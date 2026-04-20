@@ -39,6 +39,9 @@ model Task {
   reviewerComments    String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  editRequested       Boolean   @default(false)
+  editRequestBy       String?   // "OWNER" or "REVIEWER"
+  editRequestReason   String?
 }
 
 model SystemSettings {

@@ -22,6 +22,9 @@ type Task = {
   mailLink: string | null;
   ownerComments: string | null;
   reviewerComments: string | null;
+  editRequested?: boolean;
+  editRequestBy?: string | null;
+  editRequestReason?: string | null;
 };
 
 const hours12 = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -54,7 +57,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [usersList, setUsersList] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE'>('SCHEDULE');
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS'>('SCHEDULE');
   const [settings, setSettings] = useState({
     reminderFrequency: 'DAILY',
     reminderTimes: '09:00,18:00',
@@ -202,6 +205,46 @@ export default function DashboardClient({ user }: { user: any }) {
     }
   };
 
+  const handleRequestEdit = async (taskId: number, roleType: 'OWNER' | 'REVIEWER') => {
+    const reason = window.prompt("Please provide a reason for editing this completed task:");
+    if (!reason) return;
+    
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/request-edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason, requestedBy: roleType })
+      });
+      if (res.ok) {
+        alert("Edit request sent to Admin successfully.");
+        fetchTasks();
+      } else {
+        alert("Failed to send edit request.");
+      }
+    } catch (error) {
+      console.error("Failed to request edit", error);
+    }
+  };
+
+  const handleApproveEdit = async (taskId: number, action: 'APPROVE' | 'REJECT') => {
+    if (!window.confirm(`Are you sure you want to ${action.toLowerCase()} this edit request?`)) return;
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/approve-edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action })
+      });
+      if (res.ok) {
+        alert(`Edit request ${action.toLowerCase()}d successfully.`);
+        fetchTasks();
+      } else {
+        alert("Failed to process edit request.");
+      }
+    } catch (error) {
+      console.error("Failed to process edit", error);
+    }
+  };
+
   const handleTriggerEmail = async (type: "users" | "manager") => {
     if (!window.confirm(`Are you sure you want to send the ${type === 'users' ? 'Employee Reminders' : 'Manager Report'} now?`)) return;
     
@@ -331,6 +374,9 @@ export default function DashboardClient({ user }: { user: any }) {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < today;
+                    const isOwnerLocked = task.taskStatus === "Completed" && !isAdmin;
+                    const isReviewerLocked = (task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required") && !isAdmin;
+                    
                     return (
                     <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s", backgroundColor: isOverdue ? "#fee2e2" : undefined }} className="table-row">
                       <td style={tdStyle}><span style={{ color: "#94a3b8", fontWeight: 500 }}>#{task.id}</span></td>
@@ -342,8 +388,12 @@ export default function DashboardClient({ user }: { user: any }) {
                       
                       {/* Editable Completion Date */}
                       <td 
-                        style={{ ...tdStyle, cursor: "pointer", minWidth: "140px" }}
-                        onClick={() => { setEditingCell({ id: task.id, field: "completionDate" }); setEditValue(task.completionDate ? task.completionDate.split("T")[0] : ""); }}
+                        style={{ ...tdStyle, cursor: isOwnerLocked ? "not-allowed" : "pointer", minWidth: "140px" }}
+                        onClick={() => { 
+                          if (isOwnerLocked) return;
+                          setEditingCell({ id: task.id, field: "completionDate" }); 
+                          setEditValue(task.completionDate ? task.completionDate.split("T")[0] : ""); 
+                        }}
                       >
                         {editingCell?.id === task.id && editingCell.field === "completionDate" ? (
                           <input 
@@ -358,6 +408,7 @@ export default function DashboardClient({ user }: { user: any }) {
                         ) : (
                           <span style={{ color: task.completionDate ? "#0f172a" : "#cbd5e1", fontWeight: 500 }}>
                             {formatDate(task.completionDate)}
+                            {isOwnerLocked && <span style={{ marginLeft: "4px", fontSize: "10px" }}>🔒</span>}
                           </span>
                         )}
                       </td>
@@ -368,6 +419,7 @@ export default function DashboardClient({ user }: { user: any }) {
                           type="task" 
                           taskId={task.id} 
                           onUpdate={handleUpdate} 
+                          disabled={isOwnerLocked}
                         />
                       </td>
                       <td style={tdStyle}>{task.reviewerName === "Not Applicable" ? <span style={{ color: "#94a3b8" }}>N/A</span> : task.reviewerName}</td>
@@ -377,14 +429,15 @@ export default function DashboardClient({ user }: { user: any }) {
                           type="review" 
                           taskId={task.id} 
                           onUpdate={handleUpdate} 
+                          disabled={isReviewerLocked}
                         />
                       </td>
 
                       {/* Editable Review Completion Date */}
                       <td 
-                        style={{ ...tdStyle, cursor: task.reviewerName === "Not Applicable" ? "default" : "pointer", minWidth: "140px" }}
+                        style={{ ...tdStyle, cursor: task.reviewerName === "Not Applicable" || isReviewerLocked ? "not-allowed" : "pointer", minWidth: "140px" }}
                         onClick={() => { 
-                          if (task.reviewerName === "Not Applicable") return;
+                          if (task.reviewerName === "Not Applicable" || isReviewerLocked) return;
                           setEditingCell({ id: task.id, field: "reviewCompletionDate" }); 
                           setEditValue(task.reviewCompletionDate ? task.reviewCompletionDate.split("T")[0] : ""); 
                         }}
@@ -404,14 +457,19 @@ export default function DashboardClient({ user }: { user: any }) {
                         ) : (
                           <span style={{ color: task.reviewCompletionDate ? "#0f172a" : "#cbd5e1", fontWeight: 500 }}>
                             {formatDate(task.reviewCompletionDate)}
+                            {isReviewerLocked && <span style={{ marginLeft: "4px", fontSize: "10px" }}>🔒</span>}
                           </span>
                         )}
                       </td>
                       
                       {/* Editable Owner Comments */}
                       <td 
-                        style={{ ...tdStyle, cursor: "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
-                        onClick={() => { setEditingCell({ id: task.id, field: "ownerComments" }); setEditValue(task.ownerComments || ""); }}
+                        style={{ ...tdStyle, cursor: isOwnerLocked ? "not-allowed" : "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
+                        onClick={() => { 
+                          if (isOwnerLocked) return;
+                          setEditingCell({ id: task.id, field: "ownerComments" }); 
+                          setEditValue(task.ownerComments || ""); 
+                        }}
                       >
                         {editingCell?.id === task.id && editingCell.field === "ownerComments" ? (
                           <input 
@@ -429,8 +487,12 @@ export default function DashboardClient({ user }: { user: any }) {
 
                       {/* Editable Reviewer Comments */}
                       <td 
-                        style={{ ...tdStyle, cursor: "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
-                        onClick={() => { setEditingCell({ id: task.id, field: "reviewerComments" }); setEditValue(task.reviewerComments || ""); }}
+                        style={{ ...tdStyle, cursor: isReviewerLocked ? "not-allowed" : "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
+                        onClick={() => { 
+                          if (isReviewerLocked) return;
+                          setEditingCell({ id: task.id, field: "reviewerComments" }); 
+                          setEditValue(task.reviewerComments || ""); 
+                        }}
                       >
                         {editingCell?.id === task.id && editingCell.field === "reviewerComments" ? (
                           <input 
@@ -446,25 +508,49 @@ export default function DashboardClient({ user }: { user: any }) {
                         )}
                       </td>
 
-                      {/* Delete / Request Delete Action */}
+                      {/* Delete / Request Edit / Request Delete Action */}
                       <td style={{ ...tdStyle, textAlign: "center" }}>
-                        {isAdmin ? (
-                          <button 
-                            onClick={() => handleDelete(task.id)}
-                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", padding: "6px", borderRadius: "6px", transition: "all 0.2s" }}
-                            title="Delete Task"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => handleRequestDelete(task.id)}
-                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "#f59e0b", padding: "6px", borderRadius: "6px", transition: "all 0.2s" }}
-                            title="Request Delete"
-                          >
-                            <Send size={18} />
-                          </button>
-                        )}
+                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                          {isAdmin ? (
+                            <button 
+                              onClick={() => handleDelete(task.id)}
+                              style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", padding: "6px", borderRadius: "6px", transition: "all 0.2s" }}
+                              title="Delete Task"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleRequestDelete(task.id)}
+                              style={{ background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 }}
+                              title="Request Delete"
+                            >
+                              Del Req
+                            </button>
+                          )}
+                          
+                          {/* Request Edit buttons for locked tasks */}
+                          {!isAdmin && isOwnerLocked && (
+                            <button 
+                              onClick={() => handleRequestEdit(task.id, "OWNER")}
+                              disabled={task.editRequested && task.editRequestBy === "OWNER"}
+                              style={{ background: task.editRequested && task.editRequestBy === "OWNER" ? "#e2e8f0" : "#eff6ff", color: task.editRequested && task.editRequestBy === "OWNER" ? "#94a3b8" : "#3b82f6", border: task.editRequested && task.editRequestBy === "OWNER" ? "1px solid #cbd5e1" : "1px solid #bfdbfe", cursor: task.editRequested && task.editRequestBy === "OWNER" ? "not-allowed" : "pointer", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 }}
+                              title="Request Edit (Owner)"
+                            >
+                              {task.editRequested && task.editRequestBy === "OWNER" ? "Requested" : "Edit Req"}
+                            </button>
+                          )}
+                          {!isAdmin && isReviewerLocked && task.reviewerName !== "Not Applicable" && (
+                            <button 
+                              onClick={() => handleRequestEdit(task.id, "REVIEWER")}
+                              disabled={task.editRequested && task.editRequestBy === "REVIEWER"}
+                              style={{ background: task.editRequested && task.editRequestBy === "REVIEWER" ? "#e2e8f0" : "#fdf4ff", color: task.editRequested && task.editRequestBy === "REVIEWER" ? "#94a3b8" : "#d946ef", border: task.editRequested && task.editRequestBy === "REVIEWER" ? "1px solid #cbd5e1" : "1px solid #f5d0fe", cursor: task.editRequested && task.editRequestBy === "REVIEWER" ? "not-allowed" : "pointer", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 }}
+                              title="Request Edit (Reviewer)"
+                            >
+                              {task.editRequested && task.editRequestBy === "REVIEWER" ? "Requested" : "Rev Edit"}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                     );
@@ -511,9 +597,20 @@ export default function DashboardClient({ user }: { user: any }) {
                 </button>
                 <button 
                   onClick={() => setActiveOptionsTab('USERS')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'USERS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'USERS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
+                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'USERS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'USERS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
                 >
                   User Management
+                </button>
+                <button 
+                  onClick={() => setActiveOptionsTab('EDIT_REQUESTS')} 
+                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
+                >
+                  Edit Requests
+                  {tasks.filter(t => t.editRequested).length > 0 && (
+                    <span style={{ marginLeft: "8px", background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: "bold" }}>
+                      {tasks.filter(t => t.editRequested).length}
+                    </span>
+                  )}
                 </button>
               </div>
 
@@ -750,6 +847,53 @@ export default function DashboardClient({ user }: { user: any }) {
                     )}
                   </div>
                 )}
+
+                {activeOptionsTab === 'EDIT_REQUESTS' && (
+                  <div>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Pending Edit Requests</h3>
+                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Manage requests from users to unlock and edit completed tasks.</p>
+                    
+                    {tasks.filter(t => t.editRequested).length === 0 ? (
+                      <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                        <p style={{ color: "#64748b", margin: 0 }}>No pending edit requests.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        {tasks.filter(t => t.editRequested).map(task => (
+                          <div key={task.id} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                              <div>
+                                <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>Task #{task.id}: {task.taskName}</h4>
+                                <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
+                                  Requested by: <strong style={{ color: "#0f172a" }}>{task.editRequestBy === "OWNER" ? task.ownerName : task.reviewerName}</strong> ({task.editRequestBy})
+                                </p>
+                              </div>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button 
+                                  onClick={() => handleApproveEdit(task.id, 'APPROVE')}
+                                  style={{ background: "#22c55e", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                >
+                                  Approve & Unlock
+                                </button>
+                                <button 
+                                  onClick={() => handleApproveEdit(task.id, 'REJECT')}
+                                  style={{ background: "#fef2f2", color: "#ef4444", padding: "8px 16px", borderRadius: "8px", border: "1px solid #fca5a5", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ padding: "12px", background: "#f1f5f9", borderRadius: "8px" }}>
+                              <p style={{ margin: 0, fontSize: "0.875rem", color: "#475569" }}>
+                                <strong style={{ color: "#0f172a" }}>Reason:</strong> {task.editRequestReason || "No reason provided."}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -795,7 +939,7 @@ function MetricCard({ title, value, icon, bg, isActive, onClick }: { title: stri
   );
 }
 
-function StatusPill({ status, type, taskId, onUpdate }: { status: string, type: "task" | "review", taskId: number, onUpdate: any }) {
+function StatusPill({ status, type, taskId, onUpdate, disabled }: { status: string, type: "task" | "review", taskId: number, onUpdate: any, disabled?: boolean }) {
   let bg = "#f1f5f9";
   let color = "#475569";
 
@@ -821,7 +965,7 @@ function StatusPill({ status, type, taskId, onUpdate }: { status: string, type: 
     border: "none",
     outline: "none",
     appearance: "none" as const,
-    cursor: type === "task" ? "pointer" : "default",
+    cursor: type === "task" && !disabled ? "pointer" : disabled ? "not-allowed" : "default",
   };
 
   if (type === "task") {
@@ -830,6 +974,7 @@ function StatusPill({ status, type, taskId, onUpdate }: { status: string, type: 
         value={status} 
         onChange={(e) => onUpdate(taskId, "taskStatus", e.target.value)}
         style={pillStyle}
+        disabled={disabled}
       >
         <option value="Pending">Pending</option>
         <option value="In Progress">In Progress</option>
