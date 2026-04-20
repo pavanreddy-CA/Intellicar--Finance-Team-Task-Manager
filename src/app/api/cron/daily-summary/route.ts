@@ -97,6 +97,7 @@ export async function GET(req: Request) {
       const ownerName = task.ownerName;
       if (!ownerName) return;
       const email = getEmailFromName(ownerName);
+      if (!email) return;
       if (!ownerMap[ownerName]) ownerMap[ownerName] = { email, tasks: [] };
       ownerMap[ownerName].tasks.push(task);
     });
@@ -109,6 +110,7 @@ export async function GET(req: Request) {
       const reviewerName = task.reviewerName;
       if (reviewerName && reviewerName !== "Not Applicable") {
         const email = getEmailFromName(reviewerName);
+        if (!email) return;
         if (!reviewerMap[reviewerName]) reviewerMap[reviewerName] = { email, tasks: [] };
         reviewerMap[reviewerName].tasks.push(task);
       }
