@@ -5,17 +5,27 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
 // Helper to check if a task is overdue
-function isOverdue(dueDate: Date | null) {
+function isOverdue(dueDate: Date | null, referenceDate: Date) {
   if (!dueDate) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const ref = new Date(referenceDate);
+  ref.setHours(0, 0, 0, 0);
   const target = new Date(dueDate);
   target.setHours(0, 0, 0, 0);
-  return target < today;
+  return target < ref;
+}
+
+// Format date as DD-MMM-YYYY
+function formatDate(dateStr: Date | string | null) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = d.toLocaleString('en-GB', { month: 'short' });
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 
 // Reusable HTML Table Generator mirroring the Google Sheet layout
-function generateGridHtml(tasks: any[], title: string) {
+function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
   let html = `<h2 align="center" style="font-family: sans-serif; color: #333;">${title}</h2>`;
   html += `
     <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 11px; text-align: center;">
@@ -46,12 +56,12 @@ function generateGridHtml(tasks: any[], title: string) {
     html += `<tr><td colspan="19" style="padding: 20px;">No pending tasks found.</td></tr>`;
   } else {
     tasks.forEach((t, index) => {
-      const overdue = isOverdue(t.dueDate) && t.taskStatus !== "Completed";
+      const overdue = isOverdue(t.dueDate, referenceDate) && t.taskStatus !== "Completed";
       const rowStyle = overdue ? 'background-color: #ffe6e6;' : ''; // Light red background for overdue
 
       html += `<tr style="${rowStyle}">
         <td>${index + 1}</td>
-        <td>${new Date(t.createdAt).toLocaleDateString()}</td>
+        <td>${formatDate(t.createdAt)}</td>
         <td>${t.ownerName}</td>
         <td>${t.reviewerName === "Not Applicable" ? "NA" : t.reviewerName || ""}</td>
         <td>${t.taskName}</td>
@@ -60,11 +70,11 @@ function generateGridHtml(tasks: any[], title: string) {
         <td>${t.departmentName}</td>
         <td>${t.requestFrom}</td>
         <td><a href="mailto:${getEmailFromName(t.ownerName)}">${getEmailFromName(t.ownerName)}</a></td>
-        <td style="${overdue ? 'color: red; font-weight: bold;' : ''}">${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : ""}</td>
-        <td>${t.completionDate ? new Date(t.completionDate).toLocaleDateString() : ""}</td>
+        <td style="${overdue ? 'color: red; font-weight: bold;' : ''}">${formatDate(t.dueDate)}</td>
+        <td>${formatDate(t.completionDate)}</td>
         <td>${t.taskStatus}</td>
         <td><a href="mailto:${getEmailFromName(t.reviewerName)}">${getEmailFromName(t.reviewerName)}</a></td>
-        <td>${t.reviewCompletionDate ? new Date(t.reviewCompletionDate).toLocaleDateString() : ""}</td>
+        <td>${formatDate(t.reviewCompletionDate)}</td>
         <td>${t.reviewStatus}</td>
         <td>${t.mailLink ? `<a href="${t.mailLink}">Link</a>` : ""}</td>
         <td>${t.ownerComments || ""}</td>
@@ -80,6 +90,8 @@ function generateGridHtml(tasks: any[], title: string) {
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const type = url.searchParams.get("type") || "all"; // 'all', 'users', or 'manager'
+  const clientDateStr = url.searchParams.get("clientDate");
+  const referenceDate = clientDateStr ? new Date(clientDateStr) : new Date();
 
   const authHeader = req.headers.get("authorization");
   const session = await getServerSession(authOptions);
@@ -129,10 +141,10 @@ export async function GET(req: Request) {
       for (const [ownerName, data] of Object.entries(ownerMap)) {
         if (data.tasks.length === 0) continue;
         const title = `${ownerName} - Pending Tasks`;
-        const html = generateGridHtml(data.tasks, title);
+        const html = generateGridHtml(data.tasks, title, referenceDate);
         await sendEmail({ 
           to: data.email, 
-          subject: `Pending Tasks Reminder - ${new Date().toLocaleDateString()} (${data.tasks.length} Pending)`, 
+          subject: `Pending Tasks Reminder - ${formatDate(referenceDate)} (${data.tasks.length} Pending)`, 
           html 
         });
       }
@@ -141,10 +153,10 @@ export async function GET(req: Request) {
       for (const [reviewerName, data] of Object.entries(reviewerMap)) {
         if (data.tasks.length === 0) continue;
         const title = `${reviewerName} - Pending Reviews`;
-        const html = generateGridHtml(data.tasks, title);
+        const html = generateGridHtml(data.tasks, title, referenceDate);
         await sendEmail({ 
           to: data.email, 
-          subject: `Pending Reviews Reminder - ${new Date().toLocaleDateString()} (${data.tasks.length} Pending)`, 
+          subject: `Pending Reviews Reminder - ${formatDate(referenceDate)} (${data.tasks.length} Pending)`, 
           html 
         });
       }
@@ -172,7 +184,7 @@ export async function GET(req: Request) {
 
       employees.forEach(emp => {
         const empPendingOwner = pendingOwnerTasks.filter(t => t.ownerName === emp);
-        const overdueCount = empPendingOwner.filter(t => isOverdue(t.dueDate)).length;
+        const overdueCount = empPendingOwner.filter(t => isOverdue(t.dueDate, referenceDate)).length;
         const empPendingReview = pendingReviewTasks.filter(t => t.reviewerName === emp).length;
 
         if (empPendingOwner.length > 0 || empPendingReview > 0) {
@@ -199,11 +211,11 @@ export async function GET(req: Request) {
       const allConsolidatedTasks = allTasks.filter(t => t.taskStatus !== "Completed" || (t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner"));
       
       let consolidatedHtml = summaryHtml;
-      consolidatedHtml += generateGridHtml(allConsolidatedTasks, "Consolidated Pending Tasks");
+      consolidatedHtml += generateGridHtml(allConsolidatedTasks, "Consolidated Pending Tasks", referenceDate);
 
       await sendEmail({ 
         to: managerEmail, 
-        subject: `Daily Pending Tasks Report - ${new Date().toLocaleDateString()}`, 
+        subject: `Daily Pending Tasks Report - ${formatDate(referenceDate)}`, 
         html: consolidatedHtml 
       });
     }

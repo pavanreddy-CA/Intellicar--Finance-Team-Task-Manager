@@ -107,6 +107,16 @@ export default function DashboardClient({ user }: { user: any }) {
   const pendingReviewCount = tasks.filter(t => t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner").length;
   const completedCount = tasks.filter(t => t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required")).length;
 
+  // Format date as DD-MMM-YYYY
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "--";
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-GB', { month: 'short' });
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const filteredTasksToDisplay = tasks.filter(t => {
     if (activeFilter === 'ALL') return true;
     if (activeFilter === 'PENDING_ACTION') return t.taskStatus !== "Completed";
@@ -199,11 +209,11 @@ export default function DashboardClient({ user }: { user: any }) {
                     return (
                     <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s", backgroundColor: isOverdue ? "#fee2e2" : undefined }} className="table-row">
                       <td style={tdStyle}><span style={{ color: "#94a3b8", fontWeight: 500 }}>#{task.id}</span></td>
-                      <td style={tdStyle}><span style={{ color: "#64748b" }}>{new Date(task.createdAt).toLocaleDateString()}</span></td>
+                      <td style={tdStyle}><span style={{ color: "#64748b" }}>{formatDate(task.createdAt)}</span></td>
                       <td style={{ ...tdStyle, fontWeight: 500, color: "#0f172a", maxWidth: "250px", whiteSpace: "normal" }}>{task.taskName}</td>
                       <td style={tdStyle}>{task.entityName}</td>
                       <td style={tdStyle}>{task.ownerName}</td>
-                      <td style={tdStyle}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
+                      <td style={tdStyle}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
                       
                       {/* Editable Completion Date */}
                       <td 
@@ -222,7 +232,7 @@ export default function DashboardClient({ user }: { user: any }) {
                           />
                         ) : (
                           <span style={{ color: task.completionDate ? "#0f172a" : "#cbd5e1", fontWeight: 500 }}>
-                            {task.completionDate ? new Date(task.completionDate).toLocaleDateString() : "--"}
+                            {formatDate(task.completionDate)}
                           </span>
                         )}
                       </td>
