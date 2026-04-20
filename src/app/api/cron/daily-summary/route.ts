@@ -84,12 +84,12 @@ export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   const session = await getServerSession(authOptions);
   
-  // Allow if called by Vercel Cron (CRON_SECRET) OR if called by a logged-in Master Admin
-  const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  // Allow if called by Vercel Cron (CRON_SECRET), frontend hardcoded token, or Admin session
+  const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}` || authHeader === "Bearer intellicar-cron-123";
   const isAdmin = session?.user?.email === "pavanreddy@intellicar.in" || session?.user?.role === "ADMIN";
   
   if (process.env.NODE_ENV === "production" && !isCron && !isAdmin) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: "Unauthorized (Session: " + (session ? "Found" : "None") + ")" }, { status: 401 });
   }
 
   try {
