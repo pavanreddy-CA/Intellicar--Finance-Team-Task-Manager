@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type Task = {
   id: number;
@@ -65,6 +68,12 @@ export default function DashboardClient({ user }: { user: any }) {
     managerReportTimes: '10:00'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Advanced Controls State
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const isAdmin = user?.email === "pavanreddy@intellicar.in" || user?.role === "ADMIN";
 
@@ -293,12 +302,99 @@ export default function DashboardClient({ user }: { user: any }) {
   };
 
   const filteredTasksToDisplay = tasks.filter(t => {
-    if (activeFilter === 'ALL') return true;
-    if (activeFilter === 'PENDING_ACTION') return t.taskStatus !== "Completed";
-    if (activeFilter === 'PENDING_REVIEW') return t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner";
-    if (activeFilter === 'COMPLETED') return t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required");
-    return true;
+    // 1. Status Filter
+    let statusMatch = true;
+    if (activeFilter === 'PENDING_ACTION') statusMatch = t.taskStatus !== "Completed";
+    if (activeFilter === 'PENDING_REVIEW') statusMatch = t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner";
+    if (activeFilter === 'COMPLETED') statusMatch = t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required");
+    
+    // 2. Date Filter (by createdAt)
+    let dateMatch = true;
+    if (startDate || endDate) {
+      const taskDate = new Date(t.createdAt);
+      taskDate.setHours(0, 0, 0, 0);
+      
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (taskDate < start) dateMatch = false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+        if (taskDate > end) dateMatch = false;
+      }
+    }
+
+    return statusMatch && dateMatch;
   });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredTasksToDisplay.length / itemsPerPage);
+  const paginatedTasks = filteredTasksToDisplay.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, startDate, endDate, itemsPerPage]);
+
+  // Export Handlers
+  const exportToExcel = () => {
+    const exportData = filteredTasksToDisplay.map(t => ({
+      ID: t.id,
+      "Created At": formatDateTime(t.createdAt),
+      "Task Name": t.taskName,
+      Entity: t.entityName,
+      Owner: t.ownerName,
+      "Due Date": formatDate(t.dueDate),
+      "Completion Date": formatDate(t.completionDate),
+      "Task Status": t.taskStatus,
+      Reviewer: t.reviewerName,
+      "Review Status": t.reviewStatus,
+      "Review Date": formatDate(t.reviewCompletionDate),
+      "Owner Comments": t.ownerComments || "",
+      "Reviewer Comments": t.reviewerComments || ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+    XLSX.writeFile(workbook, `Intellicar_Tasks_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF('landscape');
+    
+    doc.setFontSize(16);
+    doc.text("Intellicar Finance Task Management - Report", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    const tableColumn = ["ID", "Task Name", "Entity", "Owner", "Due Date", "Task Status", "Reviewer", "Rev. Status"];
+    const tableRows = filteredTasksToDisplay.map(t => [
+      t.id,
+      t.taskName,
+      t.entityName,
+      t.ownerName,
+      formatDate(t.dueDate),
+      t.taskStatus,
+      t.reviewerName || "N/A",
+      t.reviewStatus
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 28,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [37, 99, 235] }
+    });
+
+    doc.save(`Intellicar_Tasks_Export_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f8fafc", color: "#0f172a" }}>
@@ -333,17 +429,68 @@ export default function DashboardClient({ user }: { user: any }) {
       </header>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflow: "auto", padding: "32px" }}>
+      <div style={{ flex: 1, overflow: "auto", padding: "32px", background: "#f1f5f9" }}>
+        
         {/* Metric Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px", marginBottom: "32px" }}>
-          <MetricCard title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={20} color="#3b82f6" />} bg="#eff6ff" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
-          <MetricCard title="Pending Action" value={pendingActionCount} icon={<Clock size={20} color="#f59e0b" />} bg="#fffbeb" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
-          <MetricCard title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={20} color="#ef4444" />} bg="#fef2f2" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
-          <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={20} color="#10b981" />} bg="#ecfdf5" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
+          <MetricCard title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={24} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
+          <MetricCard title="Pending Action" value={pendingActionCount} icon={<Clock size={24} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
+          <MetricCard title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={24} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
+          <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
+        </div>
+
+        {/* Action Toolbar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
+          
+          {/* Date Filter */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "white", padding: "8px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)" }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#475569" }}>Filter by Date:</span>
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={e => setStartDate(e.target.value)}
+              style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
+            />
+            <span style={{ color: "#94a3b8" }}>to</span>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={e => setEndDate(e.target.value)}
+              style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
+            />
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => { setStartDate(""); setEndDate(""); }}
+                style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600, padding: "4px 8px" }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Export Buttons */}
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button 
+              onClick={exportToExcel}
+              style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#16a34a", padding: "8px 16px", borderRadius: "12px", border: "1px solid #bbf7d0", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", transition: "all 0.2s" }}
+              onMouseOver={e => e.currentTarget.style.background = "#f0fdf4"}
+              onMouseOut={e => e.currentTarget.style.background = "white"}
+            >
+              <FileSpreadsheet size={16} /> Export Excel
+            </button>
+            <button 
+              onClick={exportToPDF}
+              style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#dc2626", padding: "8px 16px", borderRadius: "12px", border: "1px solid #fecaca", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", transition: "all 0.2s" }}
+              onMouseOver={e => e.currentTarget.style.background = "#fef2f2"}
+              onMouseOut={e => e.currentTarget.style.background = "white"}
+            >
+              <FileText size={16} /> Export PDF
+            </button>
+          </div>
         </div>
 
         {/* Data Table */}
-        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)", overflow: "hidden" }}>
+        <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
               <thead>
@@ -367,10 +514,10 @@ export default function DashboardClient({ user }: { user: any }) {
               <tbody>
                 {loading ? (
                   <tr><td colSpan={14} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading tasks...</td></tr>
-                ) : filteredTasksToDisplay.length === 0 ? (
-                  <tr><td colSpan={14} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No tasks found in the system.</td></tr>
+                ) : paginatedTasks.length === 0 ? (
+                  <tr><td colSpan={14} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No tasks found for the current filters.</td></tr>
                 ) : (
-                  filteredTasksToDisplay.map((task) => {
+                  paginatedTasks.map((task) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < today;
@@ -559,6 +706,34 @@ export default function DashboardClient({ user }: { user: any }) {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
+              <div style={{ fontSize: "0.875rem", color: "#64748b" }}>
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredTasksToDisplay.length)} of {filteredTasksToDisplay.length} tasks
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #cbd5e1", borderRadius: "6px", color: currentPage === 1 ? "#94a3b8" : "#0f172a", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}
+                >
+                  <ChevronLeft size={16} /> Prev
+                </button>
+                <div style={{ fontSize: "0.875rem", fontWeight: 500, padding: "0 12px" }}>
+                  Page {currentPage} of {totalPages}
+                </div>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #cbd5e1", borderRadius: "6px", color: currentPage === totalPages ? "#94a3b8" : "#0f172a", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
