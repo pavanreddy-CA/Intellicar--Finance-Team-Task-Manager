@@ -86,7 +86,7 @@ export async function GET(req: Request) {
   
   // Allow if called by Vercel Cron (CRON_SECRET), frontend hardcoded token, or Admin session
   const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}` || authHeader === "Bearer intellicar-cron-123";
-  const isAdmin = session?.user?.email === "pavanreddy@intellicar.in" || session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.email === "pavanreddy@intellicar.in" || (session?.user as any)?.role === "ADMIN";
   
   if (process.env.NODE_ENV === "production" && !isCron && !isAdmin) {
     return NextResponse.json({ message: "Unauthorized (Session: " + (session ? "Found" : "None") + ")" }, { status: 401 });
