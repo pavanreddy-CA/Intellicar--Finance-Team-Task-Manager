@@ -94,9 +94,11 @@ export async function GET(req: Request) {
     const ownerMap: Record<string, { email: string, tasks: typeof allTasks }> = {};
 
     pendingOwnerTasks.forEach(task => {
-      const email = getEmailFromName(task.ownerName);
-      if (!ownerMap[task.ownerName]) ownerMap[task.ownerName] = { email, tasks: [] };
-      ownerMap[task.ownerName].tasks.push(task);
+      const ownerName = task.ownerName;
+      if (!ownerName) return;
+      const email = getEmailFromName(ownerName);
+      if (!ownerMap[ownerName]) ownerMap[ownerName] = { email, tasks: [] };
+      ownerMap[ownerName].tasks.push(task);
     });
 
     // 2. Group tasks pending REVIEWER action
@@ -104,10 +106,11 @@ export async function GET(req: Request) {
     const reviewerMap: Record<string, { email: string, tasks: typeof allTasks }> = {};
 
     pendingReviewTasks.forEach(task => {
-      if (task.reviewerName && task.reviewerName !== "Not Applicable") {
-        const email = getEmailFromName(task.reviewerName);
-        if (!reviewerMap[task.reviewerName]) reviewerMap[task.reviewerName] = { email, tasks: [] };
-        reviewerMap[task.reviewerName].tasks.push(task);
+      const reviewerName = task.reviewerName;
+      if (reviewerName && reviewerName !== "Not Applicable") {
+        const email = getEmailFromName(reviewerName);
+        if (!reviewerMap[reviewerName]) reviewerMap[reviewerName] = { email, tasks: [] };
+        reviewerMap[reviewerName].tasks.push(task);
       }
     });
 
