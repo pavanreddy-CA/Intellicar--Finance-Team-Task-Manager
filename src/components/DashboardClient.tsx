@@ -248,7 +248,7 @@ export default function DashboardClient({ user }: { user: any }) {
                       <td style={tdStyle}>{task.reviewerName === "Not Applicable" ? <span style={{ color: "#94a3b8" }}>N/A</span> : task.reviewerName}</td>
                       <td style={tdStyle}>
                         <StatusPill 
-                          status={task.reviewStatus} 
+                          status={task.reviewerName === "Not Applicable" ? "Review Not Required" : task.reviewStatus} 
                           type="review" 
                           taskId={task.id} 
                           onUpdate={handleUpdate} 
@@ -257,10 +257,16 @@ export default function DashboardClient({ user }: { user: any }) {
 
                       {/* Editable Review Completion Date */}
                       <td 
-                        style={{ ...tdStyle, cursor: "pointer", minWidth: "140px" }}
-                        onClick={() => { setEditingCell({ id: task.id, field: "reviewCompletionDate" }); setEditValue(task.reviewCompletionDate ? task.reviewCompletionDate.split("T")[0] : ""); }}
+                        style={{ ...tdStyle, cursor: task.reviewerName === "Not Applicable" ? "default" : "pointer", minWidth: "140px" }}
+                        onClick={() => { 
+                          if (task.reviewerName === "Not Applicable") return;
+                          setEditingCell({ id: task.id, field: "reviewCompletionDate" }); 
+                          setEditValue(task.reviewCompletionDate ? task.reviewCompletionDate.split("T")[0] : ""); 
+                        }}
                       >
-                        {editingCell?.id === task.id && editingCell.field === "reviewCompletionDate" ? (
+                        {task.reviewerName === "Not Applicable" ? (
+                          <span style={{ color: "#94a3b8", fontWeight: 500 }}>N/A</span>
+                        ) : editingCell?.id === task.id && editingCell.field === "reviewCompletionDate" ? (
                           <input 
                             type="date"
                             autoFocus
@@ -272,14 +278,14 @@ export default function DashboardClient({ user }: { user: any }) {
                           />
                         ) : (
                           <span style={{ color: task.reviewCompletionDate ? "#0f172a" : "#cbd5e1", fontWeight: 500 }}>
-                            {task.reviewCompletionDate ? new Date(task.reviewCompletionDate).toLocaleDateString() : "--"}
+                            {formatDate(task.reviewCompletionDate)}
                           </span>
                         )}
                       </td>
                       
                       {/* Editable Owner Comments */}
                       <td 
-                        style={{ ...tdStyle, cursor: "text", minWidth: "200px", maxWidth: "300px", whiteSpace: "normal" }}
+                        style={{ ...tdStyle, cursor: "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
                         onClick={() => { setEditingCell({ id: task.id, field: "ownerComments" }); setEditValue(task.ownerComments || ""); }}
                       >
                         {editingCell?.id === task.id && editingCell.field === "ownerComments" ? (
@@ -298,7 +304,7 @@ export default function DashboardClient({ user }: { user: any }) {
 
                       {/* Editable Reviewer Comments */}
                       <td 
-                        style={{ ...tdStyle, cursor: "text", minWidth: "200px", maxWidth: "300px", whiteSpace: "normal" }}
+                        style={{ ...tdStyle, cursor: "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
                         onClick={() => { setEditingCell({ id: task.id, field: "reviewerComments" }); setEditValue(task.reviewerComments || ""); }}
                       >
                         {editingCell?.id === task.id && editingCell.field === "reviewerComments" ? (

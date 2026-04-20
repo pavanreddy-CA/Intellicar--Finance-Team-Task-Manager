@@ -60,25 +60,25 @@ function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
       const rowStyle = overdue ? 'background-color: #ffe6e6;' : ''; // Light red background for overdue
 
       html += `<tr style="${rowStyle}">
-        <td>${index + 1}</td>
-        <td>${formatDate(t.createdAt)}</td>
-        <td>${t.ownerName}</td>
-        <td>${t.reviewerName === "Not Applicable" ? "NA" : t.reviewerName || ""}</td>
-        <td>${t.taskName}</td>
-        <td>${t.entityName}</td>
-        <td>${t.taskType}</td>
-        <td>${t.departmentName}</td>
-        <td>${t.requestFrom}</td>
-        <td><a href="mailto:${getEmailFromName(t.ownerName)}">${getEmailFromName(t.ownerName)}</a></td>
-        <td style="${overdue ? 'color: red; font-weight: bold;' : ''}">${formatDate(t.dueDate)}</td>
-        <td>${formatDate(t.completionDate)}</td>
-        <td>${t.taskStatus}</td>
-        <td><a href="mailto:${getEmailFromName(t.reviewerName)}">${getEmailFromName(t.reviewerName)}</a></td>
-        <td>${formatDate(t.reviewCompletionDate)}</td>
-        <td>${t.reviewStatus}</td>
-        <td>${t.mailLink ? `<a href="${t.mailLink}">Link</a>` : ""}</td>
-        <td>${t.ownerComments || ""}</td>
-        <td>${t.reviewerComments || ""}</td>
+        <td style="white-space: nowrap;">${index + 1}</td>
+        <td style="white-space: nowrap;">${formatDate(t.createdAt)}</td>
+        <td style="white-space: nowrap;">${t.ownerName}</td>
+        <td style="white-space: nowrap;">${t.reviewerName === "Not Applicable" ? "NA" : t.reviewerName || ""}</td>
+        <td style="min-width: 150px;">${t.taskName}</td>
+        <td style="white-space: nowrap;">${t.entityName}</td>
+        <td style="white-space: nowrap;">${t.taskType}</td>
+        <td style="white-space: nowrap;">${t.departmentName}</td>
+        <td style="white-space: nowrap;">${t.requestFrom}</td>
+        <td style="white-space: nowrap;"><a href="mailto:${getEmailFromName(t.ownerName)}">${getEmailFromName(t.ownerName)}</a></td>
+        <td style="${overdue ? 'color: red; font-weight: bold;' : ''} white-space: nowrap;">${formatDate(t.dueDate)}</td>
+        <td style="white-space: nowrap;">${formatDate(t.completionDate)}</td>
+        <td style="white-space: nowrap;">${t.taskStatus}</td>
+        <td style="white-space: nowrap;"><a href="mailto:${getEmailFromName(t.reviewerName)}">${getEmailFromName(t.reviewerName)}</a></td>
+        <td style="white-space: nowrap;">${t.reviewerName === "Not Applicable" ? "NA" : formatDate(t.reviewCompletionDate)}</td>
+        <td style="white-space: nowrap;">${t.reviewerName === "Not Applicable" ? "Review Not Required" : t.reviewStatus}</td>
+        <td style="white-space: nowrap;">${t.mailLink ? `<a href="${t.mailLink}">Link</a>` : ""}</td>
+        <td style="max-width: 380px; white-space: normal; word-wrap: break-word;">${t.ownerComments || ""}</td>
+        <td style="max-width: 380px; white-space: normal; word-wrap: break-word;">${t.reviewerComments || ""}</td>
       </tr>`;
     });
   }
