@@ -204,7 +204,7 @@ export default function DashboardClient({ user }: { user: any }) {
           <img src="/logo.png" alt="Intellicar Logo" style={{ height: "45px", width: "auto" }} />
           <div>
             <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600, color: "#0f172a", letterSpacing: "-0.025em" }}>Intellicar Telematics</h1>
-            <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>Enterprise Task Management</p>
+            <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>Finance Task Management</p>
           </div>
         </div>
         <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>

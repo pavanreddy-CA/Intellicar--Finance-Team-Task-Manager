@@ -6,8 +6,8 @@ import Providers from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Master Task Tracker",
-  description: "Enterprise Task Management System",
+  title: "Intellicar Telematics",
+  description: "Finance Task Management System",
 };
 
 export default function RootLayout({

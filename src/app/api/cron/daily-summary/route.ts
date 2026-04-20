@@ -230,7 +230,7 @@ export async function GET(req: Request) {
             <div style="text-align: center; margin-bottom: 30px;">
               <img src="https://intellicar-finance-team-task-manager.vercel.app/logo.png" alt="Intellicar Logo" style="height: 60px; width: auto; margin-bottom: 15px;" />
               <h1 style="color: #2563eb; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">Intellicar Telematics</h1>
-              <p style="color: #64748b; font-family: 'Segoe UI', Arial, sans-serif; margin-top: 5px;">Daily Task Management Report - ${formatDate(referenceDate)}</p>
+              <p style="color: #64748b; font-family: 'Segoe UI', Arial, sans-serif; margin-top: 5px;">Finance Task Management Report - ${formatDate(referenceDate)}</p>
             </div>
             ${summaryHtml}
             ${generateGridHtml(allConsolidatedTasks, "Consolidated Pending Tasks", referenceDate)}
