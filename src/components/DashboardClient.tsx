@@ -74,6 +74,52 @@ export default function DashboardClient({ user }: { user: any }) {
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [dateFilterPreset, setDateFilterPreset] = useState("ALL_TIME");
+
+  const handlePresetChange = (preset: string) => {
+    setDateFilterPreset(preset);
+    const today = new Date();
+    
+    if (preset === "ALL_TIME") {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    if (preset === "CUSTOM") {
+      return; // Leave dates as they are, let user pick
+    }
+
+    let start = new Date(today);
+    let end = new Date(today);
+
+    if (preset === "CURRENT_MONTH") {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else if (preset === "LAST_MONTH") {
+      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      end = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of last month
+    } else if (preset === "LAST_3_MONTHS") {
+      start = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+    } else if (preset === "LAST_6_MONTHS") {
+      start = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate());
+    } else if (preset === "LAST_FY") {
+      const currentMonth = today.getMonth(); // 0-11
+      const currentYear = today.getFullYear();
+      let lastFyStartYear = currentMonth >= 3 ? currentYear - 1 : currentYear - 2;
+      start = new Date(lastFyStartYear, 3, 1); // April 1
+      end = new Date(lastFyStartYear + 1, 2, 31); // March 31
+    }
+
+    const toIsoDate = (d: Date) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    setStartDate(toIsoDate(start));
+    setEndDate(toIsoDate(end));
+  };
 
   const isAdmin = user?.email === "pavanreddy@intellicar.in" || user?.role === "ADMIN";
 
@@ -443,28 +489,46 @@ export default function DashboardClient({ user }: { user: any }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
           
           {/* Date Filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "white", padding: "8px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "white", padding: "8px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", flexWrap: "wrap" }}>
             <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#475569" }}>Filter by Date:</span>
-            <input 
-              type="date" 
-              value={startDate} 
-              onChange={e => setStartDate(e.target.value)}
-              style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
-            />
-            <span style={{ color: "#94a3b8" }}>to</span>
-            <input 
-              type="date" 
-              value={endDate} 
-              onChange={e => setEndDate(e.target.value)}
-              style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
-            />
-            {(startDate || endDate) && (
-              <button 
-                onClick={() => { setStartDate(""); setEndDate(""); }}
-                style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600, padding: "4px 8px" }}
-              >
-                Clear
-              </button>
+            <select
+              value={dateFilterPreset}
+              onChange={(e) => handlePresetChange(e.target.value)}
+              style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a", background: "#f8fafc" }}
+            >
+              <option value="ALL_TIME">All Time</option>
+              <option value="CURRENT_MONTH">Current Month</option>
+              <option value="LAST_MONTH">Last Month</option>
+              <option value="LAST_3_MONTHS">Last 3 Months</option>
+              <option value="LAST_6_MONTHS">Last 6 Months</option>
+              <option value="LAST_FY">Last Financial Year</option>
+              <option value="CUSTOM">Custom Range</option>
+            </select>
+
+            {dateFilterPreset === "CUSTOM" && (
+              <>
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={e => setStartDate(e.target.value)}
+                  style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
+                />
+                <span style={{ color: "#94a3b8" }}>to</span>
+                <input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={e => setEndDate(e.target.value)}
+                  style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
+                />
+                {(startDate || endDate) && (
+                  <button 
+                    onClick={() => { setStartDate(""); setEndDate(""); setDateFilterPreset("ALL_TIME"); }}
+                    style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600, padding: "4px 8px" }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </>
             )}
           </div>
 
