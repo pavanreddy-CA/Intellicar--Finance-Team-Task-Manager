@@ -167,6 +167,7 @@ export default function DashboardClient({ user }: { user: any }) {
                   <th style={thStyle}>Entity</th>
                   <th style={thStyle}>Owner</th>
                   <th style={thStyle}>Due Date</th>
+                  <th style={thStyle}>Completion Date</th>
                   <th style={thStyle}>Task Status</th>
                   <th style={thStyle}>Reviewer</th>
                   <th style={thStyle}>Review Status</th>
@@ -178,9 +179,9 @@ export default function DashboardClient({ user }: { user: any }) {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={isAdmin ? 13 : 12} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading tasks...</td></tr>
+                  <tr><td colSpan={isAdmin ? 14 : 13} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading tasks...</td></tr>
                 ) : tasks.length === 0 ? (
-                  <tr><td colSpan={isAdmin ? 13 : 12} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No tasks found in the system.</td></tr>
+                  <tr><td colSpan={isAdmin ? 14 : 13} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No tasks found in the system.</td></tr>
                 ) : (
                   tasks.map((task) => (
                     <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s" }} className="table-row">
@@ -190,6 +191,29 @@ export default function DashboardClient({ user }: { user: any }) {
                       <td style={tdStyle}>{task.entityName}</td>
                       <td style={tdStyle}>{task.ownerName}</td>
                       <td style={tdStyle}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
+                      
+                      {/* Editable Completion Date */}
+                      <td 
+                        style={{ ...tdStyle, cursor: "pointer", minWidth: "140px" }}
+                        onClick={() => { setEditingCell({ id: task.id, field: "completionDate" }); setEditValue(task.completionDate ? task.completionDate.split("T")[0] : ""); }}
+                      >
+                        {editingCell?.id === task.id && editingCell.field === "completionDate" ? (
+                          <input 
+                            type="date"
+                            autoFocus
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => handleUpdate(task.id, "completionDate", editValue)}
+                            onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "completionDate", editValue)}
+                            style={inputStyle}
+                          />
+                        ) : (
+                          <span style={{ color: task.completionDate ? "#0f172a" : "#cbd5e1", fontWeight: 500 }}>
+                            {task.completionDate ? new Date(task.completionDate).toLocaleDateString() : "--"}
+                          </span>
+                        )}
+                      </td>
+
                       <td style={tdStyle}>
                         <StatusPill 
                           status={task.taskStatus} 

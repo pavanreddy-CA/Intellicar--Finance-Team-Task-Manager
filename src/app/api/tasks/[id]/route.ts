@@ -52,6 +52,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    if (data.completionDate !== undefined) {
+      if (data.completionDate) {
+        updates.completionDate = new Date(data.completionDate);
+        updates.taskStatus = "Completed";
+        // Also update reviewStatus if needed
+        updates.reviewStatus = (existingTask.reviewerName === "Not Applicable" || !existingTask.reviewerName) 
+          ? "Review Not Required" 
+          : "Pending";
+      } else {
+        updates.completionDate = null;
+        updates.taskStatus = "Pending";
+        updates.reviewStatus = "Task Pending From Owner";
+        updates.reviewCompletionDate = null;
+      }
+    }
+
     if (data.reviewCompletionDate !== undefined) {
       if (data.reviewCompletionDate) {
         updates.reviewCompletionDate = new Date(data.reviewCompletionDate);
@@ -76,7 +92,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     // Send email to reviewer if status just changed to Completed and review is required
-    if (data.taskStatus === "Completed" && existingTask.taskStatus !== "Completed" && updatedTask.reviewStatus === "Pending") {
+    const newStatus = updates.taskStatus || data.taskStatus;
+    if (newStatus === "Completed" && existingTask.taskStatus !== "Completed" && updatedTask.reviewStatus === "Pending") {
       const reviewerEmail = getEmailFromName(updatedTask.reviewerName);
       if (reviewerEmail) {
         const emailHtml = `
