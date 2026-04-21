@@ -563,11 +563,12 @@ export default function DashboardClient({ user }: { user: any }) {
     titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
     titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Row 2: Subtitle
+    // Row 2: Subtitle (Light Blue background, Italicized Blue text)
     worksheet.mergeCells('A2:K2');
     const subCell = worksheet.getCell('A2');
     subCell.value = `Consolidated Report (All Entries) - As of ${formatDate(new Date())}`;
-    subCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF3B5998' } };
+    subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
+    subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
     subCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
     // Define column widths
@@ -585,7 +586,7 @@ export default function DashboardClient({ user }: { user: any }) {
       { width: 40 }  // Comments
     ];
 
-    // Row 3: Column Headers
+    // Row 3: Column Headers (Dark Blue background, White text)
     const headerRow = worksheet.getRow(3);
     const headers = [
       'SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
@@ -596,7 +597,7 @@ export default function DashboardClient({ user }: { user: any }) {
     headers.forEach((h, i) => {
       const cell = headerRow.getCell(i + 1);
       cell.value = h;
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
       cell.border = {

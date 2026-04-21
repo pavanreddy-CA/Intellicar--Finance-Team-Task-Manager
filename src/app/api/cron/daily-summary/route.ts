@@ -54,7 +54,7 @@ function getLOStats(los: any[]) {
   };
 }
 
-// Excel Generator Helper
+// Excel Generator Helper with perfected styling
 async function generateLOExcelBuffer(los: any[], subtitle: string) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Learning Opportunities");
@@ -74,7 +74,7 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
     { width: 40 }  // Comments
   ];
 
-  // Row 1: Main Title
+  // Row 1: Main Title (Dark Blue background, White text)
   worksheet.mergeCells('A1:K1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'ITPL - Finance Learning Opportunity Report';
@@ -82,14 +82,15 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Row 2: Subtitle
+  // Row 2: Subtitle (Light Blue background, Italicized Blue text)
   worksheet.mergeCells('A2:K2');
   const subCell = worksheet.getCell('A2');
   subCell.value = subtitle;
-  subCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF3B5998' } };
+  subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; // Light blue background
   subCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Row 3: Column Headers
+  // Row 3: Column Headers (Dark Blue background, White text)
   const headerRow = worksheet.getRow(3);
   const headers = [
     'SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
@@ -100,7 +101,7 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   headers.forEach((h, i) => {
     const cell = headerRow.getCell(i + 1);
     cell.value = h;
-    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
     cell.border = {
@@ -127,6 +128,7 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
       lo.comments || "NA"
     ]);
     row.alignment = { vertical: 'middle', wrapText: true };
+    row.font = { name: 'Calibri', size: 10 };
     row.eachCell((cell) => {
         cell.border = {
             top: { style: 'thin' },
@@ -285,8 +287,9 @@ export async function GET(req: Request) {
       const stats = getLOStats(allLOs);
       const managerEmail = "pavanreddy@intellicar.in";
       
-      const currentMonthSubtitle = `Current Month Report - ${referenceDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' })}`;
-      const consolidatedSubtitle = `Consolidated Report - All Time (As of ${formatDate(referenceDate)})`;
+      const currentMonthName = referenceDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+      const currentMonthSubtitle = `Current Month Report - ${currentMonthName}`;
+      const consolidatedSubtitle = `Consolidated Report (All Entries)`;
       
       const currentMonthBuffer = await generateLOExcelBuffer(stats.mtdItems, currentMonthSubtitle);
       const consolidatedBuffer = await generateLOExcelBuffer(allLOs, consolidatedSubtitle);
@@ -305,7 +308,7 @@ export async function GET(req: Request) {
             </div>
             <div style="padding: 40px;">
               <p style="font-size: 16px; margin-bottom: 20px;">Hi Team,</p>
-              <p style="font-size: 14px; line-height: 1.6; margin-bottom: 30px;">Please find below the Learning Opportunity summary. Detailed reports (Current Month & Consolidated) are attached.</p>
+              <p style="font-size: 14px; line-height: 1.6; margin-bottom: 30px;">Please find below the Learning Opportunity summary. Detailed reports (Current Month & Consolidated) are attached with perfected formatting.</p>
               <div style="display: table; width: 100%; border-spacing: 15px 0; margin-left: -15px; margin-right: -15px; margin-bottom: 40px;">
                 <div style="display: table-cell; width: 33.33%; background-color: #eff6ff; padding: 20px; text-align: center; border-radius: 8px; border: 1px solid #dbeafe;">
                   <div style="font-size: 12px; color: #2563eb; text-transform: uppercase; font-weight: bold; margin-bottom: 10px;">This Week</div>
@@ -356,7 +359,7 @@ export async function GET(req: Request) {
         ]
       });
 
-      return NextResponse.json({ message: "LO Report sent with dual attachments." });
+      return NextResponse.json({ message: "LO Report sent with dual attachments and perfected styling." });
     }
 
     const allTasks = await prisma.task.findMany({
