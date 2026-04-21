@@ -5,8 +5,8 @@ const transporter = nodemailer.createTransport({
   port: parseInt(process.env.SMTP_PORT || "587"),
   secure: process.env.SMTP_SECURE === "true",
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER || process.env.SMTP_USER,
+    pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
   },
 });
 
@@ -40,14 +40,14 @@ export async function sendEmail({
   html: string;
   attachments?: any[];
 }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  if (!(process.env.EMAIL_USER || process.env.SMTP_USER) || !(process.env.EMAIL_PASS || process.env.SMTP_PASS)) {
     console.warn("SMTP credentials not set. Skipping email to:", to);
     return;
   }
 
   try {
     await transporter.sendMail({
-      from: `"Task Manager" <${process.env.SMTP_USER}>`,
+      from: process.env.EMAIL_FROM || `"Task Manager" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
       to,
       subject,
       html,
