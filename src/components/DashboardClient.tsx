@@ -96,7 +96,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [showLOForm, setShowLOForm] = useState(false);
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT'>('ACCOUNT');
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA'>('ACCOUNT');
   const [settings, setSettings] = useState({
     reminderFrequency: 'DAILY',
     reminderTimes: '09:00,18:00',
@@ -1633,6 +1633,12 @@ export default function DashboardClient({ user }: { user: any }) {
                         </span>
                       )}
                     </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('DATA')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                    >
+                      <Download size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Bulk Import
+                    </button>
                   </>
                 )}
               </div>
@@ -2167,6 +2173,100 @@ export default function DashboardClient({ user }: { user: any }) {
                     )}
                   </div>
                 )}
+                
+                {activeOptionsTab === 'DATA' && (
+                  <div>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Bulk Data Import</h3>
+                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Import large amounts of data by pasting from Excel or providing JSON. Select the type of data you want to import below.</p>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                      {/* Task Import */}
+                      <div style={{ padding: "24px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                        <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}><LayoutDashboard size={20} color="#2563eb" /> Import Tasks</h4>
+                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "12px" }}>
+                          Paste rows from Excel. Required columns (in order): <br/>
+                          <strong>Task Name, Entity, Type, Dept, Requester, Owner, Reviewer, Due Date (YYYY-MM-DD)</strong>
+                        </p>
+                        <textarea 
+                          id="bulk-task-input"
+                          placeholder="Paste from Excel here..."
+                          style={{ width: "100%", height: "150px", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", fontFamily: "monospace", marginBottom: "12px" }}
+                        />
+                        <button 
+                          onClick={async () => {
+                            const val = (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value;
+                            if (!val) return;
+                            const lines = val.trim().split('\n');
+                            const tasks = lines.map(line => {
+                              const [taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate] = line.split('\t');
+                              return { taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate };
+                            });
+                            
+                            if (confirm(`Import ${tasks.length} tasks?`)) {
+                              const res = await fetch('/api/tasks/bulk', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(tasks)
+                              });
+                              if (res.ok) {
+                                alert("Tasks imported successfully!");
+                                (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value = "";
+                                fetchTasks();
+                              } else {
+                                alert("Failed to import tasks. Check format.");
+                              }
+                            }
+                          }}
+                          style={{ background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600 }}
+                        >
+                          Process & Import Tasks
+                        </button>
+                      </div>
+
+                      {/* LO Import */}
+                      <div style={{ padding: "24px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                        <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}><BookOpen size={20} color="#2563eb" /> Import Learning Opportunities</h4>
+                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "12px" }}>
+                          Paste rows from Excel. Required columns (in order): <br/>
+                          <strong>Entity, Date (YYYY-MM-DD), LO Description, Identified By, Committed By, Resolution</strong>
+                        </p>
+                        <textarea 
+                          id="bulk-lo-input"
+                          placeholder="Paste from Excel here..."
+                          style={{ width: "100%", height: "150px", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", fontFamily: "monospace", marginBottom: "12px" }}
+                        />
+                        <button 
+                          onClick={async () => {
+                            const val = (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value;
+                            if (!val) return;
+                            const lines = val.trim().split('\n');
+                            const losToImport = lines.map(line => {
+                              const [entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided] = line.split('\t');
+                              return { entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided };
+                            });
+                            
+                            if (confirm(`Import ${losToImport.length} LOs?`)) {
+                              const res = await fetch('/api/lo/bulk', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(losToImport)
+                              });
+                              if (res.ok) {
+                                alert("LOs imported successfully!");
+                                (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value = "";
+                                fetchLOs();
+                              } else {
+                                alert("Failed to import LOs. Check format.");
+                              }
+                            }
+                          }}
+                          style={{ background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600 }}
+                        >
+                          Process & Import LOs
+                        </button>
+                      </div>
+                    </div>
+                  </div>
               </div>
             </div>
           </div>
