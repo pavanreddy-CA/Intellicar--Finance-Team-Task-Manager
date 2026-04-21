@@ -96,14 +96,32 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (newStatus === "Completed" && existingTask.taskStatus !== "Completed" && updatedTask.reviewStatus === "Pending") {
       const reviewerEmail = getEmailFromName(updatedTask.reviewerName);
       if (reviewerEmail) {
+        const baseUrl = req.nextUrl.origin;
+        const dashboardUrl = `${baseUrl}/`;
+
         const emailHtml = `
-          <h2>Task Ready for Review: ${updatedTask.taskName}</h2>
-          <p><strong>Owner:</strong> ${updatedTask.ownerName}</p>
-          <p><strong>Entity:</strong> ${updatedTask.entityName}</p>
-          <p>The owner has marked this task as completed. It is now pending your review.</p>
-          <p>Please log in to the Task Manager Dashboard to complete your review.</p>
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <h2 style="color: #0f172a; margin-top: 0;">Task Ready for Review</h2>
+            <p style="font-size: 16px; color: #334155;">Hello <strong>${updatedTask.reviewerName}</strong>,</p>
+            <p style="font-size: 16px; color: #334155;">The following task has been marked as completed by <strong>${updatedTask.ownerName}</strong> and is now pending your review:</p>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f1f5f9;">
+              <table border="0" cellpadding="5" cellspacing="0" style="width: 100%; font-size: 14px;">
+                <tr><td style="color: #64748b; width: 100px;">Task Name:</td><td style="color: #0f172a; font-weight: 600;">${updatedTask.taskName}</td></tr>
+                <tr><td style="color: #64748b;">Entity:</td><td style="color: #0f172a;">${updatedTask.entityName}</td></tr>
+                <tr><td style="color: #64748b;">Completed On:</td><td style="color: #0f172a;">${updatedTask.completionDate ? new Date(updatedTask.completionDate).toDateString() : "Today"}</td></tr>
+              </table>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${dashboardUrl}" style="background: #2563eb; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Login to Dashboard</a>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">This is an automated notification from Intellicar Finance Team Task Manager.</p>
+          </div>
         `;
-        sendEmail({ to: reviewerEmail, subject: `Task Ready for Review: ${updatedTask.taskName}`, html: emailHtml });
+        sendEmail({ to: reviewerEmail, subject: `[Pending Review] ${updatedTask.taskName} - ${updatedTask.entityName}`, html: emailHtml });
       }
     }
 

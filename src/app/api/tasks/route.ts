@@ -98,17 +98,38 @@ export async function POST(req: NextRequest) {
 
     const ownerEmail = getEmailFromName(ownerName);
     if (ownerEmail) {
+      const baseUrl = req.nextUrl.origin;
+      const dashboardUrl = `${baseUrl}/`;
+      
       const emailHtml = `
-        <h2>New Task Assigned: ${taskName}</h2>
-        <p><strong>Entity:</strong> ${entityName}</p>
-        <p><strong>Type:</strong> ${taskType}</p>
-        <p><strong>Requester:</strong> ${requestFrom}</p>
-        <p><strong>Due Date:</strong> ${dueDate ? new Date(dueDate).toDateString() : "No deadline"}</p>
-        <p>Please log in to the Task Manager Dashboard to view or update the task.</p>
-        ${mailLink ? `<p><a href="${mailLink}">View Linked Email</a></p>` : ""}
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+          <h2 style="color: #0f172a; margin-top: 0;">New Task Assigned</h2>
+          <p style="font-size: 16px; color: #334155;">Hello <strong>${ownerName}</strong>,</p>
+          <p style="font-size: 16px; color: #334155;">A new task has been assigned to you in the Finance Task Manager:</p>
+          
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f1f5f9;">
+            <table border="0" cellpadding="5" cellspacing="0" style="width: 100%; font-size: 14px;">
+              <tr><td style="color: #64748b; width: 100px;">Task Name:</td><td style="color: #0f172a; font-weight: 600;">${taskName}</td></tr>
+              <tr><td style="color: #64748b;">Entity:</td><td style="color: #0f172a;">${entityName}</td></tr>
+              <tr><td style="color: #64748b;">Due Date:</td><td style="color: #0f172a;">${dueDate ? new Date(dueDate).toDateString() : "No deadline"}</td></tr>
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${dashboardUrl}" style="background: #2563eb; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Login to Dashboard</a>
+          </div>
+
+          ${mailLink ? `
+            <div style="text-align: center; margin-bottom: 20px;">
+              <a href="${mailLink}" style="color: #2563eb; text-decoration: none; font-size: 14px;">View Linked Email Reference</a>
+            </div>
+          ` : ""}
+
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">This is an automated notification from Intellicar Finance Team Task Manager.</p>
+        </div>
       `;
-      // Don't wait for the email to send before returning the response
-      sendEmail({ to: ownerEmail, subject: `New Task Assigned: ${taskName}`, html: emailHtml });
+      sendEmail({ to: ownerEmail, subject: `[New Task] ${taskName} - ${entityName}`, html: emailHtml });
     }
 
     return NextResponse.json({ message: "Task created", task: newTask }, { status: 201 });

@@ -456,17 +456,28 @@ export async function GET(req: Request) {
         const ownerTasks = pendingOwnerTasks.filter(t => t.ownerName === owner);
         const taskListHtml = generateGridHtml(ownerTasks, `Pending Tasks for ${owner}`, referenceDate);
 
+        const baseUrl = req.nextUrl.origin;
+        const dashboardUrl = `${baseUrl}/`;
+
         await sendEmail({
           to: ownerEmail,
           subject: `Reminder: You have ${ownerTasks.length} pending tasks - ${formatDate(referenceDate)}`,
           html: `
-            <div style="font-family: sans-serif; color: #334155;">
-              <h2 style="color: #2563eb;">Pending Task Reminder</h2>
-              <p>Hi ${owner},</p>
-              <p>This is a reminder that you have <strong>${ownerTasks.length}</strong> tasks pending your action.</p>
-              ${taskListHtml}
-              <p>Please update the status on the dashboard once completed.</p>
-              <p style="font-size: 12px; color: #64748b; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            <div style="font-family: sans-serif; color: #334155; max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+              <h2 style="color: #2563eb; margin-top: 0;">Pending Task Reminder</h2>
+              <p>Hi <strong>${owner}</strong>,</p>
+              <p>This is a reminder that you have <strong>${ownerTasks.length}</strong> tasks pending your action as of ${formatDate(referenceDate)}.</p>
+              
+              <div style="margin: 20px 0;">
+                ${taskListHtml}
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardUrl}" style="background: #2563eb; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Login to Dashboard</a>
+              </div>
+
+              <p style="font-size: 14px; color: #64748b;">Please update the status on the dashboard once completed.</p>
+              <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center;">
                 This is an automated reminder from Intellicar Finance Task Manager.
               </p>
             </div>
