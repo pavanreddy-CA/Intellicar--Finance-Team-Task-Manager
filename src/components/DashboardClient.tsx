@@ -409,9 +409,10 @@ export default function DashboardClient({ user }: { user: any }) {
   const completedCount = tasks.filter(t => t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required")).length;
 
   // Format date as DD-MMM-YYYY
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "--";
-    const d = new Date(dateStr);
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return "--";
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "--";
     const day = String(d.getDate()).padStart(2, '0');
     const month = d.toLocaleString('en-GB', { month: 'short' });
     const year = d.getFullYear();
@@ -419,9 +420,10 @@ export default function DashboardClient({ user }: { user: any }) {
   };
 
   // Format date and time as DD-MMM-YYYY HH:mm
-  const formatDateTime = (dateStr: string | null) => {
-    if (!dateStr) return "--";
-    const d = new Date(dateStr);
+  const formatDateTime = (date: string | Date | null) => {
+    if (!date) return "--";
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "--";
     const day = String(d.getDate()).padStart(2, '0');
     const month = d.toLocaleString('en-GB', { month: 'short' });
     const year = d.getFullYear();
