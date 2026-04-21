@@ -116,6 +116,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [dateFilterPreset, setDateFilterPreset] = useState("ALL_TIME");
+  const [loActiveFilter, setLoActiveFilter] = useState<'ALL' | 'REPORTS' | 'LEARNINGS'>('ALL');
   const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
   const [passwordLoading, setPasswordLoading] = useState(false);
 
@@ -1172,7 +1173,47 @@ export default function DashboardClient({ user }: { user: any }) {
              <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#0f172a" }}>Learning Opportunities</h3>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: "#64748b" }}>Recent insights and improvements from the team</p>
+                  <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                    <button 
+                      onClick={() => setLoActiveFilter('ALL')}
+                      style={{ 
+                        padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
+                        border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                        background: loActiveFilter === 'ALL' ? "#2563eb" : "white",
+                        borderColor: loActiveFilter === 'ALL' ? "#2563eb" : "#e2e8f0",
+                        color: loActiveFilter === 'ALL' ? "white" : "#64748b",
+                        boxShadow: loActiveFilter === 'ALL' ? "0 4px 6px -1px rgba(37, 99, 235, 0.2)" : "none"
+                      }}
+                    >
+                      All
+                    </button>
+                    <button 
+                      onClick={() => setLoActiveFilter('REPORTS')}
+                      style={{ 
+                        padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
+                        border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                        background: loActiveFilter === 'REPORTS' ? "#3b82f6" : "white",
+                        borderColor: loActiveFilter === 'REPORTS' ? "#3b82f6" : "#e2e8f0",
+                        color: loActiveFilter === 'REPORTS' ? "white" : "#64748b",
+                        boxShadow: loActiveFilter === 'REPORTS' ? "0 4px 6px -1px rgba(59, 130, 246, 0.2)" : "none"
+                      }}
+                    >
+                      My Reports
+                    </button>
+                    <button 
+                      onClick={() => setLoActiveFilter('LEARNINGS')}
+                      style={{ 
+                        padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
+                        border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                        background: loActiveFilter === 'LEARNINGS' ? "#ef4444" : "white",
+                        borderColor: loActiveFilter === 'LEARNINGS' ? "#ef4444" : "#e2e8f0",
+                        color: loActiveFilter === 'LEARNINGS' ? "white" : "#64748b",
+                        boxShadow: loActiveFilter === 'LEARNINGS' ? "0 4px 6px -1px rgba(239, 68, 68, 0.2)" : "none"
+                      }}
+                    >
+                      My Learnings
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: "12px" }}>
                   <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", padding: "10px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
@@ -1201,7 +1242,13 @@ export default function DashboardClient({ user }: { user: any }) {
                     ) : los.length === 0 ? (
                       <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No Learning Opportunities recorded.</td></tr>
                     ) : (
-                      los.map((lo, idx) => (
+                      los.filter(lo => {
+                        if (loActiveFilter === 'ALL') return true;
+                        const myName = EMAIL_TO_NAME[user?.email || ''] || user?.name;
+                        if (loActiveFilter === 'REPORTS') return lo.identifiedBy === myName;
+                        if (loActiveFilter === 'LEARNINGS') return lo.committedBy === myName;
+                        return true;
+                      }).map((lo, idx) => (
                         <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s" }} className="table-row">
                           <td style={tdStyle}><span style={{ color: "#94a3b8", fontWeight: 500 }}>{idx + 1}</span></td>
                           <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
