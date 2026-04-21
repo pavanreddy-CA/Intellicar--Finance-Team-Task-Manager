@@ -48,7 +48,9 @@ function getLOStats(los: any[]) {
   return {
     weekly: los.filter(l => new Date(l.createdAt) >= weekAgo).length,
     mtd: los.filter(l => new Date(l.createdAt) >= startOfMonth).length,
-    allTime: los.length
+    allTime: los.length,
+    mtdItems: los.filter(l => new Date(l.createdAt) >= startOfMonth),
+    startOfMonth
   };
 }
 
@@ -178,45 +180,6 @@ function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
   return html;
 }
 
-// LO HTML Table Generator
-function generateLOHtml(los: any[], title: string) {
-  let html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 100%; overflow-x: auto; margin-bottom: 40px;">`;
-  html += `<h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; font-weight: 600;">${title}</h2>`;
-  html += `
-    <table cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%; font-size: 12px; text-align: left; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-      <tr style="background-color: #2563eb; color: #ffffff; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
-        <th>S.No</th>
-        <th>Time Stamp</th>
-        <th>Entity</th>
-        <th>Mistake / LO</th>
-        <th>Identified By</th>
-        <th>Committed By</th>
-        <th>Resolution</th>
-        <th>Mode</th>
-      </tr>
-  `;
-
-  if (los.length === 0) {
-    html += `<tr><td colspan="8" style="padding: 20px;">No records found for this period.</td></tr>`;
-  } else {
-    los.forEach((lo, index) => {
-      html += `<tr style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
-        <td style="white-space: nowrap;">${index + 1}</td>
-        <td style="white-space: nowrap;">${formatDateTime(lo.createdAt)}</td>
-        <td style="white-space: nowrap;">${lo.entity}</td>
-        <td style="min-width: 300px; white-space: normal; word-wrap: break-word;">${lo.learningOpportunity}</td>
-        <td style="white-space: nowrap;">${lo.identifiedBy}</td>
-        <td style="white-space: nowrap;">${lo.committedBy}</td>
-        <td style="min-width: 300px; white-space: normal; word-wrap: break-word;">${lo.resolutionProvided}</td>
-        <td style="white-space: nowrap;">${lo.modeOfCommunication}</td>
-      </tr>`;
-    });
-  }
-
-  html += `</table></div>`;
-  return html;
-}
-
 export async function GET(req: Request) {
   const url = new URL(req.url);
   let type = url.searchParams.get("type") || "all"; 
@@ -296,41 +259,79 @@ export async function GET(req: Request) {
         orderBy: { createdAt: "desc" }
       });
       const stats = getLOStats(allLOs);
+      
+      // Calculate Entity-wise Breakdown for MTD
+      const entityCounts: Record<string, number> = {};
+      stats.mtdItems.forEach(lo => {
+        entityCounts[lo.entity] = (entityCounts[lo.entity] || 0) + 1;
+      });
+
       const managerEmail = "pavanreddy@intellicar.in";
       const excelBuffer = await generateLOExcelBuffer(allLOs);
 
       let loHtml = `
-        <div style="background-color: #f1f5f9; padding: 30px 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-          <div style="max-width: 1000px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://intellicar-finance-team-task-manager.vercel.app/logo.png" alt="Intellicar Logo" style="height: 60px; width: auto; margin-bottom: 15px;" />
-              <h1 style="color: #2563eb; margin: 0;">Learning Opportunity Report</h1>
-              <p style="color: #64748b; margin-top: 5px;">Finance Team Summary - ${formatDate(referenceDate)}</p>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; text-align: center;">
-              <div style="padding: 20px; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 12px; color: #3b82f6; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Last 7 Days</div>
-                <div style="font-size: 32px; font-weight: 800; color: #1e3a8a;">${stats.weekly}</div>
-              </div>
-              <div style="padding: 20px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
-                <div style="font-size: 12px; color: #ef4444; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">MTD</div>
-                <div style="font-size: 32px; font-weight: 800; color: #7f1d1d;">${stats.mtd}</div>
-              </div>
-              <div style="padding: 20px; background: #ecfdf5; border-radius: 12px; border: 1px solid #a7f3d0;">
-                <div style="font-size: 12px; color: #10b981; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">All Time</div>
-                <div style="font-size: 32px; font-weight: 800; color: #064e3b;">${stats.allTime}</div>
-              </div>
-            </div>
-
-            ${generateLOHtml(allLOs.slice(0, 20), "Recent Learning Opportunities (Top 20)")}
+        <div style="background-color: #f4f7f9; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155;">
+          <div style="max-width: 800px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             
-            <p style="color: #64748b; font-size: 14px; text-align: center; margin-top: 20px;">
-              Please find the complete report attached as an Excel file.
-            </p>
+            <!-- Header -->
+            <div style="background-color: #3b5998; padding: 30px; text-align: center; color: #ffffff;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600;">Weekly Finance LO Report</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">
+                Report Period: ${formatDate(stats.startOfMonth)} to ${formatDate(referenceDate)}
+              </p>
+            </div>
 
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px;">
-              This is an automated report from Intellicar Finance Task Manager.
+            <!-- Body -->
+            <div style="padding: 40px;">
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi Team,</p>
+              <p style="font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+                Please find below the Learning Opportunity summary for the period <b>${formatDate(stats.startOfMonth)} to ${formatDate(referenceDate)}</b>. Detailed reports are attached.
+              </p>
+
+              <!-- Stats Boxes -->
+              <div style="display: table; width: 100%; border-spacing: 15px 0; margin-left: -15px; margin-right: -15px; margin-bottom: 40px;">
+                <div style="display: table-cell; width: 33.33%; background-color: #eff6ff; padding: 20px; text-align: center; border-radius: 8px; border: 1px solid #dbeafe;">
+                  <div style="font-size: 12px; color: #2563eb; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">This Week</div>
+                  <div style="font-size: 36px; font-weight: 700; color: #1e3a8a;">${stats.weekly}</div>
+                </div>
+                <div style="display: table-cell; width: 33.33%; background-color: #ecfdf5; padding: 20px; text-align: center; border-radius: 8px; border: 1px solid #d1fae5;">
+                  <div style="font-size: 12px; color: #059669; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">Month To Date</div>
+                  <div style="font-size: 36px; font-weight: 700; color: #064e3b;">${stats.mtd}</div>
+                </div>
+                <div style="display: table-cell; width: 33.33%; background-color: #f5f3ff; padding: 20px; text-align: center; border-radius: 8px; border: 1px solid #ede9fe;">
+                  <div style="font-size: 12px; color: #7c3aed; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">All Time</div>
+                  <div style="font-size: 36px; font-weight: 700; color: #4c1d95;">${stats.allTime}</div>
+                </div>
+              </div>
+
+              <!-- Entity Table -->
+              <h3 style="font-size: 14px; color: #2563eb; margin-bottom: 15px;">Entity-wise Breakdown (MTD)</h3>
+              <table cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                <thead>
+                  <tr style="background-color: #3b5998; color: #ffffff;">
+                    <th style="padding: 12px 15px; text-align: left; font-size: 13px;">Entity</th>
+                    <th style="padding: 12px 15px; text-align: right; font-size: 13px;">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.entries(entityCounts).length > 0 ? Object.entries(entityCounts).map(([entity, count]) => `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 12px 15px; font-size: 13px;">${entity}</td>
+                      <td style="padding: 12px 15px; text-align: right; font-size: 13px; font-weight: 600;">${count}</td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="2" style="padding: 20px; text-align: center; color: #64748b;">No data available for this period.</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+
+              <!-- Footer -->
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 12px; color: #94a3b8;">
+                <p>Detailed reports attached. Current_Month_LO_Report.xlsx & Consolidated_LO_Report.xlsx</p>
+                <p style="margin-top: 5px;">This is an automated weekly report. Regards, Finance Team.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -338,11 +339,11 @@ export async function GET(req: Request) {
 
       await sendEmail({
         to: managerEmail,
-        subject: `Learning Opportunity Report - ${formatDate(referenceDate)}`,
+        subject: `Weekly Finance LO Report - ${formatDate(referenceDate)}`,
         html: loHtml,
         attachments: [
           {
-            filename: `Intellicar_LO_Report_${formatDate(referenceDate)}.xlsx`,
+            filename: `Current_Month_LO_Report_${formatDate(referenceDate)}.xlsx`,
             content: excelBuffer,
             contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
           }
