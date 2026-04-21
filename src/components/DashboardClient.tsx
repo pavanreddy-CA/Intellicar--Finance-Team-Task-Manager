@@ -249,6 +249,96 @@ export default function DashboardClient({ user }: { user: any }) {
     }
   };
 
+  const downloadBulkTemplate = async (type: 'tasks' | 'lo') => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(type === 'tasks' ? 'Tasks' : 'LOs');
+    
+    if (type === 'tasks') {
+      worksheet.columns = [
+        { header: 'Task Name', key: 'taskName', width: 25 },
+        { header: 'Entity', key: 'entityName', width: 20 },
+        { header: 'Type', key: 'taskType', width: 15 },
+        { header: 'Dept', key: 'departmentName', width: 15 },
+        { header: 'Requester', key: 'requestFrom', width: 20 },
+        { header: 'Owner', key: 'ownerName', width: 20 },
+        { header: 'Reviewer', key: 'reviewerName', width: 20 },
+        { header: 'Due Date (YYYY-MM-DD)', key: 'dueDate', width: 25 },
+      ];
+    } else {
+      worksheet.columns = [
+        { header: 'Entity', key: 'entity', width: 20 },
+        { header: 'Date (YYYY-MM-DD)', key: 'dateOfIdentification', width: 25 },
+        { header: 'LO Description', key: 'learningOpportunity', width: 40 },
+        { header: 'Identified By', key: 'identifiedBy', width: 20 },
+        { header: 'Committed By', key: 'committedBy', width: 20 },
+        { header: 'Resolution', key: 'resolutionProvided', width: 40 },
+      ];
+    }
+
+    // Add sample row
+    if (type === 'tasks') {
+      worksheet.addRow(['Sample Task', 'Sample Entity', 'Daily', 'Finance', 'Manager', 'Owner Name', 'Reviewer Name', '2026-12-31']);
+    } else {
+      worksheet.addRow(['Sample Entity', '2026-04-21', 'Sample LO description...', 'Name A', 'Name B', 'Done']);
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `${type}_import_template.xlsx`);
+  };
+
+  const handleExcelBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'tasks' | 'lo') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const workbook = new ExcelJS.Workbook();
+    const arrayBuffer = await file.arrayBuffer();
+    await workbook.xlsx.load(arrayBuffer);
+    const worksheet = workbook.getWorksheet(1);
+    
+    const rows: any[] = [];
+    worksheet?.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip headers
+      const values = row.values as any[];
+      if (type === 'tasks') {
+        rows.push({
+          taskName: values[1],
+          entityName: values[2],
+          taskType: values[3],
+          departmentName: values[4],
+          requestFrom: values[5],
+          ownerName: values[6],
+          reviewerName: values[7],
+          dueDate: values[8],
+        });
+      } else {
+        rows.push({
+          entity: values[1],
+          dateOfIdentification: values[2],
+          learningOpportunity: values[3],
+          identifiedBy: values[4],
+          committedBy: values[5],
+          resolutionProvided: values[6],
+        });
+      }
+    });
+
+    if (confirm(`Detected ${rows.length} records. Proceed with import?`)) {
+      const endpoint = type === 'tasks' ? '/api/tasks/bulk' : '/api/lo/bulk';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rows)
+      });
+      if (res.ok) {
+        alert("Import successful!");
+        if (type === 'tasks') fetchTasks(); else fetchLOs();
+      } else {
+        alert("Import failed. Please check template format.");
+      }
+    }
+    e.target.value = ""; // Clear input
+  };
+
   const fetchUsersList = async () => {
     if (!isAdmin) return;
     setUsersLoading(true);
@@ -2177,94 +2267,122 @@ export default function DashboardClient({ user }: { user: any }) {
                 {activeOptionsTab === 'DATA' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Bulk Data Import</h3>
-                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Import large amounts of data by pasting from Excel or providing JSON. Select the type of data you want to import below.</p>
+                    <p style={{ color: "#64748b", marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. Alternatively, use the quick paste method.</p>
                     
-                    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-                      {/* Task Import */}
-                      <div style={{ padding: "24px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                        <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}><LayoutDashboard size={20} color="#2563eb" /> Import Tasks</h4>
-                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "12px" }}>
-                          Paste rows from Excel. Required columns (in order): <br/>
-                          <strong>Task Name, Entity, Type, Dept, Requester, Owner, Reviewer, Due Date (YYYY-MM-DD)</strong>
-                        </p>
-                        <textarea 
-                          id="bulk-task-input"
-                          placeholder="Paste from Excel here..."
-                          style={{ width: "100%", height: "150px", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", fontFamily: "monospace", marginBottom: "12px" }}
-                        />
-                        <button 
-                          onClick={async () => {
-                            const val = (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value;
-                            if (!val) return;
-                            const lines = val.trim().split('\n');
-                            const tasks = lines.map(line => {
-                              const [taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate] = line.split('\t');
-                              return { taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate };
-                            });
-                            
-                            if (confirm(`Import ${tasks.length} tasks?`)) {
-                              const res = await fetch('/api/tasks/bulk', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(tasks)
-                              });
-                              if (res.ok) {
-                                alert("Tasks imported successfully!");
-                                (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value = "";
-                                fetchTasks();
-                              } else {
-                                alert("Failed to import tasks. Check format.");
-                              }
-                            }
-                          }}
-                          style={{ background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600 }}
-                        >
-                          Process & Import Tasks
-                        </button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+                      
+                      {/* Task Import Section */}
+                      <div style={{ padding: "28px", background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                          <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", color: "#0f172a" }}>
+                            <LayoutDashboard size={24} color="#2563eb" /> Task Bulk Import
+                          </h4>
+                          <button 
+                            onClick={() => downloadBulkTemplate('tasks')}
+                            style={{ background: "#f8fafc", color: "#2563eb", padding: "8px 16px", borderRadius: "8px", border: "1px solid #2563eb", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px" }}
+                          >
+                            <Download size={16} /> Download Template
+                          </button>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                          {/* File Upload */}
+                          <div style={{ padding: "20px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
+                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 1: Upload Excel File</p>
+                            <input 
+                              type="file" 
+                              accept=".xlsx" 
+                              onChange={(e) => handleExcelBulkUpload(e, 'tasks')}
+                              style={{ fontSize: "0.875rem" }}
+                            />
+                          </div>
+
+                          {/* Quick Paste */}
+                          <div>
+                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 2: Quick Paste</p>
+                            <textarea 
+                              id="bulk-task-input"
+                              placeholder="Paste rows from Excel here..."
+                              style={{ width: "100%", height: "80px", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", marginBottom: "8px" }}
+                            />
+                            <button 
+                              onClick={async () => {
+                                const val = (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value;
+                                if (!val) return;
+                                const lines = val.trim().split('\n');
+                                const tasks = lines.map(line => {
+                                  const [taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate] = line.split('\t');
+                                  return { taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate };
+                                });
+                                if (confirm(`Import ${tasks.length} tasks?`)) {
+                                  const res = await fetch('/api/tasks/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tasks) });
+                                  if (res.ok) { alert("Import successful!"); fetchTasks(); (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value = ""; }
+                                }
+                              }}
+                              style={{ background: "#2563eb", color: "white", width: "100%", padding: "8px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+                            >
+                              Process Paste
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* LO Import */}
-                      <div style={{ padding: "24px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                        <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}><BookOpen size={20} color="#2563eb" /> Import Learning Opportunities</h4>
-                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "12px" }}>
-                          Paste rows from Excel. Required columns (in order): <br/>
-                          <strong>Entity, Date (YYYY-MM-DD), LO Description, Identified By, Committed By, Resolution</strong>
-                        </p>
-                        <textarea 
-                          id="bulk-lo-input"
-                          placeholder="Paste from Excel here..."
-                          style={{ width: "100%", height: "150px", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", fontFamily: "monospace", marginBottom: "12px" }}
-                        />
-                        <button 
-                          onClick={async () => {
-                            const val = (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value;
-                            if (!val) return;
-                            const lines = val.trim().split('\n');
-                            const losToImport = lines.map(line => {
-                              const [entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided] = line.split('\t');
-                              return { entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided };
-                            });
-                            
-                            if (confirm(`Import ${losToImport.length} LOs?`)) {
-                              const res = await fetch('/api/lo/bulk', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(losToImport)
-                              });
-                              if (res.ok) {
-                                alert("LOs imported successfully!");
-                                (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value = "";
-                                fetchLOs();
-                              } else {
-                                alert("Failed to import LOs. Check format.");
-                              }
-                            }
-                          }}
-                          style={{ background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600 }}
-                        >
-                          Process & Import LOs
-                        </button>
+                      {/* LO Import Section */}
+                      <div style={{ padding: "28px", background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                          <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", color: "#0f172a" }}>
+                            <BookOpen size={24} color="#2563eb" /> LO Bulk Import
+                          </h4>
+                          <button 
+                            onClick={() => downloadBulkTemplate('lo')}
+                            style={{ background: "#f8fafc", color: "#2563eb", padding: "8px 16px", borderRadius: "8px", border: "1px solid #2563eb", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px" }}
+                          >
+                            <Download size={16} /> Download Template
+                          </button>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                          {/* File Upload */}
+                          <div style={{ padding: "20px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
+                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 1: Upload Excel File</p>
+                            <input 
+                              type="file" 
+                              accept=".xlsx" 
+                              onChange={(e) => handleExcelBulkUpload(e, 'lo')}
+                              style={{ fontSize: "0.875rem" }}
+                            />
+                          </div>
+
+                          {/* Quick Paste */}
+                          <div>
+                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 2: Quick Paste</p>
+                            <textarea 
+                              id="bulk-lo-input"
+                              placeholder="Paste rows from Excel here..."
+                              style={{ width: "100%", height: "80px", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", marginBottom: "8px" }}
+                            />
+                            <button 
+                              onClick={async () => {
+                                const val = (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value;
+                                if (!val) return;
+                                const lines = val.trim().split('\n');
+                                const losToImport = lines.map(line => {
+                                  const [entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided] = line.split('\t');
+                                  return { entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided };
+                                });
+                                if (confirm(`Import ${losToImport.length} LOs?`)) {
+                                  const res = await fetch('/api/lo/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(losToImport) });
+                                  if (res.ok) { alert("Import successful!"); fetchLOs(); (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value = ""; }
+                                }
+                              }}
+                              style={{ background: "#2563eb", color: "white", width: "100%", padding: "8px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+                            >
+                              Process Paste
+                            </button>
+                          </div>
+                        </div>
                       </div>
+
                     </div>
                   </div>
                 )}
