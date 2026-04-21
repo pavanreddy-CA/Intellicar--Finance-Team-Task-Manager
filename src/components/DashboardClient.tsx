@@ -2267,6 +2267,7 @@ export default function DashboardClient({ user }: { user: any }) {
                       </div>
                     </div>
                   </div>
+                )}
               </div>
             </div>
           </div>
