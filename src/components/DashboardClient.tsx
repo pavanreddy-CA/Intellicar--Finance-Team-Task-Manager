@@ -130,6 +130,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [loSearchQuery, setLoSearchQuery] = useState("");
   const [loEntityFilter, setLoEntityFilter] = useState("ALL");
   const [loSortConfig, setLoSortConfig] = useState<{ key: keyof LearningOpportunity; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
+  const [editRequestSubTab, setEditRequestSubTab] = useState<'TASK' | 'LO'>('TASK');
 
   const handlePresetChange = (preset: string) => {
     setDateFilterPreset(preset);
@@ -1623,20 +1624,14 @@ export default function DashboardClient({ user }: { user: any }) {
                     </button>
                     <button 
                       onClick={() => setActiveOptionsTab('EDIT_REQUESTS')} 
-                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
                     >
-                      Edit Requests
+                      Edit Request
                       {(tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length) > 0 && (
                         <span style={{ marginLeft: "8px", background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: "bold" }}>
                           {tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length}
                         </span>
                       )}
-                    </button>
-                    <button 
-                      onClick={() => setActiveOptionsTab('LO_REPORT')} 
-                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'LO_REPORT' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'LO_REPORT' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
-                    >
-                      LO Report Admin
                     </button>
                   </>
                 )}
@@ -2018,119 +2013,158 @@ export default function DashboardClient({ user }: { user: any }) {
 
                 {activeOptionsTab === 'EDIT_REQUESTS' && (
                   <div>
-                    <h3 style={{ margin: "0 0 24px 0" }}>Pending Edit Requests</h3>
-                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Manage requests from users to unlock and edit completed tasks or LO submissions.</p>
-                    
-                    {(tasks.filter(t => t.editRequested).length === 0 && los.filter(l => l.editRequested).length === 0) ? (
-                      <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                        <p style={{ color: "#64748b", margin: 0 }}>No pending edit requests.</p>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        {/* Task Edit Requests */}
-                        {tasks.filter(t => t.editRequested).map(task => (
-                          <div key={`task-${task.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                              <div>
-                                <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>Task #{task.id}: {task.taskName}</h4>
-                                <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
-                                  Requested by: <strong style={{ color: "#0f172a" }}>{task.editRequestBy === "OWNER" ? task.ownerName : task.reviewerName}</strong> ({task.editRequestBy})
-                                </p>
-                              </div>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <button 
-                                  onClick={() => handleApproveEdit(task.id, 'APPROVE')}
-                                  style={{ background: "#22c55e", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
-                                >
-                                  Approve & Unlock
-                                </button>
-                                <button 
-                                  onClick={() => handleApproveEdit(task.id, 'REJECT')}
-                                  style={{ background: "#ef4444", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
-                                >
-                                  Reject
-                                </button>
-                              </div>
-                            </div>
-                            <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
-                              <strong>Reason:</strong> {task.editRequestReason}
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* LO Edit Requests */}
-                        {los.filter(l => l.editRequested).map(lo => (
-                          <div key={`lo-${lo.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                              <div>
-                                <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>LO Update #{lo.id}: {lo.entity}</h4>
-                                <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
-                                  Submitted by: <strong style={{ color: "#0f172a" }}>{lo.identifiedBy}</strong>
-                                </p>
-                              </div>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <button 
-                                  onClick={() => handleApproveEditLO(lo.id, 'APPROVE')}
-                                  style={{ background: "#22c55e", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
-                                >
-                                  Approve & Unlock
-                                </button>
-                                <button 
-                                  onClick={() => handleApproveEditLO(lo.id, 'REJECT')}
-                                  style={{ background: "#ef4444", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
-                                >
-                                  Reject
-                                </button>
-                              </div>
-                            </div>
-                            <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
-                              <strong>Reason:</strong> {lo.editRequestReason}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeOptionsTab === 'LO_REPORT' && (
-                  <div>
-                    <h3 style={{ margin: "0 0 24px 0" }}>Learning Opportunity Report Admin</h3>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                      <p style={{ color: "#64748b", margin: 0 }}>View all submitted Learning Opportunities across all users.</p>
-                      <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 500 }}>
-                        <FileSpreadsheet size={16} /> Export All to Excel
+                    <div style={{ display: "flex", gap: "12px", marginBottom: "24px", borderBottom: "1px solid #e2e8f0", paddingBottom: "16px" }}>
+                      <button 
+                        onClick={() => setEditRequestSubTab('TASK')}
+                        style={{ 
+                          padding: "8px 16px", borderRadius: "8px", border: "none", 
+                          background: editRequestSubTab === 'TASK' ? "#2563eb" : "#f1f5f9",
+                          color: editRequestSubTab === 'TASK' ? "white" : "#64748b",
+                          fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px"
+                        }}
+                      >
+                        <LayoutDashboard size={16} /> Edit Task Request
+                        {tasks.filter(t => t.editRequested).length > 0 && (
+                          <span style={{ background: editRequestSubTab === 'TASK' ? "white" : "#ef4444", color: editRequestSubTab === 'TASK' ? "#2563eb" : "white", padding: "1px 6px", borderRadius: "10px", fontSize: "0.7rem" }}>
+                            {tasks.filter(t => t.editRequested).length}
+                          </span>
+                        )}
+                      </button>
+                      <button 
+                        onClick={() => setEditRequestSubTab('LO')}
+                        style={{ 
+                          padding: "8px 16px", borderRadius: "8px", border: "none", 
+                          background: editRequestSubTab === 'LO' ? "#2563eb" : "#f1f5f9",
+                          color: editRequestSubTab === 'LO' ? "white" : "#64748b",
+                          fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px"
+                        }}
+                      >
+                        <BookOpen size={16} /> Edit LO Request
+                        {los.filter(l => l.editRequested).length > 0 && (
+                          <span style={{ background: editRequestSubTab === 'LO' ? "white" : "#ef4444", color: editRequestSubTab === 'LO' ? "#2563eb" : "white", padding: "1px 6px", borderRadius: "10px", fontSize: "0.7rem" }}>
+                            {los.filter(l => l.editRequested).length}
+                          </span>
+                        )}
                       </button>
                     </div>
-                    
-                    <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
-                        <thead>
-                          <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left", background: "#f8fafc" }}>
-                            <th style={{ padding: "12px 8px" }}>Entity</th>
-                            <th style={{ padding: "12px 8px" }}>LO Description</th>
-                            <th style={{ padding: "12px 8px" }}>Identified By</th>
-                            <th style={{ padding: "12px 8px" }}>Committed By</th>
-                            <th style={{ padding: "12px 8px" }}>Resolution</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {los.length === 0 ? (
-                            <tr><td colSpan={5} style={{ padding: "20px", textAlign: "center" }}>No LOs found.</td></tr>
+
+                    {editRequestSubTab === 'TASK' ? (
+                      <div>
+                        <h3 style={{ margin: "0 0 16px 0", color: "#0f172a" }}>Pending Task Edit Requests</h3>
+                        <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "0.875rem" }}>Review and manage requests from users to unlock and edit completed tasks.</p>
+                        
+                        {tasks.filter(t => t.editRequested).length === 0 ? (
+                          <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                            <p style={{ color: "#64748b", margin: 0 }}>No pending task edit requests.</p>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            {tasks.filter(t => t.editRequested).map(task => (
+                              <div key={`task-${task.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                                  <div>
+                                    <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>Task #{task.id}: {task.taskName}</h4>
+                                    <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
+                                      Requested by: <strong style={{ color: "#0f172a" }}>{task.editRequestBy === "OWNER" ? task.ownerName : task.reviewerName}</strong> ({task.editRequestBy})
+                                    </p>
+                                  </div>
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <button 
+                                      onClick={() => handleApproveEdit(task.id, 'APPROVE')}
+                                      style={{ background: "#22c55e", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                    >
+                                      Approve
+                                    </button>
+                                    <button 
+                                      onClick={() => handleApproveEdit(task.id, 'REJECT')}
+                                      style={{ background: "#ef4444", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                </div>
+                                <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
+                                  <strong>Reason:</strong> {task.editRequestReason}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                          <div>
+                            <h3 style={{ margin: "0 0 8px 0", color: "#0f172a" }}>Learning Opportunity (LO) Admin</h3>
+                            <p style={{ color: "#64748b", margin: 0, fontSize: "0.875rem" }}>Manage LO edit requests and view/export all records.</p>
+                          </div>
+                          <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                            <FileSpreadsheet size={18} /> Export All
+                          </button>
+                        </div>
+
+                        {/* LO Edit Requests Section */}
+                        <div style={{ marginBottom: "32px" }}>
+                          <h4 style={{ fontSize: "0.9375rem", color: "#475569", marginBottom: "12px", fontWeight: 600 }}>Pending LO Edit Requests</h4>
+                          {los.filter(l => l.editRequested).length === 0 ? (
+                            <div style={{ padding: "24px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                              <p style={{ color: "#64748b", margin: 0, fontSize: "0.875rem" }}>No pending LO edit requests.</p>
+                            </div>
                           ) : (
-                            los.map(lo => (
-                              <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                                <td style={{ padding: "12px 8px" }}>{lo.entity}</td>
-                                <td style={{ padding: "12px 8px", minWidth: "200px" }}>{lo.learningOpportunity}</td>
-                                <td style={{ padding: "12px 8px" }}>{lo.identifiedBy}</td>
-                                <td style={{ padding: "12px 8px" }}>{lo.committedBy}</td>
-                                <td style={{ padding: "12px 8px", minWidth: "200px" }}>{lo.resolutionProvided}</td>
-                              </tr>
-                            ))
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                              {los.filter(l => l.editRequested).map(lo => (
+                                <div key={`lo-${lo.id}`} style={{ padding: "16px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                                    <div>
+                                      <h5 style={{ margin: "0 0 4px 0", fontSize: "0.9375rem", color: "#0f172a" }}>LO #{lo.id}: {lo.entity}</h5>
+                                      <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Submitted by: <strong>{lo.identifiedBy}</strong></p>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                      <button onClick={() => handleApproveEditLO(lo.id, 'APPROVE')} style={{ background: "#22c55e", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Approve</button>
+                                      <button onClick={() => handleApproveEditLO(lo.id, 'REJECT')} style={{ background: "#ef4444", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Reject</button>
+                                    </div>
+                                  </div>
+                                  <div style={{ padding: "10px", background: "#f8fafc", borderRadius: "6px", fontSize: "0.8125rem", borderLeft: "3px solid #cbd5e1" }}>
+                                    <strong>Reason:</strong> {lo.editRequestReason}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           )}
-                        </tbody>
-                      </table>
-                    </div>
+                        </div>
+
+                        {/* All records Table */}
+                        <div>
+                          <h4 style={{ fontSize: "0.9375rem", color: "#475569", marginBottom: "12px", fontWeight: 600 }}>All Learning Opportunities</h4>
+                          <div style={{ overflowX: "auto", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
+                              <thead>
+                                <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left", background: "#f8fafc" }}>
+                                  <th style={{ padding: "12px 16px" }}>Entity</th>
+                                  <th style={{ padding: "12px 16px" }}>LO Description</th>
+                                  <th style={{ padding: "12px 16px" }}>Identified By</th>
+                                  <th style={{ padding: "12px 16px" }}>Resolution</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {los.length === 0 ? (
+                                  <tr><td colSpan={4} style={{ padding: "20px", textAlign: "center" }}>No LOs found.</td></tr>
+                                ) : (
+                                  los.map(lo => (
+                                    <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                      <td style={{ padding: "12px 16px", fontWeight: 600 }}>{lo.entity}</td>
+                                      <td style={{ padding: "12px 16px", minWidth: "200px" }}>{lo.learningOpportunity}</td>
+                                      <td style={{ padding: "12px 16px" }}>{lo.identifiedBy}</td>
+                                      <td style={{ padding: "12px 16px", minWidth: "200px" }}>{lo.resolutionProvided}</td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
