@@ -42,7 +42,9 @@ export async function POST(req: Request) {
       reminderFrequency, 
       reminderTimes, 
       managerReportFrequency, 
-      managerReportTimes 
+      managerReportTimes,
+      loReportFrequency,
+      loReportTimes
     } = body;
 
     const settings = await prisma.systemSettings.upsert({
@@ -51,14 +53,18 @@ export async function POST(req: Request) {
         reminderFrequency,
         reminderTimes,
         managerReportFrequency,
-        managerReportTimes
+        managerReportTimes,
+        loReportFrequency,
+        loReportTimes
       },
       create: {
         id: "singleton",
         reminderFrequency,
         reminderTimes,
         managerReportFrequency,
-        managerReportTimes
+        managerReportTimes,
+        loReportFrequency,
+        loReportTimes
       }
     });
 

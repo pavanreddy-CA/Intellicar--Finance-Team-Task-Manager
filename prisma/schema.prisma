@@ -44,12 +44,33 @@ model Task {
   editRequestReason   String?
 }
 
+model LearningOpportunity {
+  id                  Int       @id @default(autoincrement())
+  entity              String
+  dateOfIdentification DateTime
+  learningOpportunity String
+  identifiedBy        String
+  committedBy         String
+  resolutionProvided  String
+  modeOfCommunication String
+  emailSub            String?
+  comments            String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  editRequested       Boolean   @default(false)
+  editRequestReason   String?
+  createdByEmail      String?
+}
+
 model SystemSettings {
   id                    String   @id @default("singleton")
   reminderFrequency     String   @default("DAILY")
   reminderTimes         String   @default("09:00,18:00")
   managerReportFrequency String   @default("DAILY")
   managerReportTimes     String   @default("10:00")
+  loReportFrequency     String   @default("WEEKLY")
+  loReportTimes         String   @default("10:00")
   lastReminderSentAt    DateTime?
   lastManagerReportSentAt DateTime?
+  lastLoReportSentAt    DateTime?
 }

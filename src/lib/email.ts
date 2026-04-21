@@ -33,10 +33,12 @@ export async function sendEmail({
   to,
   subject,
   html,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
+  attachments?: any[];
 }) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.warn("SMTP credentials not set. Skipping email to:", to);
@@ -49,6 +51,7 @@ export async function sendEmail({
       to,
       subject,
       html,
+      attachments,
     });
     console.log(`Email sent to ${to} successfully.`);
   } catch (error) {

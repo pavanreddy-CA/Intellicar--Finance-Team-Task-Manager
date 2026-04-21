@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet } from "lucide-react";
+import LOForm from "@/components/LOForm";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb } from "lucide-react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -31,6 +32,22 @@ type Task = {
   editRequestReason?: string | null;
 };
 
+type LearningOpportunity = {
+  id: number;
+  entity: string;
+  dateOfIdentification: string;
+  learningOpportunity: string;
+  identifiedBy: string;
+  committedBy: string;
+  resolutionProvided: string;
+  modeOfCommunication: string;
+  emailSub: string | null;
+  comments: string | null;
+  createdAt: string;
+  editRequested?: boolean;
+  editRequestReason?: string | null;
+};
+
 const hours12 = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const minutes = ["00", "15", "30", "45"];
 const ampm = ["AM", "PM"];
@@ -56,19 +73,26 @@ export default function DashboardClient({ user }: { user: any }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCell, setEditingCell] = useState<{ id: number; field: string } | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const [activeValue, setActiveValue] = useState("");
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'PENDING_ACTION' | 'PENDING_REVIEW' | 'COMPLETED'>('ALL');
+  const [activeView, setActiveView] = useState<'TASKS' | 'LOS'>('TASKS');
   const [usersList, setUsersList] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS'>('SCHEDULE');
+  const [showLOForm, setShowLOForm] = useState(false);
+  const [los, setLos] = useState<LearningOpportunity[]>([]);
+  const [loLoading, setLoLoading] = useState(false);
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT'>('SCHEDULE');
   const [settings, setSettings] = useState({
     reminderFrequency: 'DAILY',
     reminderTimes: '09:00,18:00',
     managerReportFrequency: 'DAILY',
-    managerReportTimes: '10:00'
+    managerReportTimes: '10:00',
+    loReportFrequency: 'WEEKLY',
+    loReportTimes: '10:00'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [editValue, setEditValue] = useState("");
 
   // Advanced Controls State
   const [startDate, setStartDate] = useState("");
@@ -138,10 +162,29 @@ export default function DashboardClient({ user }: { user: any }) {
     }
   };
 
+  const fetchLOs = async () => {
+    setLoLoading(true);
+    try {
+      const res = await fetch("/api/lo");
+      if (res.ok) {
+        const data = await res.json();
+        setLos(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch LOs", error);
+    } finally {
+      setLoLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
-    if (isAdmin) fetchSettings();
-  }, []);
+    fetchLOs();
+    if (isAdmin) {
+      fetchUsersList();
+      fetchSettings();
+    }
+  }, [isAdmin]);
 
   const fetchSettings = async () => {
     try {
@@ -301,8 +344,44 @@ export default function DashboardClient({ user }: { user: any }) {
     }
   };
 
-  const handleTriggerEmail = async (type: "users" | "manager") => {
-    if (!window.confirm(`Are you sure you want to send the ${type === 'users' ? 'Employee Reminders' : 'Manager Report'} now?`)) return;
+  const handleRequestEditLO = async (loId: number) => {
+    const reason = window.prompt("Please provide a reason for editing this LO submission:");
+    if (!reason) return;
+    try {
+      const res = await fetch(`/api/lo/${loId}/request-edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason })
+      });
+      if (res.ok) {
+        alert("Edit request sent to Admin successfully.");
+        fetchLOs();
+      }
+    } catch (error) {
+      console.error("Failed to request edit for LO", error);
+    }
+  };
+
+  const handleApproveEditLO = async (loId: number, action: 'APPROVE' | 'REJECT') => {
+    if (!window.confirm(`Are you sure you want to ${action.toLowerCase()} this edit request?`)) return;
+    try {
+      const res = await fetch(`/api/lo/${loId}/approve-edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action })
+      });
+      if (res.ok) {
+        alert(`Edit request ${action.toLowerCase()}d successfully.`);
+        fetchLOs();
+      }
+    } catch (error) {
+      console.error("Failed to process edit for LO", error);
+    }
+  };
+
+  const handleTriggerEmail = async (type: "users" | "manager" | "lo") => {
+    const label = type === 'users' ? 'Employee Reminders' : type === 'manager' ? 'Manager Report' : 'LO Report';
+    if (!window.confirm(`Are you sure you want to send the ${label} now?`)) return;
     
     try {
       const now = new Date();
@@ -469,6 +548,74 @@ export default function DashboardClient({ user }: { user: any }) {
     saveAs(blob, `Intellicar_Tasks_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  const exportLOsToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Learning Opportunities");
+
+    // Add Title
+    worksheet.mergeCells('A1:J2');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'ITPL - FINANCE LEARNING OPPORTUNITY REPORT';
+    titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // Define Columns
+    worksheet.columns = [
+      { header: 'SI No', key: 'id', width: 8 },
+      { header: 'Timestamp', key: 'createdAt', width: 20 },
+      { header: 'Entity', key: 'entity', width: 20 },
+      { header: 'Date of Identification', key: 'dateOfIdentification', width: 20 },
+      { header: 'Learning Opportunity', key: 'learningOpportunity', width: 45 },
+      { header: 'Identified By', key: 'identifiedBy', width: 20 },
+      { header: 'Committed By', key: 'committedBy', width: 20 },
+      { header: 'Resolution Provided', key: 'resolutionProvided', width: 45 },
+      { header: 'Mode Of Communication', key: 'modeOfCommunication', width: 20 },
+      { header: 'Email Sub', key: 'emailSub', width: 30 },
+      { header: 'Comments', key: 'comments', width: 40 }
+    ];
+
+    // Style Headers
+    const headerRow = worksheet.getRow(3);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF475569' } };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // Add Data
+    los.forEach((lo, index) => {
+      const row = worksheet.addRow({
+        id: index + 1,
+        createdAt: formatDateTime(lo.createdAt),
+        entity: lo.entity,
+        dateOfIdentification: formatDate(lo.dateOfIdentification),
+        learningOpportunity: lo.learningOpportunity,
+        identifiedBy: lo.identifiedBy,
+        committedBy: lo.committedBy,
+        resolutionProvided: lo.resolutionProvided,
+        modeOfCommunication: lo.modeOfCommunication,
+        emailSub: lo.emailSub || "N/A",
+        comments: lo.comments || "N/A"
+      });
+      row.alignment = { vertical: 'middle', wrapText: true };
+    });
+
+    // Borders
+    worksheet.eachRow({ includeEmpty: false }, (row) => {
+      row.eachCell({ includeEmpty: false }, (cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `Intellicar_LO_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const exportToPDF = () => {
     const doc = new jsPDF('landscape');
     
@@ -523,6 +670,10 @@ export default function DashboardClient({ user }: { user: any }) {
             </button>
           )}
 
+          <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", color: "#475569", padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"} onMouseOut={e => e.currentTarget.style.background = "#f8fafc"}>
+            <Lightbulb size={16} /> LO Update
+          </button>
+
           <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", transition: "all 0.2s" }} className="btn-primary">
             <Plus size={16} /> New Task
           </button>
@@ -543,6 +694,40 @@ export default function DashboardClient({ user }: { user: any }) {
           <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
         </div>
 
+        {/* View Toggle */}
+        <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
+          <button 
+            onClick={() => setActiveView('TASKS')}
+            style={{ 
+              padding: "8px 24px", borderRadius: "12px", fontSize: "0.875rem", fontWeight: 600, 
+              cursor: "pointer", transition: "all 0.2s",
+              background: activeView === 'TASKS' ? "#2563eb" : "white",
+              color: activeView === 'TASKS' ? "white" : "#475569",
+              border: "1px solid",
+              borderColor: activeView === 'TASKS' ? "#2563eb" : "#e2e8f0",
+              boxShadow: activeView === 'TASKS' ? "0 4px 6px -1px rgb(37 99 235 / 0.4)" : "none"
+            }}
+          >
+            Tasks Dashboard
+          </button>
+          <button 
+            onClick={() => setActiveView('LOS')}
+            style={{ 
+              padding: "8px 24px", borderRadius: "12px", fontSize: "0.875rem", fontWeight: 600, 
+              cursor: "pointer", transition: "all 0.2s",
+              background: activeView === 'LOS' ? "#2563eb" : "white",
+              color: activeView === 'LOS' ? "white" : "#475569",
+              border: "1px solid",
+              borderColor: activeView === 'LOS' ? "#2563eb" : "#e2e8f0",
+              boxShadow: activeView === 'LOS' ? "0 4px 6px -1px rgb(37 99 235 / 0.4)" : "none"
+            }}
+          >
+            Learning Opportunities
+          </button>
+        </div>
+
+        {activeView === 'TASKS' ? (
+          <>
         {/* Action Toolbar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
           
@@ -857,6 +1042,76 @@ export default function DashboardClient({ user }: { user: any }) {
             </div>
           )}
         </div>
+        </>
+        ) : (
+          /* LO View */
+          <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", overflow: "hidden" }}>
+             <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 600, color: "#0f172a" }}>Learning Opportunities</h3>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", color: "#475569", padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1", cursor: "pointer", fontSize: "0.875rem", fontWeight: 500 }}>
+                    <FileSpreadsheet size={16} /> Export Excel
+                  </button>
+                </div>
+             </div>
+             <div style={{ overflowX: "auto" }}>
+                <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>SI No</th>
+                      <th style={thStyle}>Date</th>
+                      <th style={thStyle}>Entity</th>
+                      <th style={thStyle}>Mistake / LO</th>
+                      <th style={thStyle}>Identified By</th>
+                      <th style={thStyle}>Committed By</th>
+                      <th style={thStyle}>Resolution</th>
+                      <th style={thStyle}>Communication Mode</th>
+                      <th style={{ ...thStyle, textAlign: "center" }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loLoading ? (
+                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading Learning Opportunities...</td></tr>
+                    ) : los.length === 0 ? (
+                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No Learning Opportunities recorded.</td></tr>
+                    ) : (
+                      los.map((lo, idx) => (
+                        <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s" }} className="table-row">
+                          <td style={tdStyle}><span style={{ color: "#94a3b8", fontWeight: 500 }}>{idx + 1}</span></td>
+                          <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
+                          <td style={tdStyle}>{lo.entity}</td>
+                          <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
+                          <td style={tdStyle}>{lo.identifiedBy}</td>
+                          <td style={tdStyle}>{lo.committedBy}</td>
+                          <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
+                          <td style={tdStyle}>{lo.modeOfCommunication}</td>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>
+                            <button 
+                              onClick={() => handleRequestEditLO(lo.id)}
+                              disabled={lo.editRequested}
+                              style={{ 
+                                padding: "6px 12px", borderRadius: "6px", border: "1px solid",
+                                background: lo.editRequested ? "#f1f5f9" : "white",
+                                color: lo.editRequested ? "#94a3b8" : "#475569",
+                                borderColor: "#cbd5e1",
+                                fontSize: "0.75rem", fontWeight: 600,
+                                cursor: lo.editRequested ? "not-allowed" : "pointer",
+                                transition: "all 0.2s"
+                              }}
+                              onMouseOver={e => !lo.editRequested && (e.currentTarget.style.background = "#f8fafc")}
+                              onMouseOut={e => !lo.editRequested && (e.currentTarget.style.background = "white")}
+                            >
+                              {lo.editRequested ? "Edit Requested" : "Request Edit"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+             </div>
+          </div>
+        )}
       </div>
 
       {showForm && (
@@ -868,7 +1123,16 @@ export default function DashboardClient({ user }: { user: any }) {
           }} 
         />
       )}
-
+      {showLOForm && (
+        <LOForm 
+          onClose={() => setShowLOForm(false)} 
+          onSuccess={() => {
+            setShowLOForm(false);
+            fetchLOs();
+            alert("LO Update submitted successfully!");
+          }} 
+        />
+      )}
       {showOptionsModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}>
           <div style={{ background: "white", borderRadius: "16px", width: "100%", maxWidth: "800px", height: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)", overflow: "hidden" }}>
@@ -900,14 +1164,20 @@ export default function DashboardClient({ user }: { user: any }) {
                 </button>
                 <button 
                   onClick={() => setActiveOptionsTab('EDIT_REQUESTS')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
+                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
                 >
                   Edit Requests
-                  {tasks.filter(t => t.editRequested).length > 0 && (
+                  {(tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length) > 0 && (
                     <span style={{ marginLeft: "8px", background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: "bold" }}>
-                      {tasks.filter(t => t.editRequested).length}
+                      {tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length}
                     </span>
                   )}
+                </button>
+                <button 
+                  onClick={() => setActiveOptionsTab('LO_REPORT')} 
+                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'LO_REPORT' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'LO_REPORT' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
+                >
+                  LO Report Admin
                 </button>
               </div>
 
@@ -1074,6 +1344,84 @@ export default function DashboardClient({ user }: { user: any }) {
                       )}
                     </div>
 
+                    {/* LO Report Schedule */}
+                    <div style={{ marginBottom: "32px", padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                        <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 600 }}>LO Report (Learning Opportunities)</h4>
+                        <select 
+                          value={settings.loReportFrequency}
+                          onChange={(e) => setSettings({...settings, loReportFrequency: e.target.value})}
+                          style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
+                        >
+                          <option value="DAILY">Daily</option>
+                          <option value="WEEKLY">Weekly</option>
+                          <option value="MONTHLY">Monthly</option>
+                          <option value="OFF">Turn Off</option>
+                        </select>
+                      </div>
+
+                      {settings.loReportFrequency !== 'OFF' && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
+                          {settings.loReportTimes.split(',').map((t, idx) => {
+                            const timeObj = convertTo12h(t.trim());
+                            return (
+                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: "white", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                                <select 
+                                  value={timeObj.h}
+                                  onChange={(e) => {
+                                    const times = settings.loReportTimes.split(',');
+                                    times[idx] = convertTo24h(e.target.value, timeObj.m, timeObj.s);
+                                    setSettings({...settings, loReportTimes: times.join(',')});
+                                  }}
+                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
+                                >
+                                  {hours12.map(h => <option key={h} value={h}>{h}</option>)}
+                                </select>
+                                <span>:</span>
+                                <select 
+                                  value={timeObj.m}
+                                  onChange={(e) => {
+                                    const times = settings.loReportTimes.split(',');
+                                    times[idx] = convertTo24h(timeObj.h, e.target.value, timeObj.s);
+                                    setSettings({...settings, loReportTimes: times.join(',')});
+                                  }}
+                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
+                                >
+                                  {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                                <select 
+                                  value={timeObj.s}
+                                  onChange={(e) => {
+                                    const times = settings.loReportTimes.split(',');
+                                    times[idx] = convertTo24h(timeObj.h, timeObj.m, e.target.value);
+                                    setSettings({...settings, loReportTimes: times.join(',')});
+                                  }}
+                                  style={{ border: "none", outline: "none", fontWeight: 600, color: "#2563eb" }}
+                                >
+                                  {ampm.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                                <button 
+                                  onClick={() => {
+                                    const times = settings.loReportTimes.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, loReportTimes: times.join(',') || "10:00"});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <button 
+                            onClick={() => setSettings({...settings, loReportTimes: settings.loReportTimes + ",10:00"})}
+                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: "0.875rem" }}
+                          >
+                            + Add Time
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
                       <button 
                         onClick={handleSaveSettings}
@@ -1102,6 +1450,13 @@ export default function DashboardClient({ user }: { user: any }) {
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontWeight: 600 }}>Send Manager Report</div>
                           <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the consolidated summary to Admin.</div>
+                        </div>
+                      </button>
+                      <button onClick={() => handleTriggerEmail("lo")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                        <Mail size={24} color="#2563eb" />
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontWeight: 600 }}>Send LO Report</div>
+                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the Learning Opportunity summary to Admin.</div>
                         </div>
                       </button>
                     </div>
@@ -1148,16 +1503,17 @@ export default function DashboardClient({ user }: { user: any }) {
                 {activeOptionsTab === 'EDIT_REQUESTS' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Pending Edit Requests</h3>
-                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Manage requests from users to unlock and edit completed tasks.</p>
+                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Manage requests from users to unlock and edit completed tasks or LO submissions.</p>
                     
-                    {tasks.filter(t => t.editRequested).length === 0 ? (
+                    {(tasks.filter(t => t.editRequested).length === 0 && los.filter(l => l.editRequested).length === 0) ? (
                       <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
                         <p style={{ color: "#64748b", margin: 0 }}>No pending edit requests.</p>
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        {/* Task Edit Requests */}
                         {tasks.filter(t => t.editRequested).map(task => (
-                          <div key={task.id} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                          <div key={`task-${task.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                               <div>
                                 <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>Task #{task.id}: {task.taskName}</h4>
@@ -1174,21 +1530,91 @@ export default function DashboardClient({ user }: { user: any }) {
                                 </button>
                                 <button 
                                   onClick={() => handleApproveEdit(task.id, 'REJECT')}
-                                  style={{ background: "#fef2f2", color: "#ef4444", padding: "8px 16px", borderRadius: "8px", border: "1px solid #fca5a5", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                  style={{ background: "#ef4444", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
                                 >
                                   Reject
                                 </button>
                               </div>
                             </div>
-                            <div style={{ padding: "12px", background: "#f1f5f9", borderRadius: "8px" }}>
-                              <p style={{ margin: 0, fontSize: "0.875rem", color: "#475569" }}>
-                                <strong style={{ color: "#0f172a" }}>Reason:</strong> {task.editRequestReason || "No reason provided."}
-                              </p>
+                            <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
+                              <strong>Reason:</strong> {task.editRequestReason}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* LO Edit Requests */}
+                        {los.filter(l => l.editRequested).map(lo => (
+                          <div key={`lo-${lo.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                              <div>
+                                <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>LO Update #{lo.id}: {lo.entity}</h4>
+                                <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
+                                  Submitted by: <strong style={{ color: "#0f172a" }}>{lo.identifiedBy}</strong>
+                                </p>
+                              </div>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button 
+                                  onClick={() => handleApproveEditLO(lo.id, 'APPROVE')}
+                                  style={{ background: "#22c55e", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                >
+                                  Approve & Unlock
+                                </button>
+                                <button 
+                                  onClick={() => handleApproveEditLO(lo.id, 'REJECT')}
+                                  style={{ background: "#ef4444", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
+                              <strong>Reason:</strong> {lo.editRequestReason}
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {activeOptionsTab === 'LO_REPORT' && (
+                  <div>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Learning Opportunity Report Admin</h3>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                      <p style={{ color: "#64748b", margin: 0 }}>View all submitted Learning Opportunities across all users.</p>
+                      <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 500 }}>
+                        <FileSpreadsheet size={16} /> Export All to Excel
+                      </button>
+                    </div>
+                    
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left", background: "#f8fafc" }}>
+                            <th style={{ padding: "12px 8px" }}>Entity</th>
+                            <th style={{ padding: "12px 8px" }}>LO Description</th>
+                            <th style={{ padding: "12px 8px" }}>Identified By</th>
+                            <th style={{ padding: "12px 8px" }}>Committed By</th>
+                            <th style={{ padding: "12px 8px" }}>Resolution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {los.length === 0 ? (
+                            <tr><td colSpan={5} style={{ padding: "20px", textAlign: "center" }}>No LOs found.</td></tr>
+                          ) : (
+                            los.map(lo => (
+                              <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                <td style={{ padding: "12px 8px" }}>{lo.entity}</td>
+                                <td style={{ padding: "12px 8px", minWidth: "200px" }}>{lo.learningOpportunity}</td>
+                                <td style={{ padding: "12px 8px" }}>{lo.identifiedBy}</td>
+                                <td style={{ padding: "12px 8px" }}>{lo.committedBy}</td>
+                                <td style={{ padding: "12px 8px", minWidth: "200px" }}>{lo.resolutionProvided}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </div>
