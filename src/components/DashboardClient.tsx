@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen } from "lucide-react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -68,6 +68,19 @@ const convertTo24h = (h12: string, m: string, suffix: string) => {
   if (suffix === 'PM' && h < 12) h += 12;
   if (suffix === 'AM' && h === 12) h = 0;
   return `${String(h).padStart(2, '0')}:${m}`;
+};
+
+const EMAIL_TO_NAME: Record<string, string> = {
+  "pavanreddy@intellicar.in": "Pavan",
+  "saikatdas@intellicar.in": "Saikath",
+  "sami@intellicar.in": "Sami",
+  "hanusha@intellicar.in": "Hanusha",
+  "sreenivasulu.t@intellicar.in": "Sreenivas",
+  "sharath.shetty@intellicar.in": "Sharath",
+  "chandanak@intellicar.in": "Chandana",
+  "nikhat@intellicar.in": "Nikhat",
+  "venkata.g@intellicar.in": "Venkat",
+  "saneja@intellicar.in": "Siddharth"
 };
 
 export default function DashboardClient({ user }: { user: any }) {
@@ -1194,8 +1207,22 @@ export default function DashboardClient({ user }: { user: any }) {
                           <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
                           <td style={tdStyle}>{lo.entity}</td>
                           <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
-                          <td style={tdStyle}>{lo.identifiedBy}</td>
-                          <td style={tdStyle}>{lo.committedBy}</td>
+                          <td style={tdStyle}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              {lo.identifiedBy}
+                              {lo.identifiedBy === (EMAIL_TO_NAME[user?.email || ''] || user?.name) && (
+                                <span style={{ background: "#eff6ff", color: "#3b82f6", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Reported</span>
+                              )}
+                            </div>
+                          </td>
+                          <td style={tdStyle}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              {lo.committedBy}
+                              {lo.committedBy === (EMAIL_TO_NAME[user?.email || ''] || user?.name) && (
+                                <span style={{ background: "#fef2f2", color: "#ef4444", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Learning</span>
+                              )}
+                            </div>
+                          </td>
                           <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
                           <td style={tdStyle}>{lo.modeOfCommunication}</td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
