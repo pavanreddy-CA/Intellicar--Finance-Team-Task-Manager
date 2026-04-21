@@ -970,82 +970,115 @@ export default function DashboardClient({ user }: { user: any }) {
   };
 
   return (
-    <div style={{ height: "100vh", display: "flex", background: "#f8fafc", color: "#0f172a", overflow: "hidden" }}>
-      {/* Sidebar Navigation (Keka Style) */}
-      <nav style={{ width: "110px", background: "#0f172a", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, boxShadow: "4px 0 10px rgba(0,0,0,0.1)", zIndex: 10 }}>
-        {/* Logo at Top of Sidebar */}
-        <div style={{ width: "100%", height: "80px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "32px" }}>
-          <img src="/logo.png" alt="Logo" style={{ height: "48px", width: "auto", objectFit: "contain" }} />
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f8fafc", color: "#0f172a", overflow: "hidden" }}>
+      {/* Top Navigation Bar (Full Width) */}
+      <header style={{ 
+        height: "80px", width: "100%", background: "#ffffff", display: "flex", 
+        alignItems: "center", justifyContent: "space-between", padding: "0 32px", 
+        borderBottom: "1px solid #e2e8f0", zIndex: 100, flexShrink: 0,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+      }}>
+        {/* Brand Area */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em" }}>Finance Hub</h1>
         </div>
 
-        {/* Sidebar Items */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%" }}>
-          <button 
-            onClick={() => setActiveView('TASKS')}
-            style={{ 
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
-              background: "transparent", border: "none", color: activeView === 'TASKS' ? "white" : "#94a3b8", 
-              cursor: "pointer", padding: "12px 0", transition: "all 0.2s", width: "100%",
-              borderLeft: activeView === 'TASKS' ? "4px solid #2563eb" : "4px solid transparent"
-            }}
-          >
-            <Home size={24} color={activeView === 'TASKS' ? "white" : "#94a3b8"} />
-            <span style={{ fontSize: "0.7rem", fontWeight: 500 }}>Tasks</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveView('LOS')}
-            style={{ 
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
-              background: "transparent", border: "none", color: activeView === 'LOS' ? "white" : "#94a3b8", 
-              cursor: "pointer", padding: "12px 0", transition: "all 0.2s", width: "100%",
-              borderLeft: activeView === 'LOS' ? "4px solid #2563eb" : "4px solid transparent"
-            }}
-          >
-            <Lightbulb size={24} color={activeView === 'LOS' ? "white" : "#94a3b8"} />
-            <span style={{ fontSize: "0.7rem", fontWeight: 500, textAlign: "center", padding: "0 4px" }}>Learning</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Main Container (Header + Content) */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Header */}
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", padding: "16px 32px", borderBottom: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", height: "80px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div>
-              <h1 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 600, color: "#0f172a", letterSpacing: "-0.025em" }}>
-                {activeView === 'TASKS' ? "Tasks Dashboard" : "Learning Opportunities"}
-              </h1>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>Intellicar Telematics • Finance Team</p>
-            </div>
+        {/* Global Actions Area */}
+        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0f172a" }}>{user.name || "Master Admin"}</div>
+            <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{user.email}</div>
           </div>
-          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0f172a" }}>{user.name || "Master Admin"}</div>
-              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{user.email}</div>
-            </div>
-            
-            <button onClick={() => { setShowOptionsModal(true); if (isAdmin) { fetchUsersList(); fetchSettings(); } else { setActiveOptionsTab('ACCOUNT'); } }} style={{ padding: "8px 16px", background: "#f8fafc", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.875rem" }}>
-              <Sliders size={16} /> Options
-            </button>
+          
+          <div style={{ height: "30px", width: "1px", background: "#f1f5f9" }}></div>
 
-            <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", color: "#475569", padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}>
-              <Lightbulb size={16} /> Update LO
-            </button>
+          <button onClick={() => { setShowOptionsModal(true); if (isAdmin) { fetchUsersList(); fetchSettings(); } else { setActiveOptionsTab('ACCOUNT'); } }} style={{ padding: "8px 16px", background: "#f8fafc", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.875rem" }}>
+            <Sliders size={16} /> Options
+          </button>
 
-            <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}>
-              <Plus size={16} /> New Task
-            </button>
-            <a href="/api/auth/signout" style={{ color: "#64748b", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
-            <LogOut size={18} /> <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Sign Out</span>
+          <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", color: "#475569", padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem" }}>
+            <Lightbulb size={16} /> Update LO
+          </button>
+
+          <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}>
+            <Plus size={16} /> New Task
+          </button>
+          
+          <a href="/api/auth/signout" style={{ color: "#64748b", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px", marginLeft: "10px" }}>
+            <LogOut size={18} />
           </a>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main style={{ flex: 1, overflow: "auto", padding: "32px", background: "#f1f5f9" }}>
-        
+      {/* Main Body (Sidebar + Content) */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        <nav style={{ 
+          width: "110px", background: "#0f172a", display: "flex", 
+          flexDirection: "column", alignItems: "center", paddingTop: "32px", 
+          flexShrink: 0, zIndex: 90, borderRight: "1px solid rgba(255,255,255,0.05)"
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", padding: "0 12px" }}>
+            <button 
+              onClick={() => setActiveView('TASKS')}
+              style={{ 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
+                background: activeView === 'TASKS' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
+                border: "none", color: activeView === 'TASKS' ? "#60a5fa" : "#94a3b8", 
+                cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
+                width: "100%", borderRadius: "16px",
+                boxShadow: activeView === 'TASKS' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
+              }}
+            >
+              <Home size={24} color={activeView === 'TASKS' ? "#60a5fa" : "#94a3b8"} />
+              <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Tasks</span>
+            </button>
+
+            <button 
+              onClick={() => setActiveView('LOS')}
+              style={{ 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
+                background: activeView === 'LOS' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
+                border: "none", color: activeView === 'LOS' ? "#60a5fa" : "#94a3b8", 
+                cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
+                width: "100%", borderRadius: "16px",
+                boxShadow: activeView === 'LOS' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
+              }}
+            >
+              <Lightbulb size={24} color={activeView === 'LOS' ? "#60a5fa" : "#94a3b8"} />
+              <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Learning</span>
+            </button>
+          </div>
+        </nav>
+
+        {/* Content Area */}
+        <main style={{ flex: 1, overflow: "auto", padding: "32px", background: "#f8fafc" }}>
+          {/* Active View Title/Context Area */}
+          <div style={{ 
+            marginBottom: "32px", 
+            paddingBottom: "24px", 
+            borderBottom: "1px solid #e2e8f0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end"
+          }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
+                <span style={{ color: "#cbd5e1" }}>/</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#64748b" }}>{activeView === 'TASKS' ? "Workplace" : "Development"}</span>
+              </div>
+              <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em" }}>
+                {activeView === 'TASKS' ? "Task Dashboard" : "Learning Opportunities"}
+              </h2>
+              <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.95rem", fontWeight: 500 }}>
+                {activeView === 'TASKS' ? "Track team productivity and operational milestones." : "Turning challenges into structured growth opportunities."}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+               {/* Quick stats could go here */}
+            </div>
+          </div>
+
         {/* Metric Cards / Motivational Quote */}
         {activeView === 'TASKS' ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px", marginBottom: "32px" }}>
