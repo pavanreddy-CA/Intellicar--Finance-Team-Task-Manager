@@ -741,11 +741,9 @@ export default function DashboardClient({ user }: { user: any }) {
             <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{user.email}</div>
           </div>
           
-          {isAdmin && (
-            <button onClick={() => { setShowOptionsModal(true); fetchUsersList(); fetchSettings(); }} style={{ padding: "10px 20px", background: "#f8fafc", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"} onMouseOut={e => e.currentTarget.style.background = "#f8fafc"}>
-              <Sliders size={18} /> Options
-            </button>
-          )}
+          <button onClick={() => { setShowOptionsModal(true); if (isAdmin) { fetchUsersList(); fetchSettings(); } else { setActiveOptionsTab('ACCOUNT'); } }} style={{ padding: "10px 20px", background: "#f8fafc", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"} onMouseOut={e => e.currentTarget.style.background = "#f8fafc"}>
+            <Sliders size={18} /> {isAdmin ? "Options" : "Settings"}
+          </button>
 
           <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", color: "#475569", padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"} onMouseOut={e => e.currentTarget.style.background = "#f8fafc"}>
             <Lightbulb size={16} /> LO Update
@@ -1249,44 +1247,101 @@ export default function DashboardClient({ user }: { user: any }) {
               {/* Sidebar Tabs */}
               <div style={{ width: "200px", background: "#f8fafc", borderRight: "1px solid #e2e8f0", padding: "16px" }}>
                 <button 
-                  onClick={() => setActiveOptionsTab('SCHEDULE')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'SCHEDULE' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'SCHEDULE' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                  onClick={() => setActiveOptionsTab('ACCOUNT')} 
+                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'ACCOUNT' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'ACCOUNT' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
                 >
-                  Automation
+                  Account
                 </button>
-                <button 
-                  onClick={() => setActiveOptionsTab('MAILS')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MAILS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MAILS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
-                >
-                  Manual Mails
-                </button>
-                <button 
-                  onClick={() => setActiveOptionsTab('USERS')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'USERS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'USERS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
-                >
-                  User Management
-                </button>
-                <button 
-                  onClick={() => setActiveOptionsTab('EDIT_REQUESTS')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
-                >
-                  Edit Requests
-                  {(tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length) > 0 && (
-                    <span style={{ marginLeft: "8px", background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: "bold" }}>
-                      {tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length}
-                    </span>
-                  )}
-                </button>
-                <button 
-                  onClick={() => setActiveOptionsTab('LO_REPORT')} 
-                  style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'LO_REPORT' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'LO_REPORT' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
-                >
-                  LO Report Admin
-                </button>
+                {isAdmin && (
+                  <>
+                    <button 
+                      onClick={() => setActiveOptionsTab('SCHEDULE')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'SCHEDULE' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'SCHEDULE' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                    >
+                      Automation
+                    </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('MAILS')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MAILS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MAILS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                    >
+                      Manual Mails
+                    </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('USERS')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'USERS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'USERS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                    >
+                      User Management
+                    </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('EDIT_REQUESTS')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'EDIT_REQUESTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'EDIT_REQUESTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                    >
+                      Edit Requests
+                      {(tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length) > 0 && (
+                        <span style={{ marginLeft: "8px", background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: "bold" }}>
+                          {tasks.filter(t => t.editRequested).length + los.filter(l => l.editRequested).length}
+                        </span>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('LO_REPORT')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'LO_REPORT' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'LO_REPORT' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer" }}
+                    >
+                      LO Report Admin
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Tab Content */}
               <div style={{ flex: 1, padding: "32px", overflow: "auto" }}>
+                {activeOptionsTab === 'ACCOUNT' && (
+                  <div>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Account Settings</h3>
+                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Update your password to keep your account secure.</p>
+                    
+                    <form onSubmit={handlePasswordChange} style={{ maxWidth: "400px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                      <div>
+                        <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Current Password</label>
+                        <input 
+                          type="password" 
+                          required
+                          value={passwordData.current}
+                          onChange={e => setPasswordData({...passwordData, current: e.target.value})}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} 
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>New Password</label>
+                        <input 
+                          type="password" 
+                          required
+                          value={passwordData.new}
+                          onChange={e => setPasswordData({...passwordData, new: e.target.value})}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} 
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Confirm New Password</label>
+                        <input 
+                          type="password" 
+                          required
+                          value={passwordData.confirm}
+                          onChange={e => setPasswordData({...passwordData, confirm: e.target.value})}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} 
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        disabled={passwordLoading}
+                        style={{ background: "#2563eb", color: "white", padding: "12px", borderRadius: "8px", border: "none", cursor: passwordLoading ? "not-allowed" : "pointer", fontWeight: 600 }}
+                      >
+                        {passwordLoading ? "Updating..." : "Update Password"}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
                 {activeOptionsTab === 'SCHEDULE' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Auto-Email Frequency</h3>
