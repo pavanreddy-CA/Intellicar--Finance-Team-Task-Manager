@@ -992,6 +992,36 @@ export default function DashboardClient({ user }: { user: any }) {
     doc.save(`Intellicar_Tasks_Export_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
+  const exportLOsToPDF = () => {
+    const doc = new jsPDF('landscape');
+    
+    doc.setFontSize(16);
+    doc.text("Intellicar Finance - Learning Opportunity Report", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    const tableColumn = ["ID", "Entity", "Date", "Mistake / LO", "Identified By", "Committed By", "Mode"];
+    const tableRows = sortedLOs.map(l => [
+      l.id,
+      l.entity,
+      formatDate(l.dateOfIdentification),
+      l.learningOpportunity,
+      l.identifiedBy,
+      l.committedBy,
+      l.modeOfCommunication
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 28,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [79, 70, 229] }
+    });
+
+    doc.save(`Intellicar_LO_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f8fafc", color: "#0f172a", overflow: "hidden" }}>
       {/* Top Navigation Bar (Full Width) */}
@@ -1249,8 +1279,16 @@ export default function DashboardClient({ user }: { user: any }) {
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
-                  <option value={100}>100</option>
                 </select>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
+                <button onClick={exportToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", padding: "8px 16px", borderRadius: "10px", border: "1px solid #cbd5e1", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                  <FileSpreadsheet size={18} color="#166534" /> Excel
+                </button>
+                <button onClick={exportToPDF} style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", padding: "8px 16px", borderRadius: "10px", border: "1px solid #cbd5e1", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#ef4444"}>
+                  <FileText size={18} color="#991b1b" /> PDF
+                </button>
               </div>
             </div>
           </div>
@@ -1611,7 +1649,10 @@ export default function DashboardClient({ user }: { user: any }) {
                     {uniqueLOEntities.map(e => <option key={e} value={e}>{e}</option>)}
                   </select>
                   <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", padding: "8px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
-                    <FileSpreadsheet size={16} color="#059669" /> Export Excel
+                    <FileSpreadsheet size={16} color="#059669" /> Excel
+                  </button>
+                  <button onClick={exportLOsToPDF} style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", padding: "8px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#ef4444"}>
+                    <FileText size={16} color="#991b1b" /> PDF
                   </button>
                 </div>
              </div>
