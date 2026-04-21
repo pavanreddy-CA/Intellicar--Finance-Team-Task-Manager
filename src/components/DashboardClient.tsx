@@ -83,7 +83,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [showLOForm, setShowLOForm] = useState(false);
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT'>('SCHEDULE');
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT'>('ACCOUNT');
   const [settings, setSettings] = useState({
     reminderFrequency: 'DAILY',
     reminderTimes: '09:00,18:00',
@@ -103,6 +103,8 @@ export default function DashboardClient({ user }: { user: any }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [dateFilterPreset, setDateFilterPreset] = useState("ALL_TIME");
+  const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const handlePresetChange = (preset: string) => {
     setDateFilterPreset(preset);
@@ -237,6 +239,52 @@ export default function DashboardClient({ user }: { user: any }) {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.new !== passwordData.confirm) {
+      alert("Passwords do not match!");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const res = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: passwordData.current, newPassword: passwordData.new }),
+      });
+      if (res.ok) {
+        alert("Password updated successfully!");
+        setPasswordData({ current: "", new: "", confirm: "" });
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to update password.");
+      }
+    } catch (error) {
+      console.error("Failed to change password", error);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleBulkAddUsers = async () => {
+    if (!window.confirm("Are you sure you want to import all predefined employees? This will create accounts with the default password 'Intellicar@123' for those who don't have one yet.")) return;
+    
+    setUsersLoading(true);
+    try {
+      const res = await fetch("/api/admin/bulk-add-users", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message + "\n\nDefault Password: " + data.defaultPassword);
+        fetchUsersList();
+      } else {
+        alert("Failed to bulk add users.");
+      }
+    } catch (error) {
+      console.error("Failed to bulk add users", error);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
       const res = await fetch("/api/users", {
@@ -1521,7 +1569,15 @@ export default function DashboardClient({ user }: { user: any }) {
 
                 {activeOptionsTab === 'USERS' && (
                   <div>
-                    <h3 style={{ margin: "0 0 24px 0" }}>User Management</h3>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                      <h3 style={{ margin: 0 }}>User Management</h3>
+                      <button 
+                        onClick={handleBulkAddUsers}
+                        style={{ background: "#2563eb", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <Users size={16} /> Import All Employees
+                      </button>
+                    </div>
                     {usersLoading ? (
                       <p>Loading users...</p>
                     ) : (
