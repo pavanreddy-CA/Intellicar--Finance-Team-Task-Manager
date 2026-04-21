@@ -2285,45 +2285,15 @@ export default function DashboardClient({ user }: { user: any }) {
                           </button>
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                          {/* File Upload */}
-                          <div style={{ padding: "20px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
-                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 1: Upload Excel File</p>
-                            <input 
-                              type="file" 
-                              accept=".xlsx" 
-                              onChange={(e) => handleExcelBulkUpload(e, 'tasks')}
-                              style={{ fontSize: "0.875rem" }}
-                            />
-                          </div>
-
-                          {/* Quick Paste */}
-                          <div>
-                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 2: Quick Paste</p>
-                            <textarea 
-                              id="bulk-task-input"
-                              placeholder="Paste rows from Excel here..."
-                              style={{ width: "100%", height: "80px", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", marginBottom: "8px" }}
-                            />
-                            <button 
-                              onClick={async () => {
-                                const val = (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value;
-                                if (!val) return;
-                                const lines = val.trim().split('\n');
-                                const tasks = lines.map(line => {
-                                  const [taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate] = line.split('\t');
-                                  return { taskName, entityName, taskType, departmentName, requestFrom, ownerName, reviewerName, dueDate };
-                                });
-                                if (confirm(`Import ${tasks.length} tasks?`)) {
-                                  const res = await fetch('/api/tasks/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tasks) });
-                                  if (res.ok) { alert("Import successful!"); fetchTasks(); (document.getElementById('bulk-task-input') as HTMLTextAreaElement).value = ""; }
-                                }
-                              }}
-                              style={{ background: "#2563eb", color: "white", width: "100%", padding: "8px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
-                            >
-                              Process Paste
-                            </button>
-                          </div>
+                        <div style={{ padding: "30px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
+                          <p style={{ fontWeight: 600, fontSize: "1rem", margin: "0 0 16px 0", color: "#475569" }}>Upload Excel File</p>
+                          <input 
+                            type="file" 
+                            accept=".xlsx" 
+                            onChange={(e) => handleExcelBulkUpload(e, 'tasks')}
+                            style={{ fontSize: "0.875rem" }}
+                          />
+                          <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "12px" }}>Ensure you use the template provided above.</p>
                         </div>
                       </div>
 
@@ -2341,45 +2311,15 @@ export default function DashboardClient({ user }: { user: any }) {
                           </button>
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                          {/* File Upload */}
-                          <div style={{ padding: "20px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
-                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 1: Upload Excel File</p>
-                            <input 
-                              type="file" 
-                              accept=".xlsx" 
-                              onChange={(e) => handleExcelBulkUpload(e, 'lo')}
-                              style={{ fontSize: "0.875rem" }}
-                            />
-                          </div>
-
-                          {/* Quick Paste */}
-                          <div>
-                            <p style={{ fontWeight: 600, margin: "0 0 12px 0", color: "#475569" }}>Option 2: Quick Paste</p>
-                            <textarea 
-                              id="bulk-lo-input"
-                              placeholder="Paste rows from Excel here..."
-                              style={{ width: "100%", height: "80px", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.75rem", marginBottom: "8px" }}
-                            />
-                            <button 
-                              onClick={async () => {
-                                const val = (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value;
-                                if (!val) return;
-                                const lines = val.trim().split('\n');
-                                const losToImport = lines.map(line => {
-                                  const [entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided] = line.split('\t');
-                                  return { entity, dateOfIdentification, learningOpportunity, identifiedBy, committedBy, resolutionProvided };
-                                });
-                                if (confirm(`Import ${losToImport.length} LOs?`)) {
-                                  const res = await fetch('/api/lo/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(losToImport) });
-                                  if (res.ok) { alert("Import successful!"); fetchLOs(); (document.getElementById('bulk-lo-input') as HTMLTextAreaElement).value = ""; }
-                                }
-                              }}
-                              style={{ background: "#2563eb", color: "white", width: "100%", padding: "8px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
-                            >
-                              Process Paste
-                            </button>
-                          </div>
+                        <div style={{ padding: "30px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
+                          <p style={{ fontWeight: 600, fontSize: "1rem", margin: "0 0 16px 0", color: "#475569" }}>Upload Excel File</p>
+                          <input 
+                            type="file" 
+                            accept=".xlsx" 
+                            onChange={(e) => handleExcelBulkUpload(e, 'lo')}
+                            style={{ fontSize: "0.875rem" }}
+                          />
+                          <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "12px" }}>Ensure you use the template provided above.</p>
                         </div>
                       </div>
 
