@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, getEmailFromName } from "@/lib/email";
 import { getServerSession } from "next-auth/next";
@@ -296,7 +296,7 @@ function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
   return html;
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   let type = url.searchParams.get("type") || "all"; 
   const clientDateStr = url.searchParams.get("clientDate");
