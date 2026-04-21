@@ -58,6 +58,7 @@ model LearningOpportunity {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   editRequested       Boolean   @default(false)
+  editApproved        Boolean   @default(false)
   editRequestReason   String?
   createdByEmail      String?
 }

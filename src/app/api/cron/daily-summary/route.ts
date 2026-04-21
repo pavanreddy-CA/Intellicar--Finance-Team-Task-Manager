@@ -59,6 +59,21 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Learning Opportunities");
 
+  // Define column widths
+  worksheet.columns = [
+    { width: 8 },  // SI No
+    { width: 20 }, // Timestamp
+    { width: 20 }, // Entity
+    { width: 20 }, // Date of Identification
+    { width: 45 }, // Learning Opportunity
+    { width: 20 }, // Identified By
+    { width: 20 }, // Committed By
+    { width: 45 }, // Resolution Provided
+    { width: 20 }, // Mode Of Communication
+    { width: 30 }, // Email Sub
+    { width: 40 }  // Comments
+  ];
+
   // Row 1: Main Title
   worksheet.mergeCells('A1:K1');
   const titleCell = worksheet.getCell('A1');
@@ -74,25 +89,18 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   subCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF3B5998' } };
   subCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Define Columns for Row 3
-  worksheet.columns = [
-    { header: 'SI No', key: 'id', width: 8 },
-    { header: 'Timestamp', key: 'createdAt', width: 20 },
-    { header: 'Entity', key: 'entity', width: 20 },
-    { header: 'Date of Identification', key: 'dateOfIdentification', width: 20 },
-    { header: 'Learning Opportunity', key: 'learningOpportunity', width: 45 },
-    { header: 'Identified By', key: 'identifiedBy', width: 20 },
-    { header: 'Committed By', key: 'committedBy', width: 20 },
-    { header: 'Resolution Provided', key: 'resolutionProvided', width: 45 },
-    { header: 'Mode Of Communication', key: 'modeOfCommunication', width: 20 },
-    { header: 'Email Sub', key: 'emailSub', width: 30 },
-    { header: 'Comments', key: 'comments', width: 40 }
-  ];
-
-  // Style Header Row (Row 3)
+  // Row 3: Column Headers
   const headerRow = worksheet.getRow(3);
-  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  headerRow.eachCell((cell) => {
+  const headers = [
+    'SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
+    'Identified by', 'Commited By', 'Resolution Provided', 'Mode Of Communication', 
+    'Email Sub', 'Comments'
+  ];
+  
+  headers.forEach((h, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = h;
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
     cell.border = {
@@ -105,19 +113,19 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
 
   // Add Data rows
   los.forEach((lo, index) => {
-    const row = worksheet.addRow({
-      id: index + 1,
-      createdAt: formatDateTime(lo.createdAt),
-      entity: lo.entity,
-      dateOfIdentification: formatDate(lo.dateOfIdentification),
-      learningOpportunity: lo.learningOpportunity,
-      identifiedBy: lo.identifiedBy,
-      committedBy: lo.committedBy,
-      resolutionProvided: lo.resolutionProvided,
-      modeOfCommunication: lo.modeOfCommunication,
-      emailSub: lo.emailSub || "Not Applicable",
-      comments: lo.comments || "NA"
-    });
+    const row = worksheet.addRow([
+      index + 1,
+      formatDateTime(lo.createdAt),
+      lo.entity,
+      formatDate(lo.dateOfIdentification),
+      lo.learningOpportunity,
+      lo.identifiedBy,
+      lo.committedBy,
+      lo.resolutionProvided,
+      lo.modeOfCommunication,
+      lo.emailSub || "Not Applicable",
+      lo.comments || "NA"
+    ]);
     row.alignment = { vertical: 'middle', wrapText: true };
     row.eachCell((cell) => {
         cell.border = {
@@ -277,7 +285,6 @@ export async function GET(req: Request) {
       const stats = getLOStats(allLOs);
       const managerEmail = "pavanreddy@intellicar.in";
       
-      // Generate two separate Excel buffers
       const currentMonthSubtitle = `Current Month Report - ${referenceDate.toLocaleString('en-GB', { month: 'long', year: 'numeric' })}`;
       const consolidatedSubtitle = `Consolidated Report - All Time (As of ${formatDate(referenceDate)})`;
       

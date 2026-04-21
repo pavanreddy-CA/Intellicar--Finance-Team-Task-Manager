@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 type LOFormProps = {
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: any;
 };
 
 const EMPLOYEES = [
@@ -13,7 +14,7 @@ const EMPLOYEES = [
   "Siddharth", "Nikhat", "Chandana", "Saikath", "Hanusha"
 ];
 
-export default function LOForm({ onClose, onSuccess }: LOFormProps) {
+export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,6 +30,22 @@ export default function LOForm({ onClose, onSuccess }: LOFormProps) {
     comments: "",
   });
 
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        entity: initialData.entity || "",
+        dateOfIdentification: initialData.dateOfIdentification ? new Date(initialData.dateOfIdentification).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        learningOpportunity: initialData.learningOpportunity || "",
+        identifiedBy: initialData.identifiedBy || "",
+        committedBy: initialData.committedBy || "",
+        resolutionProvided: initialData.resolutionProvided || "",
+        modeOfCommunication: initialData.modeOfCommunication || "",
+        emailSub: initialData.emailSub || "",
+        comments: initialData.comments || "",
+      });
+    }
+  }, [initialData]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -39,8 +56,11 @@ export default function LOForm({ onClose, onSuccess }: LOFormProps) {
     setError("");
 
     try {
-      const res = await fetch("/api/lo", {
-        method: "POST",
+      const url = initialData ? `/api/lo/${initialData.id}` : "/api/lo";
+      const method = initialData ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
@@ -71,7 +91,9 @@ export default function LOForm({ onClose, onSuccess }: LOFormProps) {
         position: "relative"
       }}>
         <div style={{ padding: "24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "white", zIndex: 10 }}>
-          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#111827", fontWeight: 600 }}>LO Submit Form (Learning Opportunity)</h2>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#111827", fontWeight: 600 }}>
+            {initialData ? "Edit LO Update" : "LO Submit Form (Learning Opportunity)"}
+          </h2>
           <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b7280" }}>
             <X size={24} />
           </button>
@@ -172,7 +194,7 @@ export default function LOForm({ onClose, onSuccess }: LOFormProps) {
               Cancel
             </button>
             <button type="submit" disabled={loading} style={{ padding: "10px 24px", borderRadius: "8px", border: "none", background: "#2563eb", color: "white", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}>
-              {loading ? "Submitting..." : "Submit LO Update"}
+              {loading ? "Submitting..." : initialData ? "Save Changes" : "Submit LO Update"}
             </button>
           </div>
         </form>

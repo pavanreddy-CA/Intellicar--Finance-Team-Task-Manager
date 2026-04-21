@@ -45,7 +45,9 @@ type LearningOpportunity = {
   comments: string | null;
   createdAt: string;
   editRequested?: boolean;
+  editApproved?: boolean;
   editRequestReason?: string | null;
+  createdByEmail?: string | null;
 };
 
 const hours12 = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -93,6 +95,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [editingLO, setEditingLO] = useState<LearningOpportunity | null>(null);
 
   // Advanced Controls State
   const [startDate, setStartDate] = useState("");
@@ -563,62 +566,70 @@ export default function DashboardClient({ user }: { user: any }) {
     // Row 2: Subtitle
     worksheet.mergeCells('A2:K2');
     const subCell = worksheet.getCell('A2');
-    subCell.value = `Consolidated Report - As of ${formatDate(new Date())}`;
+    subCell.value = `Consolidated Report (All Entries) - As of ${formatDate(new Date())}`;
     subCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF3B5998' } };
     subCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Define Columns for Row 3
+    // Define column widths
     worksheet.columns = [
-      { header: 'SI No', key: 'id', width: 8 },
-      { header: 'Timestamp', key: 'createdAt', width: 20 },
-      { header: 'Entity', key: 'entity', width: 20 },
-      { header: 'Date of Identification', key: 'dateOfIdentification', width: 20 },
-      { header: 'Learning Opportunity', key: 'learningOpportunity', width: 45 },
-      { header: 'Identified By', key: 'identifiedBy', width: 20 },
-      { header: 'Committed By', key: 'committedBy', width: 20 },
-      { header: 'Resolution Provided', key: 'resolutionProvided', width: 45 },
-      { header: 'Mode Of Communication', key: 'modeOfCommunication', width: 20 },
-      { header: 'Email Sub', key: 'emailSub', width: 30 },
-      { header: 'Comments', key: 'comments', width: 40 }
+      { width: 8 },  // SI No
+      { width: 20 }, // Timestamp
+      { width: 20 }, // Entity
+      { width: 20 }, // Date of Identification
+      { width: 45 }, // Learning Opportunity
+      { width: 20 }, // Identified By
+      { width: 20 }, // Committed By
+      { width: 45 }, // Resolution Provided
+      { width: 20 }, // Mode Of Communication
+      { width: 30 }, // Email Sub
+      { width: 40 }  // Comments
     ];
 
-    // Style Header Row (Row 3)
+    // Row 3: Column Headers
     const headerRow = worksheet.getRow(3);
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    headerRow.eachCell((cell) => {
+    const headers = [
+      'SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
+      'Identified by', 'Commited By', 'Resolution Provided', 'Mode Of Communication', 
+      'Email Sub', 'Comments'
+    ];
+    
+    headers.forEach((h, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = h;
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
       cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
       };
     });
 
     // Add Data rows
     los.forEach((lo, index) => {
-      const row = worksheet.addRow({
-        id: index + 1,
-        createdAt: formatDateTime(lo.createdAt),
-        entity: lo.entity,
-        dateOfIdentification: formatDate(lo.dateOfIdentification),
-        learningOpportunity: lo.learningOpportunity,
-        identifiedBy: lo.identifiedBy,
-        committedBy: lo.committedBy,
-        resolutionProvided: lo.resolutionProvided,
-        modeOfCommunication: lo.modeOfCommunication,
-        emailSub: lo.emailSub || "Not Applicable",
-        comments: lo.comments || "NA"
-      });
+      const row = worksheet.addRow([
+        index + 1,
+        formatDateTime(lo.createdAt),
+        lo.entity,
+        formatDate(lo.dateOfIdentification),
+        lo.learningOpportunity,
+        lo.identifiedBy,
+        lo.committedBy,
+        lo.resolutionProvided,
+        lo.modeOfCommunication,
+        lo.emailSub || "Not Applicable",
+        lo.comments || "NA"
+      ]);
       row.alignment = { vertical: 'middle', wrapText: true };
       row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
+          cell.border = {
+              top: { style: 'thin' },
+              left: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' }
+          };
       });
     });
 
@@ -1097,24 +1108,41 @@ export default function DashboardClient({ user }: { user: any }) {
                           <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
                           <td style={tdStyle}>{lo.modeOfCommunication}</td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
-                            <button 
-                              onClick={() => handleRequestEditLO(lo.id)}
-                              disabled={lo.editRequested}
-                              style={{ 
-                                padding: "6px 12px", borderRadius: "6px", border: "1px solid",
-                                background: lo.editRequested ? "#f1f5f9" : "white",
-                                color: lo.editRequested ? "#94a3b8" : "#475569",
-                                borderColor: "#cbd5e1",
-                                fontSize: "0.75rem", fontWeight: 600,
-                                cursor: lo.editRequested ? "not-allowed" : "pointer",
-                                transition: "all 0.2s"
-                              }}
-                              onMouseOver={e => !lo.editRequested && (e.currentTarget.style.background = "#f8fafc")}
-                              onMouseOut={e => !lo.editRequested && (e.currentTarget.style.background = "white")}
-                            >
-                              {lo.editRequested ? "Edit Requested" : "Request Edit"}
-                            </button>
+                            <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                              {/* Show Edit Button if Admin OR if Approved for User */}
+                              {(isAdmin || lo.editApproved) ? (
+                                <button 
+                                  onClick={() => setEditingLO(lo)}
+                                  style={{ 
+                                    padding: "6px 12px", borderRadius: "6px", border: "1px solid #2563eb",
+                                    background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600,
+                                    cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "4px"
+                                  }}
+                                >
+                                  <Edit2 size={12} /> Edit
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={() => handleRequestEditLO(lo.id)}
+                                  disabled={lo.editRequested}
+                                  style={{ 
+                                    padding: "6px 12px", borderRadius: "6px", border: "1px solid",
+                                    background: lo.editRequested ? "#f1f5f9" : "white",
+                                    color: lo.editRequested ? "#94a3b8" : "#475569",
+                                    borderColor: "#cbd5e1",
+                                    fontSize: "0.75rem", fontWeight: 600,
+                                    cursor: lo.editRequested ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s"
+                                  }}
+                                  onMouseOver={e => !lo.editRequested && (e.currentTarget.style.background = "#f8fafc")}
+                                  onMouseOut={e => !lo.editRequested && (e.currentTarget.style.background = "white")}
+                                >
+                                  {lo.editRequested ? "Edit Requested" : "Request Edit"}
+                                </button>
+                              )}
+                            </div>
                           </td>
+</td>
                         </tr>
                       ))
                     )}
@@ -1141,6 +1169,17 @@ export default function DashboardClient({ user }: { user: any }) {
             setShowLOForm(false);
             fetchLOs();
             alert("LO Update submitted successfully!");
+          }} 
+        />
+      )}
+      {editingLO && (
+        <LOForm 
+          initialData={editingLO}
+          onClose={() => setEditingLO(null)} 
+          onSuccess={() => {
+            setEditingLO(null);
+            fetchLOs();
+            alert("LO entry updated successfully!");
           }} 
         />
       )}

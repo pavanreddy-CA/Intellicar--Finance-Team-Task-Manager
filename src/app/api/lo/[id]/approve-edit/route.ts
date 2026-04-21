@@ -22,6 +22,7 @@ export async function POST(
         where: { id: loId },
         data: {
           editRequested: false,
+          editApproved: true,
           editRequestReason: null,
         }
       });
