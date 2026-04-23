@@ -3199,6 +3199,7 @@ export default function DashboardClient({ user }: { user: any }) {
                             />
                           </div>
                         </div>
+                      </div>
                       {/* Communication Modes */}
                       <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
