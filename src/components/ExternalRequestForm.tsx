@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Send } from "lucide-react";
 
 type ExternalRequestFormProps = {
@@ -20,12 +20,6 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     natureOfRequest: "",
     departmentName: "",
     requestType: "",
-  });
-
-  useState(() => {
-    if (user?.department) {
-      setFormData(prev => ({ ...prev, departmentName: user.department }));
-    }
   });
 
   useEffect(() => {
