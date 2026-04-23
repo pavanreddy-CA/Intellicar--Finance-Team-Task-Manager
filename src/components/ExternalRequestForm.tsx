@@ -18,9 +18,21 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     requestFrom: user?.name || "",
     requesterEmail: user?.email || "",
     natureOfRequest: "",
-    departmentName: user?.department || "",
+    departmentName: "",
     requestType: "",
   });
+
+  useState(() => {
+    if (user?.department) {
+      setFormData(prev => ({ ...prev, departmentName: user.department }));
+    }
+  });
+
+  useEffect(() => {
+    if (user?.department && !formData.departmentName) {
+      setFormData(prev => ({ ...prev, departmentName: user.department }));
+    }
+  }, [user, formData.departmentName]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

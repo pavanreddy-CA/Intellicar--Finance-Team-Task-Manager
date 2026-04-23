@@ -2653,6 +2653,31 @@ export default function DashboardClient({ user }: { user: any }) {
                         {passwordLoading ? "Updating..." : "Update Password"}
                       </button>
                     </form>
+
+                    <div style={{ marginTop: "48px", paddingTop: "32px", borderTop: "1px solid #e2e8f0" }}>
+                      <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: "#0f172a", fontWeight: 700 }}>Profile Information</h4>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", maxWidth: "600px" }}>
+                        <div>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Full Name</p>
+                          <p style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 500 }}>{user?.name || "Not Set"}</p>
+                        </div>
+                        <div>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Email Address</p>
+                          <p style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 500 }}>{user?.email}</p>
+                        </div>
+                        <div>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Role</p>
+                          <p style={{ margin: 0, fontSize: "0.875rem", display: "inline-block", padding: "4px 12px", background: "#f1f5f9", borderRadius: "9999px", color: "#475569", fontWeight: 600 }}>{user?.role || "USER"}</p>
+                        </div>
+                        <div>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Assigned Department</p>
+                          <p style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 500 }}>{user?.department || "Finance (Default)"}</p>
+                        </div>
+                      </div>
+                      <p style={{ marginTop: "24px", fontSize: "0.8125rem", color: "#94a3b8", fontStyle: "italic" }}>
+                        Note: If your department is incorrect, please contact an Administrator to update it in User Management.
+                      </p>
+                    </div>
                   </div>
                 )}
 
