@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, Settings } from "lucide-react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -100,7 +100,7 @@ export default function DashboardClient({ user }: { user: any }) {
   const [showLOForm, setShowLOForm] = useState(false);
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA'>('ACCOUNT');
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA' | 'INPUTS'>('ACCOUNT');
   const [settings, setSettings] = useState({
     reminderFrequency: 'DAILY',
     reminderTimes: '09:00,18:00',
@@ -109,7 +109,12 @@ export default function DashboardClient({ user }: { user: any }) {
     loReportFrequency: 'WEEKLY',
     loReportTimes: '10:00',
     managerEmail: '',
-    loReportEmail: ''
+    loReportEmail: '',
+    masterEntities: 'Intellicar-BLR,Intellicar-Delhi,Fabric IoT-BLR,Ratch-AI,Consolidation',
+    masterTaskTypes: 'Accounts Receivable,Accounts Payable,MIS,Inventory,Banking & Treasury,Customer Reconciliations,Vendor Reconciliation,Reporting,Financial Audit,Tax Audit,Other Audits,Assements & Notices,Month Closure,Corporate Taxation,GST,Employee Laws,Due Diligence,Presentations & Trainings,Other Reconcillitions,MCA Filings,Miscellaneous Activities',
+    masterDepartments: 'SW - Engineering,Manufacturing and Supply Chain,Field Operations Technicians,HW - Engineering,Operations,CSM & Sales,Finance,HR and Admin,External People',
+    masterTeamMembers: 'Venkat,Saikath,Nikhat,Sami,Pavan,Sharath,Sreenivas,Hanusha,Chandana,Sidharth Saneja',
+    masterCommunicationModes: 'Email,Verbal Discussion,Hangouts,Whatsapp IC Group'
   });
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -2084,7 +2089,8 @@ export default function DashboardClient({ user }: { user: any }) {
           onSuccess={() => {
             setShowForm(false);
             fetchTasks();
-          }} 
+          }}
+          settings={settings}
         />
       )}
       {showLOForm && (
@@ -2094,7 +2100,8 @@ export default function DashboardClient({ user }: { user: any }) {
             setShowLOForm(false);
             fetchLOs();
             alert("LO Update submitted successfully!");
-          }} 
+          }}
+          settings={settings}
         />
       )}
       {editingLO && (
@@ -2105,7 +2112,8 @@ export default function DashboardClient({ user }: { user: any }) {
             setEditingLO(null);
             fetchLOs();
             alert("LO entry updated successfully!");
-          }} 
+          }}
+          settings={settings}
         />
       )}
       {showLOCaptureModal && (
@@ -2247,6 +2255,12 @@ export default function DashboardClient({ user }: { user: any }) {
                       style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
                     >
                       <Download size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Bulk Import
+                    </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('INPUTS')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'INPUTS' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'INPUTS' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                    >
+                      <Settings size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Inputs for Forms
                     </button>
                   </>
                 )}
@@ -2954,6 +2968,74 @@ export default function DashboardClient({ user }: { user: any }) {
                     </div>
                   </div>
                 )}
+
+                {activeOptionsTab === 'INPUTS' && (
+                  <div>
+                    <h3 style={{ margin: "0 0 8px 0" }}>Inputs for Forms</h3>
+                    <p style={{ color: "#64748b", marginBottom: "32px" }}>Manage dropdown options for Task and LO forms. Add or remove items as needed.</p>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                      {/* Entities */}
+                      <MasterDataSection
+                        title="Entities"
+                        description="Companies or business units"
+                        values={settings.masterEntities?.split(',').filter(Boolean) || []}
+                        onUpdate={(newValues) => setSettings({ ...settings, masterEntities: newValues.join(',') })}
+                      />
+
+                      {/* Task Types */}
+                      <MasterDataSection
+                        title="Task Types"
+                        description="Categories of tasks"
+                        values={settings.masterTaskTypes?.split(',').filter(Boolean) || []}
+                        onUpdate={(newValues) => setSettings({ ...settings, masterTaskTypes: newValues.join(',') })}
+                      />
+
+                      {/* Departments */}
+                      <MasterDataSection
+                        title="Departments"
+                        description="Organizational departments"
+                        values={settings.masterDepartments?.split(',').filter(Boolean) || []}
+                        onUpdate={(newValues) => setSettings({ ...settings, masterDepartments: newValues.join(',') })}
+                      />
+
+                      {/* Team Members */}
+                      <MasterDataSection
+                        title="Team Members"
+                        description="Owner and reviewer names"
+                        values={settings.masterTeamMembers?.split(',').filter(Boolean) || []}
+                        onUpdate={(newValues) => setSettings({ ...settings, masterTeamMembers: newValues.join(',') })}
+                      />
+
+                      {/* Communication Modes */}
+                      <MasterDataSection
+                        title="Communication Modes"
+                        description="For LO form communication field"
+                        values={settings.masterCommunicationModes?.split(',').filter(Boolean) || []}
+                        onUpdate={(newValues) => setSettings({ ...settings, masterCommunicationModes: newValues.join(',') })}
+                      />
+                    </div>
+
+                    <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end" }}>
+                      <button
+                        onClick={handleSaveSettings}
+                        disabled={isSavingSettings}
+                        style={{ 
+                          padding: "12px 32px", 
+                          borderRadius: "8px", 
+                          border: "none", 
+                          background: "#2563eb", 
+                          color: "white", 
+                          fontWeight: 600, 
+                          cursor: isSavingSettings ? "not-allowed" : "pointer",
+                          fontSize: "0.9375rem"
+                        }}
+                      >
+                        {isSavingSettings ? "Saving..." : "Save All Changes"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -3046,6 +3128,145 @@ export default function DashboardClient({ user }: { user: any }) {
 }
 
 // Subcomponents
+
+function MasterDataSection({ title, description, values, onUpdate }: { title: string, description: string, values: string[], onUpdate: (values: string[]) => void }) {
+  const [newValue, setNewValue] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  const handleAdd = () => {
+    if (newValue.trim() && !values.includes(newValue.trim())) {
+      onUpdate([...values, newValue.trim()]);
+      setNewValue("");
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    onUpdate(values.filter((_, i) => i !== index));
+  };
+
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditValue(values[index]);
+  };
+
+  const handleSaveEdit = () => {
+    if (editValue.trim() && editingIndex !== null) {
+      const newValues = [...values];
+      newValues[editingIndex] = editValue.trim();
+      onUpdate(newValues);
+      setEditingIndex(null);
+      setEditValue("");
+    }
+  };
+
+  return (
+    <div style={{ padding: "24px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+      <div style={{ marginBottom: "16px" }}>
+        <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 600, color: "#0f172a" }}>{title}</h4>
+        <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>{description}</p>
+      </div>
+      
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+        {values.map((value, index) => (
+          <div 
+            key={index} 
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "6px", 
+              background: "#f1f5f9", 
+              padding: "6px 12px", 
+              borderRadius: "6px",
+              fontSize: "0.875rem",
+              color: "#334155"
+            }}
+          >
+            {editingIndex === index ? (
+              <>
+                <input 
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
+                  style={{ 
+                    padding: "2px 6px", 
+                    borderRadius: "4px", 
+                    border: "1px solid #cbd5e1",
+                    fontSize: "0.875rem",
+                    width: "120px"
+                  }}
+                  autoFocus
+                />
+                <button 
+                  onClick={handleSaveEdit}
+                  style={{ background: "#22c55e", color: "white", border: "none", borderRadius: "4px", padding: "2px 6px", cursor: "pointer", fontSize: "0.75rem" }}
+                >
+                  Save
+                </button>
+                <button 
+                  onClick={() => setEditingIndex(null)}
+                  style={{ background: "#94a3b8", color: "white", border: "none", borderRadius: "4px", padding: "2px 6px", cursor: "pointer", fontSize: "0.75rem" }}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <span>{value}</span>
+                <button 
+                  onClick={() => handleEdit(index)}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "#64748b", padding: "0 2px", fontSize: "0.75rem" }}
+                  title="Edit"
+                >
+                  Edit
+                </button>
+                <button 
+                  onClick={() => handleRemove(index)}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", padding: "0 2px", fontWeight: "bold" }}
+                  title="Remove"
+                >
+                  &times;
+                </button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: "8px" }}>
+        <input 
+          type="text"
+          value={newValue}
+          onChange={(e) => setNewValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          placeholder={`Add new ${title.toLowerCase().slice(0, -1)}...`}
+          style={{ 
+            flex: 1, 
+            padding: "10px 12px", 
+            borderRadius: "8px", 
+            border: "1px solid #d1d5db",
+            fontSize: "0.875rem"
+          }}
+        />
+        <button 
+          onClick={handleAdd}
+          style={{ 
+            padding: "10px 20px", 
+            borderRadius: "8px", 
+            border: "none", 
+            background: "#2563eb", 
+            color: "white", 
+            fontWeight: 500, 
+            cursor: "pointer",
+            fontSize: "0.875rem"
+          }}
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function MetricCard({ title, value, icon, bg, isActive, onClick }: { title: string, value: number, icon: any, bg: string, isActive?: boolean, onClick?: () => void }) {
   return (

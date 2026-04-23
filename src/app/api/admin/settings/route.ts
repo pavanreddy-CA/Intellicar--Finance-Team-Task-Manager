@@ -46,7 +46,12 @@ export async function POST(req: Request) {
       loReportFrequency,
       loReportTimes,
       managerEmail,
-      loReportEmail
+      loReportEmail,
+      masterEntities,
+      masterTaskTypes,
+      masterDepartments,
+      masterTeamMembers,
+      masterCommunicationModes
     } = body;
 
     const settings = await prisma.systemSettings.upsert({
@@ -59,7 +64,12 @@ export async function POST(req: Request) {
         loReportFrequency,
         loReportTimes,
         managerEmail,
-        loReportEmail
+        loReportEmail,
+        masterEntities,
+        masterTaskTypes,
+        masterDepartments,
+        masterTeamMembers,
+        masterCommunicationModes
       },
       create: {
         id: "singleton",
@@ -70,7 +80,12 @@ export async function POST(req: Request) {
         loReportFrequency,
         loReportTimes,
         managerEmail,
-        loReportEmail
+        loReportEmail,
+        masterEntities,
+        masterTaskTypes,
+        masterDepartments,
+        masterTeamMembers,
+        masterCommunicationModes
       }
     });
 

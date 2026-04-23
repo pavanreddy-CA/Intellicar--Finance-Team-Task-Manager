@@ -3,12 +3,21 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
+type SystemSettings = {
+  masterEntities?: string;
+  masterTaskTypes?: string;
+  masterDepartments?: string;
+  masterTeamMembers?: string;
+  masterCommunicationModes?: string;
+};
+
 type TaskFormProps = {
   onClose: () => void;
   onSuccess: () => void;
+  settings?: SystemSettings;
 };
 
-export default function TaskForm({ onClose, onSuccess }: TaskFormProps) {
+export default function TaskForm({ onClose, onSuccess, settings }: TaskFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,6 +32,19 @@ export default function TaskForm({ onClose, onSuccess }: TaskFormProps) {
     dueDate: "",
     mailLink: "",
   });
+
+  // Parse settings or use defaults
+  const entities = settings?.masterEntities?.split(',').filter(Boolean) || 
+    ['Intellicar-BLR', 'Intellicar-Delhi', 'Fabric IoT-BLR', 'Ratch-AI', 'Consolidation'];
+  
+  const taskTypes = settings?.masterTaskTypes?.split(',').filter(Boolean) || 
+    ['Accounts Receivable', 'Accounts Payable', 'MIS', 'Inventory', 'Banking & Treasury', 'Customer Reconciliations', 'Vendor Reconciliation', 'Reporting', 'Financial Audit', 'Tax Audit', 'Other Audits', 'Assements & Notices', 'Month Closure', 'Corporate Taxation', 'GST', 'Employee Laws', 'Due Diligence', 'Presentations & Trainings', 'Other Reconcillitions', 'MCA Filings', 'Miscellaneous Activities'];
+  
+  const departments = settings?.masterDepartments?.split(',').filter(Boolean) || 
+    ['SW - Engineering', 'Manufacturing and Supply Chain', 'Field Operations Technicians', 'HW - Engineering', 'Operations', 'CSM & Sales', 'Finance', 'HR and Admin', 'External People'];
+  
+  const teamMembers = settings?.masterTeamMembers?.split(',').filter(Boolean) || 
+    ['Venkat', 'Saikath', 'Nikhat', 'Sami', 'Pavan', 'Sharath', 'Sreenivas', 'Hanusha', 'Chandana', 'Sidharth Saneja'];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -85,38 +107,18 @@ export default function TaskForm({ onClose, onSuccess }: TaskFormProps) {
               <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Entity Name *</label>
               <select name="entityName" required value={formData.entityName} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Intellicar-BLR">Intellicar-BLR</option>
-                <option value="Intellicar-Delhi">Intellicar-Delhi</option>
-                <option value="Fabric IoT-BLR">Fabric IoT-BLR</option>
-                <option value="Ratch-AI">Ratch-AI</option>
-                <option value="Consolidation">Consolidation</option>
+                {entities.map(entity => (
+                  <option key={entity} value={entity}>{entity}</option>
+                ))}
               </select>
             </div>
             <div>
               <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Type *</label>
               <select name="taskType" required value={formData.taskType} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Accounts Receivable">Accounts Receivable</option>
-                <option value="Accounts Payable">Accounts Payable</option>
-                <option value="MIS">MIS</option>
-                <option value="Inventory">Inventory</option>
-                <option value="Banking & Treasury">Banking & Treasury</option>
-                <option value="Customer Reconciliations">Customer Reconciliations</option>
-                <option value="Vendor Reconciliation">Vendor Reconciliation</option>
-                <option value="Reporting">Reporting</option>
-                <option value="Financial Audit">Financial Audit</option>
-                <option value="Tax Audit">Tax Audit</option>
-                <option value="Other Audits">Other Audits</option>
-                <option value="Assements & Notices">Assements & Notices</option>
-                <option value="Month Closure">Month Closure</option>
-                <option value="Corporate Taxation">Corporate Taxation</option>
-                <option value="GST">GST</option>
-                <option value="Employee Laws">Employee Laws</option>
-                <option value="Due Diligence">Due Diligence</option>
-                <option value="Presentations & Trainings">Presentations & Trainings</option>
-                <option value="Other Reconcillitions">Other Reconcillitions</option>
-                <option value="MCA Filings">MCA Filings</option>
-                <option value="Miscellaneous Activities">Miscellaneous Activities</option>
+                {taskTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -126,15 +128,9 @@ export default function TaskForm({ onClose, onSuccess }: TaskFormProps) {
               <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
               <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="SW - Engineering">SW - Engineering</option>
-                <option value="Manufacturing and Supply Chain">Manufacturing and Supply Chain</option>
-                <option value="Field Operations Technicians">Field Operations Technicians</option>
-                <option value="HW - Engineering">HW - Engineering</option>
-                <option value="Operations">Operations</option>
-                <option value="CSM & Sales">CSM & Sales</option>
-                <option value="Finance">Finance</option>
-                <option value="HR and Admin">HR and Admin</option>
-                <option value="External People">External People</option>
+                {departments.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -148,32 +144,18 @@ export default function TaskForm({ onClose, onSuccess }: TaskFormProps) {
               <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Owner Name *</label>
               <select name="ownerName" required value={formData.ownerName} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Venkat">Venkat</option>
-                <option value="Saikath">Saikath</option>
-                <option value="Nikhat">Nikhat</option>
-                <option value="Sami">Sami</option>
-                <option value="Pavan">Pavan</option>
-                <option value="Sharath">Sharath</option>
-                <option value="Sreenivas">Sreenivas</option>
-                <option value="Hanusha">Hanusha</option>
-                <option value="Chandana">Chandana</option>
-                <option value="Sidharth Saneja">Sidharth Saneja</option>
+                {teamMembers.map(member => (
+                  <option key={member} value={member}>{member}</option>
+                ))}
               </select>
             </div>
             <div>
               <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Reviewer Name</label>
               <select name="reviewerName" value={formData.reviewerName} onChange={handleChange} style={inputStyle}>
                 <option value="">Not Applicable / None</option>
-                <option value="Venkat">Venkat</option>
-                <option value="Saikath">Saikath</option>
-                <option value="Nikhat">Nikhat</option>
-                <option value="Sami">Sami</option>
-                <option value="Pavan">Pavan</option>
-                <option value="Sharath">Sharath</option>
-                <option value="Sreenivas">Sreenivas</option>
-                <option value="Hanusha">Hanusha</option>
-                <option value="Chandana">Chandana</option>
-                <option value="Sidharth Saneja">Sidharth Saneja</option>
+                {teamMembers.map(member => (
+                  <option key={member} value={member}>{member}</option>
+                ))}
               </select>
             </div>
           </div>

@@ -3,20 +3,34 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
+type SystemSettings = {
+  masterEntities?: string;
+  masterTaskTypes?: string;
+  masterDepartments?: string;
+  masterTeamMembers?: string;
+  masterCommunicationModes?: string;
+};
+
 type LOFormProps = {
   onClose: () => void;
   onSuccess: () => void;
   initialData?: any;
+  settings?: SystemSettings;
 };
 
-const EMPLOYEES = [
-  "Venkat", "Pavan", "Sharath", "Sami", "Sreenivas", 
-  "Siddharth", "Nikhat", "Chandana", "Saikath", "Hanusha"
-];
-
-export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps) {
+export default function LOForm({ onClose, onSuccess, initialData, settings }: LOFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Parse settings or use defaults
+  const entities = settings?.masterEntities?.split(',').filter(Boolean) || 
+    ['Intellicar-BLR', 'Intellicar Delhi', 'Fabric IOT-Blr', 'Reltch AI', 'Consolidation'];
+  
+  const teamMembers = settings?.masterTeamMembers?.split(',').filter(Boolean) || 
+    ['Venkat', 'Pavan', 'Sharath', 'Sami', 'Sreenivas', 'Siddharth', 'Nikhat', 'Chandana', 'Saikath', 'Hanusha'];
+  
+  const communicationModes = settings?.masterCommunicationModes?.split(',').filter(Boolean) || 
+    ['Email', 'Verbal Discussion', 'Hangouts', 'Whatsapp IC Group'];
 
   const [formData, setFormData] = useState({
     entity: "",
@@ -107,11 +121,9 @@ export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps)
               <label style={labelStyle}>Entity *</label>
               <select name="entity" required value={formData.entity} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Intellicar-BLR">Intellicar-BLR</option>
-                <option value="Intellicar Delhi">Intellicar Delhi</option>
-                <option value="Fabric IOT-Blr">Fabric IOT-Blr</option>
-                <option value="Reltch AI">Reltch AI</option>
-                <option value="Consolidation">Consolidation</option>
+                {entities.map(entity => (
+                  <option key={entity} value={entity}>{entity}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -137,14 +149,18 @@ export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps)
               <label style={labelStyle}>Identified By *</label>
               <select name="identifiedBy" required value={formData.identifiedBy} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                {EMPLOYEES.map(emp => <option key={emp} value={emp}>{emp}</option>)}
+                {teamMembers.map(member => (
+                  <option key={member} value={member}>{member}</option>
+                ))}
               </select>
             </div>
             <div>
               <label style={labelStyle}>Committed By *</label>
               <select name="committedBy" required value={formData.committedBy} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                {EMPLOYEES.map(emp => <option key={emp} value={emp}>{emp}</option>)}
+                {teamMembers.map(member => (
+                  <option key={member} value={member}>{member}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -166,10 +182,9 @@ export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps)
               <label style={labelStyle}>Mode Of Communication *</label>
               <select name="modeOfCommunication" required value={formData.modeOfCommunication} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Email">Email</option>
-                <option value="Verbal Discussion">Verbal Discussion</option>
-                <option value="Hangouts">Hangouts</option>
-                <option value="Whatsapp IC Group">Whatsapp IC Group</option>
+                {communicationModes.map(mode => (
+                  <option key={mode} value={mode}>{mode}</option>
+                ))}
               </select>
             </div>
             <div>
