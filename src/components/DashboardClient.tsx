@@ -1577,7 +1577,6 @@ export default function DashboardClient({ user }: { user: any }) {
                     </button>
                   </div>
                 )}
-              </div>
             </div>
           </div>
 
@@ -1919,7 +1918,6 @@ export default function DashboardClient({ user }: { user: any }) {
               <span style={{ padding: "6px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>Coming Soon</span>
               <span style={{ padding: "6px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>Multi-Dept Sync</span>
             </div>
-          </div>
           </div>
         )}
 
