@@ -100,7 +100,9 @@ export default function DashboardClient({ user }: { user: any }) {
   const [showLOForm, setShowLOForm] = useState(false);
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA'>('ACCOUNT');
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA' | 'MASTER_DATA'>('ACCOUNT');
+  const [isTasksMenuOpen, setIsTasksMenuOpen] = useState(true);
+  const [activeSubView, setActiveSubView] = useState<'MAIN' | 'OTHER_DEPT'>('MAIN');
   const [settings, setSettings] = useState({
     reminderFrequency: 'DAILY',
     reminderTimes: '09:00,18:00',
@@ -109,7 +111,10 @@ export default function DashboardClient({ user }: { user: any }) {
     loReportFrequency: 'WEEKLY',
     loReportTimes: '10:00',
     managerEmail: '',
-    loReportEmail: ''
+    loReportEmail: '',
+    masterDepartments: '',
+    masterEntities: '',
+    masterTaskTypes: ''
   });
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -465,6 +470,23 @@ export default function DashboardClient({ user }: { user: any }) {
       }
     } catch (error) {
       console.error("Failed to update role", error);
+    }
+  };
+
+  const handleUpdateUserDepartment = async (userId: string, newDept: string) => {
+    try {
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, department: newDept }),
+      });
+      if (res.ok) {
+        fetchUsersList(); // Refresh
+      } else {
+        alert("Failed to update user department.");
+      }
+    } catch (error) {
+      console.error("Failed to update department", error);
     }
   };
 
@@ -1152,10 +1174,15 @@ export default function DashboardClient({ user }: { user: any }) {
         }
       }
 
-      // Convert buffer to base64 (Browser compatible)
-      const base64 = btoa(
-        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
+      // Convert buffer to base64 (Robust browser-compatible method)
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          resolve(dataUrl.split(',')[1]);
+        };
+        reader.readAsDataURL(new Blob([buffer]));
+      });
 
       const res = await fetch("/api/reports/share", {
         method: "POST",
@@ -1226,20 +1253,54 @@ export default function DashboardClient({ user }: { user: any }) {
           flexShrink: 0, zIndex: 90, borderRight: "1px solid rgba(255,255,255,0.05)"
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", padding: "0 12px" }}>
-            <button 
-              onClick={() => setActiveView('TASKS')}
-              style={{ 
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
-                background: activeView === 'TASKS' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
-                border: "none", color: activeView === 'TASKS' ? "#60a5fa" : "#94a3b8", 
-                cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
-                width: "100%", borderRadius: "16px",
-                boxShadow: activeView === 'TASKS' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
-              }}
-            >
-              <Home size={24} color={activeView === 'TASKS' ? "#60a5fa" : "#94a3b8"} />
-              <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Tasks</span>
-            </button>
+            <div style={{ width: "100%" }}>
+              <button 
+                onClick={() => {
+                  setActiveView('TASKS');
+                  setIsTasksMenuOpen(!isTasksMenuOpen);
+                }}
+                style={{ 
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
+                  background: activeView === 'TASKS' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
+                  border: "none", color: activeView === 'TASKS' ? "#60a5fa" : "#94a3b8", 
+                  cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
+                  width: "100%", borderRadius: "16px",
+                  boxShadow: activeView === 'TASKS' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none",
+                  position: "relative"
+                }}
+              >
+                <Home size={24} color={activeView === 'TASKS' ? "#60a5fa" : "#94a3b8"} />
+                <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Tasks</span>
+                <ChevronDown size={14} style={{ position: "absolute", bottom: "12px", right: "12px", transform: isTasksMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }} />
+              </button>
+              
+              {isTasksMenuOpen && (
+                <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", padding: "0 8px" }}>
+                  <button 
+                    onClick={() => { setActiveView('TASKS'); setActiveSubView('MAIN'); }}
+                    style={{ 
+                      padding: "10px", borderRadius: "8px", border: "none", textAlign: "left", fontSize: "0.7rem", fontWeight: 600,
+                      background: activeView === 'TASKS' && activeSubView === 'MAIN' ? "rgba(59, 130, 246, 0.2)" : "transparent",
+                      color: activeView === 'TASKS' && activeSubView === 'MAIN' ? "#60a5fa" : "#94a3b8",
+                      cursor: "pointer", transition: "all 0.2s"
+                    }}
+                  >
+                    Task Dashboard
+                  </button>
+                  <button 
+                    onClick={() => { setActiveView('TASKS'); setActiveSubView('OTHER_DEPT'); }}
+                    style={{ 
+                      padding: "10px", borderRadius: "8px", border: "none", textAlign: "left", fontSize: "0.7rem", fontWeight: 600,
+                      background: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? "rgba(59, 130, 246, 0.2)" : "transparent",
+                      color: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? "#60a5fa" : "#94a3b8",
+                      cursor: "pointer", transition: "all 0.2s"
+                    }}
+                  >
+                    Requests from Other Dept
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button 
               onClick={() => setActiveView('LOS')}
@@ -1273,13 +1334,17 @@ export default function DashboardClient({ user }: { user: any }) {
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
                 <span style={{ color: "#cbd5e1" }}>/</span>
-                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#64748b" }}>{activeView === 'TASKS' ? "Workplace" : "Development"}</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#64748b" }}>
+                  {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : "Development"}
+                </span>
               </div>
               <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em" }}>
-                {activeView === 'TASKS' ? "Task Dashboard" : "Learning Opportunities"}
+                {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Requests from Other Department") : "Learning Opportunities"}
               </h2>
               <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.95rem", fontWeight: 500 }}>
-                {activeView === 'TASKS' ? "Track team productivity and operational milestones." : "Turning challenges into structured growth opportunities."}
+                {activeView === 'TASKS' ? 
+                  (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") 
+                  : "Turning challenges into structured growth opportunities."}
               </p>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -1297,12 +1362,14 @@ export default function DashboardClient({ user }: { user: any }) {
 
         {/* Metric Cards / Motivational Quote */}
         {activeView === 'TASKS' ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px", marginBottom: "32px" }}>
-            <MetricCard title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={24} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
-            <MetricCard title="Pending Action" value={pendingActionCount} icon={<Clock size={24} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
-            <MetricCard title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={24} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
-            <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
-          </div>
+          activeSubView === 'MAIN' ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px", marginBottom: "32px" }}>
+              <MetricCard title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={24} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
+              <MetricCard title="Pending Action" value={pendingActionCount} icon={<Clock size={24} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
+              <MetricCard title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={24} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
+              <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
+            </div>
+          ) : null
         ) : (
           <div style={{ 
             marginBottom: "32px", 
@@ -1341,6 +1408,7 @@ export default function DashboardClient({ user }: { user: any }) {
 
 
         {activeView === 'TASKS' ? (
+          activeSubView === 'MAIN' ? (
           <>
         {/* Action Toolbar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
@@ -1834,8 +1902,24 @@ export default function DashboardClient({ user }: { user: any }) {
               </div>
             </div>
           )}
-        </div>
         </>
+        ) : (
+          /* Placeholder for Other Departments */
+          <div style={{ padding: "80px 20px", textAlign: "center", background: "white", borderRadius: "24px", border: "1px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#eff6ff", padding: "20px", borderRadius: "50%", marginBottom: "20px" }}>
+              <Users size={48} color="#3b82f6" />
+            </div>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 12px 0" }}>Cross-Departmental Collaboration</h3>
+            <p style={{ maxWidth: "500px", color: "#64748b", lineHeight: 1.6, margin: 0 }}>
+              This module is being prepared to handle task requests from departments outside of Finance. 
+              Incoming requests will appear here for your review and action.
+            </p>
+            <div style={{ marginTop: "32px", display: "flex", gap: "12px" }}>
+              <span style={{ padding: "6px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>Coming Soon</span>
+              <span style={{ padding: "6px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>Multi-Dept Sync</span>
+            </div>
+          </div>
+        )
         ) : (
           /* LO View */
           <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
@@ -2080,6 +2164,7 @@ export default function DashboardClient({ user }: { user: any }) {
 
       {showForm && (
         <TaskForm 
+          settings={settings}
           onClose={() => setShowForm(false)} 
           onSuccess={() => {
             setShowForm(false);
@@ -2089,6 +2174,7 @@ export default function DashboardClient({ user }: { user: any }) {
       )}
       {showLOForm && (
         <LOForm 
+          settings={settings}
           onClose={() => setShowLOForm(false)} 
           onSuccess={() => {
             setShowLOForm(false);
@@ -2099,6 +2185,7 @@ export default function DashboardClient({ user }: { user: any }) {
       )}
       {editingLO && (
         <LOForm 
+          settings={settings}
           initialData={editingLO}
           onClose={() => setEditingLO(null)} 
           onSuccess={() => {
@@ -2243,6 +2330,12 @@ export default function DashboardClient({ user }: { user: any }) {
                       )}
                     </button>
                     <button 
+                      onClick={() => setActiveOptionsTab('MASTER_DATA')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MASTER_DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MASTER_DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                    >
+                      Master Data
+                    </button>
+                    <button 
                       onClick={() => setActiveOptionsTab('DATA')} 
                       style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
                     >
@@ -2313,77 +2406,75 @@ export default function DashboardClient({ user }: { user: any }) {
                         {/* Task Report Managers */}
                         <div>
                           <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Manager Emails</label>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", background: "white", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
                             {(settings.managerEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
-                              <div key={`m-${idx}`} style={{ display: "flex", gap: "8px" }}>
-                                <input 
-                                  type="email" 
-                                  value={email.trim()}
-                                  onChange={(e) => {
-                                    const emails = (settings.managerEmail || "").split(',');
-                                    emails[idx] = e.target.value;
-                                    setSettings({...settings, managerEmail: emails.join(',')});
-                                  }}
-                                  style={{ ...inputStyle, flex: 1 }} 
-                                  placeholder="manager@intellicar.in"
-                                />
+                              <div key={`m-${idx}`} style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", border: "1px solid #bfdbfe" }}>
+                                {email.trim()}
                                 <button 
                                   onClick={() => {
                                     const emails = (settings.managerEmail || "").split(',').filter((_, i) => i !== idx);
                                     setSettings({...settings, managerEmail: emails.join(',')});
                                   }}
-                                  style={{ background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5", borderRadius: "8px", padding: "0 10px", cursor: "pointer", fontWeight: "bold" }}
+                                  style={{ background: "transparent", border: "none", color: "#3b82f6", cursor: "pointer", fontWeight: "bold", fontSize: "14px", display: "flex", alignItems: "center" }}
                                 >
                                   ×
                                 </button>
                               </div>
                             ))}
-                            <button 
-                              onClick={() => setSettings({...settings, managerEmail: (settings.managerEmail || "") + (settings.managerEmail?.trim() ? "," : "") + " "})}
-                              style={{ alignSelf: "flex-start", padding: "6px 12px", borderRadius: "8px", border: "1px dashed #3b82f6", background: "white", color: "#3b82f6", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
-                            >
-                              + Add Manager Email
-                            </button>
+                            <input 
+                              type="email" 
+                              placeholder="Add email..."
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const val = e.currentTarget.value.trim();
+                                  if (val && val.includes('@')) {
+                                    setSettings({...settings, managerEmail: (settings.managerEmail || "") + (settings.managerEmail?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ border: "none", outline: "none", fontSize: "0.8125rem", flex: 1, minWidth: "120px" }}
+                            />
                           </div>
-                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Recipients for Task Summary reports.</p>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Press Enter to add recipient.</p>
                         </div>
 
                         {/* LO Report Admins */}
                         <div>
                           <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>LO Report Admins</label>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", background: "white", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
                             {(settings.loReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
-                              <div key={`l-${idx}`} style={{ display: "flex", gap: "8px" }}>
-                                <input 
-                                  type="email" 
-                                  value={email.trim()}
-                                  onChange={(e) => {
-                                    const emails = (settings.loReportEmail || "").split(',');
-                                    emails[idx] = e.target.value;
-                                    setSettings({...settings, loReportEmail: emails.join(',')});
-                                  }}
-                                  style={{ ...inputStyle, flex: 1 }} 
-                                  placeholder="admin@intellicar.in"
-                                />
+                              <div key={`l-${idx}`} style={{ background: "#f5f3ff", color: "#6d28d9", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", border: "1px solid #ddd6fe" }}>
+                                {email.trim()}
                                 <button 
                                   onClick={() => {
                                     const emails = (settings.loReportEmail || "").split(',').filter((_, i) => i !== idx);
                                     setSettings({...settings, loReportEmail: emails.join(',')});
                                   }}
-                                  style={{ background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5", borderRadius: "8px", padding: "0 10px", cursor: "pointer", fontWeight: "bold" }}
+                                  style={{ background: "transparent", border: "none", color: "#7c3aed", cursor: "pointer", fontWeight: "bold", fontSize: "14px", display: "flex", alignItems: "center" }}
                                 >
                                   ×
                                 </button>
                               </div>
                             ))}
-                            <button 
-                              onClick={() => setSettings({...settings, loReportEmail: (settings.loReportEmail || "") + (settings.loReportEmail?.trim() ? "," : "") + " "})}
-                              style={{ alignSelf: "flex-start", padding: "6px 12px", borderRadius: "8px", border: "1px dashed #3b82f6", background: "white", color: "#3b82f6", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
-                            >
-                              + Add Admin Email
-                            </button>
+                            <input 
+                              type="email" 
+                              placeholder="Add email..."
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const val = e.currentTarget.value.trim();
+                                  if (val && val.includes('@')) {
+                                    setSettings({...settings, loReportEmail: (settings.loReportEmail || "") + (settings.loReportEmail?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ border: "none", outline: "none", fontSize: "0.8125rem", flex: 1, minWidth: "120px" }}
+                            />
                           </div>
-                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Recipients for LO reports.</p>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Press Enter to add recipient.</p>
                         </div>
                       </div>
                     </div>
@@ -2680,9 +2771,10 @@ export default function DashboardClient({ user }: { user: any }) {
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
                         <thead>
                           <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left" }}>
-                            <th style={{ padding: "12px 8px" }}>Name</th>
-                            <th style={{ padding: "12px 8px" }}>Email</th>
-                            <th style={{ padding: "12px 8px" }}>Role</th>
+                             <th style={{ padding: "12px 8px" }}>Name</th>
+                             <th style={{ padding: "12px 8px" }}>Email</th>
+                             <th style={{ padding: "12px 8px" }}>Department</th>
+                             <th style={{ padding: "12px 8px" }}>Role</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -2690,6 +2782,18 @@ export default function DashboardClient({ user }: { user: any }) {
                             <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                               <td style={{ padding: "12px 8px" }}>{u.name || "--"}</td>
                               <td style={{ padding: "12px 8px" }}>{u.email}</td>
+                               <td style={{ padding: "12px 8px" }}>
+                                <select 
+                                  value={u.department || ""}
+                                  onChange={(e) => handleUpdateUserDepartment(u.id, e.target.value)}
+                                  style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", width: "100%", maxWidth: "150px" }}
+                                >
+                                  <option value="">Select Dept</option>
+                                  {settings.masterDepartments.split(',').filter(d => d.trim()).map(dept => (
+                                    <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
+                                  ))}
+                                </select>
+                              </td>
                               <td style={{ padding: "12px 8px" }}>
                                 <select 
                                   value={u.role}
@@ -2892,6 +2996,153 @@ export default function DashboardClient({ user }: { user: any }) {
                       )}
                     </div>
                   )}
+
+                {activeOptionsTab === 'MASTER_DATA' && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                      <h3 style={{ margin: 0, color: "#0f172a" }}>Master Data Hub</h3>
+                      <button 
+                        onClick={handleSaveSettings}
+                        disabled={isSavingSettings}
+                        style={{ padding: "8px 24px", background: "#2563eb", color: "white", borderRadius: "8px", border: "none", fontWeight: 600, cursor: isSavingSettings ? "not-allowed" : "pointer" }}
+                      >
+                        {isSavingSettings ? "Saving..." : "Save Changes"}
+                      </button>
+                    </div>
+                    <p style={{ color: "#64748b", marginBottom: "32px", fontSize: "0.875rem" }}>
+                      Manage the global dropdown lists used across all forms (Task Submission, LO Identification, etc.). 
+                      Changes here will reflect instantly across the entire platform.
+                    </p>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+                      {/* Departments */}
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                          <Users size={18} color="#3b82f6" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Departments</h4>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {settings.masterDepartments.split(',').filter(d => d.trim()).map((dept, idx) => (
+                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {dept.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterDepartments.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterDepartments: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add department..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    setSettings({...settings, masterDepartments: (settings.masterDepartments || "") + (settings.masterDepartments?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Entities */}
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                          <Building2 size={18} color="#f59e0b" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Entities</h4>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {settings.masterEntities.split(',').filter(e => e.trim()).map((ent, idx) => (
+                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {ent.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterEntities.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterEntities: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add entity..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    setSettings({...settings, masterEntities: (settings.masterEntities || "") + (settings.masterEntities?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Task Types */}
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                          <Tag size={18} color="#10b981" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Task Categories</h4>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {settings.masterTaskTypes.split(',').filter(t => t.trim()).map((type, idx) => (
+                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {type.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterTaskTypes.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterTaskTypes: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add category..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    setSettings({...settings, masterTaskTypes: (settings.masterTaskTypes || "") + (settings.masterTaskTypes?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {activeOptionsTab === 'DATA' && (
                   <div>

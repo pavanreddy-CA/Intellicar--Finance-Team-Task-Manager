@@ -20,6 +20,7 @@ export async function GET(req: Request) {
         name: true,
         email: true,
         role: true,
+        department: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -43,15 +44,19 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { userId, role } = body;
+    const { userId, role, department } = body;
 
-    if (!userId || !role) {
-      return NextResponse.json({ message: "User ID and Role are required" }, { status: 400 });
+    if (!userId || (!role && !department)) {
+      return NextResponse.json({ message: "User ID and at least one field to update are required" }, { status: 400 });
     }
+
+    const updateData: any = {};
+    if (role) updateData.role = role;
+    if (department) updateData.department = department;
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { role },
+      data: updateData,
     });
 
     return NextResponse.json({ message: "User role updated successfully", user }, { status: 200 });

@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 type LOFormProps = {
   onClose: () => void;
   onSuccess: () => void;
+  settings: any;
   initialData?: any;
 };
 
@@ -14,7 +15,7 @@ const EMPLOYEES = [
   "Siddharth", "Nikhat", "Chandana", "Saikath", "Hanusha"
 ];
 
-export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps) {
+export default function LOForm({ onClose, onSuccess, settings, initialData }: LOFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -107,11 +108,9 @@ export default function LOForm({ onClose, onSuccess, initialData }: LOFormProps)
               <label style={labelStyle}>Entity *</label>
               <select name="entity" required value={formData.entity} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Intellicar-BLR">Intellicar-BLR</option>
-                <option value="Intellicar Delhi">Intellicar Delhi</option>
-                <option value="Fabric IOT-Blr">Fabric IOT-Blr</option>
-                <option value="Reltch AI">Reltch AI</option>
-                <option value="Consolidation">Consolidation</option>
+                {settings?.masterEntities?.split(',').filter((e: string) => e.trim()).map((entity: string) => (
+                  <option key={entity.trim()} value={entity.trim()}>{entity.trim()}</option>
+                ))}
               </select>
             </div>
             <div>
