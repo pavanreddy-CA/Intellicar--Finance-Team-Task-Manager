@@ -1405,7 +1405,7 @@ export default function DashboardClient({ user }: { user: any }) {
           </div>
         )}
 
-      {activeView === 'TASKS' && activeSubView === 'MAIN' && (
+        {activeView === 'TASKS' && activeSubView === 'MAIN' && (
           <div className="main-tasks-view">
         {/* Action Toolbar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
@@ -1508,8 +1508,9 @@ export default function DashboardClient({ user }: { user: any }) {
                   <option value={50}>50</option>
                 </select>
               </div>
-
-              <div className="download-container" style={{ display: "flex", gap: "8px", marginLeft: "auto", position: "relative" }}>
+            </div>
+              
+            <div className="download-container" style={{ display: "flex", gap: "8px", marginLeft: "auto", position: "relative" }}>
                 <button 
                   onClick={() => setShowTaskDownloadDropdown(!showTaskDownloadDropdown)}
                   style={{ 
@@ -1905,7 +1906,7 @@ export default function DashboardClient({ user }: { user: any }) {
         {/* Other Dept View */}
         {activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && (
           <div className="other-dept-view">
-          /* Placeholder for Other Departments */
+          {/* Placeholder for Other Departments */}
           <div style={{ padding: "80px 20px", textAlign: "center", background: "white", borderRadius: "24px", border: "1px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "#eff6ff", padding: "20px", borderRadius: "50%", marginBottom: "20px" }}>
               <Users size={48} color="#3b82f6" />
@@ -1926,7 +1927,7 @@ export default function DashboardClient({ user }: { user: any }) {
         {/* LO View */}
         {activeView === 'LOS' && (
           <div className="lo-view">
-          /* LO View */
+          {/* LO View */}
           <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
              <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
                 <div>
