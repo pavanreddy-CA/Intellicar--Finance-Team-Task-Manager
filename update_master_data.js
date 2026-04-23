@@ -18,6 +18,10 @@ async function main() {
     "CSM & Sales", "Finance", "HR and Admin", "External People"
   ].join(',');
 
+  const communicationModes = [
+    "Email", "Verbal Discussion", "Hangouts", "Whatsapp-IC Group"
+  ].join(',');
+
   const settings = await prisma.systemSettings.findFirst();
 
   if (settings) {
@@ -25,7 +29,8 @@ async function main() {
       where: { id: settings.id },
       data: {
         masterTaskTypes: taskTypes,
-        masterDepartments: departments
+        masterDepartments: departments,
+        masterCommunicationModes: communicationModes
       }
     });
     console.log("Master data updated successfully in database.");
@@ -40,6 +45,7 @@ async function main() {
         loReportTimes: '10:00',
         masterTaskTypes: taskTypes,
         masterDepartments: departments,
+        masterCommunicationModes: communicationModes,
         masterEntities: 'Intellicar-BLR,Intellicar-MUM,Intellicar-DEL'
       }
     });

@@ -86,4 +86,5 @@ model SystemSettings {
   masterDepartments     String   @default("Finance,HR,IT,Operations,Sales,Marketing,Admin")
   masterEntities        String   @default("Intellicar-BLR,Intellicar-DEL,Intellicar-MUM,ITPL-Bangalore")
   masterTaskTypes       String   @default("Daily,Weekly,Monthly,Quarterly,Yearly,Statutory,Internal")
+  masterCommunicationModes String  @default("Email,Verbal Discussion,Hangouts,Whatsapp-IC Group")
 }

@@ -114,7 +114,8 @@ export default function DashboardClient({ user }: { user: any }) {
     loReportEmail: '',
     masterDepartments: 'SW - Engineering,Manufacturing and Supply Chain,Field Operations Technicians,HW - Engineering,Operations,CSM & Sales,Finance,HR and Admin,External People',
     masterEntities: 'Intellicar-BLR,Intellicar-MUM,Intellicar-DEL',
-    masterTaskTypes: 'Accounts Payable,MIS,Inventory,Banking & Treasury,Customer Reconciliations,Vendor Reconciliation,Reporting,Financial Audit,Tax Audit,Other Audits,Assesments & Notices,Month Closure,Corporate Taxation,GST,Employee Laws,Due Diligence,Presentations & Trainings,Other Reconciallitions,MCA Filings,Miscellaneous Activities,Month End Billing,Credit Cards & Debt,Customizations / Automations'
+    masterTaskTypes: 'Accounts Payable,MIS,Inventory,Banking & Treasury,Customer Reconciliations,Vendor Reconciliation,Reporting,Financial Audit,Tax Audit,Other Audits,Assesments & Notices,Month Closure,Corporate Taxation,GST,Employee Laws,Due Diligence,Presentations & Trainings,Other Reconciallitions,MCA Filings,Miscellaneous Activities,Month End Billing,Credit Cards & Debt,Customizations / Automations',
+    masterCommunicationModes: 'Email,Verbal Discussion,Hangouts,Whatsapp-IC Group'
   });
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -1762,7 +1763,7 @@ export default function DashboardClient({ user }: { user: any }) {
                                   committedBy: task.ownerName || "",
                                   learningOpportunity: "",
                                   resolutionProvided: "",
-                                  modeOfCommunication: "Official Internal Mail",
+                                  modeOfCommunication: "Email",
                                   comments: ""
                                 });
                                 setShowLOCaptureModal(true);
@@ -2271,11 +2272,10 @@ export default function DashboardClient({ user }: { user: any }) {
                   onChange={e => setLOCaptureForm({...loCaptureForm, modeOfCommunication: e.target.value})}
                   style={inputStyle}
                 >
-                  <option value="Official Internal Mail">Official Internal Mail</option>
-                  <option value="Unofficial / Personal Mail">Unofficial / Personal Mail</option>
-                  <option value="In Person / Verbal">In Person / Verbal</option>
-                  <option value="Teams Call">Teams Call</option>
-                  <option value="WhatsApp / Group Message">WhatsApp / Group Message</option>
+                  <option value="">Choose</option>
+                  {settings?.masterCommunicationModes?.split(',').filter((m: string) => m.trim()).map((mode: string) => (
+                    <option key={mode.trim()} value={mode.trim()}>{mode.trim()}</option>
+                  ))}
                 </select>
               </div>
 
@@ -3191,6 +3191,46 @@ export default function DashboardClient({ user }: { user: any }) {
                                   const val = e.currentTarget.value.trim();
                                   if (val) {
                                     setSettings({...settings, masterTaskTypes: (settings.masterTaskTypes || "") + (settings.masterTaskTypes?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      {/* Communication Modes */}
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                          <Send size={18} color="#8b5cf6" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Communication Modes</h4>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {(settings.masterCommunicationModes || "").split(',').filter(t => t.trim()).map((mode, idx) => (
+                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {mode.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterCommunicationModes.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterCommunicationModes: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add mode..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    setSettings({...settings, masterCommunicationModes: (settings.masterCommunicationModes || "") + (settings.masterCommunicationModes?.trim() ? "," : "") + val});
                                     e.currentTarget.value = "";
                                   }
                                 }

@@ -165,10 +165,9 @@ export default function LOForm({ onClose, onSuccess, settings, initialData }: LO
               <label style={labelStyle}>Mode Of Communication *</label>
               <select name="modeOfCommunication" required value={formData.modeOfCommunication} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                <option value="Email">Email</option>
-                <option value="Verbal Discussion">Verbal Discussion</option>
-                <option value="Hangouts">Hangouts</option>
-                <option value="Whatsapp IC Group">Whatsapp IC Group</option>
+                {settings?.masterCommunicationModes?.split(',').filter((m: string) => m.trim()).map((mode: string) => (
+                  <option key={mode.trim()} value={mode.trim()}>{mode.trim()}</option>
+                ))}
               </select>
             </div>
             <div>
