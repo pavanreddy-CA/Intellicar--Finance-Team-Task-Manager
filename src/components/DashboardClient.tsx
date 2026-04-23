@@ -1334,7 +1334,6 @@ export default function DashboardClient({ user }: { user: any }) {
           flexShrink: 0, zIndex: 90, borderRight: "1px solid rgba(255,255,255,0.05)"
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", padding: "0 12px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", padding: "0 12px" }}>
             {/* Logic: Check if module is allowed for user's department */}
             {(() => {
               const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
