@@ -40,14 +40,12 @@ export default function Register() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
+    <div className="register-container" style={{ minHeight: "100vh", display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
       {/* Left Side: Hero Section (Same as Login for consistency) */}
-      <div style={{ 
+      <div className="hero-side" style={{ 
         flex: 1.2, 
-        position: 'relative', 
-        display: 'none', 
-        '@media (min-width: 1024px)': { display: 'block' } 
-      } as any}>
+        position: 'relative'
+      }}>
         <div style={{ 
           position: 'absolute', 
           inset: 0, 
@@ -69,6 +67,7 @@ export default function Register() {
           <div style={{ position: 'absolute', top: '40px', left: '40px' }}>
             <img src="/logo.png" alt="Intellicar Logo" style={{ height: "48px", width: "auto" }} />
           </div>
+
           <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
             Join the Finance <br /><span style={{ color: '#60a5fa' }}>Hub.</span>
           </h2>
@@ -218,6 +217,9 @@ export default function Register() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body { margin: 0; }
+        @media (max-width: 1023px) {
+          .hero-side { display: none !important; }
+        }
       `}</style>
     </div>
   );

@@ -39,14 +39,12 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
+    <div className="login-container" style={{ minHeight: "100vh", display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
       {/* Left Side: Hero Section */}
-      <div style={{ 
+      <div className="hero-side" style={{ 
         flex: 1.2, 
-        position: 'relative', 
-        display: 'none', 
-        '@media (min-width: 1024px)': { display: 'block' } 
-      } as any}>
+        position: 'relative'
+      }}>
         <div style={{ 
           position: 'absolute', 
           inset: 0, 
@@ -68,23 +66,13 @@ export default function Login() {
           <div style={{ position: 'absolute', top: '40px', left: '40px' }}>
             <img src="/logo.png" alt="Intellicar Logo" style={{ height: "48px", width: "auto" }} />
           </div>
+
           <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
             Empowering Finance <br /><span style={{ color: '#60a5fa' }}>Excellence.</span>
           </h2>
           <p style={{ fontSize: '1.25rem', opacity: 0.9, maxWidth: '480px', lineHeight: 1.6, color: '#e2e8f0' }}>
             Manage tasks, analyze performance, and optimize financial workflows with ease.
           </p>
-          <div style={{ marginTop: '60px', display: 'flex', gap: '24px' }}>
-            <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>100%</div>
-              <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>Automation</div>
-            </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)' }}></div>
-            <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>24/7</div>
-              <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>Availability</div>
-            </div>
-          </div>
         </div>
       </div>
 
