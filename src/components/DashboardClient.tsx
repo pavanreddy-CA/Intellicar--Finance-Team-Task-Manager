@@ -1430,22 +1430,6 @@ export default function DashboardClient({ user }: { user: any }) {
                     </button>
                   )}
 
-                  {isAdmin && (
-                    <button 
-                      onClick={() => setActiveMainView('ADMIN_MATRIX')}
-                      style={{ 
-                        display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
-                        background: activeMainView === 'ADMIN_MATRIX' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
-                        border: "none", color: activeMainView === 'ADMIN_MATRIX' ? "#60a5fa" : "#94a3b8", 
-                        cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
-                        width: "100%", borderRadius: "16px",
-                        boxShadow: activeMainView === 'ADMIN_MATRIX' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
-                      }}
-                    >
-                      <ShieldCheck size={24} color={activeMainView === 'ADMIN_MATRIX' ? "#60a5fa" : "#94a3b8"} />
-                      <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Matrix Module</span>
-                    </button>
-                  )}
                 </>
               );
             })()}
@@ -1481,14 +1465,6 @@ export default function DashboardClient({ user }: { user: any }) {
               </p>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              {activeMainView === 'ADMIN_MATRIX' ? (
-                <button 
-                  onClick={handleSaveSettings}
-                  disabled={isSavingSettings}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: isSavingSettings ? "not-allowed" : "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(16, 185, 129, 0.3)" }}
-                >
-                  <ShieldCheck size={18} /> {isSavingSettings ? "Saving..." : "Save Matrix Changes"}
-                </button>
               ) : (activeView === 'TASKS' && activeSubView === 'MAIN') ? (
                 <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(37, 99, 235, 0.3)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
                   <Plus size={18} /> New Task
@@ -2090,131 +2066,6 @@ export default function DashboardClient({ user }: { user: any }) {
           </div>
         )}
 
-        {/* Admin Matrix View */}
-        {activeMainView === 'ADMIN_MATRIX' && (
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
-            <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button 
-                  onClick={() => setActiveMatrixTab('ACCESS')}
-                  style={{ 
-                    padding: "8px 20px", borderRadius: "12px", fontSize: "0.875rem", fontWeight: 600, 
-                    border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                    background: activeMatrixTab === 'ACCESS' ? "#4f46e5" : "white",
-                    borderColor: activeMatrixTab === 'ACCESS' ? "#4f46e5" : "#e2e8f0",
-                    color: activeMatrixTab === 'ACCESS' ? "white" : "#64748b"
-                  }}
-                >
-                  Matrix A: Module Access
-                </button>
-                <button 
-                  onClick={() => setActiveMatrixTab('ALLOCATION')}
-                  style={{ 
-                    padding: "8px 20px", borderRadius: "12px", fontSize: "0.875rem", fontWeight: 600, 
-                    border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                    background: activeMatrixTab === 'ALLOCATION' ? "#4f46e5" : "white",
-                    borderColor: activeMatrixTab === 'ALLOCATION' ? "#4f46e5" : "#e2e8f0",
-                    color: activeMatrixTab === 'ALLOCATION' ? "white" : "#64748b"
-                  }}
-                >
-                  Matrix B: Request Allocation
-                </button>
-              </div>
-            </div>
-
-            <div style={{ padding: "32px" }}>
-              {activeMatrixTab === 'ACCESS' && (
-                <div>
-                  <h4 style={{ margin: "0 0 24px 0", fontSize: "1.1rem", color: "#0f172a" }}>Module Access Matrix (Departments)</h4>
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ background: "#f8fafc" }}>
-                          <th style={{ padding: "16px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.75rem", textTransform: "uppercase" }}>Department</th>
-                          {['Tasks', 'Requests', 'Learning'].map(module => (
-                            <th key={module} style={{ padding: "16px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.75rem", textTransform: "uppercase" }}>{module}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {settings.masterDepartments.split(',').filter(d => d.trim()).map((dept) => {
-                          const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-                          return (
-                            <tr key={dept} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                              <td style={{ padding: "16px", fontWeight: 600, color: "#1e293b" }}>{dept}</td>
-                              {['Tasks', 'Requests', 'Learning'].map(module => (
-                                <td key={module} style={{ padding: "16px", textAlign: "center" }}>
-                                  <input 
-                                    type="checkbox" 
-                                    checked={matrix[module]?.includes(dept)} 
-                                    onChange={(e) => {
-                                      const current = matrix[module] || [];
-                                      const updated = e.target.checked 
-                                        ? [...current, dept] 
-                                        : current.filter((d: string) => d !== dept);
-                                      setSettings({
-                                        ...settings, 
-                                        moduleAccessMatrix: JSON.stringify({ ...matrix, [module]: updated })
-                                      });
-                                    }}
-                                    style={{ width: "20px", height: "20px", cursor: "pointer" }}
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {activeMatrixTab === 'ALLOCATION' && (
-                <div>
-                  <h4 style={{ margin: "0 0 24px 0", fontSize: "1.1rem", color: "#0f172a" }}>Request Allocation Matrix (Finance Team)</h4>
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ background: "#f8fafc" }}>
-                          <th style={{ padding: "16px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.75rem", textTransform: "uppercase" }}>Request Type</th>
-                          <th style={{ padding: "16px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.75rem", textTransform: "uppercase" }}>Authorized Allocator</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {settings.masterRequestTypes.split(',').filter(t => t.trim()).map((type) => {
-                          const matrix = JSON.parse(settings.allocationMatrix || '{}');
-                          return (
-                            <tr key={type} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                              <td style={{ padding: "16px", fontWeight: 600, color: "#1e293b" }}>{type}</td>
-                              <td style={{ padding: "16px" }}>
-                                <select 
-                                  value={matrix[type] || ""}
-                                  onChange={(e) => {
-                                    setSettings({
-                                      ...settings,
-                                      allocationMatrix: JSON.stringify({ ...matrix, [type]: e.target.value })
-                                    });
-                                  }}
-                                  style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #e2e8f0" }}
-                                >
-                                  <option value="">No Allocator Assigned</option>
-                                  {Object.entries(EMAIL_TO_NAME).map(([email, name]) => (
-                                    <option key={email} value={email}>{name} ({email})</option>
-                                  ))}
-                                </select>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Other Dept View (Requests Module) */}
         {activeMainView === 'DASHBOARD' && activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && (
@@ -2750,7 +2601,7 @@ export default function DashboardClient({ user }: { user: any }) {
                       onClick={() => setActiveOptionsTab('MATRICES')} 
                       style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MATRICES' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MATRICES' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
                     >
-                      Admin Control Matrix
+                      Matrix Module
                     </button>
                   </>
                 )}
@@ -3698,6 +3549,140 @@ export default function DashboardClient({ user }: { user: any }) {
                           <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "12px" }}>Ensure you use the template provided above.</p>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeOptionsTab === 'MATRICES' && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                      <h3 style={{ margin: 0 }}>Matrix Module</h3>
+                      <button 
+                        onClick={handleSaveSettings}
+                        disabled={isSavingSettings}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "white", padding: "10px 20px", borderRadius: "10px", border: "none", cursor: isSavingSettings ? "not-allowed" : "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.2)" }}
+                      >
+                        <ShieldCheck size={18} /> {isSavingSettings ? "Saving..." : "Save Matrix Changes"}
+                      </button>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "12px", marginBottom: "24px", background: "#f8fafc", padding: "8px", borderRadius: "12px" }}>
+                      <button 
+                        onClick={() => setActiveMatrixTab('ACCESS')}
+                        style={{ 
+                          flex: 1, padding: "10px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, 
+                          border: "none", cursor: "pointer", transition: "all 0.2s",
+                          background: activeMatrixTab === 'ACCESS' ? "white" : "transparent",
+                          color: activeMatrixTab === 'ACCESS' ? "#4f46e5" : "#64748b",
+                          boxShadow: activeMatrixTab === 'ACCESS' ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
+                        }}
+                      >
+                        Matrix A: Module Access
+                      </button>
+                      <button 
+                        onClick={() => setActiveMatrixTab('ALLOCATION')}
+                        style={{ 
+                          flex: 1, padding: "10px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, 
+                          border: "none", cursor: "pointer", transition: "all 0.2s",
+                          background: activeMatrixTab === 'ALLOCATION' ? "white" : "transparent",
+                          color: activeMatrixTab === 'ALLOCATION' ? "#4f46e5" : "#64748b",
+                          boxShadow: activeMatrixTab === 'ALLOCATION' ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
+                        }}
+                      >
+                        Matrix B: Request Allocation
+                      </button>
+                    </div>
+
+                    <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                      {activeMatrixTab === 'ACCESS' && (
+                        <div style={{ padding: "24px" }}>
+                          <h4 style={{ margin: "0 0 20px 0", fontSize: "1rem", color: "#0f172a" }}>Module Access Matrix (Departments)</h4>
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                              <thead>
+                                <tr style={{ background: "#f8fafc" }}>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Department</th>
+                                  {['Tasks', 'Requests', 'Learning'].map(module => (
+                                    <th key={module} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>{module}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {settings.masterDepartments.split(',').filter(d => d.trim()).map((dept) => {
+                                  const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
+                                  return (
+                                    <tr key={dept} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                      <td style={{ padding: "12px", fontWeight: 600, color: "#1e293b", fontSize: "0.875rem" }}>{dept}</td>
+                                      {['Tasks', 'Requests', 'Learning'].map(module => (
+                                        <td key={module} style={{ padding: "12px", textAlign: "center" }}>
+                                          <input 
+                                            type="checkbox" 
+                                            checked={matrix[module]?.includes(dept)} 
+                                            onChange={(e) => {
+                                              const current = matrix[module] || [];
+                                              const updated = e.target.checked 
+                                                ? [...current, dept] 
+                                                : current.filter((d: string) => d !== dept);
+                                              setSettings({
+                                                ...settings, 
+                                                moduleAccessMatrix: JSON.stringify({ ...matrix, [module]: updated })
+                                              });
+                                            }}
+                                            style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                                          />
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeMatrixTab === 'ALLOCATION' && (
+                        <div style={{ padding: "24px" }}>
+                          <h4 style={{ margin: "0 0 20px 0", fontSize: "1rem", color: "#0f172a" }}>Request Allocation Matrix (Finance Team)</h4>
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                              <thead>
+                                <tr style={{ background: "#f8fafc" }}>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Request Type</th>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Authorized Allocator</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {settings.masterRequestTypes.split(',').filter(t => t.trim()).map((type) => {
+                                  const matrix = JSON.parse(settings.allocationMatrix || '{}');
+                                  return (
+                                    <tr key={type} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                      <td style={{ padding: "12px", fontWeight: 600, color: "#1e293b", fontSize: "0.875rem" }}>{type}</td>
+                                      <td style={{ padding: "12px" }}>
+                                        <select 
+                                          value={matrix[type] || ""}
+                                          onChange={(e) => {
+                                            setSettings({
+                                              ...settings,
+                                              allocationMatrix: JSON.stringify({ ...matrix, [type]: e.target.value })
+                                            });
+                                          }}
+                                          style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.875rem" }}
+                                        >
+                                          <option value="">No Allocator Assigned</option>
+                                          {Object.entries(EMAIL_TO_NAME).map(([email, name]) => (
+                                            <option key={email} value={email}>{name} ({email})</option>
+                                          ))}
+                                        </select>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
