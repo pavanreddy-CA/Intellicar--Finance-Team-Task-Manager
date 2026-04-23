@@ -12,30 +12,43 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        console.log("[v0] Auth attempt for:", credentials?.email);
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log("[v0] Missing credentials");
           throw new Error("Invalid credentials");
         }
         
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        });
-        
-        if (!user || !user.password) {
-          throw new Error("User not found");
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          });
+          
+          console.log("[v0] User found:", user ? "yes" : "no");
+          
+          if (!user || !user.password) {
+            console.log("[v0] User not found or no password");
+            throw new Error("User not found");
+          }
+          
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+          console.log("[v0] Password valid:", isPasswordValid);
+          
+          if (!isPasswordValid) {
+            throw new Error("Invalid password");
+          }
+          
+          console.log("[v0] Auth successful, returning user");
+          return {
+            id: String(user.id),
+            email: user.email,
+            name: user.name,
+            role: user.role
+          };
+        } catch (error) {
+          console.log("[v0] Auth error:", error);
+          throw error;
         }
-        
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-        
-        if (!isPasswordValid) {
-          throw new Error("Invalid password");
-        }
-        
-        return {
-          id: String(user.id),
-          email: user.email,
-          name: user.name,
-          role: user.role
-        };
       }
     })
   ],

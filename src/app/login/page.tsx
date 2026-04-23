@@ -16,18 +16,28 @@ export default function Login() {
     setLoading(true);
     setError("");
 
+    console.log("[v0] Login attempt for:", email);
+    
     const res = await signIn("credentials", {
       redirect: false,
       email,
       password,
     });
 
+    console.log("[v0] SignIn response:", JSON.stringify(res));
+
     if (res?.error) {
+      console.log("[v0] SignIn error:", res.error);
       setError(res.error);
       setLoading(false);
-    } else {
+    } else if (res?.ok) {
+      console.log("[v0] SignIn success, redirecting...");
       router.push("/");
       router.refresh();
+    } else {
+      console.log("[v0] SignIn failed without error:", res);
+      setError("Login failed. Please try again.");
+      setLoading(false);
     }
   };
 
