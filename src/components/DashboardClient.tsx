@@ -1900,11 +1900,13 @@ export default function DashboardClient({ user }: { user: any }) {
                 </button>
               </div>
             </div>
-          )}
+            </div>
           </div>
         )}
 
+        {/* Other Dept View */}
         {activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && (
+          <div className="other-dept-view">
           /* Placeholder for Other Departments */
           <div style={{ padding: "80px 20px", textAlign: "center", background: "white", borderRadius: "24px", border: "1px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "#eff6ff", padding: "20px", borderRadius: "50%", marginBottom: "20px" }}>
@@ -1922,7 +1924,9 @@ export default function DashboardClient({ user }: { user: any }) {
           </div>
         )}
 
+        {/* LO View */}
         {activeView === 'LOS' && (
+          <div className="lo-view">
           /* LO View */
           <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
              <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
@@ -2162,7 +2166,8 @@ export default function DashboardClient({ user }: { user: any }) {
                 </table>
              </div>
           </div>
-        )}
+        </div>
+      )}
 
       {showForm && (
         <TaskForm 
