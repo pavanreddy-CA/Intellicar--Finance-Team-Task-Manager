@@ -1489,11 +1489,11 @@ export default function DashboardClient({ user }: { user: any }) {
                 >
                   <ShieldCheck size={18} /> {isSavingSettings ? "Saving..." : "Save Matrix Changes"}
                 </button>
-              ) : activeView === 'TASKS' ? (
+              ) : (activeView === 'TASKS' && activeSubView === 'MAIN') ? (
                 <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(37, 99, 235, 0.3)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
                   <Plus size={18} /> New Task
                 </button>
-              ) : (
+              ) : activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? null : (
                 <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#0f172a", padding: "10px 20px", borderRadius: "12px", border: "1px solid #e2e8f0", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
                   <Lightbulb size={18} color="#f59e0b" /> Update LO
                 </button>
@@ -1773,11 +1773,11 @@ export default function DashboardClient({ user }: { user: any }) {
                   </th>
                   <th style={thStyle}>Reviewer</th>
                   <th style={thStyle}>Review Status</th>
-                  <th style={thStyle}>Request Status</th>
                   <th style={thStyle}>Review Date</th>
                   <th style={thStyle}>Capture LO?</th>
                   <th style={thStyle}>Owner Comments</th>
                   <th style={thStyle}>Reviewer Comments</th>
+                  <th style={thStyle}>Request Status</th>
                   <th style={{ ...thStyle, textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
@@ -1859,43 +1859,6 @@ export default function DashboardClient({ user }: { user: any }) {
                         />
                       </td>
 
-                      <td style={tdStyle}>
-                        {task.linkedRequestId ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <span style={{ 
-                              padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: 700,
-                              background: task.requestStatus === 'Processed' ? "#dcfce7" : "#fef3c7",
-                              color: task.requestStatus === 'Processed' ? "#15803d" : "#b45309",
-                              textAlign: "center"
-                            }}>
-                              {task.requestStatus || "Pending"}
-                            </span>
-                            {task.requestStatus !== 'Processed' && 
-                             (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required') && 
-                             isCurrentUserOwner && (
-                              <button 
-                                onClick={async () => {
-                                  // Update Task
-                                  await handleUpdate(task.id, "requestStatus", "Processed");
-                                  // Update External Request
-                                  if (task.linkedRequestId) {
-                                    await handleUpdateExtRequestStatus(task.linkedRequestId, "Processed");
-                                  }
-                                  alert("Marked as Processed and Requester notified!");
-                                }}
-                                style={{ 
-                                  padding: "2px 6px", fontSize: "0.65rem", background: "#4f46e5", 
-                                  color: "white", border: "none", borderRadius: "4px", cursor: "pointer" 
-                                }}
-                              >
-                                Mark Processed
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span style={{ color: "#94a3b8", fontWeight: 500 }}>N/A</span>
-                        )}
-                      </td>
 
                       <td 
                         style={{ ...tdStyle, cursor: task.reviewerName === "Not Applicable" || isReviewerLocked || !canEditReviewFields ? "not-allowed" : "pointer", minWidth: "140px" }}
@@ -2003,6 +1966,44 @@ export default function DashboardClient({ user }: { user: any }) {
                             {task.reviewerComments || "Click to add..."}
                             {(isReviewerLocked || !canEditReviewFields) && <span style={{ marginLeft: "4px", fontSize: "10px" }}>🔒</span>}
                           </span>
+                        )}
+                      </td>
+
+                      <td style={tdStyle}>
+                        {task.linkedRequestId ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <span style={{ 
+                              padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: 700,
+                              background: task.requestStatus === 'Processed' ? "#dcfce7" : "#fef3c7",
+                              color: task.requestStatus === 'Processed' ? "#15803d" : "#b45309",
+                              textAlign: "center"
+                            }}>
+                              {task.requestStatus || "Pending"}
+                            </span>
+                            {task.requestStatus !== 'Processed' && 
+                             (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required') && 
+                             isCurrentUserOwner && (
+                              <button 
+                                onClick={async () => {
+                                  // Update Task
+                                  await handleUpdate(task.id, "requestStatus", "Processed");
+                                  // Update External Request
+                                  if (task.linkedRequestId) {
+                                    await handleUpdateExtRequestStatus(task.linkedRequestId, "Processed");
+                                  }
+                                  alert("Marked as Processed and Requester notified!");
+                                }}
+                                style={{ 
+                                  padding: "2px 6px", fontSize: "0.65rem", background: "#4f46e5", 
+                                  color: "white", border: "none", borderRadius: "4px", cursor: "pointer" 
+                                }}
+                              >
+                                Mark Processed
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#94a3b8", fontWeight: 500 }}>N/A</span>
                         )}
                       </td>
 
@@ -2241,7 +2242,7 @@ export default function DashboardClient({ user }: { user: any }) {
                       <th style={thStyle}>Date</th>
                       <th style={thStyle}>Request Type</th>
                       <th style={thStyle}>Nature of Request</th>
-                      <th style={thStyle}>Status</th>
+                      <th style={thStyle}>Request Status</th>
                       <th style={thStyle}>Action</th>
                     </tr>
                   </thead>
@@ -2744,6 +2745,12 @@ export default function DashboardClient({ user }: { user: any }) {
                       style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
                     >
                       <Download size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Bulk Import
+                    </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('MATRICES')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MATRICES' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MATRICES' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                    >
+                      Admin Control Matrix
                     </button>
                   </>
                 )}
