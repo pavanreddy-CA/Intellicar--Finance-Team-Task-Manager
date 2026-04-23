@@ -105,6 +105,7 @@ const EMAIL_TO_NAME: Record<string, string> = {
 };
 
 export default function DashboardClient({ user }: { user: any }) {
+  const isAdmin = user?.role === 'ADMIN' || user?.email === 'pavanreddy@intellicar.in';
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -212,6 +213,8 @@ export default function DashboardClient({ user }: { user: any }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTaskDownloadDropdown, showLODownloadDropdown]);
+
+
 
   // Smart Permission Helpers
   const matrixAllocators = JSON.parse(settings.allocationMatrix || '{}');
