@@ -1405,9 +1405,8 @@ export default function DashboardClient({ user }: { user: any }) {
           </div>
         )}
       </div>
-        
 
-        {activeView === 'TASKS' && activeSubView === 'MAIN' && (
+      {activeView === 'TASKS' && activeSubView === 'MAIN' && (
           <div className="main-tasks-view">
         {/* Action Toolbar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
