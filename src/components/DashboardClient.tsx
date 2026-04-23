@@ -2217,7 +2217,7 @@ export default function DashboardClient({ user }: { user: any }) {
                       onClick={() => setActiveOptionsTab('SCHEDULE')} 
                       style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'SCHEDULE' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'SCHEDULE' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
                     >
-                      Automation
+                      Email Trigger
                     </button>
                     <button 
                       onClick={() => setActiveOptionsTab('MAILS')} 
@@ -2303,33 +2303,87 @@ export default function DashboardClient({ user }: { user: any }) {
 
                 {activeOptionsTab === 'SCHEDULE' && (
                   <div>
-                    <h3 style={{ margin: "0 0 24px 0" }}>Auto-Email Frequency</h3>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Email Trigger & Schedule</h3>
                     
                     {/* Dynamic Emails Control */}
                     <div style={{ marginBottom: "32px", padding: "20px", background: "#f0f9ff", borderRadius: "12px", border: "1px solid #bae6fd" }}>
                       <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: "#0369a1", fontWeight: 700 }}>Report Recipients</h4>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                      
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                        {/* Task Report Managers */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Manager Email</label>
-                          <input 
-                            type="email" 
-                            placeholder="manager@intellicar.in"
-                            value={settings.managerEmail}
-                            onChange={(e) => setSettings({...settings, managerEmail: e.target.value})}
-                            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem" }} 
-                          />
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Receives Task Summary reports.</p>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Manager Emails</label>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            {(settings.managerEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
+                              <div key={`m-${idx}`} style={{ display: "flex", gap: "8px" }}>
+                                <input 
+                                  type="email" 
+                                  value={email.trim()}
+                                  onChange={(e) => {
+                                    const emails = (settings.managerEmail || "").split(',');
+                                    emails[idx] = e.target.value;
+                                    setSettings({...settings, managerEmail: emails.join(',')});
+                                  }}
+                                  style={{ ...inputStyle, flex: 1 }} 
+                                  placeholder="manager@intellicar.in"
+                                />
+                                <button 
+                                  onClick={() => {
+                                    const emails = (settings.managerEmail || "").split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, managerEmail: emails.join(',')});
+                                  }}
+                                  style={{ background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5", borderRadius: "8px", padding: "0 10px", cursor: "pointer", fontWeight: "bold" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              onClick={() => setSettings({...settings, managerEmail: (settings.managerEmail || "") + (settings.managerEmail?.trim() ? "," : "") + " "})}
+                              style={{ alignSelf: "flex-start", padding: "6px 12px", borderRadius: "8px", border: "1px dashed #3b82f6", background: "white", color: "#3b82f6", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
+                            >
+                              + Add Manager Email
+                            </button>
+                          </div>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Recipients for Task Summary reports.</p>
                         </div>
+
+                        {/* LO Report Admins */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>LO Report Email</label>
-                          <input 
-                            type="email" 
-                            placeholder="admin@intellicar.in"
-                            value={settings.loReportEmail}
-                            onChange={(e) => setSettings({...settings, loReportEmail: e.target.value})}
-                            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem" }} 
-                          />
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Receives Learning Opportunity reports.</p>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>LO Report Admins</label>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            {(settings.loReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
+                              <div key={`l-${idx}`} style={{ display: "flex", gap: "8px" }}>
+                                <input 
+                                  type="email" 
+                                  value={email.trim()}
+                                  onChange={(e) => {
+                                    const emails = (settings.loReportEmail || "").split(',');
+                                    emails[idx] = e.target.value;
+                                    setSettings({...settings, loReportEmail: emails.join(',')});
+                                  }}
+                                  style={{ ...inputStyle, flex: 1 }} 
+                                  placeholder="admin@intellicar.in"
+                                />
+                                <button 
+                                  onClick={() => {
+                                    const emails = (settings.loReportEmail || "").split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, loReportEmail: emails.join(',')});
+                                  }}
+                                  style={{ background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5", borderRadius: "8px", padding: "0 10px", cursor: "pointer", fontWeight: "bold" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              onClick={() => setSettings({...settings, loReportEmail: (settings.loReportEmail || "") + (settings.loReportEmail?.trim() ? "," : "") + " "})}
+                              style={{ alignSelf: "flex-start", padding: "6px 12px", borderRadius: "8px", border: "1px dashed #3b82f6", background: "white", color: "#3b82f6", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
+                            >
+                              + Add Admin Email
+                            </button>
+                          </div>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Recipients for LO reports.</p>
                         </div>
                       </div>
                     </div>
@@ -2835,35 +2889,6 @@ export default function DashboardClient({ user }: { user: any }) {
                           )}
                         </div>
 
-                        {/* All records Table */}
-                        <div>
-                          <h4 style={{ fontSize: "0.9375rem", color: "#475569", marginBottom: "12px", fontWeight: 600 }}>All Learning Opportunities</h4>
-                          <div style={{ overflowX: "auto", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
-                              <thead>
-                                <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left", background: "#f8fafc" }}>
-                                  <th style={{ padding: "12px 16px" }}>Entity</th>
-                                  <th style={{ padding: "12px 16px" }}>LO Description</th>
-                                  <th style={{ padding: "12px 16px" }}>Identified By</th>
-                                  <th style={{ padding: "12px 16px" }}>Resolution</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {los.length === 0 ? (
-                                  <tr><td colSpan={4} style={{ padding: "20px", textAlign: "center" }}>No LOs found.</td></tr>
-                                ) : (
-                                  los.map(lo => (
-                                    <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                                      <td style={{ padding: "12px 16px", fontWeight: 600 }}>{lo.entity}</td>
-                                      <td style={{ padding: "12px 16px", minWidth: "200px" }}>{lo.learningOpportunity}</td>
-                                      <td style={{ padding: "12px 16px" }}>{lo.identifiedBy}</td>
-                                      <td style={{ padding: "12px 16px", minWidth: "200px" }}>{lo.resolutionProvided}</td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
                         </div>
                       </div>
                     )}
