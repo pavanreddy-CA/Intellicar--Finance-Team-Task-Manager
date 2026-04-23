@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("User not found");
         }
 
-        if (!(user as any).isApproved) {
+        if ((user as any).isApproved === false) {
           throw new Error("Your account is pending admin approval.");
         }
         
