@@ -2412,76 +2412,116 @@ export default function DashboardClient({ user }: { user: any }) {
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                         {/* Task Report Managers */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Manager Emails</label>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", background: "white", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
-                            {(settings.managerEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
-                              <div key={`m-${idx}`} style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", border: "1px solid #bfdbfe" }}>
-                                {email.trim()}
-                                <button 
-                                  onClick={() => {
-                                    const emails = (settings.managerEmail || "").split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, managerEmail: emails.join(',')});
-                                  }}
-                                  style={{ background: "transparent", border: "none", color: "#3b82f6", cursor: "pointer", fontWeight: "bold", fontSize: "14px", display: "flex", alignItems: "center" }}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                            <input 
-                              type="email" 
-                              placeholder="Add email..."
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const val = e.currentTarget.value.trim();
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Emails</label>
+                          <div style={{ background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                              {(settings.managerEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
+                                <div key={`m-${idx}`} style={{ background: "#f8fafc", color: "#334155", padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #e2e8f0" }}>
+                                  <span style={{ fontFamily: "monospace" }}>{email.trim()}</span>
+                                  <button 
+                                    onClick={() => {
+                                      const emails = (settings.managerEmail || "").split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, managerEmail: emails.join(',')});
+                                    }}
+                                    style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
+                                    onMouseOver={e => e.currentTarget.style.color = "#ef4444"}
+                                    onMouseOut={e => e.currentTarget.style.color = "#94a3b8"}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <input 
+                                id="add-primary-email"
+                                type="email" 
+                                placeholder="Add email..."
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const val = e.currentTarget.value.trim();
+                                    if (val && val.includes('@')) {
+                                      setSettings({...settings, managerEmail: (settings.managerEmail || "") + (settings.managerEmail?.trim() ? "," : "") + val});
+                                      e.currentTarget.value = "";
+                                    }
+                                  }
+                                }}
+                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", outline: "none" }}
+                              />
+                              <button 
+                                onClick={() => {
+                                  const input = document.getElementById('add-primary-email') as HTMLInputElement;
+                                  const val = input.value.trim();
                                   if (val && val.includes('@')) {
                                     setSettings({...settings, managerEmail: (settings.managerEmail || "") + (settings.managerEmail?.trim() ? "," : "") + val});
-                                    e.currentTarget.value = "";
+                                    input.value = "";
                                   }
-                                }
-                              }}
-                              style={{ border: "none", outline: "none", fontSize: "0.8125rem", flex: 1, minWidth: "120px" }}
-                            />
+                                }}
+                                style={{ background: "#2563eb", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+                              >
+                                Add
+                              </button>
+                            </div>
                           </div>
-                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Press Enter to add recipient.</p>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Add multiple emails to receive reports.</p>
                         </div>
 
                         {/* LO Report Admins */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>LO Report Admins</label>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", background: "white", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
-                            {(settings.loReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
-                              <div key={`l-${idx}`} style={{ background: "#f5f3ff", color: "#6d28d9", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", border: "1px solid #ddd6fe" }}>
-                                {email.trim()}
-                                <button 
-                                  onClick={() => {
-                                    const emails = (settings.loReportEmail || "").split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, loReportEmail: emails.join(',')});
-                                  }}
-                                  style={{ background: "transparent", border: "none", color: "#7c3aed", cursor: "pointer", fontWeight: "bold", fontSize: "14px", display: "flex", alignItems: "center" }}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                            <input 
-                              type="email" 
-                              placeholder="Add email..."
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const val = e.currentTarget.value.trim();
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary LO Mails</label>
+                          <div style={{ background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                              {(settings.loReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
+                                <div key={`l-${idx}`} style={{ background: "#fdf4ff", color: "#701a75", padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #fae8ff" }}>
+                                  <span style={{ fontFamily: "monospace" }}>{email.trim()}</span>
+                                  <button 
+                                    onClick={() => {
+                                      const emails = (settings.loReportEmail || "").split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, loReportEmail: emails.join(',')});
+                                    }}
+                                    style={{ background: "transparent", border: "none", color: "#d8b4fe", cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
+                                    onMouseOver={e => e.currentTarget.style.color = "#ef4444"}
+                                    onMouseOut={e => e.currentTarget.style.color = "#d8b4fe"}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <input 
+                                id="add-lo-email"
+                                type="email" 
+                                placeholder="Add email..."
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const val = e.currentTarget.value.trim();
+                                    if (val && val.includes('@')) {
+                                      setSettings({...settings, loReportEmail: (settings.loReportEmail || "") + (settings.loReportEmail?.trim() ? "," : "") + val});
+                                      e.currentTarget.value = "";
+                                    }
+                                  }
+                                }}
+                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", outline: "none" }}
+                              />
+                              <button 
+                                onClick={() => {
+                                  const input = document.getElementById('add-lo-email') as HTMLInputElement;
+                                  const val = input.value.trim();
                                   if (val && val.includes('@')) {
                                     setSettings({...settings, loReportEmail: (settings.loReportEmail || "") + (settings.loReportEmail?.trim() ? "," : "") + val});
-                                    e.currentTarget.value = "";
+                                    input.value = "";
                                   }
-                                }
-                              }}
-                              style={{ border: "none", outline: "none", fontSize: "0.8125rem", flex: 1, minWidth: "120px" }}
-                            />
+                                }}
+                                style={{ background: "#7c3aed", color: "white", padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+                              >
+                                Add
+                              </button>
+                            </div>
                           </div>
-                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Press Enter to add recipient.</p>
+                          <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Add multiple emails to receive LO reports.</p>
                         </div>
                       </div>
                     </div>
