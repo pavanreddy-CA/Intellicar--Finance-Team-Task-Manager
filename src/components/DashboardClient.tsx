@@ -2248,7 +2248,7 @@ export default function DashboardClient({ user }: { user: any }) {
                     ) : externalRequests.filter(r => {
                       // GLOBAL VISIBILITY RULE
                       const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
-                      const isRelevantToUser = r.requestFromEmail === user?.email || userAllocatedDepts.includes(r.requestType);
+                      const isRelevantToUser = r.requesterEmail === user?.email || userAllocatedDepts.includes(r.requestType);
                       
                       if (!isPrimaryAdmin && !isRelevantToUser) return false;
 
@@ -2281,7 +2281,7 @@ export default function DashboardClient({ user }: { user: any }) {
                     ) : (
                       externalRequests.filter(r => {
                         const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
-                        const isRelevantToUser = r.requestFromEmail === user?.email || userAllocatedDepts.includes(r.requestType);
+                        const isRelevantToUser = r.requesterEmail === user?.email || userAllocatedDepts.includes(r.requestType);
                         if (!isPrimaryAdmin && !isRelevantToUser) return false;
                         if (extReqSearch && !r.natureOfRequest.toLowerCase().includes(extReqSearch.toLowerCase()) && !r.requestFrom.toLowerCase().includes(extReqSearch.toLowerCase())) return false;
                         if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter && (extReqStatusFilter !== 'New' || (r.status !== 'New' && r.status !== ''))) {
