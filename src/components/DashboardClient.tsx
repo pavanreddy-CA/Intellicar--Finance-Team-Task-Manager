@@ -1404,7 +1404,6 @@ export default function DashboardClient({ user }: { user: any }) {
             </div>
           </div>
         )}
-      </div>
 
       {activeView === 'TASKS' && activeSubView === 'MAIN' && (
           <div className="main-tasks-view">
