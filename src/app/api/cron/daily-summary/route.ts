@@ -313,9 +313,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const settings = await prisma.systemSettings.findUnique({ where: { id: "singleton" } });
+
   if (isVercelCron) {
     try {
-      const settings = await prisma.systemSettings.findUnique({ where: { id: "singleton" } });
       if (settings) {
         const now = new Date();
         const istDate = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
@@ -372,7 +373,7 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" }
       });
       const stats = getLOStats(allLOs);
-      const managerEmail = "pavanreddy@intellicar.in";
+      const managerEmail = settings?.loReportEmail || "pavanreddy@intellicar.in";
       
       const currentMonthName = `${FULL_MONTHS[referenceDate.getMonth()]} ${referenceDate.getFullYear()}`;
       const currentMonthSubtitle = `Current Month Report - ${currentMonthName}`;
@@ -491,7 +492,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === "all" || type === "manager") {
-      const managerEmail = "pavanreddy@intellicar.in";
+      const managerEmail = settings?.managerEmail || "pavanreddy@intellicar.in";
       const startOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
       const mtdTasks = allTasks.filter(t => new Date(t.createdAt) >= startOfMonth);
       

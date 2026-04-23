@@ -107,7 +107,18 @@ export default function DashboardClient({ user }: { user: any }) {
     managerReportFrequency: 'DAILY',
     managerReportTimes: '10:00',
     loReportFrequency: 'WEEKLY',
-    loReportTimes: '10:00'
+    loReportTimes: '10:00',
+    managerEmail: '',
+    loReportEmail: ''
+  });
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareData, setShareData] = useState({
+    recipientEmail: '',
+    ccEmail: '',
+    subject: '',
+    type: 'task' as 'task' | 'lo',
+    format: 'excel' as 'excel' | 'pdf'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
@@ -1075,6 +1086,94 @@ export default function DashboardClient({ user }: { user: any }) {
 
     doc.save(`Intellicar_LO_Report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
+  const handleShareReport = async () => {
+    if (!shareData.recipientEmail) {
+      alert("Please enter a recipient email address.");
+      return;
+    }
+    setShareLoading(true);
+    try {
+      let buffer: ArrayBuffer | Uint8Array;
+      let contentType = "";
+      let attachmentName = "";
+      let subject = shareData.subject || `Shared ${shareData.type === 'task' ? 'Task' : 'LO'} Report`;
+
+      if (shareData.type === 'task') {
+        if (shareData.format === 'excel') {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet("Tasks");
+          // ... (simplified excel logic or reuse)
+          // For now, let's just copy the logic briefly or use a helper
+          // I will use a simplified version for sharing to keep it clean
+          worksheet.addRow(['Shared Task Report']);
+          sortedTasks.forEach((t, i) => worksheet.addRow([i+1, t.taskName, t.entityName, t.ownerName, t.taskStatus]));
+          buffer = await workbook.xlsx.writeBuffer();
+          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          attachmentName = `Tasks_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        } else {
+          const doc = new jsPDF('landscape');
+          doc.text("Shared Task Report", 14, 15);
+          autoTable(doc, {
+            head: [["ID", "Task Name", "Entity", "Owner", "Status"]],
+            body: sortedTasks.map(t => [t.id, t.taskName, t.entityName, t.ownerName, t.taskStatus]),
+            startY: 20
+          });
+          buffer = doc.output('arraybuffer');
+          contentType = 'application/pdf';
+          attachmentName = `Tasks_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        }
+      } else {
+        if (shareData.format === 'excel') {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet("LOs");
+          worksheet.addRow(['Shared LO Report']);
+          sortedLOs.forEach((l, i) => worksheet.addRow([i+1, l.entity, l.learningOpportunity, l.identifiedBy, l.committedBy]));
+          buffer = await workbook.xlsx.writeBuffer();
+          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          attachmentName = `LO_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        } else {
+          const doc = new jsPDF('landscape');
+          doc.text("Shared LO Report", 14, 15);
+          autoTable(doc, {
+            head: [["ID", "Entity", "Date", "Mistake / LO", "Identified By"]],
+            body: sortedLOs.map(l => [l.id, l.entity, formatDate(l.dateOfIdentification), l.learningOpportunity, l.identifiedBy]),
+            startY: 20
+          });
+          buffer = doc.output('arraybuffer');
+          contentType = 'application/pdf';
+          attachmentName = `LO_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        }
+      }
+
+      // Convert buffer to base64
+      const base64 = Buffer.from(buffer).toString('base64');
+
+      const res = await fetch("/api/reports/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail: shareData.recipientEmail,
+          ccEmail: shareData.ccEmail,
+          subject,
+          attachmentName,
+          attachmentBuffer: base64,
+          contentType
+        })
+      });
+
+      if (res.ok) {
+        alert("Report shared successfully via email!");
+        setShowShareModal(false);
+      } else {
+        alert("Failed to share report.");
+      }
+    } catch (error) {
+      console.error("Share error", error);
+      alert("An error occurred while sharing the report.");
+    } finally {
+      setShareLoading(false);
+    }
+  };
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f8fafc", color: "#0f172a", overflow: "hidden" }}>
@@ -1381,6 +1480,24 @@ export default function DashboardClient({ user }: { user: any }) {
                       onMouseOut={e => e.currentTarget.style.background = "white"}
                     >
                       <FileText size={16} color="#991b1b" /> PDF Document
+                    </button>
+                    <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }}></div>
+                    <button 
+                      onClick={() => { 
+                        setShareData({...shareData, type: 'task', format: 'excel', subject: `Task Report - ${new Date().toISOString().split('T')[0]}`});
+                        setShowShareModal(true); 
+                        setShowTaskDownloadDropdown(false); 
+                      }}
+                      style={{ 
+                        width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                        padding: "12px 16px", border: "none", background: "white", 
+                        color: "#2563eb", cursor: "pointer", fontSize: "0.875rem", 
+                        textAlign: "left", transition: "background 0.2s", fontWeight: 600
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
+                      onMouseOut={e => e.currentTarget.style.background = "white"}
+                    >
+                      <Mail size={16} color="#2563eb" /> Share via Email
                     </button>
                   </div>
                 )}
@@ -1824,6 +1941,24 @@ export default function DashboardClient({ user }: { user: any }) {
                         >
                           <FileText size={14} color="#991b1b" /> PDF Document
                         </button>
+                        <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }}></div>
+                        <button 
+                          onClick={() => { 
+                            setShareData({...shareData, type: 'lo', format: 'excel', subject: `LO Report - ${new Date().toISOString().split('T')[0]}`});
+                            setShowShareModal(true); 
+                            setShowLODownloadDropdown(false); 
+                          }}
+                          style={{ 
+                            width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                            padding: "10px 16px", border: "none", background: "white", 
+                            color: "#4f46e5", cursor: "pointer", fontSize: "0.8125rem", 
+                            textAlign: "left", transition: "background 0.2s", fontWeight: 600
+                          }}
+                          onMouseOver={e => e.currentTarget.style.background = "#f5f3ff"}
+                          onMouseOut={e => e.currentTarget.style.background = "white"}
+                        >
+                          <Mail size={14} color="#4f46e5" /> Share via Email
+                        </button>
                       </div>
                     )}
                   </div>
@@ -2161,6 +2296,34 @@ export default function DashboardClient({ user }: { user: any }) {
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Auto-Email Frequency</h3>
                     
+                    {/* Dynamic Emails Control */}
+                    <div style={{ marginBottom: "32px", padding: "20px", background: "#f0f9ff", borderRadius: "12px", border: "1px solid #bae6fd" }}>
+                      <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: "#0369a1", fontWeight: 700 }}>Report Recipients</h4>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                        <div>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Manager Email</label>
+                          <input 
+                            type="email" 
+                            placeholder="manager@intellicar.in"
+                            value={settings.managerEmail}
+                            onChange={(e) => setSettings({...settings, managerEmail: e.target.value})}
+                            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem" }} 
+                          />
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Receives Task Summary reports.</p>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>LO Report Email</label>
+                          <input 
+                            type="email" 
+                            placeholder="admin@intellicar.in"
+                            value={settings.loReportEmail}
+                            onChange={(e) => setSettings({...settings, loReportEmail: e.target.value})}
+                            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem" }} 
+                          />
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: "#64748b" }}>Receives Learning Opportunity reports.</p>
+                        </div>
+                      </div>
+                    </div>
                     {/* Reminders Schedule */}
                     <div style={{ marginBottom: "32px", padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -2756,10 +2919,83 @@ export default function DashboardClient({ user }: { user: any }) {
                           <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "12px" }}>Ensure you use the template provided above.</p>
                         </div>
                       </div>
-
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showShareModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "500px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px", background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Share Report via Email</h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", opacity: 0.9 }}>Send the current report as an attachment.</p>
+              </div>
+              <button onClick={() => setShowShareModal(false)} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "white", cursor: "pointer", width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem" }}>×</button>
+            </div>
+            
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Recipient Email</label>
+                <input 
+                  type="email" 
+                  placeholder="recipient@example.com"
+                  value={shareData.recipientEmail}
+                  onChange={e => setShareData({...shareData, recipientEmail: e.target.value})}
+                  style={inputStyle} 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>CC (Optional)</label>
+                <input 
+                  type="email" 
+                  placeholder="manager@example.com"
+                  value={shareData.ccEmail}
+                  onChange={e => setShareData({...shareData, ccEmail: e.target.value})}
+                  style={inputStyle} 
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Subject</label>
+                <input 
+                  type="text" 
+                  value={shareData.subject}
+                  onChange={e => setShareData({...shareData, subject: e.target.value})}
+                  style={inputStyle} 
+                />
+              </div>
+
+              <div style={{ padding: "16px", background: "#f0f9ff", borderRadius: "12px", border: "1px solid #bae6fd", display: "flex", alignItems: "center", gap: "12px" }}>
+                <FileSpreadsheet size={24} color="#0369a1" />
+                <div>
+                  <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>Attachment Info</p>
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: "#0ea5e9" }}>
+                    {shareData.type === 'task' ? 'Task Dashboard' : 'LO Dashboard'} Export ({shareData.format.toUpperCase()})
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                <button 
+                  onClick={() => setShowShareModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleShareReport}
+                  disabled={shareLoading}
+                  style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#2563eb", color: "white", fontWeight: 600, cursor: shareLoading ? "not-allowed" : "pointer", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
+                >
+                  {shareLoading ? "Sending..." : "Send Email"}
+                </button>
               </div>
             </div>
           </div>

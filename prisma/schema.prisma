@@ -78,4 +78,6 @@ model SystemSettings {
   lastReminderSentAt    DateTime?
   lastManagerReportSentAt DateTime?
   lastLoReportSentAt    DateTime?
+  managerEmail          String   @default("pavanreddy@intellicar.in")
+  loReportEmail         String   @default("pavanreddy@intellicar.in")
 }
