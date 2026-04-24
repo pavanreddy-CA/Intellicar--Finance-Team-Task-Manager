@@ -2493,8 +2493,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <th style={thStyle}>Request Type</th>
                       <th style={thStyle}>Nature of Request</th>
                       <th style={thStyle}>Request Status</th>
-                      <th style={thStyle}>Rejection Reason</th>
                       {canAllocateAnything && <th style={thStyle}>Action</th>}
+                      <th style={thStyle}>Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2614,15 +2614,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   </div>
                                 )}
                             </td>
-                            <td style={{ ...tdStyle, maxWidth: "250px", whiteSpace: "normal", color: "#64748b", fontSize: "0.8rem" }}>
-                              {req.status === 'Rejected' ? (
-                                <span style={{ color: "#ef4444", fontWeight: 500 }}>
-                                  {(req as any).rejectReason || "-"}
-                                </span>
-                              ) : (
-                                <span style={{ color: "#cbd5e1" }}>-</span>
-                              )}
-                            </td>
                             {canAllocateAnything && (
                               <td style={tdStyle}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -2671,6 +2662,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                 </div>
                               </td>
                             )}
+                            <td style={{ ...tdStyle, maxWidth: "280px", whiteSpace: "normal", color: "#64748b", fontSize: "0.8rem" }}>
+                              {req.status === 'Rejected' ? (
+                                <span style={{ color: "#ef4444", fontWeight: 500 }}>
+                                  {(req as any).rejectReason || "No reason specified"}
+                                </span>
+                              ) : req.status === 'Processed' ? (
+                                <span style={{ color: "#10b981", fontWeight: 500 }}>N/A</span>
+                              ) : (
+                                <span style={{ color: "#cbd5e1" }}>-</span>
+                              )}
+                            </td>
                           </tr>
                         );
                       })
