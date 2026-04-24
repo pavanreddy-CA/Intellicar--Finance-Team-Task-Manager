@@ -2383,7 +2383,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       Rejected
                     </button>
                   </div>
-    </div>
                 </div>
                 <button 
                   onClick={() => setShowExtReqForm(true)}
