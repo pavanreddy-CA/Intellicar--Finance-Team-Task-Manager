@@ -182,7 +182,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [externalRequests, setExternalRequests] = useState<ExternalRequest[]>([]);
   const [extReqLoading, setExtReqLoading] = useState(false);
   const [showExtReqForm, setShowExtReqForm] = useState(false);
-  const [extReqFilter, setExtReqFilter] = useState<'ALL' | 'ALLOCATION' | 'PROCESS' | 'PROCESSED'>('ALL');
+  const [extReqFilter, setExtReqFilter] = useState<'ALL' | 'ALLOCATION' | 'PROCESS' | 'PROCESSED' | 'REJECTED'>('ALL');
   const [extReqSearch, setExtReqSearch] = useState("");
   const [extReqStatusFilter, setExtReqStatusFilter] = useState("ALL");
   const [loEntityFilter, setLoEntityFilter] = useState("ALL");
