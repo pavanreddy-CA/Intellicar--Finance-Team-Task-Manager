@@ -76,8 +76,7 @@ export default function Login() {
 
           <h2 style={{ fontSize: '3.2rem', fontWeight: 800, marginBottom: '24px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
             Empowering<br />
-            Financial Clarity &<br />
-            <span style={{ color: '#60a5fa' }}>Excellence.</span>
+            Financial Clarity & <span style={{ color: '#60a5fa' }}>Excellence.</span>
           </h2>
           <p style={{ fontSize: '1.25rem', opacity: 0.9, maxWidth: '480px', lineHeight: 1.6, color: '#e2e8f0' }}>
             Manage tasks, analyze performance, and optimize financial workflows with ease.
