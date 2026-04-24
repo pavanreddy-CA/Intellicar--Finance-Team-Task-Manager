@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
-import { prisma } from "./prisma";
+import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcrypt";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-in-production"
@@ -73,17 +75,22 @@ export async function authenticate(
   password: string
 ): Promise<{ success: boolean; user?: SessionUser; error?: string }> {
   try {
-    // Find user in database
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    // Find user in database using Neon serverless
+    const users = await sql`
+      SELECT id, email, name, password, role, department, "isApproved"
+      FROM "User"
+      WHERE email = ${email}
+      LIMIT 1
+    `;
+    
+    const user = users[0];
     
     if (!user || !user.password) {
       return { success: false, error: "User not found" };
     }
     
     // Check if user is approved
-    if ((user as any).isApproved === false) {
+    if (user.isApproved === false) {
       return { success: false, error: "Your account is pending admin approval." };
     }
     
