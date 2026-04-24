@@ -3692,7 +3692,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                <th style={{ padding: "12px 8px" }}>Email</th>
                                <th style={{ padding: "12px 8px" }}>Department</th>
                                <th style={{ padding: "12px 8px" }}>Role</th>
-                               <th style={{ padding: "12px 8px", textAlign: "center" }}>Allocator</th>
                                <th style={{ padding: "12px 8px", textAlign: "right" }}>Actions</th>
                             </tr>
                           </thead>
@@ -3722,25 +3721,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     <option value="USER">USER</option>
                                     <option value="ADMIN">ADMIN</option>
                                   </select>
-                                </td>
-                                <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                                  <input 
-                                    type="checkbox" 
-                                    checked={(u as any).isAllocator || false}
-                                    onChange={async (e) => {
-                                      try {
-                                        const res = await fetch("/api/users", {
-                                          method: "PATCH",
-                                          headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({ userId: u.id, isAllocator: e.target.checked })
-                                        });
-                                        if (res.ok) fetchUsersList();
-                                      } catch (err) {
-                                        console.error("Failed to update allocator status", err);
-                                      }
-                                    }}
-                                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                                  />
                                 </td>
                                 <td style={{ padding: "12px 8px", textAlign: "right" }}>
                                   <button 
