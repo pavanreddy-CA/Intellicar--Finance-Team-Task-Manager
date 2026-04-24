@@ -19,30 +19,23 @@ export default function Login() {
     setError("");
 
     try {
-      console.log("[v0] Attempting login with email:", email);
       const res = await signIn("credentials", {
         redirect: false,
         email,
         password,
       });
 
-      console.log("[v0] signIn response:", res);
-
       if (res?.error) {
-        console.log("[v0] Login error:", res.error);
         setError(res.error);
         setLoading(false);
       } else if (res?.ok) {
-        console.log("[v0] Login successful, redirecting...");
         router.push("/");
         router.refresh();
       } else {
-        console.log("[v0] Unknown response:", res);
         setError("Login failed. Please try again.");
         setLoading(false);
       }
     } catch (err) {
-      console.log("[v0] Login exception:", err);
       setError("An unexpected error occurred. Please try again later.");
       setLoading(false);
     }

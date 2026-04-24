@@ -12,54 +12,35 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("[v0] authorize called with email:", credentials?.email);
-        
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            console.log("[v0] Missing email or password");
-            throw new Error("Invalid credentials");
-          }
-          
-          console.log("[v0] Querying user from database...");
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
-          });
-          
-          console.log("[v0] User found:", !!user);
-          
-          if (!user || !user.password) {
-            console.log("[v0] User not found or no password");
-            throw new Error("User not found");
-          }
-
-          console.log("[v0] Checking approval status...");
-          if ((user as any).isApproved === false) {
-            console.log("[v0] User not approved");
-            throw new Error("Your account is pending admin approval.");
-          }
-          
-          console.log("[v0] Verifying password...");
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-          
-          console.log("[v0] Password valid:", isPasswordValid);
-          
-          if (!isPasswordValid) {
-            console.log("[v0] Password invalid");
-            throw new Error("Invalid password");
-          }
-          
-          console.log("[v0] Login successful, returning user object");
-          return {
-            id: String(user.id),
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            department: user.department
-          };
-        } catch (error) {
-          console.log("[v0] Error in authorize:", error);
-          throw error;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Invalid credentials");
         }
+        
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
+        
+        if (!user || !user.password) {
+          throw new Error("User not found");
+        }
+
+        if ((user as any).isApproved === false) {
+          throw new Error("Your account is pending admin approval.");
+        }
+        
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        
+        if (!isPasswordValid) {
+          throw new Error("Invalid password");
+        }
+        
+        return {
+          id: String(user.id),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          department: user.department
+        };
       }
     })
   ],
@@ -67,9 +48,30 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    pkceCodeVerifier: {
+      name: `next-auth.pkce.code_verifier`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -78,12 +80,9 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  useSecureCookies: process.env.NODE_ENV === "production",
   callbacks: {
     async jwt({ token, user }) {
-      console.log("[v0] jwt callback called, user exists:", !!user);
       if (user) {
-        console.log("[v0] Adding user data to JWT token");
         token.id = user.id;
         token.role = (user as any).role;
         token.department = (user as any).department;
@@ -91,9 +90,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log("[v0] session callback called");
       if (token && session.user) {
-        console.log("[v0] Adding token data to session");
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).department = token.department;
@@ -104,17 +101,6 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  debug: true,
+  debug: process.env.NODE_ENV === "development",
   trustHost: true,
-  events: {
-    async signIn(message) {
-      console.log("[v0] EVENT signIn:", message);
-    },
-    async signOut(message) {
-      console.log("[v0] EVENT signOut:", message);
-    },
-    async session(message) {
-      console.log("[v0] EVENT session:", message);
-    }
-  }
 };
