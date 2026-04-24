@@ -44,13 +44,13 @@ export async function POST(req: NextRequest) {
     // Set session cookie
     response.cookies.set("session-token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Allow in development and preview environments
       sameSite: "lax",
       path: "/",
       maxAge: 30 * 24 * 60 * 60, // 30 days
     });
     
-    console.log("[Login API] Session cookie set");
+    console.log("[Login API] Session cookie set with token length:", token.length);
     
     return response;
   } catch (error: any) {

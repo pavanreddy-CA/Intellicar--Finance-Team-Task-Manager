@@ -47,19 +47,34 @@ export async function verifyToken(token: string): Promise<SessionUser | null> {
 
 // Get the current session from cookies
 export async function getSession(): Promise<Session | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session-token")?.value;
-  
-  if (!token) {
+  try {
+    const cookieStore = await cookies();
+    
+    // Debug: list all cookies
+    const allCookies = cookieStore.getAll();
+    console.log("[getSession] All cookies:", allCookies.map(c => c.name));
+    
+    const token = cookieStore.get("session-token")?.value;
+    
+    console.log("[getSession] Checking for token, found:", !!token);
+    
+    if (!token) {
+      console.log("[getSession] No token found, returning null");
+      return null;
+    }
+    
+    const user = await verifyToken(token);
+    console.log("[getSession] Token verified, user found:", !!user);
+    
+    if (!user) {
+      return null;
+    }
+    
+    return { user };
+  } catch (error: any) {
+    console.error("[getSession] Error:", error.message);
     return null;
   }
-  
-  const user = await verifyToken(token);
-  if (!user) {
-    return null;
-  }
-  
-  return { user };
 }
 
 // Authenticate user with email and password

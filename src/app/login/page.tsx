@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function Login() {
@@ -25,6 +26,7 @@ export default function Login() {
       });
       
       const data = await response.json();
+      console.log("[Login] Response:", data);
       
       if (!response.ok) {
         setError(data.error || "Login failed");
@@ -32,9 +34,15 @@ export default function Login() {
         return;
       }
       
-      // Force full page reload to pick up the new session cookie
-      window.location.href = "/";
+      // Add a small delay to ensure cookie is set before redirecting
+      console.log("[Login] Redirecting to dashboard...");
+      setTimeout(() => {
+        router.push("/");
+        // Also call router.refresh() to revalidate session
+        router.refresh();
+      }, 100);
     } catch (err) {
+      console.error("[Login] Error:", err);
       setError("An unexpected error occurred. Please try again later.");
       setLoading(false);
     }
