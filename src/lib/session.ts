@@ -98,10 +98,10 @@ export async function authenticate(
       success: true,
       user: {
         id: String(user.id),
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        department: user.department,
+        email: user.email || "",
+        name: user.name || "",
+        role: user.role || "",
+        department: user.department || "",
       }
     };
   } catch (error: any) {
