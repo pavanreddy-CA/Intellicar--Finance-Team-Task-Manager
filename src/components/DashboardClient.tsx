@@ -201,6 +201,11 @@ export default function DashboardClient({ user }: { user: any }) {
     modeOfCommunication: "Official Internal Mail",
     comments: ""
   });
+  
+  // Rejection Logic State
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectingReq, setRejectingReq] = useState<ExternalRequest | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   // Dropdown Refs
   const taskDropdownRef = useState<HTMLDivElement | null>(null)[0]; // Actually I should use useRef
@@ -388,6 +393,37 @@ export default function DashboardClient({ user }: { user: any }) {
       }
     } catch (error) {
       console.error("Failed to update request status", error);
+    }
+  };
+
+  const handleDeleteExtRequest = async (id: number) => {
+    if (!confirm("Are you sure you want to permanently delete this request?")) return;
+    try {
+      const res = await fetch(`/api/external-requests/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setExternalRequests(prev => prev.filter(r => r.id !== id));
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const handleRejectExtRequest = async () => {
+    if (!rejectingReq || !rejectReason.trim()) return;
+    try {
+      const res = await fetch(`/api/external-requests/${rejectingReq.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Rejected", rejectReason: rejectReason.trim() }),
+      });
+      if (res.ok) {
+        setShowRejectModal(false);
+        setRejectingReq(null);
+        setRejectReason("");
+        fetchExternalRequests();
+      }
+    } catch (err) {
+      console.error("Reject error:", err);
     }
   };
 
@@ -2475,16 +2511,41 @@ export default function DashboardClient({ user }: { user: any }) {
                               </span>
                             </td>
                             <td style={tdStyle}>
-                              {req.status !== 'Processed' && req.status !== 'Under Process' && !req.convertedTaskId && isAuthorizedAllocator && (
-                                <button 
-                                  onClick={() => handleConvertToTask(req)}
-                                  style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
-                                >
-                                  Convert to Task
-                                </button>
+                              {(req.status !== 'Processed' && req.status !== 'Under Process' && req.status !== 'Rejected' && !req.convertedTaskId && isAuthorizedAllocator) && (
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button 
+                                    onClick={() => handleConvertToTask(req)}
+                                    style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                                  >
+                                    <Plus size={12} /> Convert
+                                  </button>
+                                  <button 
+                                    onClick={() => { setRejectingReq(req); setShowRejectModal(true); }}
+                                    style={{ background: "white", color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
                               )}
                               {req.convertedTaskId && (
-                                <span style={{ fontSize: "0.7rem", color: "#64748b", fontStyle: "italic" }}>Task ID: {req.convertedTaskId}</span>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                  <span style={{ fontSize: "0.7rem", color: "#64748b", fontStyle: "italic" }}>Task ID: {req.convertedTaskId}</span>
+                                </div>
+                              )}
+                              {req.status === 'Rejected' && (
+                                <div style={{ fontSize: "0.7rem", color: "#ef4444", maxWidth: "200px" }}>
+                                  <strong>Reason:</strong> { (req as any).rejectReason }
+                                </div>
+                              )}
+                              {(isAdmin || (user as any).isAllocator) && (
+                                <button 
+                                  onClick={() => handleDeleteExtRequest(req.id)}
+                                  style={{ marginTop: "8px", background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "6px" }}
+                                  onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
+                                  onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
                               )}
                             </td>
                           </tr>
@@ -4243,6 +4304,50 @@ export default function DashboardClient({ user }: { user: any }) {
         </div>
       )}
 
+      {showRejectModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "450px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px", background: "#fef2f2", borderBottom: "1px solid #fee2e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#fee2e2", color: "#ef4444", padding: "10px", borderRadius: "12px" }}>
+                  <AlertCircle size={24} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700, color: "#991b1b" }}>Reject Request</h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#b91c1c", opacity: 0.8 }}>Please provide a reason for rejection.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowRejectModal(false)} style={{ background: "white", border: "1px solid #fee2e2", color: "#ef4444", cursor: "pointer", width: "32px", height: "32px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem" }}>×</button>
+            </div>
+            
+            <div style={{ padding: "24px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Rejection Reason</label>
+              <textarea 
+                placeholder="Explain why this request is being rejected..."
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                style={{ ...inputStyle, minHeight: "120px", resize: "none", padding: "12px" }} 
+              />
+              
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                <button 
+                  onClick={() => setShowRejectModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleRejectExtRequest}
+                  disabled={!rejectReason.trim()}
+                  style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#ef4444", color: "white", fontWeight: 600, cursor: !rejectReason.trim() ? "not-allowed" : "pointer", boxShadow: "0 4px 6px -1px rgba(239, 68, 68, 0.2)" }}
+                >
+                  Confirm Rejection
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <style dangerouslySetInnerHTML={{__html: `
         .table-row:hover { background-color: #f8fafc; }
         .btn-primary:hover { background-color: #1d4ed8 !important; }

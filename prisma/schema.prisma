@@ -85,6 +85,7 @@ model ExternalRequest {
   status              String    @default("Under Process")
   assignedAllocatorEmail String?
   convertedTaskId     Int?
+  rejectReason        String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 }
