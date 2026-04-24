@@ -4130,6 +4130,50 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           </div>
                         </div>
                       </div>
+
+                      {/* Request Types */}
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                          <FileText size={18} color="#8b5cf6" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Request Types</h4>
+                        </div>
+                        <p style={{ fontSize: "0.75rem", color: "#64748b", margin: "0 0 12px 0" }}>Used in Inter Department Request form.</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {(settings.masterRequestTypes || "").split(',').filter(t => t.trim()).map((type, idx) => (
+                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {type.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterRequestTypes.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterRequestTypes: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add request type..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    setSettings({...settings, masterRequestTypes: (settings.masterRequestTypes || "") + (settings.masterRequestTypes?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 )}
