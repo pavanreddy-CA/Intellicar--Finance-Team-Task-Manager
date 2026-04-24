@@ -147,7 +147,7 @@ export default function DashboardClient({ user }: { user: any }) {
     recipientEmail: '',
     ccEmail: '',
     subject: '',
-    type: 'task' as 'task' | 'lo',
+    type: 'task' as 'task' | 'lo' | 'request',
     format: 'excel' as 'excel' | 'pdf'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
