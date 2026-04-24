@@ -2344,15 +2344,16 @@ export default function DashboardClient({ user }: { user: any }) {
                   />
                 </div>
                 <select 
-                  value={extReqStatusFilter}
-                  onChange={e => setExtReqStatusFilter(e.target.value)}
-                  style={{ padding: "8px", borderRadius: "10px", border: "1px solid #e2e8f0", outline: "none", fontSize: "0.8125rem", background: "white", color: "#475569", minWidth: "150px" }}
-                >
-                  <option value="ALL">All Statuses</option>
-                  <option value="New">Pending Allocation</option>
-                  <option value="Under Process">Under Process</option>
-                  <option value="Processed">Processed</option>
-                </select>
+                    value={extReqStatusFilter}
+                    onChange={(e) => setExtReqStatusFilter(e.target.value)}
+                    style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px 16px", fontSize: "0.875rem", color: "#64748b", cursor: "pointer", outline: "none" }}
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Under Process">Under Process</option>
+                    <option value="Processed">Processed</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
                 {canAllocateAnything && (
                   <select 
                     onChange={e => {
@@ -2511,42 +2512,50 @@ export default function DashboardClient({ user }: { user: any }) {
                               </span>
                             </td>
                             <td style={tdStyle}>
-                              {(req.status !== 'Processed' && req.status !== 'Under Process' && req.status !== 'Rejected' && !req.convertedTaskId && isAuthorizedAllocator) && (
-                                <div style={{ display: "flex", gap: "8px" }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                {(req.status === 'Pending' && !req.convertedTaskId && isAuthorizedAllocator) && (
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <button 
+                                      onClick={() => handleConvertToTask(req)}
+                                      style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                                    >
+                                      <Plus size={12} /> Convert to Task
+                                    </button>
+                                    <button 
+                                      onClick={() => { setRejectingReq(req); setShowRejectModal(true); }}
+                                      style={{ background: "white", color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                )}
+                                
+                                {(req.status === 'Under Process' || req.status === 'Processed') && req.convertedTaskId && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd" }}>
+                                      TASK CREATED
+                                    </span>
+                                    <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 500 }}>ID: {req.convertedTaskId}</span>
+                                  </div>
+                                )}
+
+                                {req.status === 'Rejected' && (
+                                  <div style={{ fontSize: "0.7rem", color: "#ef4444", maxWidth: "200px", padding: "8px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fee2e2" }}>
+                                    <strong>Rejected:</strong> { (req as any).rejectReason || "No reason provided" }
+                                  </div>
+                                )}
+
+                                {(isAdmin || (user as any).isAllocator) && (
                                   <button 
-                                    onClick={() => handleConvertToTask(req)}
-                                    style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                                    onClick={() => handleDeleteExtRequest(req.id)}
+                                    style={{ alignSelf: "flex-start", marginTop: "4px", background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "4px" }}
+                                    onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
+                                    onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
                                   >
-                                    <Plus size={12} /> Convert
+                                    <Trash2 size={12} /> <span style={{ fontSize: "0.65rem" }}>Delete Request</span>
                                   </button>
-                                  <button 
-                                    onClick={() => { setRejectingReq(req); setShowRejectModal(true); }}
-                                    style={{ background: "white", color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
-                              )}
-                              {req.convertedTaskId && (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                  <span style={{ fontSize: "0.7rem", color: "#64748b", fontStyle: "italic" }}>Task ID: {req.convertedTaskId}</span>
-                                </div>
-                              )}
-                              {req.status === 'Rejected' && (
-                                <div style={{ fontSize: "0.7rem", color: "#ef4444", maxWidth: "200px" }}>
-                                  <strong>Reason:</strong> { (req as any).rejectReason }
-                                </div>
-                              )}
-                              {(isAdmin || (user as any).isAllocator) && (
-                                <button 
-                                  onClick={() => handleDeleteExtRequest(req.id)}
-                                  style={{ marginTop: "8px", background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "6px" }}
-                                  onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
-                                  onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
