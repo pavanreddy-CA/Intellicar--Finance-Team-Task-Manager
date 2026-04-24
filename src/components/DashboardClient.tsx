@@ -2487,18 +2487,19 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
-                      <th style={thStyle}>Sl No.</th>
+                      <th style={{ ...thStyle, width: "50px" }}>Sl No.</th>
                       <th style={thStyle}>Request From</th>
                       <th style={thStyle}>Date</th>
                       <th style={thStyle}>Request Type</th>
                       <th style={thStyle}>Nature of Request</th>
                       <th style={thStyle}>Request Status</th>
+                      <th style={thStyle}>Rejection Reason</th>
                       {canAllocateAnything && <th style={thStyle}>Action</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {extReqLoading ? (
-                      <tr><td colSpan={canAllocateAnything ? 7 : 6} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading requests...</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading requests...</td></tr>
                     ) : externalRequests.filter(r => {
                       const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
                       const isRelevantToUser = r.requesterEmail === user?.email || userAllocatedDepts.includes(r.requestType);
@@ -2520,7 +2521,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         }
                         return true;
                     }).length === 0 ? (
-                      <tr><td colSpan={canAllocateAnything ? 7 : 6} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No requests found.</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No requests found.</td></tr>
                     ) : (
                       externalRequests.filter(r => {
                         const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
@@ -2612,6 +2613,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     )}
                                   </div>
                                 )}
+                            </td>
+                            <td style={{ ...tdStyle, maxWidth: "250px", whiteSpace: "normal", color: "#64748b", fontSize: "0.8rem" }}>
+                              {req.status === 'Rejected' ? (
+                                <span style={{ color: "#ef4444", fontWeight: 500 }}>
+                                  {(req as any).rejectReason || "-"}
+                                </span>
+                              ) : (
+                                <span style={{ color: "#cbd5e1" }}>-</span>
+                              )}
                             </td>
                             {canAllocateAnything && (
                               <td style={tdStyle}>
