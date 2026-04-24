@@ -120,7 +120,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
   const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA' | 'MASTER_DATA' | 'MATRICES'>('ACCOUNT');
-  const [activeMatrixTab, setActiveMatrixTab] = useState<'ACCESS' | 'ALLOCATION'>('ACCESS');
+  const [activeMatrixTab, setActiveMatrixTab] = useState<'ACCESS' | 'ALLOCATION' | ''>('ACCESS');
   const [isTasksMenuOpen, setIsTasksMenuOpen] = useState(true);
   const [activeSubView, setActiveSubView] = useState<'MAIN' | 'OTHER_DEPT'>('MAIN');
   const [activeMainView, setActiveMainView] = useState<'DASHBOARD' | 'ADMIN_MATRIX'>('DASHBOARD');
