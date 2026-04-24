@@ -1,6 +1,8 @@
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(request: Request) {
   console.log("[v0] test-auth API called");
@@ -11,9 +13,10 @@ export async function POST(request: Request) {
     
     // Test database connection
     console.log("[v0] Querying database...");
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    const users = await sql`
+      SELECT * FROM "User" WHERE email = ${email} LIMIT 1
+    `;
+    const user = users[0];
     
     console.log("[v0] User found:", !!user);
     

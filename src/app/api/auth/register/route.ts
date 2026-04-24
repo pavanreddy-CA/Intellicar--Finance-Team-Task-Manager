@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcrypt";
 import { sendEmail } from "@/lib/email";
 
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,40 +13,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    const existingUsers = await sql`
+      SELECT id FROM "User" WHERE email = ${email} LIMIT 1
+    `;
 
-    if (existingUser) {
+    if (existingUsers.length > 0) {
       return NextResponse.json({ message: "User already exists" }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // New users are created as PENDING (isApproved: false)
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        department,
-        isApproved: false,
-      }
-    });
+    const users = await sql`
+      INSERT INTO "User" (id, name, email, password, department, "isApproved", role, "createdAt", "updatedAt")
+      VALUES (gen_random_uuid(), ${name}, ${email}, ${hashedPassword}, ${department}, false, 'USER', NOW(), NOW())
+      RETURNING id, name, email
+    `;
+    const user = users[0];
 
     // Notify Admins
     try {
-      const admins = await prisma.user.findMany({
-        where: { role: "ADMIN" },
-        select: { email: true }
-      });
+      const admins = await sql`
+        SELECT email FROM "User" WHERE role = 'ADMIN'
+      `;
       
       const adminEmails = admins.map(a => a.email).filter(Boolean) as string[];
       
       if (adminEmails.length > 0) {
         await sendEmail({
           to: adminEmails.join(", "),
-          subject: "🚨 New Access Request Pending Approval",
+          subject: "New Access Request Pending Approval",
           html: `
             <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
               <div style="background: #2563eb; padding: 24px; color: white;">

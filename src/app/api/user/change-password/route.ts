@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import bcrypt from "bcrypt";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: Request) {
   const session = await getServerSession();
@@ -16,9 +18,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Current and new passwords are required" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
+    const users = await sql`
+      SELECT * FROM "User" WHERE email = ${session.user.email} LIMIT 1
+    `;
+    const user = users[0];
 
     if (!user || !user.password) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -31,10 +34,11 @@ export async function POST(req: Request) {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    await prisma.user.update({
-      where: { email: session.user.email },
-      data: { password: hashedNewPassword }
-    });
+    await sql`
+      UPDATE "User"
+      SET password = ${hashedNewPassword}
+      WHERE email = ${session.user.email}
+    `;
 
     return NextResponse.json({ message: "Password updated successfully" });
   } catch (error: any) {

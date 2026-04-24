@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(
   req: Request,
@@ -17,22 +19,17 @@ export async function POST(
     const loId = parseInt(id);
 
     if (action === "APPROVE") {
-      await prisma.learningOpportunity.update({
-        where: { id: loId },
-        data: {
-          editRequested: false,
-          editApproved: true,
-          editRequestReason: null,
-        }
-      });
+      await sql`
+        UPDATE "LearningOpportunity"
+        SET "editRequested" = false, "editApproved" = true, "editRequestReason" = null
+        WHERE id = ${loId}
+      `;
     } else {
-      await prisma.learningOpportunity.update({
-        where: { id: loId },
-        data: {
-          editRequested: false,
-          editRequestReason: null
-        }
-      });
+      await sql`
+        UPDATE "LearningOpportunity"
+        SET "editRequested" = false, "editRequestReason" = null
+        WHERE id = ${loId}
+      `;
     }
 
     return NextResponse.json({ message: `Edit request ${action.toLowerCase()}d` });

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { sendEmail, getEmailFromName } from "@/lib/email";
 import { getServerSession } from "@/lib/session";
 import * as ExcelJS from "exceljs";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 // Helper to check if a task is overdue
 function isOverdue(dueDate: Date | null, referenceDate: Date) {
@@ -63,22 +65,11 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Learning Opportunities");
 
-  // Define column widths
   worksheet.columns = [
-    { width: 8 },  // SI No
-    { width: 20 }, // Timestamp
-    { width: 20 }, // Entity
-    { width: 20 }, // Date of Identification
-    { width: 45 }, // Learning Opportunity
-    { width: 20 }, // Identified By
-    { width: 20 }, // Committed By
-    { width: 45 }, // Resolution Provided
-    { width: 20 }, // Mode Of Communication
-    { width: 30 }, // Email Sub
-    { width: 40 }  // Comments
+    { width: 8 }, { width: 20 }, { width: 20 }, { width: 20 }, { width: 45 },
+    { width: 20 }, { width: 20 }, { width: 45 }, { width: 20 }, { width: 30 }, { width: 40 }
   ];
 
-  // Row 1: Main Title (Dark Blue background, White text)
   worksheet.mergeCells('A1:K1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'ITPL - Finance Learning Opportunity Report';
@@ -86,21 +77,16 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Row 2: Subtitle (Light Blue background, Italicized Blue text)
   worksheet.mergeCells('A2:K2');
   const subCell = worksheet.getCell('A2');
   subCell.value = subtitle;
   subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
-  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; 
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
   subCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Row 3: Column Headers (Dark Blue background, White text)
   const headerRow = worksheet.getRow(3);
-  const headers = [
-    'SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
-    'Identified by', 'Commited By', 'Resolution Provided', 'Mode Of Communication', 
-    'Email Sub', 'Comments'
-  ];
+  const headers = ['SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
+    'Identified by', 'Commited By', 'Resolution Provided', 'Mode Of Communication', 'Email Sub', 'Comments'];
   
   headers.forEach((h, i) => {
     const cell = headerRow.getCell(i + 1);
@@ -108,38 +94,19 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
     cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-    };
+    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
   });
 
-  // Add Data rows
   los.forEach((lo, index) => {
     const row = worksheet.addRow([
-      index + 1,
-      formatDateTime(lo.createdAt),
-      lo.entity || "",
-      formatDate(lo.dateOfIdentification),
-      lo.learningOpportunity || "",
-      lo.identifiedBy || "",
-      lo.committedBy || "",
-      lo.resolutionProvided || "",
-      lo.modeOfCommunication || "",
-      lo.emailSub || "Not Applicable",
-      lo.comments || "NA"
+      index + 1, formatDateTime(lo.createdAt), lo.entity || "", formatDate(lo.dateOfIdentification),
+      lo.learningOpportunity || "", lo.identifiedBy || "", lo.committedBy || "", lo.resolutionProvided || "",
+      lo.modeOfCommunication || "", lo.emailSub || "Not Applicable", lo.comments || "NA"
     ]);
     row.alignment = { vertical: 'middle', wrapText: true };
     row.eachCell((cell) => {
-        cell.font = { name: 'Calibri', size: 10 };
-        cell.border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            bottom: { style: 'thin' },
-            right: { style: 'thin' }
-        };
+      cell.font = { name: 'Calibri', size: 10 };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
     });
   });
 
@@ -147,33 +114,17 @@ async function generateLOExcelBuffer(los: any[], subtitle: string) {
   return Buffer.from(buffer);
 }
 
-// Task Excel Generator with perfected styling
+// Task Excel Generator
 async function generateTaskExcelBuffer(tasks: any[], subtitle: string) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Tasks");
 
-  // Define column widths
   worksheet.columns = [
-    { width: 8 },  // SI No
-    { width: 20 }, // Timestamp
-    { width: 45 }, // Task Name
-    { width: 25 }, // Entity Name
-    { width: 20 }, // Task Type
-    { width: 20 }, // Department
-    { width: 20 }, // Request From
-    { width: 25 }, // Owner Name
-    { width: 20 }, // Due Date
-    { width: 20 }, // Completion Date
-    { width: 18 }, // Task Status
-    { width: 25 }, // Reviewer Name
-    { width: 25 }, // Review Status
-    { width: 20 }, // Review Completion Date
-    { width: 40 }, // Owner Comments
-    { width: 40 }, // Reviewer Comments
-    { width: 30 }  // Mail Link
+    { width: 8 }, { width: 20 }, { width: 45 }, { width: 25 }, { width: 20 }, { width: 20 },
+    { width: 20 }, { width: 25 }, { width: 20 }, { width: 20 }, { width: 18 }, { width: 25 },
+    { width: 25 }, { width: 20 }, { width: 40 }, { width: 40 }, { width: 30 }
   ];
 
-  // Row 1: Main Title (Dark Blue background, White text)
   worksheet.mergeCells('A1:Q1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'ITPL - Finance Task Management Report';
@@ -181,22 +132,17 @@ async function generateTaskExcelBuffer(tasks: any[], subtitle: string) {
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Row 2: Subtitle (Light Blue background, Italicized Blue text)
   worksheet.mergeCells('A2:Q2');
   const subCell = worksheet.getCell('A2');
   subCell.value = subtitle;
   subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
-  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; 
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
   subCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Row 3: Column Headers (Dark Blue background, White text)
   const headerRow = worksheet.getRow(3);
-  const headers = [
-    'SI No', 'Timestamp', 'Task Name', 'Entity', 'Type', 
-    'Department', 'Requested By', 'Owner', 'Due Date', 
-    'Completion Date', 'Status', 'Reviewer', 'Review Status', 
-    'Review Date', 'Owner Comments', 'Reviewer Comments', 'Mail Link'
-  ];
+  const headers = ['SI No', 'Timestamp', 'Task Name', 'Entity', 'Type', 'Department', 'Requested By',
+    'Owner', 'Due Date', 'Completion Date', 'Status', 'Reviewer', 'Review Status', 'Review Date',
+    'Owner Comments', 'Reviewer Comments', 'Mail Link'];
   
   headers.forEach((h, i) => {
     const cell = headerRow.getCell(i + 1);
@@ -204,44 +150,21 @@ async function generateTaskExcelBuffer(tasks: any[], subtitle: string) {
     cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-    };
+    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
   });
 
-  // Add Data rows
   tasks.forEach((t, index) => {
     const row = worksheet.addRow([
-      index + 1,
-      formatDateTime(t.createdAt),
-      t.taskName || "",
-      t.entityName || "",
-      t.taskType || "",
-      t.departmentName || "",
-      t.requestFrom || "",
-      t.ownerName || "",
-      formatDate(t.dueDate),
-      formatDate(t.completionDate),
-      t.taskStatus || "",
-      t.reviewerName || "Not Applicable",
-      t.reviewStatus || "",
-      formatDate(t.reviewCompletionDate),
-      t.ownerComments || "",
-      t.reviewerComments || "",
-      t.mailLink || ""
+      index + 1, formatDateTime(t.createdAt), t.taskName || "", t.entityName || "", t.taskType || "",
+      t.departmentName || "", t.requestFrom || "", t.ownerName || "", formatDate(t.dueDate),
+      formatDate(t.completionDate), t.taskStatus || "", t.reviewerName || "Not Applicable",
+      t.reviewStatus || "", formatDate(t.reviewCompletionDate), t.ownerComments || "",
+      t.reviewerComments || "", t.mailLink || ""
     ]);
     row.alignment = { vertical: 'middle', wrapText: true };
     row.eachCell((cell) => {
-        cell.font = { name: 'Calibri', size: 10 };
-        cell.border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            bottom: { style: 'thin' },
-            right: { style: 'thin' }
-        };
+      cell.font = { name: 'Calibri', size: 10 };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
     });
   });
 
@@ -253,12 +176,10 @@ async function generateTaskExcelBuffer(tasks: any[], subtitle: string) {
 function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
   let html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 100%; overflow-x: auto; margin-bottom: 40px;">`;
   html += `<h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; font-weight: 600;">${title}</h2>`;
-  html += `
-    <table cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%; font-size: 12px; text-align: left; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-      <tr style="background-color: #2563eb; color: #ffffff; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
-        <th>S.No</th><th>Time Stamp</th><th>Owner Name</th><th>Reviewer Name</th><th>Task Name</th><th>Entity Name</th><th>Task Type</th><th>Department Name</th><th>Request From</th><th>Owner Mail ID</th><th>Due Date</th><th>Completion Date</th><th>Task Status</th><th>Reviewer Email</th><th>Review Completion Date</th><th>Review Status</th><th>Mail Link</th><th>Owner Comments</th><th>Reviewer Comments</th>
-      </tr>
-  `;
+  html += `<table cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%; font-size: 12px; text-align: left; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+    <tr style="background-color: #2563eb; color: #ffffff; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+      <th>S.No</th><th>Time Stamp</th><th>Owner Name</th><th>Reviewer Name</th><th>Task Name</th><th>Entity Name</th><th>Task Type</th><th>Department Name</th><th>Request From</th><th>Owner Mail ID</th><th>Due Date</th><th>Completion Date</th><th>Task Status</th><th>Reviewer Email</th><th>Review Completion Date</th><th>Review Status</th><th>Mail Link</th><th>Owner Comments</th><th>Reviewer Comments</th>
+    </tr>`;
 
   if (tasks.length === 0) {
     html += `<tr><td colspan="19" style="padding: 20px;">No pending tasks found.</td></tr>`;
@@ -266,38 +187,29 @@ function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
     tasks.forEach((t, index) => {
       const overdue = isOverdue(t.dueDate, referenceDate) && t.taskStatus !== "Completed";
       const rowStyle = overdue ? 'background-color: #fef2f2; border-bottom: 1px solid #fee2e2;' : 'background-color: #ffffff; border-bottom: 1px solid #e2e8f0;';
-
       html += `<tr style="${rowStyle}">
-        <td>${index + 1}</td>
-        <td>${formatDateTime(t.createdAt)}</td>
-        <td>${t.ownerName}</td>
+        <td>${index + 1}</td><td>${formatDateTime(t.createdAt)}</td><td>${t.ownerName}</td>
         <td>${t.reviewerName === "Not Applicable" ? "NA" : t.reviewerName || ""}</td>
-        <td style="min-width: 400px;">${t.taskName}</td>
-        <td>${t.entityName}</td>
-        <td>${t.taskType}</td>
-        <td>${t.departmentName}</td>
-        <td>${t.requestFrom}</td>
+        <td style="min-width: 400px;">${t.taskName}</td><td>${t.entityName}</td><td>${t.taskType}</td>
+        <td>${t.departmentName}</td><td>${t.requestFrom}</td>
         <td><a href="mailto:${getEmailFromName(t.ownerName)}">${getEmailFromName(t.ownerName)}</a></td>
         <td style="${overdue ? 'color: red; font-weight: bold;' : ''}">${formatDate(t.dueDate)}</td>
-        <td>${formatDate(t.completionDate)}</td>
-        <td>${t.taskStatus}</td>
+        <td>${formatDate(t.completionDate)}</td><td>${t.taskStatus}</td>
         <td><a href="mailto:${getEmailFromName(t.reviewerName)}">${getEmailFromName(t.reviewerName)}</a></td>
         <td>${t.reviewerName === "Not Applicable" ? "NA" : formatDate(t.reviewCompletionDate)}</td>
         <td>${t.reviewerName === "Not Applicable" ? "Review Not Required" : t.reviewStatus}</td>
         <td>${t.mailLink ? `<a href="${t.mailLink}">Link</a>` : ""}</td>
-        <td>${t.ownerComments || ""}</td>
-        <td>${t.reviewerComments || ""}</td>
+        <td>${t.ownerComments || ""}</td><td>${t.reviewerComments || ""}</td>
       </tr>`;
     });
   }
-
   html += `</table></div>`;
   return html;
 }
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  let type = url.searchParams.get("type") || "all"; 
+  let type = url.searchParams.get("type") || "all";
   const clientDateStr = url.searchParams.get("clientDate");
   const referenceDate = clientDateStr ? new Date(clientDateStr) : new Date();
 
@@ -312,7 +224,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const settings = await prisma.systemSettings.findUnique({ where: { id: "singleton" } });
+  const settingsRows = await sql`SELECT * FROM "SystemSettings" WHERE id = 'singleton'`;
+  const settings = settingsRows[0];
 
   if (isVercelCron) {
     try {
@@ -326,7 +239,7 @@ export async function GET(req: NextRequest) {
         let shouldRemind = false, shouldReport = false, shouldLOReport = false;
 
         if (settings.reminderFrequency !== 'OFF') {
-          const rTimes = settings.reminderTimes.split(',').map(t => t.trim());
+          const rTimes = settings.reminderTimes.split(',').map((t: string) => t.trim());
           if (rTimes.includes(currentHHmm)) {
             if (settings.reminderFrequency === 'DAILY') shouldRemind = true;
             else if (settings.reminderFrequency === 'WEEKLY' && currentDay === 1) shouldRemind = true;
@@ -335,7 +248,7 @@ export async function GET(req: NextRequest) {
         }
 
         if (settings.managerReportFrequency !== 'OFF') {
-          const mTimes = settings.managerReportTimes.split(',').map(t => t.trim());
+          const mTimes = settings.managerReportTimes.split(',').map((t: string) => t.trim());
           if (mTimes.includes(currentHHmm)) {
             if (settings.managerReportFrequency === 'DAILY') shouldReport = true;
             else if (settings.managerReportFrequency === 'WEEKLY' && currentDay === 1) shouldReport = true;
@@ -343,12 +256,12 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        if ((settings as any).loReportFrequency !== 'OFF') {
-          const loTimes = (settings as any).loReportTimes.split(',').map((t: string) => t.trim());
+        if (settings.loReportFrequency !== 'OFF') {
+          const loTimes = settings.loReportTimes.split(',').map((t: string) => t.trim());
           if (loTimes.includes(currentHHmm)) {
-             if ((settings as any).loReportFrequency === 'DAILY') shouldLOReport = true;
-             else if ((settings as any).loReportFrequency === 'WEEKLY' && currentDay === 1) shouldLOReport = true;
-             else if ((settings as any).loReportFrequency === 'MONTHLY' && currentDate === 1) shouldLOReport = true;
+            if (settings.loReportFrequency === 'DAILY') shouldLOReport = true;
+            else if (settings.loReportFrequency === 'WEEKLY' && currentDay === 1) shouldLOReport = true;
+            else if (settings.loReportFrequency === 'MONTHLY' && currentDate === 1) shouldLOReport = true;
           }
         }
 
@@ -368,9 +281,7 @@ export async function GET(req: NextRequest) {
 
   try {
     if (type === "lo") {
-      const allLOs = await prisma.learningOpportunity.findMany({
-        orderBy: { createdAt: "desc" }
-      });
+      const allLOs = await sql`SELECT * FROM "LearningOpportunity" ORDER BY "createdAt" DESC`;
       const stats = getLOStats(allLOs);
       const managerEmail = settings?.loReportEmail || "pavanreddy@intellicar.in";
       
@@ -427,35 +338,26 @@ export async function GET(req: NextRequest) {
         subject: `Weekly Finance LO Report - ${formatDate(referenceDate)}`,
         html: loHtml,
         attachments: [
-          {
-            filename: `Current_Month_LO_Report_${formatDate(referenceDate)}.xlsx`,
-            content: currentMonthBuffer,
-            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          },
-          {
-            filename: `Consolidated_LO_Report_${formatDate(referenceDate)}.xlsx`,
-            content: consolidatedBuffer,
-            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          }
+          { filename: `Current_Month_LO_Report_${formatDate(referenceDate)}.xlsx`, content: currentMonthBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+          { filename: `Consolidated_LO_Report_${formatDate(referenceDate)}.xlsx`, content: consolidatedBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
         ]
       });
 
       return NextResponse.json({ message: "LO Report sent successfully." });
     }
 
-    const allTasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
+    const allTasks = await sql`SELECT * FROM "Task" ORDER BY "createdAt" DESC`;
     const pendingOwnerTasks = allTasks.filter(t => t.taskStatus !== "Completed");
     const pendingReviewTasks = allTasks.filter(t => t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner");
 
     if (type === "all" || type === "users") {
       const owners = Array.from(new Set(pendingOwnerTasks.map(t => t.ownerName)));
       for (const owner of owners) {
-        const ownerEmail = getEmailFromName(owner);
+        const ownerEmail = getEmailFromName(owner as string);
         if (!ownerEmail) continue;
 
         const ownerTasks = pendingOwnerTasks.filter(t => t.ownerName === owner);
         const taskListHtml = generateGridHtml(ownerTasks, `Pending Tasks for ${owner}`, referenceDate);
-
         const dashboardUrl = "https://intellicar-finance-team-task-manage-one.vercel.app/";
 
         await sendEmail({
@@ -466,15 +368,10 @@ export async function GET(req: NextRequest) {
               <h2 style="color: #2563eb; margin-top: 0;">Pending Task Reminder</h2>
               <p>Hi <strong>${owner}</strong>,</p>
               <p>This is a reminder that you have <strong>${ownerTasks.length}</strong> tasks pending your action as of ${formatDate(referenceDate)}.</p>
-              
-              <div style="margin: 20px 0;">
-                ${taskListHtml}
-              </div>
-
+              <div style="margin: 20px 0;">${taskListHtml}</div>
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${dashboardUrl}" style="background: #2563eb; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Login to Dashboard</a>
               </div>
-
               <p style="font-size: 14px; color: #64748b;">Please update the status on the dashboard once completed.</p>
               <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center;">
                 This is an automated reminder from Intellicar Finance Task Manager.
@@ -484,10 +381,7 @@ export async function GET(req: NextRequest) {
         });
       }
       
-      await prisma.systemSettings.update({
-        where: { id: "singleton" },
-        data: { lastReminderSentAt: new Date() }
-      });
+      await sql`UPDATE "SystemSettings" SET "lastReminderSentAt" = NOW() WHERE id = 'singleton'`;
     }
 
     if (type === "all" || type === "manager") {
@@ -525,23 +419,12 @@ export async function GET(req: NextRequest) {
         subject: `Daily Finance Task Report - ${formatDate(referenceDate)}`,
         html: statsHtml,
         attachments: [
-          {
-            filename: `Current_Month_Tasks_${formatDate(referenceDate)}.xlsx`,
-            content: currentMonthBuffer,
-            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          },
-          {
-            filename: `Consolidated_Tasks_Report_${formatDate(referenceDate)}.xlsx`,
-            content: consolidatedBuffer,
-            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          }
+          { filename: `Current_Month_Tasks_${formatDate(referenceDate)}.xlsx`, content: currentMonthBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+          { filename: `Consolidated_Tasks_Report_${formatDate(referenceDate)}.xlsx`, content: consolidatedBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
         ]
       });
 
-      await prisma.systemSettings.update({
-        where: { id: "singleton" },
-        data: { lastManagerReportSentAt: new Date() }
-      });
+      await sql`UPDATE "SystemSettings" SET "lastManagerReportSentAt" = NOW() WHERE id = 'singleton'`;
     }
 
     return NextResponse.json({ message: `Emails sent.` });

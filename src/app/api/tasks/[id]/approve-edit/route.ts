@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,7 +15,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const taskId = parseInt(resolvedParams.id);
     const { action } = await req.json(); // "APPROVE" or "REJECT"
 
-    const existingTask = await prisma.task.findUnique({ where: { id: taskId } });
+    const existingTasks = await sql`SELECT * FROM "Task" WHERE id = ${taskId}`;
+    const existingTask = existingTasks[0];
+    
     if (!existingTask) {
       return NextResponse.json({ message: "Task not found" }, { status: 404 });
     }
@@ -28,30 +32,44 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ message: "Forbidden: Only Admin can approve edit requests" }, { status: 403 });
     }
 
-    let updates: any = {
-      editRequested: false,
-      editRequestBy: null,
-      editRequestReason: null
-    };
-
+    let updatedTask;
+    
     if (action === "APPROVE") {
       if (existingTask.editRequestBy === "OWNER") {
-        updates.taskStatus = "Pending";
-        updates.completionDate = null;
-        updates.reviewStatus = "Task Pending From Owner";
-        updates.reviewCompletionDate = null;
+        updatedTask = await sql`
+          UPDATE "Task"
+          SET "editRequested" = false, "editRequestBy" = null, "editRequestReason" = null,
+              "taskStatus" = 'Pending', "completionDate" = null, 
+              "reviewStatus" = 'Task Pending From Owner', "reviewCompletionDate" = null
+          WHERE id = ${taskId}
+          RETURNING *
+        `;
       } else if (existingTask.editRequestBy === "REVIEWER") {
-        updates.reviewStatus = "Pending";
-        updates.reviewCompletionDate = null;
+        updatedTask = await sql`
+          UPDATE "Task"
+          SET "editRequested" = false, "editRequestBy" = null, "editRequestReason" = null,
+              "reviewStatus" = 'Pending', "reviewCompletionDate" = null
+          WHERE id = ${taskId}
+          RETURNING *
+        `;
+      } else {
+        updatedTask = await sql`
+          UPDATE "Task"
+          SET "editRequested" = false, "editRequestBy" = null, "editRequestReason" = null
+          WHERE id = ${taskId}
+          RETURNING *
+        `;
       }
+    } else {
+      updatedTask = await sql`
+        UPDATE "Task"
+        SET "editRequested" = false, "editRequestBy" = null, "editRequestReason" = null
+        WHERE id = ${taskId}
+        RETURNING *
+      `;
     }
 
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: updates
-    });
-
-    return NextResponse.json({ message: `Edit request ${action.toLowerCase()}d successfully`, task: updatedTask }, { status: 200 });
+    return NextResponse.json({ message: `Edit request ${action.toLowerCase()}d successfully`, task: updatedTask[0] }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ message: "Failed to process edit request", error: error.message }, { status: 500 });
   }

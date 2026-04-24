@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function PATCH(
   req: Request,
@@ -14,9 +16,10 @@ export async function PATCH(
   const loId = parseInt(id);
 
   try {
-    const existingLO = await prisma.learningOpportunity.findUnique({
-      where: { id: loId }
-    });
+    const existingLOs = await sql`
+      SELECT * FROM "LearningOpportunity" WHERE id = ${loId}
+    `;
+    const existingLO = existingLOs[0];
 
     if (!existingLO) return NextResponse.json({ message: "LO not found" }, { status: 404 });
 
@@ -27,25 +30,26 @@ export async function PATCH(
     }
 
     const data = await req.json();
+    const editApproved = isAdmin ? existingLO.editApproved : false;
     
-    const updatedLO = await prisma.learningOpportunity.update({
-      where: { id: loId },
-      data: {
-        entity: data.entity,
-        dateOfIdentification: data.dateOfIdentification ? new Date(data.dateOfIdentification) : undefined,
-        learningOpportunity: data.learningOpportunity,
-        identifiedBy: data.identifiedBy,
-        committedBy: data.committedBy,
-        resolutionProvided: data.resolutionProvided,
-        modeOfCommunication: data.modeOfCommunication,
-        emailSub: data.emailSub,
-        comments: data.comments,
-        // Reset approval after user edits
-        editApproved: isAdmin ? existingLO.editApproved : false 
-      }
-    });
+    const updatedLOs = await sql`
+      UPDATE "LearningOpportunity"
+      SET "entity" = ${data.entity || existingLO.entity},
+          "dateOfIdentification" = ${data.dateOfIdentification ? new Date(data.dateOfIdentification).toISOString() : existingLO.dateOfIdentification},
+          "learningOpportunity" = ${data.learningOpportunity || existingLO.learningOpportunity},
+          "identifiedBy" = ${data.identifiedBy || existingLO.identifiedBy},
+          "committedBy" = ${data.committedBy || existingLO.committedBy},
+          "resolutionProvided" = ${data.resolutionProvided || existingLO.resolutionProvided},
+          "modeOfCommunication" = ${data.modeOfCommunication || existingLO.modeOfCommunication},
+          "emailSub" = ${data.emailSub !== undefined ? data.emailSub : existingLO.emailSub},
+          "comments" = ${data.comments !== undefined ? data.comments : existingLO.comments},
+          "editApproved" = ${editApproved},
+          "updatedAt" = NOW()
+      WHERE id = ${loId}
+      RETURNING *
+    `;
 
-    return NextResponse.json(updatedLO);
+    return NextResponse.json(updatedLOs[0]);
   } catch (error: any) {
     console.error("LO update error:", error);
     return NextResponse.json({ message: "Failed to update LO", error: error.message }, { status: 500 });

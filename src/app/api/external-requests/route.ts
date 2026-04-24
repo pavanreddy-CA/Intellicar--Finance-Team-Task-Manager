@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { neon } from '@neondatabase/serverless';
 
-const prisma = new PrismaClient();
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function GET(request: Request) {
   try {
@@ -10,26 +10,29 @@ export async function GET(request: Request) {
     const department = searchParams.get('department');
     const role = searchParams.get('role');
 
-    let where: any = {};
+    let requests;
 
     // Logic:
     // If Admin, see all.
     // If Finance member and has allocation rights (handled by frontend filtering or we could do it here), see relevant ones.
     // If External user, see only their own.
     
-    if (role === 'ADMIN') {
-      // Admin sees everything
-    } else if (department === 'Finance') {
-      // Finance team can see all requests to allocate them
+    if (role === 'ADMIN' || department === 'Finance') {
+      // Admin and Finance team sees everything
+      requests = await sql`
+        SELECT * FROM "ExternalRequest"
+        ORDER BY "createdAt" DESC
+      `;
     } else if (email) {
       // External users only see their own requests
-      where.requesterEmail = email;
+      requests = await sql`
+        SELECT * FROM "ExternalRequest"
+        WHERE "requesterEmail" = ${email}
+        ORDER BY "createdAt" DESC
+      `;
+    } else {
+      requests = [];
     }
-
-    const requests = await prisma.externalRequest.findMany({
-      where,
-      orderBy: { createdAt: 'desc' }
-    });
     
     return NextResponse.json(requests);
   } catch (error) {
@@ -47,18 +50,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-    const newRequest = await prisma.externalRequest.create({
-      data: {
-        requestFrom,
-        requesterEmail,
-        natureOfRequest,
-        departmentName,
-        requestType,
-        status: 'Pending'
-      }
-    });
+    const newRequests = await sql`
+      INSERT INTO "ExternalRequest" (
+        "requestFrom", "requesterEmail", "natureOfRequest", "departmentName", 
+        "requestType", "status", "createdAt", "updatedAt"
+      )
+      VALUES (
+        ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${departmentName},
+        ${requestType}, 'Pending', NOW(), NOW()
+      )
+      RETURNING *
+    `;
 
-    return NextResponse.json(newRequest, { status: 201 });
+    return NextResponse.json(newRequests[0], { status: 201 });
   } catch (error) {
     console.error('Error creating external request:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import { sendEmail } from "@/lib/email";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -14,9 +16,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { comment } = await req.json();
     const taskId = Number(resolvedParams.id);
 
-    const task = await prisma.task.findUnique({
-      where: { id: taskId },
-    });
+    const tasks = await sql`SELECT * FROM "Task" WHERE id = ${taskId}`;
+    const task = tasks[0];
 
     if (!task) {
       return NextResponse.json({ message: "Task not found" }, { status: 404 });
@@ -50,13 +51,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       </div>
     `;
 
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: {
-        deleteRequested: true,
-        deleteRequestReason: comment
-      }
-    });
+    await sql`
+      UPDATE "Task"
+      SET "deleteRequested" = true, "deleteRequestReason" = ${comment}
+      WHERE id = ${taskId}
+    `;
 
     await sendEmail({
       to: adminEmail,

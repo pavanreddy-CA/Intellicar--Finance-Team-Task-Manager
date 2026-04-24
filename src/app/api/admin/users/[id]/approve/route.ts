@@ -1,7 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import { sendEmail } from "@/lib/email";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(
   req: NextRequest,
@@ -14,17 +16,20 @@ export async function POST(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: { isApproved: true }
-    });
+    const users = await sql`
+      UPDATE "User"
+      SET "isApproved" = true
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    const user = users[0];
 
     // Notify user of approval
     try {
       if (user.email) {
         await sendEmail({
           to: user.email,
-          subject: "🎉 Your Account has been Approved!",
+          subject: "Your Account has been Approved!",
           html: `
             <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
               <div style="background: #10b981; padding: 24px; color: white; text-align: center;">

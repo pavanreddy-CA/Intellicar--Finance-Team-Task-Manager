@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function DELETE(
   req: NextRequest,
@@ -18,9 +20,7 @@ export async function DELETE(
       return NextResponse.json({ message: "You cannot remove your own account" }, { status: 400 });
     }
 
-    await prisma.user.delete({
-      where: { id }
-    });
+    await sql`DELETE FROM "User" WHERE id = ${id}`;
 
     return NextResponse.json({ message: "User removed successfully" });
   } catch (error: any) {

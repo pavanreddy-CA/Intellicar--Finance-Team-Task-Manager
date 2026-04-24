@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { neon } from '@neondatabase/serverless';
 
-const prisma = new PrismaClient();
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function PATCH(
   request: Request,
@@ -12,16 +12,32 @@ export async function PATCH(
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
     
-    const updatedRequest = await prisma.externalRequest.update({
-      where: { id },
-      data: body
-    });
-
-    // If status is updated to Processed, and there's a linked task, we might want to update the task too?
-    // But the requirement says Task -> Request sync. 
-    // Request -> Task sync is usually only at creation.
+    // Build dynamic update
+    const updates: string[] = [];
+    const values: any[] = [];
     
-    return NextResponse.json(updatedRequest);
+    if (body.status !== undefined) {
+      updates.push(`status = '${body.status}'`);
+    }
+    if (body.convertedTaskId !== undefined) {
+      updates.push(`"convertedTaskId" = ${body.convertedTaskId}`);
+    }
+    if (body.rejectReason !== undefined) {
+      updates.push(`"rejectReason" = '${body.rejectReason}'`);
+    }
+    
+    if (updates.length === 0) {
+      return NextResponse.json({ message: 'No fields to update' }, { status: 400 });
+    }
+    
+    const updatedRequests = await sql`
+      UPDATE "ExternalRequest"
+      SET ${sql.unsafe(updates.join(', '))}, "updatedAt" = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    
+    return NextResponse.json(updatedRequests[0]);
   } catch (error) {
     console.error('Error updating external request:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
@@ -36,9 +52,7 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     
-    await prisma.externalRequest.delete({
-      where: { id }
-    });
+    await sql`DELETE FROM "ExternalRequest" WHERE id = ${id}`;
     
     return NextResponse.json({ message: "Request deleted successfully" });
   } catch (error) {

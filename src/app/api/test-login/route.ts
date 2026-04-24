@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcrypt";
 import { encode } from "next-auth/jwt";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,9 +12,10 @@ export async function POST(req: NextRequest) {
     console.log("[v0] Test login - Direct auth check for:", email);
     
     // 1. Find user
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    const users = await sql`
+      SELECT * FROM "User" WHERE email = ${email} LIMIT 1
+    `;
+    const user = users[0];
     
     if (!user || !user.password) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });

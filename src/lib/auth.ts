@@ -1,7 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
+import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcrypt";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,15 +18,20 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
         
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        });
+        const users = await sql`
+          SELECT id, email, name, password, role, department, "isApproved"
+          FROM "User"
+          WHERE email = ${credentials.email}
+          LIMIT 1
+        `;
+        
+        const user = users[0];
         
         if (!user || !user.password) {
           throw new Error("User not found");
         }
 
-        if ((user as any).isApproved === false) {
+        if (user.isApproved === false) {
           throw new Error("Your account is pending admin approval.");
         }
         

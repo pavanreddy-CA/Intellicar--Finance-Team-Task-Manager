@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,7 +15,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const taskId = parseInt(resolvedParams.id);
     const { action } = await req.json(); // "APPROVE" or "REJECT"
 
-    const existingTask = await prisma.task.findUnique({ where: { id: taskId } });
+    const existingTasks = await sql`SELECT * FROM "Task" WHERE id = ${taskId}`;
+    const existingTask = existingTasks[0];
+    
     if (!existingTask) {
       return NextResponse.json({ message: "Task not found" }, { status: 404 });
     }
@@ -29,16 +33,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     if (action === "APPROVE") {
-      await prisma.task.delete({ where: { id: taskId } });
+      await sql`DELETE FROM "Task" WHERE id = ${taskId}`;
       return NextResponse.json({ message: "Task deleted successfully" }, { status: 200 });
     } else {
-      await prisma.task.update({
-        where: { id: taskId },
-        data: {
-          deleteRequested: false,
-          deleteRequestReason: null
-        }
-      });
+      await sql`
+        UPDATE "Task"
+        SET "deleteRequested" = false, "deleteRequestReason" = null
+        WHERE id = ${taskId}
+      `;
       return NextResponse.json({ message: "Deletion request rejected successfully" }, { status: 200 });
     }
   } catch (error: any) {

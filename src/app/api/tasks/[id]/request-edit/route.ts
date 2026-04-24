@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import { getEmailFromName } from "@/lib/email";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -14,7 +16,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const taskId = parseInt(resolvedParams.id);
     const { reason, requestedBy } = await req.json();
 
-    const existingTask = await prisma.task.findUnique({ where: { id: taskId } });
+    const existingTasks = await sql`SELECT * FROM "Task" WHERE id = ${taskId}`;
+    const existingTask = existingTasks[0];
+    
     if (!existingTask) {
       return NextResponse.json({ message: "Task not found" }, { status: 404 });
     }
@@ -30,14 +34,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ message: "Forbidden: You don't have permission to edit this task" }, { status: 403 });
     }
 
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: {
-        editRequested: true,
-        editRequestBy: requestedBy, // 'OWNER' or 'REVIEWER'
-        editRequestReason: reason
-      }
-    });
+    const updatedTasks = await sql`
+      UPDATE "Task"
+      SET "editRequested" = true, "editRequestBy" = ${requestedBy}, "editRequestReason" = ${reason}
+      WHERE id = ${taskId}
+      RETURNING *
+    `;
+    const updatedTask = updatedTasks[0];
 
     // Send alert email to Admin
     const adminEmail = "pavanreddy@intellicar.in";

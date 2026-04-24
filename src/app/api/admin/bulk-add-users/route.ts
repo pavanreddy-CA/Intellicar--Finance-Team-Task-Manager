@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import bcrypt from "bcrypt";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 const EMPLOYEES = [
   { name: "Saikath", email: "saikatdas@intellicar.in" },
@@ -32,19 +34,15 @@ export async function POST(req: Request) {
     let skippedCount = 0;
 
     for (const emp of EMPLOYEES) {
-      const existing = await prisma.user.findUnique({
-        where: { email: emp.email }
-      });
+      const existing = await sql`
+        SELECT id FROM "User" WHERE email = ${emp.email} LIMIT 1
+      `;
 
-      if (!existing) {
-        await prisma.user.create({
-          data: {
-            name: emp.name,
-            email: emp.email,
-            password: hashedPassword,
-            role: "USER"
-          }
-        });
+      if (existing.length === 0) {
+        await sql`
+          INSERT INTO "User" (id, name, email, password, role, "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), ${emp.name}, ${emp.email}, ${hashedPassword}, 'USER', NOW(), NOW())
+        `;
         createdCount++;
       } else {
         skippedCount++;

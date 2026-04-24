@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import { sendEmail, getEmailFromName } from "@/lib/email";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 // GET /api/tasks
 export async function GET(req: NextRequest) {
@@ -16,17 +18,18 @@ export async function GET(req: NextRequest) {
     
     // Master Admin can see everything
     if (userEmail === "pavanreddy@intellicar.in" || userRole === "ADMIN") {
-      const tasks = await prisma.task.findMany({
-        orderBy: { createdAt: "desc" }
-      });
+      const tasks = await sql`
+        SELECT * FROM "Task"
+        ORDER BY "createdAt" DESC
+      `;
       return NextResponse.json(tasks, { status: 200 });
     }
 
     // Regular users only see tasks assigned to them or created by them
-    // Fetch all and filter in memory since we use a custom email mapping
-    const allTasks = await prisma.task.findMany({
-      orderBy: { createdAt: "desc" }
-    });
+    const allTasks = await sql`
+      SELECT * FROM "Task"
+      ORDER BY "createdAt" DESC
+    `;
 
     const filteredTasks = allTasks.filter(task => {
       const ownerEmail = getEmailFromName(task.ownerName);
@@ -83,33 +86,29 @@ export async function POST(req: NextRequest) {
     // Set default request status
     const requestStatus = linkedRequestId ? "Pending" : "Not Applicable";
 
-    const newTask = await prisma.task.create({
-      data: {
-        taskName,
-        entityName,
-        taskType,
-        departmentName,
-        requestFrom,
-        ownerName,
-        reviewerName: resolvedReviewer,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        mailLink: mailLink || null,
-        taskStatus: "Pending",
-        reviewStatus,
-        linkedRequestId: linkedRequestId || null,
-        requestStatus,
-      }
-    });
+    const newTasks = await sql`
+      INSERT INTO "Task" (
+        "taskName", "entityName", "taskType", "departmentName", "requestFrom",
+        "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
+        "reviewStatus", "linkedRequestId", "requestStatus", "createdAt", "updatedAt"
+      )
+      VALUES (
+        ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
+        ${ownerName}, ${resolvedReviewer}, ${dueDate ? new Date(dueDate).toISOString() : null}, ${mailLink || null}, 'Pending',
+        ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, NOW(), NOW()
+      )
+      RETURNING *
+    `;
+    
+    const newTask = newTasks[0];
 
     // Link back to External Request if applicable
     if (linkedRequestId) {
-      await prisma.externalRequest.update({
-        where: { id: Number(linkedRequestId) },
-        data: { 
-          status: "Under Process",
-          convertedTaskId: newTask.id
-        }
-      });
+      await sql`
+        UPDATE "ExternalRequest"
+        SET status = 'Under Process', "convertedTaskId" = ${newTask.id}
+        WHERE id = ${Number(linkedRequestId)}
+      `;
     }
 
     const ownerEmail = getEmailFromName(ownerName);

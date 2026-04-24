@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,25 +22,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid data format. Expected an array of Learning Opportunities." }, { status: 400 });
     }
 
-    const losToCreate = data.map(lo => ({
-      entity: lo.entity,
-      dateOfIdentification: lo.dateOfIdentification ? new Date(lo.dateOfIdentification) : new Date(),
-      learningOpportunity: lo.learningOpportunity,
-      identifiedBy: lo.identifiedBy,
-      committedBy: lo.committedBy,
-      resolutionProvided: lo.resolutionProvided || "Pending",
-      modeOfCommunication: lo.modeOfCommunication || "Email",
-      emailSub: lo.emailSub || null,
-      comments: lo.comments || null,
-      createdByEmail: lo.createdByEmail || userEmail,
-    }));
+    let count = 0;
+    for (const lo of data) {
+      await sql`
+        INSERT INTO "LearningOpportunity" (
+          "entity", "dateOfIdentification", "learningOpportunity", "identifiedBy",
+          "committedBy", "resolutionProvided", "modeOfCommunication", "emailSub",
+          "comments", "createdByEmail", "createdAt", "updatedAt"
+        )
+        VALUES (
+          ${lo.entity}, 
+          ${lo.dateOfIdentification ? new Date(lo.dateOfIdentification).toISOString() : new Date().toISOString()},
+          ${lo.learningOpportunity}, ${lo.identifiedBy}, ${lo.committedBy},
+          ${lo.resolutionProvided || "Pending"}, ${lo.modeOfCommunication || "Email"},
+          ${lo.emailSub || null}, ${lo.comments || null}, 
+          ${lo.createdByEmail || userEmail}, NOW(), NOW()
+        )
+      `;
+      count++;
+    }
 
-    const result = await prisma.learningOpportunity.createMany({
-      data: losToCreate,
-      skipDuplicates: true,
-    });
-
-    return NextResponse.json({ message: "Bulk import successful", count: result.count }, { status: 201 });
+    return NextResponse.json({ message: "Bulk import successful", count }, { status: 201 });
   } catch (error: any) {
     console.error("Bulk LO import failed", error);
     return NextResponse.json({ message: "Failed to import LOs", error: error.message }, { status: 500 });

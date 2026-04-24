@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 const EMAIL_TO_NAME: Record<string, string> = {
   "pavanreddy@intellicar.in": "Pavan",
@@ -23,16 +25,21 @@ export async function GET(req: Request) {
   const shortName = EMAIL_TO_NAME[session.user.email] || session.user.name || "";
 
   try {
-    const los = await prisma.learningOpportunity.findMany({
-      where: isAdmin ? {} : {
-        OR: [
-          { createdByEmail: session.user.email },
-          { identifiedBy: shortName },
-          { committedBy: shortName }
-        ]
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    let los;
+    if (isAdmin) {
+      los = await sql`
+        SELECT * FROM "LearningOpportunity"
+        ORDER BY "createdAt" DESC
+      `;
+    } else {
+      los = await sql`
+        SELECT * FROM "LearningOpportunity"
+        WHERE "createdByEmail" = ${session.user.email}
+           OR "identifiedBy" = ${shortName}
+           OR "committedBy" = ${shortName}
+        ORDER BY "createdAt" DESC
+      `;
+    }
     return NextResponse.json(los);
   } catch (error) {
     return NextResponse.json({ message: "Failed to fetch LOs" }, { status: 500 });
@@ -47,21 +54,21 @@ export async function POST(req: Request) {
 
   try {
     const data = await req.json();
-    const lo = await prisma.learningOpportunity.create({
-      data: {
-        entity: data.entity,
-        dateOfIdentification: new Date(data.dateOfIdentification),
-        learningOpportunity: data.learningOpportunity,
-        identifiedBy: data.identifiedBy,
-        committedBy: data.committedBy,
-        resolutionProvided: data.resolutionProvided,
-        modeOfCommunication: data.modeOfCommunication,
-        emailSub: data.emailSub,
-        comments: data.comments,
-        createdByEmail: session.user.email,
-      }
-    });
-    return NextResponse.json(lo, { status: 201 });
+    const los = await sql`
+      INSERT INTO "LearningOpportunity" (
+        "entity", "dateOfIdentification", "learningOpportunity", "identifiedBy",
+        "committedBy", "resolutionProvided", "modeOfCommunication", "emailSub",
+        "comments", "createdByEmail", "createdAt", "updatedAt"
+      )
+      VALUES (
+        ${data.entity}, ${new Date(data.dateOfIdentification).toISOString()}, 
+        ${data.learningOpportunity}, ${data.identifiedBy},
+        ${data.committedBy}, ${data.resolutionProvided}, ${data.modeOfCommunication}, 
+        ${data.emailSub}, ${data.comments}, ${session.user.email}, NOW(), NOW()
+      )
+      RETURNING *
+    `;
+    return NextResponse.json(los[0], { status: 201 });
   } catch (error: any) {
     console.error("LO creation error:", error);
     return NextResponse.json({ message: "Failed to create LO", error: error.message }, { status: 500 });

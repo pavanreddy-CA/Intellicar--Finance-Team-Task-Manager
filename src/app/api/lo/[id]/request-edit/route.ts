@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(
   req: Request,
@@ -14,13 +16,13 @@ export async function POST(
     const { reason } = await req.json();
     const loId = parseInt(id);
 
-    const lo = await prisma.learningOpportunity.update({
-      where: { id: loId },
-      data: {
-        editRequested: true,
-        editRequestReason: reason
-      }
-    });
+    const los = await sql`
+      UPDATE "LearningOpportunity"
+      SET "editRequested" = true, "editRequestReason" = ${reason}
+      WHERE id = ${loId}
+      RETURNING *
+    `;
+    const lo = los[0];
 
     // Send alert email to Admin
     const adminEmail = "pavanreddy@intellicar.in";

@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(
   req: NextRequest,
@@ -13,9 +15,7 @@ export async function POST(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.user.delete({
-      where: { id }
-    });
+    await sql`DELETE FROM "User" WHERE id = ${id}`;
 
     return NextResponse.json({ message: "Request rejected and user removed" });
   } catch (error: any) {

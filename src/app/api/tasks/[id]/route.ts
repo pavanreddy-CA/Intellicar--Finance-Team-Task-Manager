@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "@/lib/session";
 import { sendEmail, getEmailFromName } from "@/lib/email";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -14,7 +16,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const taskId = parseInt(resolvedParams.id);
     const data = await req.json();
 
-    const existingTask = await prisma.task.findUnique({ where: { id: taskId } });
+    const existingTasks = await sql`SELECT * FROM "Task" WHERE id = ${taskId}`;
+    const existingTask = existingTasks[0];
+    
     if (!existingTask) {
       return NextResponse.json({ message: "Task not found" }, { status: 404 });
     }
@@ -32,71 +36,86 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     // Prepare updates
-    let updates: any = {};
+    let taskStatus = existingTask.taskStatus;
+    let reviewStatus = existingTask.reviewStatus;
+    let completionDate = existingTask.completionDate;
+    let reviewCompletionDate = existingTask.reviewCompletionDate;
+    let ownerComments = existingTask.ownerComments;
+    let reviewerComments = existingTask.reviewerComments;
+    let requestStatus = existingTask.requestStatus;
 
     if (data.taskStatus) {
-      updates.taskStatus = data.taskStatus;
+      taskStatus = data.taskStatus;
       
       if (data.taskStatus === "Completed" && !existingTask.completionDate) {
-        updates.completionDate = new Date();
+        completionDate = new Date().toISOString();
       }
 
       if (data.taskStatus === "Completed" && existingTask.taskStatus !== "Completed") {
-        updates.reviewStatus = (existingTask.reviewerName === "Not Applicable" || !existingTask.reviewerName) 
+        reviewStatus = (existingTask.reviewerName === "Not Applicable" || !existingTask.reviewerName) 
           ? "Review Not Required" 
           : "Pending";
       } else if (data.taskStatus === "Pending") {
-        updates.reviewStatus = "Task Pending From Owner";
-        updates.reviewCompletionDate = null;
+        reviewStatus = "Task Pending From Owner";
+        reviewCompletionDate = null;
       }
     }
 
     if (data.completionDate !== undefined) {
       if (data.completionDate) {
-        updates.completionDate = new Date(data.completionDate);
-        updates.taskStatus = "Completed";
-        // Also update reviewStatus if needed
-        updates.reviewStatus = (existingTask.reviewerName === "Not Applicable" || !existingTask.reviewerName) 
+        completionDate = new Date(data.completionDate).toISOString();
+        taskStatus = "Completed";
+        reviewStatus = (existingTask.reviewerName === "Not Applicable" || !existingTask.reviewerName) 
           ? "Review Not Required" 
           : "Pending";
       } else {
-        updates.completionDate = null;
-        updates.taskStatus = "Pending";
-        updates.reviewStatus = "Task Pending From Owner";
-        updates.reviewCompletionDate = null;
+        completionDate = null;
+        taskStatus = "Pending";
+        reviewStatus = "Task Pending From Owner";
+        reviewCompletionDate = null;
       }
     }
 
     if (data.reviewCompletionDate !== undefined) {
       if (data.reviewCompletionDate) {
-        updates.reviewCompletionDate = new Date(data.reviewCompletionDate);
-        updates.reviewStatus = "Completed";
+        reviewCompletionDate = new Date(data.reviewCompletionDate).toISOString();
+        reviewStatus = "Completed";
       } else {
-        updates.reviewCompletionDate = null;
-        updates.reviewStatus = "Pending";
+        reviewCompletionDate = null;
+        reviewStatus = "Pending";
       }
     }
 
     if (data.ownerComments !== undefined) {
-      updates.ownerComments = data.ownerComments;
+      ownerComments = data.ownerComments;
     }
 
     if (data.reviewerComments !== undefined) {
-      updates.reviewerComments = data.reviewerComments;
+      reviewerComments = data.reviewerComments;
     }
 
     if (data.requestStatus !== undefined) {
-      updates.requestStatus = data.requestStatus;
+      requestStatus = data.requestStatus;
     }
 
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: updates
-    });
+    const updatedTasks = await sql`
+      UPDATE "Task"
+      SET "taskStatus" = ${taskStatus},
+          "reviewStatus" = ${reviewStatus},
+          "completionDate" = ${completionDate},
+          "reviewCompletionDate" = ${reviewCompletionDate},
+          "ownerComments" = ${ownerComments},
+          "reviewerComments" = ${reviewerComments},
+          "requestStatus" = ${requestStatus},
+          "updatedAt" = NOW()
+      WHERE id = ${taskId}
+      RETURNING *
+    `;
+    
+    const updatedTask = updatedTasks[0];
 
     // Send email to reviewer if status just changed to Completed and review is required
-    const newStatus = updates.taskStatus || data.taskStatus;
-    if (newStatus === "Completed" && existingTask.taskStatus !== "Completed" && updatedTask.reviewStatus === "Pending") {
+    if (taskStatus === "Completed" && existingTask.taskStatus !== "Completed" && updatedTask.reviewStatus === "Pending") {
       const reviewerEmail = getEmailFromName(updatedTask.reviewerName);
       if (reviewerEmail) {
         const dashboardUrl = "https://intellicar-finance-team-task-manage-one.vercel.app/";
@@ -153,7 +172,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ message: "Forbidden: Only Master Admin can delete tasks" }, { status: 403 });
     }
 
-    await prisma.task.delete({ where: { id: taskId } });
+    await sql`DELETE FROM "Task" WHERE id = ${taskId}`;
 
     return NextResponse.json({ message: "Task deleted successfully" }, { status: 200 });
   } catch (error: any) {
