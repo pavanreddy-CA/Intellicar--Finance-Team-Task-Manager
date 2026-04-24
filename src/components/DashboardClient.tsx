@@ -104,7 +104,8 @@ const EMAIL_TO_NAME: Record<string, string> = {
   "saneja@intellicar.in": "Siddharth"
 };
 
-export default function DashboardClient({ user }: { user: any }) {
+export default function DashboardClient({ user: initialUser }: { user: any }) {
+  const [user, setUser] = useState(initialUser);
   const isAdmin = user?.role === 'ADMIN' || user?.email === 'pavanreddy@intellicar.in';
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -327,15 +328,53 @@ export default function DashboardClient({ user }: { user: any }) {
     }
   };
 
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch("/api/user/me");
+      if (res.ok) {
+        const latestUser = await res.json();
+        setUser(latestUser);
+      }
+    } catch (err) {
+      console.error("Failed to sync user data", err);
+    }
+  };
+
   useEffect(() => {
+    fetchCurrentUser();
     fetchTasks();
     fetchLOs();
     fetchExternalRequests();
+    fetchSettings();
     if (isAdmin) {
       fetchUsersList();
-      fetchSettings();
     }
   }, [isAdmin]);
+
+  // SMART REDIRECTION LOGIC
+  useEffect(() => {
+    if (settings.moduleAccessMatrix && settings.moduleAccessMatrix !== '{}' && user?.department) {
+      try {
+        const matrix = JSON.parse(settings.moduleAccessMatrix);
+        const canSeeTasks = isAdmin || (matrix['Tasks'] && matrix['Tasks'].includes(user.department));
+        
+        // If user is on TASKS dashboard but not allowed, push to Inter-Dept Requests
+        if (!canSeeTasks && activeView === 'TASKS' && activeSubView === 'MAIN') {
+          const canSeeRequests = isAdmin || (matrix['Requests'] && matrix['Requests'].includes(user.department));
+          if (canSeeRequests) {
+            setActiveView('TASKS');
+            setActiveSubView('OTHER_DEPT');
+            setIsTasksMenuOpen(false);
+          } else {
+            // If even requests are not allowed, maybe push to LO or just hide everything
+            setActiveView('LOS');
+          }
+        }
+      } catch (err) {
+        console.error("Matrix parse error during redirect", err);
+      }
+    }
+  }, [settings.moduleAccessMatrix, user?.department, activeView, activeSubView]);
 
   const fetchSettings = async () => {
     try {
