@@ -4198,8 +4198,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 )}
 
                 {activeOptionsTab === 'MATRICES' && (
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                       <h3 style={{ margin: 0 }}>Matrix Module</h3>
                       <button 
                         onClick={handleSaveSettings}
@@ -4210,37 +4210,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </button>
                     </div>
 
-                    <div style={{ display: "flex", gap: "12px", marginBottom: "24px", background: "#f8fafc", padding: "8px", borderRadius: "12px" }}>
-                      <button 
-                        onClick={() => setActiveMatrixTab('ACCESS')}
-                        style={{ 
-                          flex: 1, padding: "10px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, 
-                          border: "none", cursor: "pointer", transition: "all 0.2s",
-                          background: activeMatrixTab === 'ACCESS' ? "white" : "transparent",
-                          color: activeMatrixTab === 'ACCESS' ? "#4f46e5" : "#64748b",
-                          boxShadow: activeMatrixTab === 'ACCESS' ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
-                        }}
+                    {/* Matrix A: Module Access (Accordion) */}
+                    <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div 
+                        onClick={() => setActiveMatrixTab(activeMatrixTab === 'ACCESS' ? '' : 'ACCESS')}
+                        style={{ padding: "20px 24px", background: activeMatrixTab === 'ACCESS' ? "#f8fafc" : "white", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: activeMatrixTab === 'ACCESS' ? "1px solid #e2e8f0" : "none", transition: "all 0.2s" }}
                       >
-                        Matrix A: Module Access
-                      </button>
-                      <button 
-                        onClick={() => setActiveMatrixTab('ALLOCATION')}
-                        style={{ 
-                          flex: 1, padding: "10px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, 
-                          border: "none", cursor: "pointer", transition: "all 0.2s",
-                          background: activeMatrixTab === 'ALLOCATION' ? "white" : "transparent",
-                          color: activeMatrixTab === 'ALLOCATION' ? "#4f46e5" : "#64748b",
-                          boxShadow: activeMatrixTab === 'ALLOCATION' ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
-                        }}
-                      >
-                        Matrix B: Request Allocation
-                      </button>
-                    </div>
-
-                    <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                        <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px", color: activeMatrixTab === 'ACCESS' ? "#2563eb" : "#0f172a" }}>
+                          <Shield size={20} /> Matrix A : Module Access
+                        </h4>
+                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ACCESS' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: "#64748b" }} />
+                      </div>
+                      
                       {activeMatrixTab === 'ACCESS' && (
-                        <div style={{ padding: "24px" }}>
-                          <h4 style={{ margin: "0 0 20px 0", fontSize: "1rem", color: "#0f172a" }}>Module Access Matrix (Departments)</h4>
+                        <div style={{ padding: "24px", animation: "slideDown 0.3s ease-out" }}>
+                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: "#64748b" }}>Define which departments have access to specific modules.</p>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
@@ -4284,10 +4268,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Matrix B: Request Allocation (Accordion) */}
+                    <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div 
+                        onClick={() => setActiveMatrixTab(activeMatrixTab === 'ALLOCATION' ? '' : 'ALLOCATION')}
+                        style={{ padding: "20px 24px", background: activeMatrixTab === 'ALLOCATION' ? "#f8fafc" : "white", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: activeMatrixTab === 'ALLOCATION' ? "1px solid #e2e8f0" : "none", transition: "all 0.2s" }}
+                      >
+                        <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px", color: activeMatrixTab === 'ALLOCATION' ? "#2563eb" : "#0f172a" }}>
+                          <Users size={20} /> Matrix B : Request Allocation
+                        </h4>
+                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ALLOCATION' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: "#64748b" }} />
+                      </div>
 
                       {activeMatrixTab === 'ALLOCATION' && (
-                        <div style={{ padding: "24px" }}>
-                          <h4 style={{ margin: "0 0 20px 0", fontSize: "1rem", color: "#0f172a" }}>Request Allocation Matrix (Finance Team)</h4>
+                        <div style={{ padding: "24px", animation: "slideDown 0.3s ease-out" }}>
+                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: "#64748b" }}>Assign authorized allocators for each type of inter-departmental request.</p>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
