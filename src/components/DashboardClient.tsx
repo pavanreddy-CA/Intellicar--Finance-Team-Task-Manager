@@ -142,6 +142,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     moduleAccessMatrix: '{}',
     allocationMatrix: '{}'
   });
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareData, setShareData] = useState({
@@ -288,8 +289,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       }
     } catch (error) {
       console.error("Failed to fetch tasks", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -385,8 +384,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       }
     } catch (error) {
       console.error("Failed to fetch settings", error);
+    } finally {
+      setSettingsLoading(false);
     }
   };
+
+  // FINAL LOADING RELEASE
+  useEffect(() => {
+    if (!settingsLoading) {
+      // Small delay to allow the Redirection useEffect to fire
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [settingsLoading, activeView, activeSubView]);
 
   const handleSaveSettings = async () => {
     setIsSavingSettings(true);
