@@ -8,6 +8,11 @@ import Link from "next/link";
 
 export default function Login() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"LOGIN" | "FORGOT_PASSWORD" | "OTP_VERIFY" | "RESET_PASSWORD">("LOGIN");
   const [forgotEmail, setForgotEmail] = useState("");
   const [otp, setOtp] = useState("");
