@@ -29,15 +29,15 @@ export async function PATCH(request: Request) {
         INSERT INTO "SystemSettings" (
           "masterDepartments", "masterEntities", "masterTaskTypes", 
           "masterCommunicationModes", "masterRequestTypes",
-          "matrixModuleAccess", "matrixAllocation"
+          "moduleAccessMatrix", "allocationMatrix"
         ) VALUES (
           ${body.masterDepartments || ''},
           ${body.masterEntities || ''},
           ${body.masterTaskTypes || ''},
           ${body.masterCommunicationModes || ''},
           ${body.masterRequestTypes || ''},
-          ${body.matrixModuleAccess || '{}'},
-          ${body.matrixAllocation || '{}'}
+          ${body.moduleAccessMatrix || '{}'},
+          ${body.allocationMatrix || '{}'}
         )
         RETURNING *
       `;
@@ -55,8 +55,8 @@ export async function PATCH(request: Request) {
         "masterTaskTypes" = COALESCE(${body.masterTaskTypes}, "masterTaskTypes"),
         "masterCommunicationModes" = COALESCE(${body.masterCommunicationModes}, "masterCommunicationModes"),
         "masterRequestTypes" = COALESCE(${body.masterRequestTypes}, "masterRequestTypes"),
-        "matrixModuleAccess" = COALESCE(${body.matrixModuleAccess}, "matrixModuleAccess"),
-        "matrixAllocation" = COALESCE(${body.matrixAllocation}, "matrixAllocation"),
+        "moduleAccessMatrix" = COALESCE(${body.moduleAccessMatrix}, "moduleAccessMatrix"),
+        "allocationMatrix" = COALESCE(${body.allocationMatrix}, "allocationMatrix"),
         "updatedAt" = NOW()
       WHERE id = ${settingsId}
       RETURNING *
