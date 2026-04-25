@@ -26,11 +26,16 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update user password
-    await sql`
+    const updateResult = await sql`
       UPDATE "User"
       SET password = ${hashedPassword}
       WHERE LOWER(email) = LOWER(${email})
+      RETURNING id
     `;
+
+    if (updateResult.length === 0) {
+      return NextResponse.json({ message: "User account not found for reset" }, { status: 404 });
+    }
 
     // Delete the used token
     await sql`DELETE FROM "VerificationToken" WHERE LOWER(identifier) = LOWER(${email})`;

@@ -109,8 +109,12 @@ export async function authenticate(
     
     const user = users[0];
     
-    if (!user || !user.password) {
-      return { success: false, error: "User not found" };
+    if (!user) {
+      return { success: false, error: "Invalid email address" };
+    }
+    
+    if (!user.password) {
+      return { success: false, error: "Account error: No password set" };
     }
     
     // Check if account is suspended
@@ -126,7 +130,7 @@ export async function authenticate(
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      return { success: false, error: "Invalid password" };
+      return { success: false, error: "Invalid password provided" };
     }
     
     // Return user data
