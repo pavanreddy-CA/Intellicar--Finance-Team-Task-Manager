@@ -41,8 +41,9 @@ export async function sendEmail({
   attachments?: any[];
 }) {
   if (!(process.env.EMAIL_USER || process.env.SMTP_USER) || !(process.env.EMAIL_PASS || process.env.SMTP_PASS)) {
-    console.warn("SMTP credentials not set. Skipping email to:", to);
-    return;
+    const msg = "SMTP credentials not set. Please configure EMAIL_USER and EMAIL_PASS in environment variables.";
+    console.error(msg);
+    throw new Error(msg);
   }
 
   try {
@@ -56,5 +57,6 @@ export async function sendEmail({
     console.log(`Email sent to ${to} successfully.`);
   } catch (error) {
     console.error("Error sending email:", error);
+    throw error; // Throwing error so caller knows it failed
   }
 }
