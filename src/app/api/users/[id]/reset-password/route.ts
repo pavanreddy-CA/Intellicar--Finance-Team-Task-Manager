@@ -5,9 +5,11 @@ import bcrypt from "bcryptjs";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
+    const userId = resolvedParams.id;
     const session = await getSession();
     if (!session || session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "New password is required" }, { status: 400 });
     }
 
-    const userId = params.id;
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const sql = getDb();
 
