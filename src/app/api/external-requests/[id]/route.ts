@@ -49,7 +49,7 @@ export async function PATCH(
       RETURNING *
     `;
 
-    const updatedRequests = await sql.unsafe(query) as any[];
+    const updatedRequests = await sql.unsafe(query) as unknown as any[];
     
     return NextResponse.json(updatedRequests[0]);
   } catch (error) {
