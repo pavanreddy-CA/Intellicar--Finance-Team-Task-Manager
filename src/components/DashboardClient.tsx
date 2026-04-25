@@ -4324,6 +4324,37 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </button>
                     </div>
 
+                    {/* Finance Team Overview */}
+                    <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                        <div style={{ padding: "8px", background: "#eff6ff", borderRadius: "10px" }}>
+                          <Users size={20} color="#2563eb" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: "#1e293b" }}>Finance Team Members</h4>
+                          <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>These users are available as Authorized Allocators.</p>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                        {usersList.filter(u => u.department === 'Finance' && (u as any).isApproved !== false).length === 0 ? (
+                          <p style={{ fontSize: "0.875rem", color: "#94a3b8", italic: "true" } as any}>No users found in Finance department.</p>
+                        ) : (
+                          usersList.filter(u => u.department === 'Finance' && (u as any).isApproved !== false).map(u => (
+                            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#2563eb", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.875rem" }}>
+                                {u.name ? u.name[0].toUpperCase() : u.email[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1e293b" }}>{u.name || "--"}</div>
+                                <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{u.email}</div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
                     {/* Matrix A: Module Access (Accordion) */}
                     <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                       <div 
@@ -4425,9 +4456,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                           style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.875rem" }}
                                         >
                                           <option value="">No Allocator Assigned</option>
-                                          {Object.entries(EMAIL_TO_NAME).map(([email, name]) => (
-                                            <option key={email} value={email}>{name} ({email})</option>
-                                          ))}
+                                          {usersList
+                                            .filter(u => u.department === 'Finance' && (u as any).isApproved !== false)
+                                            .map(u => (
+                                              <option key={u.email} value={u.email}>{u.name || u.email} ({u.email})</option>
+                                            ))
+                                          }
                                         </select>
                                       </td>
                                     </tr>
