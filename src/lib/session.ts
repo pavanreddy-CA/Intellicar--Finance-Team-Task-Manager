@@ -100,6 +100,15 @@ export async function authenticate(
   try {
     // Find user in database using Neon serverless
     const sql = getDb();
+    
+    // --- Self-healing Migration ---
+    // Add isSuspended column if it doesn't exist (Runs here because users can't login to trigger the User Management one)
+    try {
+      await sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isSuspended" BOOLEAN DEFAULT FALSE`;
+    } catch (e) {
+      console.log("Migration check done");
+    }
+
     const users = await sql`
       SELECT id, email, name, password, role, department, "isApproved", "isSuspended"
       FROM "User"
