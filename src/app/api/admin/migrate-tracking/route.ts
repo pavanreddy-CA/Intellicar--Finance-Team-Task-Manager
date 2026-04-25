@@ -24,6 +24,7 @@ export async function GET() {
     // Add columns to SystemSettings if they don't exist
     await sql`
       ALTER TABLE "SystemSettings" 
+      ALTER COLUMN "id" TYPE TEXT,
       ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) DEFAULT NOW(),
       ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) DEFAULT NOW()
     `;

@@ -52,13 +52,13 @@ export async function PATCH(request: Request) {
     const updatedSettings = await sql`
       UPDATE "SystemSettings"
       SET 
-        "masterDepartments" = COALESCE(${body.masterDepartments}, "masterDepartments"),
-        "masterEntities" = COALESCE(${body.masterEntities}, "masterEntities"),
-        "masterTaskTypes" = COALESCE(${body.masterTaskTypes}, "masterTaskTypes"),
-        "masterCommunicationModes" = COALESCE(${body.masterCommunicationModes}, "masterCommunicationModes"),
-        "masterRequestTypes" = COALESCE(${body.masterRequestTypes}, "masterRequestTypes"),
-        "moduleAccessMatrix" = COALESCE(${body.moduleAccessMatrix}, "moduleAccessMatrix"),
-        "allocationMatrix" = COALESCE(${body.allocationMatrix}, "allocationMatrix"),
+        "masterDepartments" = ${body.masterDepartments ?? existingSettings[0].masterDepartments},
+        "masterEntities" = ${body.masterEntities ?? existingSettings[0].masterEntities},
+        "masterTaskTypes" = ${body.masterTaskTypes ?? existingSettings[0].masterTaskTypes},
+        "masterCommunicationModes" = ${body.masterCommunicationModes ?? existingSettings[0].masterCommunicationModes},
+        "masterRequestTypes" = ${body.masterRequestTypes ?? existingSettings[0].masterRequestTypes},
+        "moduleAccessMatrix" = ${body.moduleAccessMatrix ?? existingSettings[0].moduleAccessMatrix},
+        "allocationMatrix" = ${body.allocationMatrix ?? existingSettings[0].allocationMatrix},
         "updatedAt" = NOW()
       WHERE id = ${settingsId}
       RETURNING *
