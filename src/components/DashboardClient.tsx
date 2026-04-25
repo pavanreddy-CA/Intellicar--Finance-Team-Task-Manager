@@ -191,6 +191,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [showTaskDownloadDropdown, setShowTaskDownloadDropdown] = useState(false);
   const [showLODownloadDropdown, setShowLODownloadDropdown] = useState(false);
   const [showExtReqDownloadDropdown, setShowExtReqDownloadDropdown] = useState(false);
+  const [extReqSortConfig, setExtReqSortConfig] = useState<{ key: keyof ExternalRequest; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
   const [showLOCaptureModal, setShowLOCaptureModal] = useState(false);
   const [loCaptureForm, setLOCaptureForm] = useState({
     taskId: 0,
@@ -1066,6 +1067,59 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       return { key, direction: 'asc' };
     });
   };
+
+  const handleExtReqSort = (key: keyof ExternalRequest) => {
+    setExtReqSortConfig(prev => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  // External Requests Filtering and Sorting
+  const filteredExternalRequests = externalRequests.filter(r => {
+    const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
+    const isRelevantToUser = (r.requesterEmail?.toLowerCase().trim() === user?.email?.toLowerCase().trim()) || 
+      userAllocatedDepts.some(dept => dept.toLowerCase() === r.requestType?.toLowerCase().trim());
+    
+    if (!isPrimaryAdmin && !isRelevantToUser) return false;
+    
+    if (extReqSearch) {
+      const q = extReqSearch.toLowerCase();
+      if (!r.natureOfRequest.toLowerCase().includes(q) && !r.requestFrom.toLowerCase().includes(q)) return false;
+    }
+    
+    if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter) return false;
+
+    if (extReqFilter === 'ALLOCATION') {
+      return r.status === 'Pending' || !r.status || r.status === 'New';
+    }
+    if (extReqFilter === 'PROCESS') {
+      return r.status === 'Under Process';
+    }
+    if (extReqFilter === 'PROCESSED') {
+      return r.status === 'Processed';
+    }
+    if (extReqFilter === 'REJECTED') {
+      return r.status === 'Rejected';
+    }
+    return true;
+  });
+
+  const sortedExternalRequests = [...filteredExternalRequests].sort((a, b) => {
+    if (!extReqSortConfig) return 0;
+    const { key, direction } = extReqSortConfig;
+    let valA = a[key];
+    let valB = b[key];
+
+    if (valA === null || valA === undefined) valA = "";
+    if (valB === null || valB === undefined) valB = "";
+
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   // Pagination Logic
   const totalPages = Math.ceil(sortedTasks.length / itemsPerPage);
@@ -2007,13 +2061,29 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={thStyle}>Reviewer</th>
-                  <th style={thStyle}>Review Date</th>
-                  <th style={thStyle}>Review Status</th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Review Date {taskSortConfig?.key === 'reviewCompletionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('reviewStatus')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={thStyle}>Capture LO?</th>
                   <th style={thStyle}>Owner Comments</th>
                   <th style={thStyle}>Reviewer Comments</th>
-                  <th style={thStyle}>Request Status</th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={{ ...thStyle, textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
@@ -2498,11 +2568,31 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
                       <th style={{ ...thStyle, width: "50px" }}>Sl No.</th>
-                      <th style={thStyle}>Request From</th>
-                      <th style={thStyle}>Date</th>
-                      <th style={thStyle}>Finance Function</th>
-                      <th style={thStyle}>Nature of Request</th>
-                      <th style={thStyle}>Request Status</th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('requestFrom')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('createdAt')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Date {extReqSortConfig?.key === 'createdAt' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('requestType')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Finance Function {extReqSortConfig?.key === 'requestType' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('natureOfRequest')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Nature of Request {extReqSortConfig?.key === 'natureOfRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('status')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       {canAllocateAnything && <th style={thStyle}>Action</th>}
                       <th style={thStyle}>Remarks</th>
                     </tr>
@@ -2510,51 +2600,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <tbody>
                     {extReqLoading ? (
                       <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading requests...</td></tr>
-                    ) : externalRequests.filter(r => {
-                      const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
-                      const isRelevantToUser = r.requesterEmail === user?.email || userAllocatedDepts.includes(r.requestType);
-                      if (!isPrimaryAdmin && !isRelevantToUser) return false;
-                      if (extReqSearch && !r.natureOfRequest.toLowerCase().includes(extReqSearch.toLowerCase()) && !r.requestFrom.toLowerCase().includes(extReqSearch.toLowerCase())) return false;
-                      if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter) return false;
-
-                        if (extReqFilter === 'ALLOCATION') {
-                          return r.status === 'Pending' || !r.status || r.status === 'New';
-                        }
-                        if (extReqFilter === 'PROCESS') {
-                          return r.status === 'Under Process';
-                        }
-                        if (extReqFilter === 'PROCESSED') {
-                          return r.status === 'Processed';
-                        }
-                        if (extReqFilter === 'REJECTED') {
-                          return r.status === 'Rejected';
-                        }
-                        return true;
-                    }).length === 0 ? (
+                    ) : sortedExternalRequests.length === 0 ? (
                       <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No requests found.</td></tr>
                     ) : (
-                      externalRequests.filter(r => {
-                        const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
-                        const isRelevantToUser = (r.requesterEmail?.toLowerCase().trim() === user?.email?.toLowerCase().trim()) || 
-                          userAllocatedDepts.some(dept => dept.toLowerCase() === r.requestType?.toLowerCase().trim());
-                        if (!isPrimaryAdmin && !isRelevantToUser) return false;
-                        if (extReqSearch && !r.natureOfRequest.toLowerCase().includes(extReqSearch.toLowerCase()) && !r.requestFrom.toLowerCase().includes(extReqSearch.toLowerCase())) return false;
-                        if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter) return false;
-
-                        if (extReqFilter === 'ALLOCATION') {
-                          return r.status === 'Pending' || !r.status || r.status === 'New';
-                        }
-                        if (extReqFilter === 'PROCESS') {
-                          return r.status === 'Under Process';
-                        }
-                        if (extReqFilter === 'PROCESSED') {
-                          return r.status === 'Processed';
-                        }
-                        if (extReqFilter === 'REJECTED') {
-                          return r.status === 'Rejected';
-                        }
-                        return true;
-                      }).map((req, idx) => {
+                      sortedExternalRequests.map((req, idx) => {
                         const matrix = JSON.parse(settings.allocationMatrix || '{}');
                         const isAuthorizedAllocator = matrix[req.requestType] === user?.email || isAdmin || (user as any).isAllocator;
                         
@@ -2848,7 +2897,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           Entity {loSortConfig?.key === 'entity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={thStyle}>Learning Opportunity</th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Learning Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('identifiedBy')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Identified By {loSortConfig?.key === 'identifiedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -2859,8 +2912,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           Committed By {loSortConfig?.key === 'committedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={thStyle}>Resolution</th>
-                      <th style={thStyle}>Communication Mode</th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('modeOfCommunication')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Communication Mode {loSortConfig?.key === 'modeOfCommunication' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       <th style={{ ...thStyle, textAlign: "center" }}>Actions</th>
                     </tr>
                   </thead>
