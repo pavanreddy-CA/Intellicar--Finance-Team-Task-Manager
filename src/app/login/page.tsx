@@ -57,7 +57,7 @@ export default function Login() {
         alignItems: "center", padding: "0 32px", borderBottom: "1px solid #e2e8f0",
         flexShrink: 0
       }}>
-        <img src="/logo.png" alt="Intellicar Logo" style={{ height: "40px", width: "auto", objectFit: "contain" }} />
+        <img src="/vercel.svg" alt="Test Logo" style={{ height: "40px", width: "auto", objectFit: "contain" }} />
       </header>
 
       <div className="login-container" style={{ flex: 1, display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
