@@ -115,13 +115,10 @@ export default function Register() {
       }}>
         <div style={{ width: '100%', maxWidth: '420px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <Image
+            <img
               src="/logo.png"
               alt="Intellicar Logo"
-              width={180}
-              height={56}
-              style={{ objectFit: 'contain', marginBottom: '16px' }}
-              priority
+              style={{ width: '180px', height: 'auto', objectFit: 'contain', marginBottom: '16px' }}
             />
           </div>
 
