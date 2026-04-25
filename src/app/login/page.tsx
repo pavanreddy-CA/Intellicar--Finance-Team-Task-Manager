@@ -50,17 +50,7 @@ export default function Login() {
   };
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Top Header Bar */}
-      <header style={{ 
-        height: "80px", width: "100%", background: "#ffffff", display: "flex", 
-        alignItems: "center", padding: "0 32px", borderBottom: "1px solid #e2e8f0",
-        flexShrink: 0
-      }}>
-        <img src="/logo.png" alt="Intellicar Logo" style={{ height: "40px", width: "auto", objectFit: "contain" }} />
-      </header>
-
-      <div className="login-container" style={{ flex: 1, display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
+    <div className="login-container" style={{ minHeight: "100vh", display: "flex", background: "white", fontFamily: "'Inter', sans-serif" }}>
       {/* Left Side: Hero Section */}
       <div style={{ 
         flex: 1.2, 
@@ -105,6 +95,13 @@ export default function Login() {
         background: '#f8fafc'
       }}>
         <div style={{ width: '100%', maxWidth: '420px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <img
+              src="/logo.png"
+              alt="Intellicar Logo"
+              style={{ width: '180px', height: 'auto', objectFit: 'contain', marginBottom: '16px' }}
+            />
+          </div>
 
 
           <div style={{ marginBottom: '32px', textAlign: 'center' }}>
@@ -213,7 +210,6 @@ export default function Login() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body { margin: 0; }
       `}</style>
-      </div>
     </div>
   );
 }
