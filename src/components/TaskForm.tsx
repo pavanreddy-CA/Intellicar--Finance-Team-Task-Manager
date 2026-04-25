@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 
 type TaskFormProps = {
   onClose: () => void;
@@ -13,6 +13,9 @@ type TaskFormProps = {
 export default function TaskForm({ onClose, onSuccess, settings, initialData }: TaskFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [changeRequestType, setChangeRequestType] = useState(false);
+  const [newRequestType, setNewRequestType] = useState("");
+  const [transferring, setTransferring] = useState(false);
 
   const [formData, setFormData] = useState({
     taskName: initialData?.taskName || "",
@@ -29,6 +32,37 @@ export default function TaskForm({ onClose, onSuccess, settings, initialData }: 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle request type transfer - update request and send to new allocator
+  const handleTransferRequest = async () => {
+    if (!newRequestType || !initialData?.linkedRequestId) return;
+    
+    setTransferring(true);
+    setError("");
+    
+    try {
+      const res = await fetch(`/api/external-requests/${initialData.linkedRequestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          requestType: newRequestType,
+          status: "Pending" // Reset to pending for new allocator
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to transfer request");
+      }
+
+      alert(`Request transferred to ${newRequestType} allocator successfully!`);
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setTransferring(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +112,90 @@ export default function TaskForm({ onClose, onSuccess, settings, initialData }: 
         <form onSubmit={handleSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
           {error && <div style={{ background: "#fee2e2", color: "#b91c1c", padding: "12px", borderRadius: "6px", fontSize: "0.875rem" }}>{error}</div>}
           
+          {/* Request Type Transfer Option - Only show when converting from external request */}
+          {initialData?.linkedRequestId && (
+            <div style={{ 
+              background: "#f0f9ff", 
+              border: "1px solid #bae6fd", 
+              borderRadius: "8px", 
+              padding: "16px",
+              marginBottom: "8px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                <AlertCircle size={18} color="#0284c7" />
+                <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>
+                  Any change in request type?
+                </span>
+              </div>
+              
+              <div style={{ display: "flex", gap: "12px", marginBottom: changeRequestType ? "12px" : "0" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                  <input 
+                    type="radio" 
+                    name="changeType" 
+                    checked={!changeRequestType} 
+                    onChange={() => { setChangeRequestType(false); setNewRequestType(""); }}
+                    style={{ accentColor: "#2563eb" }}
+                  />
+                  <span style={{ fontSize: "0.875rem", color: "#374151" }}>No</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                  <input 
+                    type="radio" 
+                    name="changeType" 
+                    checked={changeRequestType} 
+                    onChange={() => setChangeRequestType(true)}
+                    style={{ accentColor: "#2563eb" }}
+                  />
+                  <span style={{ fontSize: "0.875rem", color: "#374151" }}>Yes</span>
+                </label>
+              </div>
+
+              {changeRequestType && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontSize: "0.8125rem", fontWeight: 500, color: "#374151" }}>
+                      Select New Request Type
+                    </label>
+                    <select 
+                      value={newRequestType} 
+                      onChange={(e) => setNewRequestType(e.target.value)}
+                      style={{ ...inputStyle, background: "white" }}
+                    >
+                      <option value="">Choose request type...</option>
+                      {settings?.masterRequestTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
+                        <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {newRequestType && (
+                    <button 
+                      type="button"
+                      onClick={handleTransferRequest}
+                      disabled={transferring}
+                      style={{ 
+                        padding: "10px 16px", 
+                        borderRadius: "6px", 
+                        border: "none", 
+                        background: "#f59e0b", 
+                        color: "white", 
+                        fontWeight: 500, 
+                        cursor: transferring ? "not-allowed" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      {transferring ? "Transferring..." : `Transfer to ${newRequestType} Allocator`}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Name *</label>
             <input name="taskName" required value={formData.taskName} onChange={handleChange} style={inputStyle} placeholder="Enter task name" />
