@@ -96,7 +96,16 @@ export default function Login() {
       }}>
         <div style={{ width: '100%', maxWidth: '420px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-             <img src="/logo.png" alt="Intellicar Logo" style={{ height: "56px", marginBottom: '16px' }} />
+             <img 
+               src="/logo.png" 
+               alt="Intellicar Logo" 
+               crossOrigin="anonymous"
+               style={{ height: "56px", marginBottom: '16px', objectFit: 'contain' }}
+               onError={(e) => {
+                 console.log("[v0] Logo failed to load from /logo.png");
+                 e.currentTarget.style.display = 'none';
+               }}
+             />
           </div>
 
           <div style={{ marginBottom: '32px', textAlign: 'center' }}>
