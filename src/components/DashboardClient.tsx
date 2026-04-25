@@ -1062,8 +1062,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     if (taskStatusFilter !== "ALL" && t.taskStatus !== taskStatusFilter) dropdownMatch = false;
     
     // 5. Task Type Filter
-    if (taskTypeFilter === "INTERNAL" && t.linkedRequestId) dropdownMatch = false;
-    if (taskTypeFilter === "EXTERNAL" && !t.linkedRequestId) dropdownMatch = false;
+    const isActuallyExternal = !!t.linkedRequestId && t.departmentName !== "Finance";
+    
+    if (taskTypeFilter === "INTERNAL" && isActuallyExternal) dropdownMatch = false;
+    if (taskTypeFilter === "EXTERNAL" && !isActuallyExternal) dropdownMatch = false;
 
     return statusMatch && dateMatch && searchMatch && dropdownMatch;
   });
@@ -2232,7 +2234,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <span style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
                             {task.taskType}
                           </span>
-                          {(isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && (
+                          {(isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && task.linkedRequestId && (
                             task.transferStatus === 'T' ? (
                               <span 
                                 title={`Transferred Request (Original: ${task.originalRequestType || 'Unknown'})`}
