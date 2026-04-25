@@ -35,6 +35,8 @@ type Task = {
   deleteRequestReason?: string | null;
   linkedRequestId?: number | null;
   requestStatus?: string | null;
+  transferStatus: string | null;
+  originalRequestType: string | null;
 };
 
 type ExternalRequest = {
@@ -48,6 +50,8 @@ type ExternalRequest = {
   status: string;
   assignedAllocatorEmail: string | null;
   convertedTaskId: number | null;
+  originalRequestType: string | null;
+  transferStatus: string | null;
   createdAt: string;
 };
 
@@ -429,7 +433,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       taskName: req.natureOfRequest,
       departmentName: req.departmentName,
       requestFrom: req.requestFrom,
-      linkedRequestId: req.id
+      linkedRequestId: req.id,
+      transferStatus: req.transferStatus,
+      originalRequestType: req.originalRequestType
     });
     setShowForm(true);
   };
@@ -2123,7 +2129,28 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <td style={{ ...tdStyle, whiteSpace: "nowrap" }}><span style={{ color: "#64748b" }}>{formatDateTime(task.createdAt)}</span></td>
                       <td style={tdStyle}>{task.entityName}</td>
                       <td style={{ ...tdStyle, fontWeight: 500, color: "#0f172a", minWidth: "300px", maxWidth: "600px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
-                      <td style={tdStyle}><span style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>{task.taskType}</span></td>
+                      <td style={tdStyle}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
+                            {task.taskType}
+                          </span>
+                          {task.transferStatus === 'T' ? (
+                            <span 
+                              title={`Transferred Request (Original: ${task.originalRequestType || 'Unknown'})`}
+                              style={{ cursor: "help", fontSize: "1rem" }}
+                            >
+                              🔴
+                            </span>
+                          ) : (
+                            <span 
+                              title="Original Request"
+                              style={{ cursor: "help", fontSize: "1rem" }}
+                            >
+                              🟢
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td style={tdStyle}>{task.requestFrom}</td>
                       <td style={tdStyle}>{task.ownerName}</td>
                       <td style={tdStyle}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
@@ -2611,9 +2638,27 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             </td>
                             <td style={tdStyle}>{new Date(req.createdAt).toLocaleDateString()}</td>
                             <td style={tdStyle}>
-                              <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f1f5f9", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
-                                {req.requestType}
-                              </span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f1f5f9", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
+                                  {req.requestType}
+                                </span>
+                                {req.transferStatus && (
+                                  <div 
+                                    title={req.transferStatus === 'T' ? `Transferred from: ${req.originalRequestType || 'Unknown'}` : 'Original Request'}
+                                    style={{ 
+                                      width: "20px", height: "20px", borderRadius: "50%", 
+                                      background: req.transferStatus === 'T' ? "#fef2f2" : "#f0fdf4", 
+                                      color: req.transferStatus === 'T' ? "#ef4444" : "#10b981", 
+                                      display: "flex", alignItems: "center", justifyContent: "center", 
+                                      fontSize: "0.65rem", fontWeight: 800, 
+                                      border: `1px solid ${req.transferStatus === 'T' ? "#fee2e2" : "#dcfce7"}`,
+                                      cursor: "help"
+                                    }}
+                                  >
+                                    {req.transferStatus}
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td style={{ ...tdStyle, maxWidth: "300px", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
                             <td style={tdStyle}>

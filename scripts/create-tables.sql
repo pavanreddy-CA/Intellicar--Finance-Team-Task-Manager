@@ -80,6 +80,8 @@ CREATE TABLE "ExternalRequest" (
     "natureOfRequest" TEXT NOT NULL,
     "departmentName" TEXT NOT NULL,
     "requestType" TEXT NOT NULL,
+    "originalRequestType" TEXT,
+    "transferStatus" TEXT DEFAULT 'O',
     "status" TEXT NOT NULL DEFAULT 'Under Process',
     "assignedAllocatorEmail" TEXT,
     "convertedTaskId" INTEGER,

@@ -54,11 +54,11 @@ export async function POST(request: Request) {
     const newRequests = await sql`
       INSERT INTO "ExternalRequest" (
         "requestFrom", "requesterEmail", "natureOfRequest", "departmentName", 
-        "requestType", "status", "createdAt", "updatedAt"
+        "requestType", "originalRequestType", "transferStatus", "status", "createdAt", "updatedAt"
       )
       VALUES (
         ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${departmentName},
-        ${requestType}, 'Pending', NOW(), NOW()
+        ${requestType}, ${requestType}, 'O', 'Pending', NOW(), NOW()
       )
       RETURNING *
     `;

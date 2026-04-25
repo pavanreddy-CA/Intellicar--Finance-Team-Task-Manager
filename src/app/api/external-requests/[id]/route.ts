@@ -12,9 +12,14 @@ export async function PATCH(
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
     
-    // Build dynamic update
+    // Fetch current state first if we need to check for transfers
+    let currentRequest = null;
+    if (body.requestType !== undefined) {
+      const existing = await sql`SELECT "requestType", "originalRequestType" FROM "ExternalRequest" WHERE id = ${id}`;
+      currentRequest = existing[0];
+    }
+
     const updates: string[] = [];
-    const values: any[] = [];
     
     if (body.status !== undefined) {
       updates.push(`status = '${body.status}'`);
@@ -25,17 +30,26 @@ export async function PATCH(
     if (body.rejectReason !== undefined) {
       updates.push(`"rejectReason" = '${body.rejectReason}'`);
     }
+    if (body.requestType !== undefined) {
+      updates.push(`"requestType" = '${body.requestType}'`);
+      // If the new requestType is different from the originalRequestType, it's a transfer
+      if (currentRequest && body.requestType !== currentRequest.originalRequestType) {
+        updates.push(`"transferStatus" = 'T'`);
+      }
+    }
     
     if (updates.length === 0) {
       return NextResponse.json({ message: 'No fields to update' }, { status: 400 });
     }
     
-    const updatedRequests = await sql`
+    const query = `
       UPDATE "ExternalRequest"
-      SET ${sql.unsafe(updates.join(', '))}, "updatedAt" = NOW()
+      SET ${updates.join(', ')}, "updatedAt" = NOW()
       WHERE id = ${id}
       RETURNING *
     `;
+
+    const updatedRequests = await sql.unsafe(query);
     
     return NextResponse.json(updatedRequests[0]);
   } catch (error) {

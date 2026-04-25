@@ -91,12 +91,12 @@ export async function POST(req: NextRequest) {
       INSERT INTO "Task" (
         "taskName", "entityName", "taskType", "departmentName", "requestFrom",
         "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
-        "reviewStatus", "linkedRequestId", "requestStatus", "createdAt", "updatedAt"
+        "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "createdAt", "updatedAt"
       )
       VALUES (
         ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
         ${ownerName}, ${resolvedReviewer}, ${dueDate ? new Date(dueDate).toISOString() : null}, ${mailLink || null}, 'Pending',
-        ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, NOW(), NOW()
+        ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, NOW(), NOW()
       )
       RETURNING *
     `;

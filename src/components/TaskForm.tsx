@@ -27,7 +27,9 @@ export default function TaskForm({ onClose, onSuccess, settings, initialData }: 
     reviewerName: "",
     dueDate: "",
     mailLink: "",
-    linkedRequestId: initialData?.linkedRequestId || null
+    linkedRequestId: initialData?.linkedRequestId || null,
+    transferStatus: initialData?.transferStatus || 'O',
+    originalRequestType: initialData?.originalRequestType || null
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -196,102 +198,112 @@ export default function TaskForm({ onClose, onSuccess, settings, initialData }: 
             </div>
           )}
 
-          <div>
-            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Name *</label>
-            <input name="taskName" required value={formData.taskName} onChange={handleChange} style={inputStyle} placeholder="Enter task name" />
-          </div>
+          {!changeRequestType ? (
+            <>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Name *</label>
+                <input name="taskName" required value={formData.taskName} onChange={handleChange} style={inputStyle} placeholder="Enter task name" />
+              </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Entity Name *</label>
-              <select name="entityName" required value={formData.entityName} onChange={handleChange} style={inputStyle}>
-                <option value="">Choose</option>
-                {settings?.masterEntities?.split(',').filter((e: string) => e.trim()).map((entity: string) => (
-                  <option key={entity.trim()} value={entity.trim()}>{entity.trim()}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Type *</label>
-              <select name="taskType" required value={formData.taskType} onChange={handleChange} style={inputStyle}>
-                <option value="">Choose</option>
-                {settings?.masterTaskTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
-                  <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Entity Name *</label>
+                  <select name="entityName" required value={formData.entityName} onChange={handleChange} style={inputStyle}>
+                    <option value="">Choose</option>
+                    {settings?.masterEntities?.split(',').filter((e: string) => e.trim()).map((entity: string) => (
+                      <option key={entity.trim()} value={entity.trim()}>{entity.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Type *</label>
+                  <select name="taskType" required value={formData.taskType} onChange={handleChange} style={inputStyle}>
+                    <option value="">Choose</option>
+                    {settings?.masterTaskTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
+                      <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
-              <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
-                <option value="">Choose</option>
-                {settings?.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => (
-                  <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
-              <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
-            </div>
-          </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
+                  <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
+                    <option value="">Choose</option>
+                    {settings?.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => (
+                      <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
+                  <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
+                </div>
+              </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Owner Name *</label>
-              <select name="ownerName" required value={formData.ownerName} onChange={handleChange} style={inputStyle}>
-                <option value="">Choose</option>
-                <option value="Venkat">Venkat</option>
-                <option value="Saikath">Saikath</option>
-                <option value="Nikhat">Nikhat</option>
-                <option value="Sami">Sami</option>
-                <option value="Pavan">Pavan</option>
-                <option value="Sharath">Sharath</option>
-                <option value="Sreenivas">Sreenivas</option>
-                <option value="Hanusha">Hanusha</option>
-                <option value="Chandana">Chandana</option>
-                <option value="Sidharth Saneja">Sidharth Saneja</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Reviewer Name</label>
-              <select name="reviewerName" value={formData.reviewerName} onChange={handleChange} style={inputStyle}>
-                <option value="">Not Applicable / None</option>
-                <option value="Venkat">Venkat</option>
-                <option value="Saikath">Saikath</option>
-                <option value="Nikhat">Nikhat</option>
-                <option value="Sami">Sami</option>
-                <option value="Pavan">Pavan</option>
-                <option value="Sharath">Sharath</option>
-                <option value="Sreenivas">Sreenivas</option>
-                <option value="Hanusha">Hanusha</option>
-                <option value="Chandana">Chandana</option>
-                <option value="Sidharth Saneja">Sidharth Saneja</option>
-              </select>
-            </div>
-          </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Owner Name *</label>
+                  <select name="ownerName" required value={formData.ownerName} onChange={handleChange} style={inputStyle}>
+                    <option value="">Choose</option>
+                    <option value="Venkat">Venkat</option>
+                    <option value="Saikath">Saikath</option>
+                    <option value="Nikhat">Nikhat</option>
+                    <option value="Sami">Sami</option>
+                    <option value="Pavan">Pavan</option>
+                    <option value="Sharath">Sharath</option>
+                    <option value="Sreenivas">Sreenivas</option>
+                    <option value="Hanusha">Hanusha</option>
+                    <option value="Chandana">Chandana</option>
+                    <option value="Sidharth Saneja">Sidharth Saneja</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Reviewer Name</label>
+                  <select name="reviewerName" value={formData.reviewerName} onChange={handleChange} style={inputStyle}>
+                    <option value="">Not Applicable / None</option>
+                    <option value="Venkat">Venkat</option>
+                    <option value="Saikath">Saikath</option>
+                    <option value="Nikhat">Nikhat</option>
+                    <option value="Sami">Sami</option>
+                    <option value="Pavan">Pavan</option>
+                    <option value="Sharath">Sharath</option>
+                    <option value="Sreenivas">Sreenivas</option>
+                    <option value="Hanusha">Hanusha</option>
+                    <option value="Chandana">Chandana</option>
+                    <option value="Sidharth Saneja">Sidharth Saneja</option>
+                  </select>
+                </div>
+              </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Due Date</label>
-              <input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Mail Link</label>
-              <input name="mailLink" value={formData.mailLink} onChange={handleChange} style={inputStyle} placeholder="Optional email link" />
-            </div>
-          </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Due Date</label>
+                  <input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Mail Link</label>
+                  <input name="mailLink" value={formData.mailLink} onChange={handleChange} style={inputStyle} placeholder="Optional email link" />
+                </div>
+              </div>
 
-          <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-            <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", color: "#374151", fontWeight: 500, cursor: "pointer" }}>
-              Cancel
-            </button>
-            <button type="submit" disabled={loading} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "white", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer" }}>
-              {loading ? "Creating..." : "Create Task"}
-            </button>
-          </div>
+              <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+                <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", color: "#374151", fontWeight: 500, cursor: "pointer" }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={loading} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "white", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer" }}>
+                  {loading ? "Creating..." : "Create Task"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", color: "#374151", fontWeight: 500, cursor: "pointer" }}>
+                Cancel
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
