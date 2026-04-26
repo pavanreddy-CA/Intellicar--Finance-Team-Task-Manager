@@ -1889,43 +1889,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     return null;
                   })()}
 
-                  {(() => {
-                            // Check Matrix for Recurring Activities access
-                            const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-                            const canSeeRecurring = isAdmin || (matrix['Recurring Activities'] && matrix['Recurring Activities'].includes(user?.department));
-                            if (!canSeeRecurring) return null;
-                            return (
-                              <button 
-                                onClick={() => { setActiveView('RECURRING'); setActiveMainView('DASHBOARD'); }}
-                                style={{ 
-                                  padding: "10px", borderRadius: "8px", border: "none", textAlign: "left", fontSize: "0.7rem", fontWeight: 600,
-                                  background: activeView === 'RECURRING' ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                                  color: activeView === 'RECURRING' ? "#60a5fa" : "#94a3b8",
-                                  cursor: "pointer", transition: "all 0.2s"
-                                }}
-                              >
-                                Recurring Activities
-                              </button>
-                            );
-                          })()}
-                          {canSeeRequests && (
-                            <button 
-                              onClick={() => { setActiveView('TASKS'); setActiveSubView('OTHER_DEPT'); setActiveMainView('DASHBOARD'); }}
-                              style={{ 
-                                padding: "10px", borderRadius: "8px", border: "none", textAlign: "left", fontSize: "0.7rem", fontWeight: 600,
-                                background: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && activeMainView === 'DASHBOARD' ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                                color: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8",
-                                cursor: "pointer", transition: "all 0.2s"
-                              }}
-                            >
-                              Inter Dept Request
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Recurring Module */}
                   {(isAdmin || access.RECURRING) && (
                     <button 
