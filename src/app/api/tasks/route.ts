@@ -76,6 +76,15 @@ export async function POST(req: NextRequest) {
       assignments, // New: Array of { entityName, ownerName, reviewerName }
     } = data);
 
+    // Ensure columns exist (Self-healing)
+    try {
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+    } catch (e) {
+      console.log("Task migration check skipped/failed");
+    }
+
     if (!taskName || !taskType || !departmentName || !requestFrom || !assignments || !assignments.length) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
@@ -90,6 +99,21 @@ export async function POST(req: NextRequest) {
       const reviewStatus = resolvedReviewer === "Not Applicable" ? "Review Not Required" : "Task Pending From Owner";
       const requestStatus = linkedRequestId ? "Pending" : "Not Applicable";
 
+      const parseDate = (d: string) => {
+        if (!d) return null;
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) return parsed.toISOString();
+        // Try DD-MM-YYYY
+        const parts = d.split(/[-/]/);
+        if (parts.length === 3) {
+          if (parts[0].length === 2 && parts[2].length === 4) {
+            const d2 = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            if (!isNaN(d2.getTime())) return d2.toISOString();
+          }
+        }
+        return null;
+      };
+
       const newTasks = await sql`
         INSERT INTO "Task" (
           "taskName", "entityName", "taskType", "departmentName", "requestFrom",
@@ -98,7 +122,7 @@ export async function POST(req: NextRequest) {
         )
         VALUES (
           ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
-          ${ownerName}, ${resolvedReviewer}, ${dueDate ? new Date(dueDate).toISOString() : null}, ${mailLink || null}, 'Pending',
+          ${ownerName}, ${resolvedReviewer}, ${parseDate(dueDate)}, ${mailLink || null}, 'Pending',
           ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, NOW(), NOW()
         )
         RETURNING *

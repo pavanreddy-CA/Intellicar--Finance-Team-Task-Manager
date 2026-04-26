@@ -47,6 +47,16 @@ export async function POST(request: Request) {
 
   try {
     const sql = getDb();
+    
+    // Self-healing migration
+    try {
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+    } catch (e) {
+      console.log("ExternalRequest migration check failed/skipped");
+    }
+
     if (!requestFrom || !requesterEmail || !natureOfRequest || !departmentName || !requestType || !entityNames || !entityNames.length) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
