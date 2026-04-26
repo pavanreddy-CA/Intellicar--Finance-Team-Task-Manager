@@ -3302,8 +3302,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           </div>
                         </div>
                         <div>
-                          <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Primary Recipients (Comma separated)</label>
-                          <textarea rows={3} value={settings.primaryEmails || ""} onChange={(e) => setSettings({ ...settings, primaryEmails: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} placeholder="email1@example.com, email2@example.com" />
+                          <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Manager Email(s) (Comma separated)</label>
+                          <textarea rows={3} value={settings.managerEmail || ""} onChange={(e) => setSettings({ ...settings, managerEmail: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} placeholder="email1@example.com, email2@example.com" />
                         </div>
                         <button onClick={() => handleUpdateSettings(settings)} style={{ padding: "12px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer" }}>Save Schedule</button>
                       </div>
