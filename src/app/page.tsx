@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import DashboardClient from "@/components/DashboardClient";
+import DashboardWrapper from "@/components/DashboardWrapper";
 
 export default async function Dashboard() {
   const session = await getSession();
@@ -9,5 +9,5 @@ export default async function Dashboard() {
     redirect("/login");
   }
 
-  return <DashboardClient user={session.user} />;
+  return <DashboardWrapper user={session.user} />;
 }
