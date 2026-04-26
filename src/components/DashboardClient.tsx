@@ -150,7 +150,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     moduleAccessMatrix: '{}',
     allocationMatrix: '{}',
     entityMatrix: '{}',
-    homeContent: '{}'
+    homeContent: '{}',
+    escalationBuffer: 2 // Adding to state for UI consistency, though not in DB yet
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -3294,14 +3295,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     <div>
                       <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>Automated Email Schedule</h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: "24px", maxWidth: "600px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }}>
                           <div>
-                            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Report Time (24h Format)</label>
-                            <input type="time" value={settings.reportTime || "09:00"} onChange={(e) => setSettings({ ...settings, reportTime: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} />
-                          </div>
-                          <div>
-                            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Escalation Buffer (Days)</label>
-                            <input type="number" value={settings.escalationBuffer || 2} onChange={(e) => setSettings({ ...settings, escalationBuffer: Number(e.target.value) })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} />
+                            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Manager Report Time (24h Format)</label>
+                            <input type="time" value={settings.managerReportTimes || "10:00"} onChange={(e) => setSettings({ ...settings, managerReportTimes: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} />
                           </div>
                         </div>
                         <div>
