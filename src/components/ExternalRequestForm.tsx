@@ -13,15 +13,28 @@ type ExternalRequestFormProps = {
 export default function ExternalRequestForm({ onClose, onSuccess, settings, user }: ExternalRequestFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [formData, setFormData] = useState({
     requestFrom: user?.name || "",
     requesterEmail: user?.email || "",
     natureOfRequest: "",
     departmentName: "",
     requestType: "",
-    entityName: "",
+    entityNames: [] as string[],
   });
+
+  const [allowedEntities, setAllowedEntities] = useState<string[]>([]);
+
+  useEffect(() => {
+    const matrix = JSON.parse(settings.entityMatrix || '{}');
+    const userPerms = matrix[user.id] || [];
+    const allEntities = settings?.masterEntities?.split(',').map((e: string) => e.trim()).filter((e: string) => e) || [];
+    
+    if (userPerms.includes('ALL')) {
+      setAllowedEntities(allEntities);
+    } else {
+      setAllowedEntities(allEntities.filter((e: string) => userPerms.includes(e)));
+    }
+  }, [settings, user.id]);
 
   useEffect(() => {
     if (user?.department && !formData.departmentName) {
@@ -29,12 +42,33 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     }
   }, [user, formData.departmentName]);
 
+  const handleEntityToggle = (entity: string) => {
+    setFormData(prev => {
+      const current = prev.entityNames;
+      const updated = current.includes(entity) 
+        ? current.filter(e => e !== entity) 
+        : [...current, entity];
+      return { ...prev, entityNames: updated };
+    });
+  };
+
+  const handleSelectAll = () => {
+    setFormData(prev => {
+      const isAllSelected = prev.entityNames.length === allowedEntities.length;
+      return { ...prev, entityNames: isAllSelected ? [] : [...allowedEntities] };
+    });
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.entityNames.length === 0) {
+      setError("Please select at least one entity.");
+      return;
+    }
     setLoading(true);
     setError("");
 
