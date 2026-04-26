@@ -246,6 +246,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     accent: '#2563eb'
   };
 
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       // If clicking a download button or inside a dropdown, don't close immediately here
