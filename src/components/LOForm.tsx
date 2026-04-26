@@ -7,17 +7,17 @@ type LOFormProps = {
   onClose: () => void;
   onSuccess: () => void;
   settings: any;
+  usersList: any[];
   initialData?: any;
 };
 
-const EMPLOYEES = [
-  "Venkat", "Pavan", "Sharath", "Sami", "Sreenivas", 
-  "Siddharth", "Nikhat", "Chandana", "Saikath", "Hanusha"
-];
-
-export default function LOForm({ onClose, onSuccess, settings, initialData }: LOFormProps) {
+export default function LOForm({ onClose, onSuccess, settings, usersList, initialData }: LOFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const employees = usersList && usersList.length > 0 
+    ? usersList.filter(u => u.isApproved !== false).map(u => u.name || u.email.split('@')[0])
+    : ["Venkat", "Pavan", "Sharath", "Sami", "Sreenivas", "Siddharth", "Nikhat", "Chandana", "Saikath", "Hanusha"];
 
   const [formData, setFormData] = useState({
     entity: "",
@@ -136,14 +136,14 @@ export default function LOForm({ onClose, onSuccess, settings, initialData }: LO
               <label style={labelStyle}>Identified By *</label>
               <select name="identifiedBy" required value={formData.identifiedBy} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                {EMPLOYEES.map(emp => <option key={emp} value={emp}>{emp}</option>)}
+                {employees.map(emp => <option key={emp} value={emp}>{emp}</option>)}
               </select>
             </div>
             <div>
               <label style={labelStyle}>Committed By *</label>
               <select name="committedBy" required value={formData.committedBy} onChange={handleChange} style={inputStyle}>
                 <option value="">Choose</option>
-                {EMPLOYEES.map(emp => <option key={emp} value={emp}>{emp}</option>)}
+                {employees.map(emp => <option key={emp} value={emp}>{emp}</option>)}
               </select>
             </div>
           </div>

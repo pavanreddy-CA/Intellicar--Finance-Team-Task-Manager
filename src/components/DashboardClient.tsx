@@ -2663,28 +2663,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               Del Req
                             </button>
                           )}
-                          
-                          {/* Request Edit buttons for locked tasks */}
-                          {!isAdmin && isOwnerLocked && (
+                                     {/* Request Edit buttons for users */}
+                          {!isAdmin && (
                             <button 
-                              onClick={() => handleRequestEdit(task.id, "OWNER")}
-                              disabled={task.editRequested && task.editRequestBy === "OWNER"}
-                              style={{ background: task.editRequested && task.editRequestBy === "OWNER" ? "#e2e8f0" : "#eff6ff", color: task.editRequested && task.editRequestBy === "OWNER" ? "#94a3b8" : "#3b82f6", border: task.editRequested && task.editRequestBy === "OWNER" ? "1px solid #cbd5e1" : "1px solid #bfdbfe", cursor: task.editRequested && task.editRequestBy === "OWNER" ? "not-allowed" : "pointer", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 }}
-                              title="Request Edit (Owner)"
+                              onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
+                              disabled={task.editRequested}
+                              style={{ 
+                                background: task.editRequested ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
+                                color: task.editRequested ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
+                                border: task.editRequested ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
+                                cursor: task.editRequested ? "not-allowed" : "pointer", 
+                                padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
+                              }}
+                              title={task.editRequested ? "Request Pending" : "Request Edit"}
                             >
-                              {task.editRequested && task.editRequestBy === "OWNER" ? "Requested" : "Edit Req"}
+                              {task.editRequested ? "Requested" : "Edit Req"}
                             </button>
-                          )}
-                          {!isAdmin && isReviewerLocked && task.reviewerName !== "Not Applicable" && (
-                            <button 
-                              onClick={() => handleRequestEdit(task.id, "REVIEWER")}
-                              disabled={task.editRequested && task.editRequestBy === "REVIEWER"}
-                              style={{ background: task.editRequested && task.editRequestBy === "REVIEWER" ? "#e2e8f0" : "#fdf4ff", color: task.editRequested && task.editRequestBy === "REVIEWER" ? "#94a3b8" : "#d946ef", border: task.editRequested && task.editRequestBy === "REVIEWER" ? "1px solid #cbd5e1" : "1px solid #f5d0fe", cursor: task.editRequested && task.editRequestBy === "REVIEWER" ? "not-allowed" : "pointer", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 }}
-                              title="Request Edit (Reviewer)"
-                            >
-                              {task.editRequested && task.editRequestBy === "REVIEWER" ? "Requested" : "Rev Edit"}
-                            </button>
-                          )}
+                          )}               )}
                         </div>
                       </td>
                     </tr>
@@ -3330,7 +3325,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   onMouseOver={e => !lo.editRequested && (e.currentTarget.style.background = "#f8fafc")}
                                   onMouseOut={e => !lo.editRequested && (e.currentTarget.style.background = "white")}
                                 >
-                                  {lo.editRequested ? "Edit Requested" : "Request Edit"}
+                                  {lo.editRequested ? "Requested" : "Edit Req"}
                                 </button>
                               )}
                             </div>
@@ -3366,6 +3361,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       {showLOForm && (
         <LOForm 
           settings={settings}
+          usersList={usersList}
           onClose={() => setShowLOForm(false)} 
           onSuccess={() => {
             setShowLOForm(false);
@@ -3377,6 +3373,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       {editingLO && (
         <LOForm 
           settings={settings}
+          usersList={usersList}
           initialData={editingLO}
           onClose={() => setEditingLO(null)} 
           onSuccess={() => {
