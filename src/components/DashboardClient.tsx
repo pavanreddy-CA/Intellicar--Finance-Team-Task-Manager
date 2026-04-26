@@ -3298,27 +3298,27 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>CC (Optional)</label>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>CC (Optional)</label>
                 <input 
                   type="email" 
                   placeholder="manager@example.com"
                   value={shareData.ccEmail}
                   onChange={e => setShareData({...shareData, ccEmail: e.target.value})}
-                  style={inputStyle} 
+                  style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} 
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Subject</label>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Subject</label>
                 <input 
                   type="text" 
                   value={shareData.subject}
                   onChange={e => setShareData({...shareData, subject: e.target.value})}
-                  style={inputStyle} 
+                  style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} 
                 />
               </div>
 
-              <div style={{ padding: "16px", background: "#f0f9ff", borderRadius: "12px", border: "1px solid #bae6fd", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ padding: "16px", background: theme === 'DARK' ? 'rgba(3, 105, 161, 0.1)' : "#f0f9ff", borderRadius: "12px", border: `1px solid ${theme === 'DARK' ? 'rgba(3, 105, 161, 0.2)' : '#bae6fd'}`, display: "flex", alignItems: "center", gap: "12px" }}>
                 <FileSpreadsheet size={24} color="#0369a1" />
                 <div>
                   <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>Attachment Info</p>
@@ -3331,16 +3331,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
                 <button 
                   onClick={() => setShowShareModal(false)}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.bg, color: t.text, fontWeight: 600, cursor: "pointer" }}
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleShareReport}
                   disabled={shareLoading}
-                  style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#2563eb", color: "white", fontWeight: 600, cursor: shareLoading ? "not-allowed" : "pointer", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
+                  style={{ flex: 2, padding: "12px", borderRadius: "12px", border: "none", background: "#2563eb", color: "white", fontWeight: 600, cursor: shareLoading ? "not-allowed" : "pointer", boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)" }}
                 >
-                  {shareLoading ? "Sending..." : "Send Email"}
+                  {shareLoading ? "Sending..." : "Send Email Report"}
                 </button>
               </div>
             </div>
@@ -3407,7 +3407,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   </div>
 </div>
   );
-}
 
   // Subcomponents (Defined inside to access t)
   function MetricCard({ title, value, icon, bg, isActive, onClick }: { title: string, value: number, icon: any, bg: string, isActive?: boolean, onClick?: () => void }) {
@@ -3486,3 +3485,4 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
     return <span style={pillStyle}>{status}</span>;
   }
+}
