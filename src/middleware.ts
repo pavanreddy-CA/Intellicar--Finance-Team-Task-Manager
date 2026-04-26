@@ -25,6 +25,10 @@ export async function middleware(request: NextRequest) {
     "/api/debug-login", 
     "/api/auth/register",
     "/api/auth", // NextAuth endpoints
+    "/api/auth/status", // Auth status check
+    "/api/auth/forgot-password",
+    "/api/auth/verify-otp",
+    "/api/auth/reset-password",
     "/api/public-settings"
   ];
   

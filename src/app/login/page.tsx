@@ -77,7 +77,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include",
+        credentials: "include", // Include cookies in request
       });
       
       const data = await response.json();
@@ -88,13 +88,16 @@ export default function Login() {
         return;
       }
       
-      // Store token in cookie manually (for v0 preview environment where server-set cookies may not work)
-      if (data.token) {
-        document.cookie = `session-token=${data.token}; path=/; max-age=${30 * 24 * 60 * 60}; samesite=lax`;
+      // Success! Redirect to dashboard
+      if (data.success) {
+        // Use window.location for full page reload to ensure cookie is sent
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 200);
+      } else {
+        setError(data.error || "Login failed");
+        setLoading(false);
       }
-      
-      // Full page redirect to ensure cookie is sent with next request
-      window.location.href = "/";
     } catch (err) {
       setError("An unexpected error occurred. Please try again later.");
       setLoading(false);
