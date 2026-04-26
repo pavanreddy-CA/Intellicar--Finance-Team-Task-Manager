@@ -387,7 +387,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     fetchLOs();
     fetchExternalRequests();
     fetchSettings();
-    fetchUsersList();
+    fetchUsersList(); // Ensure users load on mount for LO form
   }, [isAdmin]);
 
   // SMART REDIRECTION LOGIC
@@ -947,6 +947,24 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       }
     } catch (error) {
       console.error("Failed to request edit for LO", error);
+    }
+  };
+
+  const handleRequestDeleteLO = async (loId: number) => {
+    const comment = window.prompt("Please provide a reason for deleting this LO entry:");
+    if (comment === null) return;
+    try {
+      const res = await fetch(`/api/lo/${loId}/request-delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment })
+      });
+      if (res.ok) {
+        alert("Deletion request sent to Admin successfully.");
+        fetchLOs();
+      }
+    } catch (error) {
+      console.error("Failed to request delete for LO", error);
     }
   };
 
@@ -2645,42 +2663,36 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                       {/* Delete / Request Edit / Request Delete Action */}
                       <td style={{ ...tdStyle, textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                          {isAdmin ? (
-                            <button 
-                              onClick={() => handleDelete(task.id)}
-                              style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", padding: "6px", borderRadius: "6px", transition: "all 0.2s" }}
-                              title="Delete Task"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => handleRequestDelete(task.id)}
-                              style={{ background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 }}
-                              title="Request Delete"
-                            >
-                              Del Req
-                            </button>
-                          )}
-                                     {/* Request Edit buttons for users */}
-                          {!isAdmin && (
-                            <button 
-                              onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
-                              disabled={task.editRequested}
-                              style={{ 
-                                background: task.editRequested ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
-                                color: task.editRequested ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
-                                border: task.editRequested ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
-                                cursor: task.editRequested ? "not-allowed" : "pointer", 
-                                padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
-                              }}
-                              title={task.editRequested ? "Request Pending" : "Request Edit"}
-                            >
-                              {task.editRequested ? "Requested" : "Edit Req"}
-                            </button>
-                          )}
-                        </div>
+                           <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                             <button 
+                               onClick={() => handleRequestDelete(task.id)}
+                               disabled={task.deleteRequested}
+                               style={{ 
+                                 background: task.deleteRequested ? "#e2e8f0" : "#fef2f2", 
+                                 color: task.deleteRequested ? "#94a3b8" : "#ef4444", 
+                                 border: task.deleteRequested ? "1px solid #cbd5e1" : "1px solid #fca5a5", 
+                                 cursor: task.deleteRequested ? "not-allowed" : "pointer", 
+                                 padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
+                               }}
+                               title={task.deleteRequested ? "Delete Pending" : "Request Delete"}
+                             >
+                               {task.deleteRequested ? "Requested" : "Del Req"}
+                             </button>
+                             <button 
+                               onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
+                               disabled={task.editRequested}
+                               style={{ 
+                                 background: task.editRequested ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
+                                 color: task.editRequested ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
+                                 border: task.editRequested ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
+                                 cursor: task.editRequested ? "not-allowed" : "pointer", 
+                                 padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
+                               }}
+                               title={task.editRequested ? "Edit Pending" : "Edit Req"}
+                             >
+                               {task.editRequested ? "Requested" : "Edit Req"}
+                             </button>
+                           </div>
                       </td>
                     </tr>
                     )
@@ -3296,39 +3308,38 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
                           <td style={tdStyle}>{lo.modeOfCommunication}</td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
-                            <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                              {/* Show Edit Button if Admin OR if Approved for User */}
-                              {(isAdmin || lo.editApproved) ? (
+                              <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                                 <button 
-                                  onClick={() => setEditingLO(lo)}
+                                  onClick={() => handleRequestDeleteLO(lo.id)}
+                                  disabled={lo.deleteRequested}
                                   style={{ 
-                                    padding: "6px 12px", borderRadius: "6px", border: "1px solid #2563eb",
-                                    background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600,
-                                    cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "4px"
+                                    padding: "6px 12px", borderRadius: "6px", border: "1px solid",
+                                    background: lo.deleteRequested ? "#f1f5f9" : "#fef2f2",
+                                    color: lo.deleteRequested ? "#94a3b8" : "#ef4444",
+                                    borderColor: lo.deleteRequested ? "#cbd5e1" : "#fca5a5",
+                                    fontSize: "0.75rem", fontWeight: 600,
+                                    cursor: lo.deleteRequested ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s"
                                   }}
                                 >
-                                  <Edit2 size={12} /> Edit
+                                  {lo.deleteRequested ? "Requested" : "Del Req"}
                                 </button>
-                              ) : (
                                 <button 
                                   onClick={() => handleRequestEditLO(lo.id)}
                                   disabled={lo.editRequested}
                                   style={{ 
                                     padding: "6px 12px", borderRadius: "6px", border: "1px solid",
-                                    background: lo.editRequested ? "#f1f5f9" : "white",
-                                    color: lo.editRequested ? "#94a3b8" : "#475569",
-                                    borderColor: "#cbd5e1",
+                                    background: lo.editRequested ? "#f1f5f9" : "#eff6ff",
+                                    color: lo.editRequested ? "#94a3b8" : "#3b82f6",
+                                    borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe",
                                     fontSize: "0.75rem", fontWeight: 600,
                                     cursor: lo.editRequested ? "not-allowed" : "pointer",
                                     transition: "all 0.2s"
                                   }}
-                                  onMouseOver={e => !lo.editRequested && (e.currentTarget.style.background = "#f8fafc")}
-                                  onMouseOut={e => !lo.editRequested && (e.currentTarget.style.background = "white")}
                                 >
                                   {lo.editRequested ? "Requested" : "Edit Req"}
                                 </button>
-                              )}
-                            </div>
+                              </div>
                           </td>
                         </tr>
                       ))
