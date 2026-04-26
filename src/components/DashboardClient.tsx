@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, Sun, Moon } from "lucide-react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -1784,7 +1784,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             }}
             title={`Switch to ${theme === 'DARK' ? 'Light' : 'Dark'} Mode`}
           >
-            {theme === 'DARK' ? <Lightbulb size={20} color="#f59e0b" /> : <Clock size={20} color="#64748b" />}
+            {theme === 'DARK' ? <Sun size={20} color="#fbbf24" /> : <Moon size={20} color="#6366f1" />}
           </button>
 
           <div style={{ textAlign: "right" }}>
@@ -1971,47 +1971,47 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
           {activeView !== 'RECURRING' && (
             <>
-          {/* Active View Title/Context Area */}
-          <div style={{ 
-            marginBottom: "32px", 
-            paddingBottom: "24px", 
-            borderBottom: `1px solid ${t.border}`,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            transition: "all 0.3s ease"
-          }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
-                <span style={{ color: "#cbd5e1" }}>/</span>
-                <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#64748b" }}>
-                  {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : "Development"}
-                </span>
+          {/* Active View Title/Context Area - Hidden on HOME for a cleaner mission focus */}
+          {activeView !== 'HOME' && (
+            <div style={{ 
+              marginBottom: "32px", 
+              paddingBottom: "24px", 
+              borderBottom: `1px solid ${t.border}`,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              transition: "all 0.3s ease"
+            }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
+                  <span style={{ color: t.textMuted, opacity: 0.5 }}>/</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 500, color: t.textMuted }}>
+                    {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : "Development"}
+                  </span>
+                </div>
+                <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: t.text, letterSpacing: "-0.03em", transition: "all 0.3s ease" }}>
+                  {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : "Learning Opportunities"}
+                </h2>
+                <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.95rem", fontWeight: 500 }}>
+                  {activeView === 'TASKS' ? 
+                    (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") 
+                    : "Turning challenges into structured growth opportunities."}
+                </p>
               </div>
-              <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: t.text, letterSpacing: "-0.03em", transition: "all 0.3s ease" }}>
-                {activeView === 'HOME' ? "Finance Home Hub" : 
-                 activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : "Learning Opportunities"}
-              </h2>
-              <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.95rem", fontWeight: 500 }}>
-                {activeView === 'HOME' ? "Your central space for team mission, stories, and achievements." : 
-                 activeView === 'TASKS' ? 
-                  (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") 
-                  : "Turning challenges into structured growth opportunities."}
-              </p>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {(activeView === 'TASKS' && activeSubView === 'MAIN') ? (
+                  <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(37, 99, 235, 0.3)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
+                    <Plus size={18} /> New Task
+                  </button>
+                ) : activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? null : (
+                  <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.text, padding: "10px 20px", borderRadius: "12px", border: `1px solid ${t.border}`, cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = t.bg} onMouseOut={e => e.currentTarget.style.background = t.card}>
+                    <Lightbulb size={18} color="#fbbf24" /> Update LO
+                  </button>
+                )}
+              </div>
             </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {activeView === 'HOME' ? null : (activeView === 'TASKS' && activeSubView === 'MAIN') ? (
-                <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(37, 99, 235, 0.3)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
-                  <Plus size={18} /> New Task
-                </button>
-              ) : activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? null : (
-                <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#0f172a", padding: "10px 20px", borderRadius: "12px", border: "1px solid #e2e8f0", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
-                  <Lightbulb size={18} color="#f59e0b" /> Update LO
-                </button>
-              )}
-            </div>
-          </div>
+          )}
 
         {/* Metric Cards / Motivational Quote / Home Content */}
         {activeView === 'HOME' ? (
