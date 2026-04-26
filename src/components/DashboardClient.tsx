@@ -3221,7 +3221,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         onClick={() => setActiveOptionsTab('SCHEDULE')} 
                         style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'SCHEDULE' ? (theme === 'DARK' ? 'rgba(59, 130, 246, 0.2)' : "#e0f2fe") : "transparent", color: activeOptionsTab === 'SCHEDULE' ? (theme === 'DARK' ? "#60a5fa" : "#0369a1") : t.textMuted, fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
                       >
-                        Email Trigger
+                        Primary Emails
+                      </button>
+                      <button 
+                        onClick={() => setActiveOptionsTab('LO_REPORT')} 
+                        style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'LO_REPORT' ? (theme === 'DARK' ? 'rgba(59, 130, 246, 0.2)' : "#e0f2fe") : "transparent", color: activeOptionsTab === 'LO_REPORT' ? (theme === 'DARK' ? "#60a5fa" : "#0369a1") : t.textMuted, fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
+                      >
+                        LO Emails
                       </button>
                       <button 
                         onClick={() => setActiveOptionsTab('MAILS')} 
@@ -3293,19 +3299,42 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                   {activeOptionsTab === 'SCHEDULE' && isAdmin && (
                     <div>
-                      <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>Automated Email Schedule</h3>
+                      <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>Primary Email Settings</h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: "24px", maxWidth: "600px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                           <div>
                             <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Manager Report Time (24h Format)</label>
                             <input type="time" value={settings.managerReportTimes || "10:00"} onChange={(e) => setSettings({ ...settings, managerReportTimes: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} />
                           </div>
+                          <div>
+                            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Escalation Buffer (Days)</label>
+                            <input type="number" value={settings.escalationBuffer || 2} onChange={(e) => setSettings({ ...settings, escalationBuffer: Number(e.target.value) })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} />
+                          </div>
                         </div>
                         <div>
-                          <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Manager Email(s) (Comma separated)</label>
+                          <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Primary Recipients (Comma separated)</label>
                           <textarea rows={3} value={settings.managerEmail || ""} onChange={(e) => setSettings({ ...settings, managerEmail: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} placeholder="email1@example.com, email2@example.com" />
                         </div>
-                        <button onClick={() => handleUpdateSettings(settings)} style={{ padding: "12px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer" }}>Save Schedule</button>
+                        <button onClick={() => handleUpdateSettings(settings)} style={{ padding: "12px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer" }}>Save Primary Settings</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeOptionsTab === 'LO_REPORT' && isAdmin && (
+                    <div>
+                      <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>LO Email Settings</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "24px", maxWidth: "600px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }}>
+                          <div>
+                            <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>LO Report Time (24h Format)</label>
+                            <input type="time" value={settings.loReportTimes || "10:00"} onChange={(e) => setSettings({ ...settings, loReportTimes: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} />
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>LO Report Recipients (Comma separated)</label>
+                          <textarea rows={3} value={settings.loReportEmail || ""} onChange={(e) => setSettings({ ...settings, loReportEmail: e.target.value })} style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} placeholder="email1@example.com, email2@example.com" />
+                        </div>
+                        <button onClick={() => handleUpdateSettings(settings)} style={{ padding: "12px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer" }}>Save LO Settings</button>
                       </div>
                     </div>
                   )}
