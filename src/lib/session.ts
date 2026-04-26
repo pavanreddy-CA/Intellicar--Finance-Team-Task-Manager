@@ -106,11 +106,11 @@ export async function authenticate(
       // Add isSuspended column
       await sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isSuspended" BOOLEAN DEFAULT FALSE`;
       
-      // Add Recurring Activities column to Settings
-      await sql`ALTER TABLE "Settings" ADD COLUMN IF NOT EXISTS "recurringMatrix" TEXT DEFAULT '{}'`;
+      // Add Recurring Activities column to SystemSettings
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "recurringMatrix" TEXT DEFAULT '{}'`;
 
-      // Add Entity Controls column to Settings
-      await sql`ALTER TABLE "Settings" ADD COLUMN IF NOT EXISTS "entityMatrix" TEXT DEFAULT '{}'`;
+      // Add Entity Controls column to SystemSettings
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "entityMatrix" TEXT DEFAULT '{}'`;
 
       // Add missing columns to ExternalRequest
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;

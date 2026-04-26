@@ -34,6 +34,8 @@ export async function PATCH(request: Request) {
           "masterRequestTypes",
           "moduleAccessMatrix", 
           "allocationMatrix",
+          "entityMatrix",
+          "recurringMatrix",
           "reminderFrequency",
           "reminderTimes",
           "managerReportFrequency",
@@ -51,6 +53,8 @@ export async function PATCH(request: Request) {
           ${body.masterRequestTypes || ''},
           ${body.moduleAccessMatrix || '{}'},
           ${body.allocationMatrix || '{}'},
+          ${body.entityMatrix || '{}'},
+          ${body.recurringMatrix || '{}'},
           ${body.reminderFrequency || 'DAILY'},
           ${body.reminderTimes || '09:00,18:00'},
           ${body.managerReportFrequency || 'DAILY'},
@@ -68,7 +72,7 @@ export async function PATCH(request: Request) {
     const settingsId = existingSettings[0].id;
     console.log('PATCH /api/admin/settings - Updating settings with ID:', settingsId);
     
-    // Update existing settings - ONLY columns we are 100% sure exist
+    // Update existing settings
     const updatedSettings = await sql`
       UPDATE "SystemSettings"
       SET 
@@ -79,6 +83,8 @@ export async function PATCH(request: Request) {
         "masterRequestTypes" = ${body.masterRequestTypes ?? existingSettings[0].masterRequestTypes},
         "moduleAccessMatrix" = ${body.moduleAccessMatrix ?? existingSettings[0].moduleAccessMatrix},
         "allocationMatrix" = ${body.allocationMatrix ?? existingSettings[0].allocationMatrix},
+        "entityMatrix" = ${body.entityMatrix ?? existingSettings[0].entityMatrix},
+        "recurringMatrix" = ${body.recurringMatrix ?? existingSettings[0].recurringMatrix},
         "reminderFrequency" = ${body.reminderFrequency ?? existingSettings[0].reminderFrequency},
         "reminderTimes" = ${body.reminderTimes ?? existingSettings[0].reminderTimes},
         "managerReportFrequency" = ${body.managerReportFrequency ?? existingSettings[0].managerReportFrequency},
