@@ -496,6 +496,26 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  const triggerManualMail = async (type: 'DASHBOARD' | 'EXTERNAL' | 'LO') => {
+    try {
+      const endpointMap = {
+        DASHBOARD: '/api/cron/daily-summary',
+        EXTERNAL: '/api/cron/external-summary',
+        LO: '/api/cron/lo-summary',
+      };
+      const res = await fetch(endpointMap[type], { method: 'GET' });
+      if (res.ok) {
+        alert(`✅ ${type} report email triggered successfully!`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`❌ Failed to trigger ${type} report: ${err.message || res.statusText}`);
+      }
+    } catch (error) {
+      console.error('Failed to trigger manual mail:', error);
+      alert(`❌ Error triggering ${type} report email.`);
+    }
+  };
+
   const [preFilledTask, setPreFilledTask] = useState<any>(null);
 
   const handleConvertToTask = (req: ExternalRequest) => {
