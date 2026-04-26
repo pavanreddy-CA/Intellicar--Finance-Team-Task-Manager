@@ -49,11 +49,13 @@ type ExternalRequest = {
   departmentName: string;
   requestType: string;
   status: string;
+  entityName: string;
   assignedAllocatorEmail: string | null;
   convertedTaskId: number | null;
   originalRequestType: string | null;
   transferStatus: string | null;
   createdAt: string;
+  updatedAt?: string;
 };
 
 type LearningOpportunity = {
