@@ -1798,96 +1798,82 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             {/* Logic: Check if module is allowed for user's department */}
             {(() => {
               const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-              const canSeeTasks = isAdmin || matrix['Tasks']?.includes(user?.department);
-              const canSeeRequests = isAdmin || matrix['Requests']?.includes(user?.department);
-              const canSeeLearning = isAdmin || matrix['Learning']?.includes(user?.department);
+              const access = matrix[user?.department || ''] || { HOME: true, TASKS: true, RECURRING: true, LOS: true, REQUESTS: false };
 
               return (
                 <>
                   {/* Home Module */}
-                  {(() => {
-                    const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-                    const access = matrix[user?.department || ''] || { HOME: true, TASKS: true, RECURRING: true, LOS: true };
-                    const canSeeHome = isAdmin || access.HOME;
-                    if (!canSeeHome) return null;
-                    return (
+                  {(isAdmin || access.HOME) && (
+                    <button 
+                      onClick={() => { setActiveView('HOME'); setActiveMainView('DASHBOARD'); }}
+                      style={{ 
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
+                        background: activeView === 'HOME' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
+                        border: "none", color: activeView === 'HOME' ? "#60a5fa" : "#94a3b8", 
+                        cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
+                        width: "100%", borderRadius: "16px"
+                      }}
+                    >
+                      <Home size={24} color={activeView === 'HOME' ? "#60a5fa" : "#94a3b8"} />
+                      <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Home</span>
+                    </button>
+                  )}
+
+                  {/* Tasks Module */}
+                  {(isAdmin || access.TASKS) && (
+                    <div style={{ width: "100%" }}>
                       <button 
-                        onClick={() => { setActiveView('HOME'); setActiveMainView('DASHBOARD'); }}
+                        onClick={() => {
+                          if (activeView !== 'TASKS') {
+                            setActiveView('TASKS');
+                            setActiveSubView('MAIN');
+                          }
+                          setIsTasksMenuOpen(!isTasksMenuOpen);
+                          setActiveMainView('DASHBOARD');
+                        }}
                         style={{ 
                           display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
-                          background: activeView === 'HOME' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
-                          border: "none", color: activeView === 'HOME' ? "#60a5fa" : "#94a3b8", 
+                          background: activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
+                          border: "none", color: activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8", 
                           cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
-                          width: "100%", borderRadius: "16px"
+                          width: "100%", borderRadius: "16px",
+                          boxShadow: activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none",
+                          position: "relative"
                         }}
                       >
-                        <Home size={24} color={activeView === 'HOME' ? "#60a5fa" : "#94a3b8"} />
-                        <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Home</span>
+                        <Briefcase size={24} color={activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8"} />
+                        <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Tasks</span>
+                        <ChevronDown size={14} style={{ position: "absolute", bottom: "12px", right: "12px", transform: isTasksMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }} />
                       </button>
-                    );
-                  })()}
-
-                  {(() => {
-                    const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-                    const access = matrix[user?.department || ''] || { HOME: true, TASKS: true, RECURRING: true, LOS: true };
-                    if (isAdmin || access.TASKS) {
-                      return (
-                        <div style={{ width: "100%" }}>
+                      
+                      {isTasksMenuOpen && (
+                        <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", padding: "0 8px" }}>
                           <button 
-                            onClick={() => {
-                              if (activeView !== 'TASKS') {
-                                setActiveView('TASKS');
-                                setActiveSubView('MAIN');
-                              }
-                              setIsTasksMenuOpen(!isTasksMenuOpen);
-                              setActiveMainView('DASHBOARD');
-                            }}
+                            onClick={() => { setActiveView('TASKS'); setActiveSubView('MAIN'); setActiveMainView('DASHBOARD'); }}
                             style={{ 
-                              display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
-                              background: activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
-                              border: "none", color: activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8", 
-                              cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
-                              width: "100%", borderRadius: "16px",
-                              boxShadow: activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none",
-                              position: "relative"
+                              padding: "10px", borderRadius: "12px", border: "none", 
+                              background: activeView === 'TASKS' && activeSubView === 'MAIN' ? "rgba(255,255,255,0.1)" : "transparent",
+                              color: activeView === 'TASKS' && activeSubView === 'MAIN' ? "white" : "#94a3b8",
+                              fontSize: "0.65rem", fontWeight: 600, cursor: "pointer", textAlign: "center", transition: "all 0.2s"
                             }}
                           >
-                            <Briefcase size={24} color={activeView === 'TASKS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8"} />
-                            <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Tasks</span>
-                            <ChevronDown size={14} style={{ position: "absolute", bottom: "12px", right: "12px", transform: isTasksMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }} />
+                            Workplace
                           </button>
-                          
-                          {isTasksMenuOpen && (
-                            <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", padding: "0 8px" }}>
-                              <button 
-                                onClick={() => { setActiveView('TASKS'); setActiveSubView('MAIN'); setActiveMainView('DASHBOARD'); }}
-                                style={{ 
-                                  padding: "10px", borderRadius: "12px", border: "none", 
-                                  background: activeView === 'TASKS' && activeSubView === 'MAIN' ? "rgba(255,255,255,0.1)" : "transparent",
-                                  color: activeView === 'TASKS' && activeSubView === 'MAIN' ? "white" : "#94a3b8",
-                                  fontSize: "0.65rem", fontWeight: 600, cursor: "pointer", textAlign: "center", transition: "all 0.2s"
-                                }}
-                              >
-                                Workplace
-                              </button>
-                              <button 
-                                onClick={() => { setActiveView('TASKS'); setActiveSubView('OTHER_DEPT'); setActiveMainView('DASHBOARD'); }}
-                                style={{ 
-                                  padding: "10px", borderRadius: "12px", border: "none", 
-                                  background: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? "rgba(255,255,255,0.1)" : "transparent",
-                                  color: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? "white" : "#94a3b8",
-                                  fontSize: "0.65rem", fontWeight: 600, cursor: "pointer", textAlign: "center", transition: "all 0.2s"
-                                }}
-                              >
-                                Inter-Dept
-                              </button>
-                            </div>
-                          )}
+                          <button 
+                            onClick={() => { setActiveView('TASKS'); setActiveSubView('OTHER_DEPT'); setActiveMainView('DASHBOARD'); }}
+                            style={{ 
+                              padding: "10px", borderRadius: "12px", border: "none", 
+                              background: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? "rgba(255,255,255,0.1)" : "transparent",
+                              color: activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? "white" : "#94a3b8",
+                              fontSize: "0.65rem", fontWeight: 600, cursor: "pointer", textAlign: "center", transition: "all 0.2s"
+                            }}
+                          >
+                            Inter-Dept
+                          </button>
                         </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                      )}
+                    </div>
+                  )}
 
                   {/* Recurring Module */}
                   {(isAdmin || access.RECURRING) && (
@@ -1939,10 +1925,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>LOs</span>
                     </button>
                   )}
-
                 </>
               );
             })()}
+
           </div>
         </nav>
 
