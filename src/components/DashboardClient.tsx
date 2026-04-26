@@ -3559,52 +3559,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
                   )}
 
-                  {activeOptionsTab === 'MATRICES' && isAdmin && (
-                    <div>
-                      <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>Module Access Matrix</h3>
-                      <div style={{ background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                          <thead>
-                            <tr style={{ background: t.card, borderBottom: `1px solid ${t.border}` }}>
-                              <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "0.75rem", color: t.textMuted }}>Department</th>
-                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Home</th>
-                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Tasks</th>
-                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Recurring</th>
-                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>LOs</th>
-                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Ext Req</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {settings.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => {
-                              const d = dept.trim();
-                              const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-                              const access = matrix[d] || { HOME: true, TASKS: true, RECURRING: true, LOS: true, REQUESTS: false };
-                              
-                              const toggleAccess = (module: string) => {
-                                const newMatrix = { ...matrix };
-                                if (!newMatrix[d]) newMatrix[d] = { ...access };
-                                newMatrix[d][module] = !newMatrix[d][module];
-                                setSettings({ ...settings, moduleAccessMatrix: JSON.stringify(newMatrix) });
-                              };
-
-                              return (
-                                <tr key={d} style={{ borderBottom: `1px solid ${t.border}` }}>
-                                  <td style={{ padding: "12px 16px", fontWeight: 600, color: t.text }}>{d}</td>
-                                  {['HOME', 'TASKS', 'RECURRING', 'LOS', 'REQUESTS'].map(m => (
-                                    <td key={m} style={{ padding: "12px 16px", textAlign: "center" }}>
-                                      <input type="checkbox" checked={access[m]} onChange={() => toggleAccess(m)} />
-                                    </td>
-                                  ))}
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                      <button onClick={() => handleSaveSettings()} style={{ marginTop: "20px", padding: "12px 24px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer" }}>Save Matrix</button>
-                    </div>
-                  )}
-
                   {activeOptionsTab === 'HOME_HUB' && isAdmin && (() => {
                     const homeContent = JSON.parse(settings.homeContent || '{}');
                     const stories = homeContent.stories || [];
@@ -3716,7 +3670,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     const newContent = { ...homeContent, stories: stories.filter((x: any) => x.id !== s.id) };
                                     updateHomeContent(newContent);
                                   }}
-                                  style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", padding: "4px 8px" }}
+                                  style={{ background: "none", border: "none", color: "#ef4444", cursor: "#ef4444", fontWeight: 700, fontSize: "1.1rem", padding: "4px 8px" }}
                                 >
                                   ×
                                 </button>
@@ -3805,6 +3759,52 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
                     );
                   })()}
+
+                  {activeOptionsTab === 'MATRICES' && isAdmin && (
+                    <div>
+                      <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>Module Access Matrix</h3>
+                      <div style={{ background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <thead>
+                            <tr style={{ background: t.card, borderBottom: `1px solid ${t.border}` }}>
+                              <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "0.75rem", color: t.textMuted }}>Department</th>
+                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Home</th>
+                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Tasks</th>
+                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Recurring</th>
+                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>LOs</th>
+                              <th style={{ padding: "12px 16px", textAlign: "center", fontSize: "0.75rem", color: t.textMuted }}>Ext Req</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {settings.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => {
+                              const d = dept.trim();
+                              const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
+                              const access = matrix[d] || { HOME: true, TASKS: true, RECURRING: true, LOS: true, REQUESTS: false };
+                              
+                              const toggleAccess = (module: string) => {
+                                const newMatrix = { ...matrix };
+                                if (!newMatrix[d]) newMatrix[d] = { ...access };
+                                newMatrix[d][module] = !newMatrix[d][module];
+                                setSettings({ ...settings, moduleAccessMatrix: JSON.stringify(newMatrix) });
+                              };
+
+                              return (
+                                <tr key={d} style={{ borderBottom: `1px solid ${t.border}` }}>
+                                  <td style={{ padding: "12px 16px", fontWeight: 600, color: t.text }}>{d}</td>
+                                  {['HOME', 'TASKS', 'RECURRING', 'LOS', 'REQUESTS'].map(m => (
+                                    <td key={m} style={{ padding: "12px 16px", textAlign: "center" }}>
+                                      <input type="checkbox" checked={access[m]} onChange={() => toggleAccess(m)} />
+                                    </td>
+                                  ))}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      <button onClick={() => handleSaveSettings()} style={{ marginTop: "20px", padding: "12px 24px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer" }}>Save Matrix</button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
