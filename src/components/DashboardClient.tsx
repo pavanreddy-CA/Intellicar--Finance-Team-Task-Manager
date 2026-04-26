@@ -3505,24 +3505,206 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
                   )}
 
-                  {activeOptionsTab === 'HOME_HUB' && isAdmin && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-                      <div>
-                        <h3 style={{ margin: "0 0 20px 0", fontSize: "1.125rem", fontWeight: 700, color: t.text }}>Mission Statement</h3>
-                        <textarea 
-                          rows={3} 
-                          value={JSON.parse(settings.homeContent || '{}').mission || ""} 
-                          onChange={(e) => {
-                            const content = JSON.parse(settings.homeContent || '{}');
-                            content.mission = e.target.value;
-                            setSettings({ ...settings, homeContent: JSON.stringify(content) });
-                          }} 
-                          style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }} 
-                        />
+                  {activeOptionsTab === 'HOME_HUB' && isAdmin && (() => {
+                    const homeContent = JSON.parse(settings.homeContent || '{}');
+                    const stories = homeContent.stories || [];
+                    const achievements = homeContent.achievements || [];
+
+                    const updateHomeContent = (newContent: any) => {
+                      setSettings({ ...settings, homeContent: JSON.stringify(newContent) });
+                    };
+
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: t.text }}>Home Hub Management</h2>
+                            <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: t.textMuted }}>Manage what your team sees on the Home screen.</p>
+                          </div>
+                          <button
+                            onClick={() => handleSaveSettings()}
+                            style={{ padding: "10px 20px", background: "#10b981", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                          >
+                            💾 Save Home Content
+                          </button>
+                        </div>
+
+                        {/* Edit Mission Statement */}
+                        <div style={{ background: t.card, borderRadius: "16px", padding: "24px", border: `1px solid ${t.border}` }}>
+                          <h3 style={{ margin: "0 0 12px 0", fontSize: "1rem", fontWeight: 700, color: t.text, display: "flex", alignItems: "center", gap: "8px" }}>
+                            🏛️ Edit Mission Statement
+                          </h3>
+                          <textarea
+                            rows={3}
+                            placeholder="Enter the team mission statement..."
+                            value={homeContent.mission || ""}
+                            onChange={(e) => {
+                              const newContent = { ...homeContent, mission: e.target.value };
+                              updateHomeContent(newContent);
+                            }}
+                            style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}`, width: "100%" }}
+                          />
+                        </div>
+
+                        {/* Manage Success Stories */}
+                        <div style={{ background: t.card, borderRadius: "16px", padding: "24px", border: `1px solid ${t.border}` }}>
+                          <h3 style={{ margin: "0 0 16px 0", fontSize: "1rem", fontWeight: 700, color: t.text, display: "flex", alignItems: "center", gap: "8px" }}>
+                            🏅 Manage Success Stories
+                          </h3>
+                          {/* Add New Story */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr auto", gap: "12px", marginBottom: "20px", alignItems: "end" }}>
+                            <div>
+                              <label style={{ display: "block", marginBottom: "4px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Title</label>
+                              <input
+                                id="new-story-title"
+                                type="text"
+                                placeholder="e.g. Efficiency Boost"
+                                style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: "block", marginBottom: "4px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Story Text</label>
+                              <input
+                                id="new-story-text"
+                                type="text"
+                                placeholder="Short description of the win..."
+                                style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: "block", marginBottom: "4px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Author</label>
+                              <input
+                                id="new-story-author"
+                                type="text"
+                                placeholder="Team Member"
+                                style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }}
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                const titleEl = document.getElementById('new-story-title') as HTMLInputElement;
+                                const textEl = document.getElementById('new-story-text') as HTMLInputElement;
+                                const authorEl = document.getElementById('new-story-author') as HTMLInputElement;
+                                if (!titleEl?.value || !textEl?.value) return;
+                                const newStory = { id: Date.now(), title: titleEl.value, text: textEl.value, author: authorEl?.value || "Team" };
+                                const newContent = { ...homeContent, stories: [...stories, newStory] };
+                                updateHomeContent(newContent);
+                                titleEl.value = ''; textEl.value = ''; if (authorEl) authorEl.value = '';
+                              }}
+                              style={{ padding: "10px 18px", background: "#4f46e5", color: "white", borderRadius: "8px", border: "none", fontWeight: 700, cursor: "pointer" }}
+                            >
+                              + Add
+                            </button>
+                          </div>
+                          {/* Existing Stories */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            {stories.length === 0 && (
+                              <p style={{ color: t.textMuted, fontSize: "0.875rem", textAlign: "center", padding: "16px", background: t.bg, borderRadius: "10px", border: `1px dashed ${t.border}` }}>
+                                No stories yet. Add one above.
+                              </p>
+                            )}
+                            {stories.map((s: any) => (
+                              <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: t.bg, borderRadius: "10px", border: `1px solid ${t.border}` }}>
+                                <div>
+                                  <span style={{ fontWeight: 700, color: t.text, fontSize: "0.875rem" }}>{s.title}</span>
+                                  <span style={{ color: t.textMuted, fontSize: "0.8rem", marginLeft: "12px" }}>by {s.author}</span>
+                                  <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem", color: t.textMuted }}>{s.text}</p>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const newContent = { ...homeContent, stories: stories.filter((x: any) => x.id !== s.id) };
+                                    updateHomeContent(newContent);
+                                  }}
+                                  style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", padding: "4px 8px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Manage Achievements */}
+                        <div style={{ background: t.card, borderRadius: "16px", padding: "24px", border: `1px solid ${t.border}` }}>
+                          <h3 style={{ margin: "0 0 16px 0", fontSize: "1rem", fontWeight: 700, color: t.text, display: "flex", alignItems: "center", gap: "8px" }}>
+                            🏆 Manage Achievements
+                          </h3>
+                          {/* Add New Achievement */}
+                          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: "12px", marginBottom: "20px", alignItems: "end" }}>
+                            <div>
+                              <label style={{ display: "block", marginBottom: "4px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Achievement Title</label>
+                              <input
+                                id="new-ach-title"
+                                type="text"
+                                placeholder="e.g. Platform Launch"
+                                style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: "block", marginBottom: "4px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>Date / Period</label>
+                              <input
+                                id="new-ach-date"
+                                type="text"
+                                placeholder="e.g. Apr 2026"
+                                style={{ ...inputStyle, background: t.bg, color: t.text, border: `1px solid ${t.border}` }}
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                const titleEl = document.getElementById('new-ach-title') as HTMLInputElement;
+                                const dateEl = document.getElementById('new-ach-date') as HTMLInputElement;
+                                if (!titleEl?.value) return;
+                                const newAch = { id: Date.now(), title: titleEl.value, date: dateEl?.value || "" };
+                                const newContent = { ...homeContent, achievements: [...achievements, newAch] };
+                                updateHomeContent(newContent);
+                                titleEl.value = ''; if (dateEl) dateEl.value = '';
+                              }}
+                              style={{ padding: "10px 18px", background: "#4f46e5", color: "white", borderRadius: "8px", border: "none", fontWeight: 700, cursor: "pointer" }}
+                            >
+                              + Add
+                            </button>
+                          </div>
+                          {/* Existing Achievements */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            {achievements.length === 0 && (
+                              <p style={{ color: t.textMuted, fontSize: "0.875rem", textAlign: "center", padding: "16px", background: t.bg, borderRadius: "10px", border: `1px dashed ${t.border}` }}>
+                                No achievements yet. Add one above.
+                              </p>
+                            )}
+                            {achievements.map((a: any) => (
+                              <div key={a.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: t.bg, borderRadius: "10px", border: `1px solid ${t.border}` }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                  <span style={{ fontSize: "1.25rem" }}>🏅</span>
+                                  <div>
+                                    <span style={{ fontWeight: 700, color: t.text, fontSize: "0.875rem" }}>{a.title}</span>
+                                    {a.date && <span style={{ color: t.textMuted, fontSize: "0.8rem", marginLeft: "8px" }}>— {a.date}</span>}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const newContent = { ...homeContent, achievements: achievements.filter((x: any) => x.id !== a.id) };
+                                    updateHomeContent(newContent);
+                                  }}
+                                  style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", padding: "4px 8px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Save Button at Bottom */}
+                        <button
+                          onClick={() => handleSaveSettings()}
+                          style={{ padding: "14px", background: "#10b981", color: "white", borderRadius: "12px", border: "none", fontWeight: 700, cursor: "pointer", fontSize: "1rem" }}
+                        >
+                          💾 Save All Home Hub Changes
+                        </button>
                       </div>
-                      <button onClick={() => handleSaveSettings()} style={{ padding: "12px", background: "#4f46e5", color: "white", borderRadius: "10px", border: "none", fontWeight: 700, cursor: "pointer", width: "200px" }}>Update Home Hub</button>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             </div>
