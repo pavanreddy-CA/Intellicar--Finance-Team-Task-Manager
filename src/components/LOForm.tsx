@@ -16,7 +16,7 @@ export default function LOForm({ onClose, onSuccess, settings, usersList, initia
   const [error, setError] = useState("");
 
   const employees = usersList && usersList.length > 0 
-    ? usersList.filter(u => u.isApproved !== false).map(u => u.name || u.email.split('@')[0])
+    ? usersList.filter(u => u.isApproved !== false && u.department === 'Finance').map(u => u.name || u.email.split('@')[0])
     : ["Venkat", "Pavan", "Sharath", "Sami", "Sreenivas", "Siddharth", "Nikhat", "Chandana", "Saikath", "Hanusha"];
 
   const [formData, setFormData] = useState({
