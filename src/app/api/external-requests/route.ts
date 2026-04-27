@@ -61,19 +61,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-<<<<<<< HEAD
-    const newRequests = await sql`
-      INSERT INTO "ExternalRequest" (
-        "requestFrom", "requesterEmail", "natureOfRequest", "departmentName", 
-        "requestType", "originalRequestType", "transferStatus", "status", "createdAt", "updatedAt"
-      )
-      VALUES (
-        ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${departmentName},
-        ${requestType}, ${requestType}, 'O', 'Pending', NOW(), NOW()
-      )
-      RETURNING *
-    `;
-=======
     const createdRequests = [];
     for (const entityName of entityNames) {
       const result = await sql`
@@ -89,7 +76,6 @@ export async function POST(request: Request) {
       `;
       createdRequests.push(result[0]);
     }
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
 
     return NextResponse.json(createdRequests, { status: 201 });
   } catch (error: any) {

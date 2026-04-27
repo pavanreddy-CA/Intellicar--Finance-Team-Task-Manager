@@ -92,30 +92,12 @@ export async function POST(req: NextRequest) {
     const createdTasks = [];
     const dashboardUrl = process.env.NEXT_PUBLIC_APP_URL || "https://intellicar-finance-team-task-manage-one.vercel.app/";
 
-<<<<<<< HEAD
-    const newTasks = await sql`
-      INSERT INTO "Task" (
-        "taskName", "entityName", "taskType", "departmentName", "requestFrom",
-        "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
-        "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "createdAt", "updatedAt"
-      )
-      VALUES (
-        ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
-        ${ownerName}, ${resolvedReviewer}, ${dueDate ? new Date(dueDate).toISOString() : null}, ${mailLink || null}, 'Pending',
-        ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, NOW(), NOW()
-      )
-      RETURNING *
-    `;
-    
-    const newTask = newTasks[0];
-=======
     for (const assignment of assignments) {
       const { entityName, ownerName, reviewerName } = assignment;
       
       const resolvedReviewer = reviewerName || "Not Applicable";
       const reviewStatus = resolvedReviewer === "Not Applicable" ? "Review Not Required" : "Task Pending From Owner";
       const requestStatus = linkedRequestId ? "Pending" : "Not Applicable";
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
 
       const parseDate = (d: string) => {
         if (!d) return null;
@@ -187,46 +169,7 @@ export async function POST(req: NextRequest) {
       `;
     }
 
-<<<<<<< HEAD
-    const ownerEmail = getEmailFromName(ownerName);
-    if (ownerEmail) {
-      const dashboardUrl = process.env.NEXT_PUBLIC_APP_URL || "https://intellicar-finance-team-task-manage-one.vercel.app/";
-      
-      const emailHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h2 style="color: #0f172a; margin-top: 0;">New Task Assigned</h2>
-          <p style="font-size: 16px; color: #334155;">Hello <strong>${ownerName}</strong>,</p>
-          <p style="font-size: 16px; color: #334155;">A new task has been assigned to you in the Finance Task Manager:</p>
-          
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f1f5f9;">
-            <table border="0" cellpadding="5" cellspacing="0" style="width: 100%; font-size: 14px;">
-              <tr><td style="color: #64748b; width: 100px;">Task Name:</td><td style="color: #0f172a; font-weight: 600;">${taskName}</td></tr>
-              <tr><td style="color: #64748b;">Entity:</td><td style="color: #0f172a;">${entityName}</td></tr>
-              <tr><td style="color: #64748b;">Due Date:</td><td style="color: #0f172a;">${dueDate ? new Date(dueDate).toDateString() : "No deadline"}</td></tr>
-            </table>
-          </div>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${dashboardUrl}" style="background: #2563eb; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Login to Dashboard</a>
-          </div>
-
-          ${mailLink ? `
-            <div style="text-align: center; margin-bottom: 20px;">
-              <a href="${mailLink}" style="color: #2563eb; text-decoration: none; font-size: 14px;">View Linked Email Reference</a>
-            </div>
-          ` : ""}
-
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">This is an automated notification from Intellicar Finance Team Task Manager.</p>
-        </div>
-      `;
-      sendEmail({ to: ownerEmail, subject: `[New Task] ${taskName} - ${entityName}`, html: emailHtml });
-    }
-
-    return NextResponse.json({ message: "Task created", task: newTask }, { status: 201 });
-=======
     return NextResponse.json({ message: "Tasks created", count: createdTasks.length }, { status: 201 });
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
   } catch (error: any) {
     console.error("Task creation error:", error);
     console.error("Task creation error - Full Data:", { taskName, assignments, dueDate });

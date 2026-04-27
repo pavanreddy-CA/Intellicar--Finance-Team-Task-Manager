@@ -101,11 +101,6 @@ export async function authenticate(
     // Find user in database using Neon serverless
     const sql = getDb();
     
-<<<<<<< HEAD
-    // Skip migrations during auth to avoid delays and errors
-    // All tables should already exist from initial setup
-    
-=======
     // --- Self-healing Migration ---
     try {
       // Add isSuspended column
@@ -151,8 +146,6 @@ export async function authenticate(
     } catch (e) {
       console.log("Migration check done/failed gracefully");
     }
-
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     const users = await sql`
       SELECT id, email, name, password, role, department, "isApproved", "isSuspended"
       FROM "User"
@@ -162,22 +155,14 @@ export async function authenticate(
     
     const user = users[0];
     
-<<<<<<< HEAD
     console.log("[v0] Auth debug - User found:", !!user, user?.email);
-    
-=======
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     if (!user) {
       return { success: false, error: "Invalid email address" };
     }
     
-<<<<<<< HEAD
     console.log("[v0] Auth debug - Password exists:", !!user.password);
     console.log("[v0] Auth debug - Is suspended:", user.isSuspended);
     console.log("[v0] Auth debug - Is approved:", user.isApproved);
-    
-=======
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     if (!user.password) {
       return { success: false, error: "Account error: No password set" };
     }
