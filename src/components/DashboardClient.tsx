@@ -156,6 +156,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     type: 'task' as 'task' | 'lo' | 'request',
     format: 'excel' as 'excel' | 'pdf'
   });
+  const [recipientTags, setRecipientTags] = useState<string[]>([]);
+  const [ccTags, setCcTags] = useState<string[]>([]);
+  const [recipientInput, setRecipientInput] = useState("");
+  const [ccInput, setCcInput] = useState("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [editValue, setEditValue] = useState("");
@@ -1737,8 +1741,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     doc.save(`Intellicar_LO_Report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
   const handleShareReport = async () => {
-    if (!shareData.recipientEmail) {
-      alert("Please enter a recipient email address.");
+    if (recipientTags.length === 0) {
+      alert("Please add at least one recipient email.");
       return;
     }
     setShareLoading(true);
@@ -1857,8 +1861,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientEmail: shareData.recipientEmail,
-          ccEmail: shareData.ccEmail,
+          recipientEmail: recipientTags.join(','),
+          ccEmail: ccTags.join(','),
           subject,
           attachmentName,
           attachmentBuffer: base64,
@@ -5531,25 +5535,61 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             
             <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Recipient Email</label>
-                <input 
-                  type="email" 
-                  placeholder="recipient@example.com"
-                  value={shareData.recipientEmail}
-                  onChange={e => setShareData({...shareData, recipientEmail: e.target.value})}
-                  style={inputStyle} 
-                />
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Recipient Emails *</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "45px", background: "#f8fafc" }}>
+                  {recipientTags.map((email, idx) => (
+                    <div key={idx} style={{ background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                      {email}
+                      <X size={14} style={{ cursor: "pointer" }} onClick={() => setRecipientTags(prev => prev.filter((_, i) => i !== idx))} />
+                    </div>
+                  ))}
+                  <input 
+                    type="text" 
+                    placeholder={recipientTags.length === 0 ? "Type email and press Enter..." : ""}
+                    value={recipientInput}
+                    onChange={e => setRecipientInput(e.target.value)}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            const email = recipientInput.trim().toLowerCase();
+                            if (email && email.includes('@') && !recipientTags.includes(email)) {
+                              setRecipientTags([...recipientTags, email]);
+                              setRecipientInput("");
+                            }
+                        }
+                    }}
+                    style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
+                  />
+                </div>
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>CC (Optional)</label>
-                <input 
-                  type="email" 
-                  placeholder="manager@example.com"
-                  value={shareData.ccEmail}
-                  onChange={e => setShareData({...shareData, ccEmail: e.target.value})}
-                  style={inputStyle} 
-                />
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>CC Emails (Optional)</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "45px", background: "#f8fafc" }}>
+                  {ccTags.map((email, idx) => (
+                    <div key={idx} style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                      {email}
+                      <X size={14} style={{ cursor: "pointer" }} onClick={() => setCcTags(prev => prev.filter((_, i) => i !== idx))} />
+                    </div>
+                  ))}
+                  <input 
+                    type="text" 
+                    placeholder={ccTags.length === 0 ? "Type email and press Enter..." : ""}
+                    value={ccInput}
+                    onChange={e => setCcInput(e.target.value)}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            const email = ccInput.trim().toLowerCase();
+                            if (email && email.includes('@') && !ccTags.includes(email)) {
+                              setCcTags([...ccTags, email]);
+                              setCcInput("");
+                            }
+                        }
+                    }}
+                    style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
+                  />
+                </div>
               </div>
 
               <div>
