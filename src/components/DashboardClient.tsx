@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode } from "lucide-react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -529,9 +529,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const downloadBulkTemplate = async (type: 'tasks' | 'lo') => {
+  const downloadBulkTemplate = async (type: 'tasks' | 'lo' | 'recurring') => {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(type === 'tasks' ? 'Tasks' : 'LOs');
+    const sheetName = type === 'tasks' ? 'Tasks' : type === 'lo' ? 'LOs' : 'RecurringTemplates';
+    const worksheet = workbook.addWorksheet(sheetName);
     
     if (type === 'tasks') {
       worksheet.columns = [
@@ -544,7 +545,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         { header: 'Reviewer', key: 'reviewerName', width: 20 },
         { header: 'Due Date (YYYY-MM-DD)', key: 'dueDate', width: 25 },
       ];
-    } else {
+      worksheet.addRow(['Sample Task', 'Sample Entity', 'Daily', 'Finance', 'Manager', 'Owner Name', 'Reviewer Name', '2026-12-31']);
+    } else if (type === 'lo') {
       worksheet.columns = [
         { header: 'Entity', key: 'entity', width: 20 },
         { header: 'Date (YYYY-MM-DD)', key: 'dateOfIdentification', width: 25 },
@@ -553,20 +555,48 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         { header: 'Committed By', key: 'committedBy', width: 20 },
         { header: 'Resolution', key: 'resolutionProvided', width: 40 },
       ];
-    }
-
-    // Add sample row
-    if (type === 'tasks') {
-      worksheet.addRow(['Sample Task', 'Sample Entity', 'Daily', 'Finance', 'Manager', 'Owner Name', 'Reviewer Name', '2026-12-31']);
-    } else {
       worksheet.addRow(['Sample Entity', '2026-04-21', 'Sample LO description...', 'Name A', 'Name B', 'Done']);
+    } else {
+      // Recurring Template
+      worksheet.columns = [
+        { header: 'Task Name Pattern', key: 'taskNamePattern', width: 30 },
+        { header: 'Entity Name', key: 'entityName', width: 20 },
+        { header: 'Task Type', key: 'taskType', width: 15 },
+        { header: 'Department', key: 'departmentName', width: 15 },
+        { header: 'Finance Function', key: 'financeFunction', width: 20 },
+        { header: 'Frequency (M/Q/Y/W/D/BW/H/2Y/Ad)', key: 'frequency', width: 30 },
+        { header: 'Day Offset (Date/DayIdx)', key: 'dayOffset', width: 25 },
+        { header: 'Month Offset', key: 'monthOffset', width: 15 },
+        { header: 'Default Owner', key: 'defaultOwner', width: 20 },
+        { header: 'Default Reviewer', key: 'defaultReviewer', width: 20 },
+        { header: 'Start Date (YYYY-MM-DD)', key: 'startDate', width: 25 },
+        { header: 'End Date (YYYY-MM-DD)', key: 'endDate', width: 25 },
+        { header: 'Is Active (TRUE/FALSE)', key: 'isActive', width: 20 },
+        { header: 'Freq Label', key: 'freqLabel', width: 20 },
+      ];
+      worksheet.addRow([
+        'Sample Recurring Task - [Month] [Year]', 
+        'Entity Name', 
+        'External', 
+        'Finance', 
+        'Direct Tax', 
+        'M', 
+        '10', 
+        '0', 
+        'Owner Email/Name', 
+        'Reviewer Email/Name', 
+        '2026-04-01', 
+        '', 
+        'TRUE', 
+        'Monthly'
+      ]);
     }
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `${type}_import_template.xlsx`);
   };
 
-  const handleExcelBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'tasks' | 'lo') => {
+  const handleExcelBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'tasks' | 'lo' | 'recurring') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -590,7 +620,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           reviewerName: values[7],
           dueDate: values[8],
         });
-      } else {
+      } else if (type === 'lo') {
         rows.push({
           entity: values[1],
           dateOfIdentification: values[2],
@@ -599,11 +629,29 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           committedBy: values[5],
           resolutionProvided: values[6],
         });
+      } else {
+        // Recurring Template
+        rows.push({
+          taskNamePattern: values[1],
+          entityName: values[2],
+          taskType: values[3],
+          departmentName: values[4],
+          financeFunction: values[5],
+          frequency: values[6],
+          dayOffset: Number(values[7]),
+          monthOffset: Number(values[8]),
+          defaultOwner: values[9],
+          defaultReviewer: values[10],
+          startDate: values[11],
+          endDate: values[12],
+          isActive: String(values[13]).toUpperCase() === 'TRUE',
+          freqLabel: values[14],
+        });
       }
     });
 
     if (confirm(`Detected ${rows.length} records. Proceed with import?`)) {
-      const endpoint = type === 'tasks' ? '/api/tasks/bulk' : '/api/lo/bulk';
+      const endpoint = type === 'tasks' ? '/api/tasks/bulk' : type === 'lo' ? '/api/lo/bulk' : '/api/recurring-templates/bulk';
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -611,7 +659,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       });
       if (res.ok) {
         alert("Import successful!");
-        if (type === 'tasks') fetchTasks(); else fetchLOs();
+        if (type === 'tasks') fetchTasks(); 
+        else if (type === 'lo') fetchLOs();
+        else {
+          // If we are on Recurring tab, we might want to trigger a refresh there.
+          // Since RecurringActivities is a child, we might need a way to notify it.
+          // For now, if user is in Control Center, they can just refresh or switch tabs.
+          // But actually, fetchTasks() is good because it updates global state if needed.
+        }
       } else {
         alert("Import failed. Please check template format.");
       }
@@ -4932,61 +4987,79 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 {activeOptionsTab === 'DATA' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Bulk Data Import</h3>
-                    <p style={{ color: "#64748b", marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. Alternatively, use the quick paste method.</p>
+                    <p style={{ color: "#64748b", marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. All imports follow a strictly defined schema.</p>
                     
-                    <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
                       
                       {/* Task Import Section */}
-                      <div style={{ padding: "28px", background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                          <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", color: "#0f172a" }}>
-                            <LayoutDashboard size={24} color="#2563eb" /> Task Bulk Import
-                          </h4>
+                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#eff6ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <FileSpreadsheet size={24} color="#3b82f6" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Task Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Standard one-time task uploads.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                           <button 
                             onClick={() => downloadBulkTemplate('tasks')}
-                            style={{ background: "#f8fafc", color: "#2563eb", padding: "8px 16px", borderRadius: "8px", border: "1px solid #2563eb", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px" }}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #3b82f6", background: "white", color: "#3b82f6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                           >
-                            <Download size={16} /> Download Template
+                            <Download size={14} /> Template
                           </button>
-                        </div>
-
-                        <div style={{ padding: "30px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
-                          <p style={{ fontWeight: 600, fontSize: "1rem", margin: "0 0 16px 0", color: "#475569" }}>Upload Excel File</p>
-                          <input 
-                            type="file" 
-                            accept=".xlsx" 
-                            onChange={(e) => handleExcelBulkUpload(e, 'tasks')}
-                            style={{ fontSize: "0.875rem" }}
-                          />
-                          <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "12px" }}>Ensure you use the template provided above.</p>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#3b82f6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'tasks')} />
+                          </label>
                         </div>
                       </div>
 
                       {/* LO Import Section */}
-                      <div style={{ padding: "28px", background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                          <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", color: "#0f172a" }}>
-                            <BookOpen size={24} color="#2563eb" /> LO Bulk Import
-                          </h4>
+                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#fef2f2", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Lightbulb size={24} color="#ef4444" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>LO Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Learning Opportunities tracker.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                           <button 
                             onClick={() => downloadBulkTemplate('lo')}
-                            style={{ background: "#f8fafc", color: "#2563eb", padding: "8px 16px", borderRadius: "8px", border: "1px solid #2563eb", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", display: "flex", alignItems: "center", gap: "8px" }}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #ef4444", background: "white", color: "#ef4444", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                           >
-                            <Download size={16} /> Download Template
+                            <Download size={14} /> Template
                           </button>
-                        </div>
-
-                        <div style={{ padding: "30px", background: "#f1f5f9", borderRadius: "12px", border: "2px dashed #cbd5e1", textAlign: "center" }}>
-                          <p style={{ fontWeight: 600, fontSize: "1rem", margin: "0 0 16px 0", color: "#475569" }}>Upload Excel File</p>
-                          <input 
-                            type="file" 
-                            accept=".xlsx" 
-                            onChange={(e) => handleExcelBulkUpload(e, 'lo')}
-                            style={{ fontSize: "0.875rem" }}
-                          />
-                          <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "12px" }}>Ensure you use the template provided above.</p>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#ef4444", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'lo')} />
+                          </label>
                         </div>
                       </div>
+
+                      {/* Recurring Import Section */}
+                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#f5f3ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Repeat size={24} color="#8b5cf6" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Recurring Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Master Recurring Template data.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('recurring')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #8b5cf6", background: "white", color: "#8b5cf6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#8b5cf6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'recurring')} />
+                          </label>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 )}
