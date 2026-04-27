@@ -2037,9 +2037,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             <>
           {/* Active View Title/Context Area */}
           <div style={{ 
-            marginBottom: "32px", 
-            paddingBottom: "24px", 
-            borderBottom: `1px solid ${t.border}`,
+            marginBottom: activeView === 'HOME' ? "0" : "32px", 
+            paddingBottom: activeView === 'HOME' ? "0" : "24px", 
+            borderBottom: activeView === 'HOME' ? "none" : `1px solid ${t.border}`,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-end",
