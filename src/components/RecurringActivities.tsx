@@ -300,7 +300,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
       body: tableData,
       startY: 20,
       theme: 'grid',
-      headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' }
+      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' }
     });
 
     doc.save(`Recurring_Report_${dateFilter.from}.pdf`);
