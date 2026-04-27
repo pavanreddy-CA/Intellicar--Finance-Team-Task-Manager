@@ -61,7 +61,7 @@ export async function PATCH(
       RETURNING *
     `;
     
-    const result = await (sql as any)(query, [...values, id]);
+    const result = await (sql as any).query(query, [...values, id]);
     const updatedRequest = result[0];
     
     return NextResponse.json(updatedRequest);
