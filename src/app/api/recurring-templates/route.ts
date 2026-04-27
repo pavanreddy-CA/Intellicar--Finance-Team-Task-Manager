@@ -56,6 +56,9 @@ export async function POST(req: NextRequest) {
       ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE,
       ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT,
       ADD COLUMN IF NOT EXISTS "excludedDates" JSONB;
+
+      ALTER TABLE "SystemSettings"
+      ADD COLUMN IF NOT EXISTS "masterWeekDays" TEXT DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday';
     `).catch(() => {});
 
     const data = await req.json();
@@ -68,6 +71,7 @@ export async function POST(req: NextRequest) {
       frequency,
       dayOffset,
       monthOffset,
+      defaultOwner,
       defaultReviewer,
       startDate,
       endDate,

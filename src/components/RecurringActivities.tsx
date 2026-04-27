@@ -776,8 +776,8 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                             style={inputStyle}
                         >
                             <option value="">Align to Start Date</option>
-                            {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => (
-                                <option key={d} value={d}>{d}</option>
+                            {(settings.masterWeekDays || 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday').split(',').map((d: string) => (
+                                <option key={d} value={d.trim()}>{d.trim()}</option>
                             ))}
                         </select>
                     </div>
