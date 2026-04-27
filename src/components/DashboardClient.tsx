@@ -96,18 +96,7 @@ const convertTo24h = (h12: string, m: string, suffix: string) => {
   return `${String(h).padStart(2, '0')}:${m}`;
 };
 
-const EMAIL_TO_NAME: Record<string, string> = {
-  "pavanreddy@intellicar.in": "Pavan",
-  "saikatdas@intellicar.in": "Saikath",
-  "sami@intellicar.in": "Sami",
-  "hanusha@intellicar.in": "Hanusha",
-  "sreenivasulu.t@intellicar.in": "Sreenivas",
-  "sharath.shetty@intellicar.in": "Sharath",
-  "chandanak@intellicar.in": "Chandana",
-  "nikhat@intellicar.in": "Nikhat",
-  "venkata.g@intellicar.in": "Venkat",
-  "saneja@intellicar.in": "Siddharth"
-};
+// User name mapping handled dynamically
 
 export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [user, setUser] = useState(initialUser);
@@ -1139,10 +1128,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     // 1. Metric Filter (My Reports / My Learnings)
     let typeMatch = true;
     if (loActiveFilter === 'REPORTS') {
-      const myName = EMAIL_TO_NAME[user?.email || ''] || user?.name;
+      const myName = user?.name || user?.email;
       typeMatch = lo.identifiedBy === myName;
     } else if (loActiveFilter === 'LEARNINGS') {
-      const myName = EMAIL_TO_NAME[user?.email || ''] || user?.name;
+      const myName = user?.name || user?.email;
       typeMatch = lo.committedBy === myName;
     }
 
@@ -2416,7 +2405,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <tr><td colSpan={17} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No tasks found for the current filters.</td></tr>
                 ) : (
                   paginatedTasks.map((task) => {
-                    const currentUserName = EMAIL_TO_NAME[user?.email || ""];
+                    const currentUserName = user?.name || user?.email;
                     const isCurrentUserOwner = task.ownerName === currentUserName;
                     const isCurrentUserReviewer = task.reviewerName === currentUserName;
 
@@ -3292,7 +3281,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <td style={tdStyle}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                               {lo.identifiedBy}
-                              {lo.identifiedBy === (EMAIL_TO_NAME[user?.email || ''] || user?.name) && (
+                              {lo.identifiedBy === (user?.name || user?.email) && (
                                 <span style={{ background: "#eff6ff", color: "#3b82f6", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Reported</span>
                               )}
                             </div>
@@ -3300,7 +3289,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <td style={tdStyle}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                               {lo.committedBy}
-                              {lo.committedBy === (EMAIL_TO_NAME[user?.email || ''] || user?.name) && (
+                              {lo.committedBy === (user?.name || user?.email) && (
                                 <span style={{ background: "#fef2f2", color: "#ef4444", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Learning</span>
                               )}
                             </div>
@@ -3373,6 +3362,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         <LOForm 
           settings={settings}
           usersList={usersList}
+          user={user}
           onClose={() => setShowLOForm(false)} 
           onSuccess={() => {
             setShowLOForm(false);
@@ -3385,6 +3375,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         <LOForm 
           settings={settings}
           usersList={usersList}
+          user={user}
           initialData={editingLO}
           onClose={() => setEditingLO(null)} 
           onSuccess={() => {

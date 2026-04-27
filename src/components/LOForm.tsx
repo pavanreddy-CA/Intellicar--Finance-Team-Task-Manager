@@ -8,10 +8,11 @@ type LOFormProps = {
   onSuccess: () => void;
   settings: any;
   usersList: any[];
+  user: any;
   initialData?: any;
 };
 
-export default function LOForm({ onClose, onSuccess, settings, usersList = [], initialData }: LOFormProps) {
+export default function LOForm({ onClose, onSuccess, settings, usersList = [], user, initialData }: LOFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,7 +22,7 @@ export default function LOForm({ onClose, onSuccess, settings, usersList = [], i
     entity: "",
     dateOfIdentification: new Date().toISOString().split('T')[0],
     learningOpportunity: "",
-    identifiedBy: "",
+    identifiedBy: (user?.department === 'Finance' ? (user.name || user.email) : ""),
     committedBy: "",
     resolutionProvided: "",
     modeOfCommunication: "",
