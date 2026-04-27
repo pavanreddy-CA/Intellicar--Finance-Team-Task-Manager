@@ -232,6 +232,16 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
     }
   };
 
+  const handleDeleteTemplate = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+    try {
+      await fetch(`/api/recurring-templates/${id}`, { method: "DELETE" });
+      fetchTemplates();
+    } catch (err) {
+      console.error("Delete template error:", err);
+    }
+  };
+
   const handleGenerateTasks = async () => {
     const tasksToPost = stagingTasks.filter((_, idx) => selectedTasks.includes(idx) && _.isReady && !_.isConverted);
     if (tasksToPost.length === 0) return;
