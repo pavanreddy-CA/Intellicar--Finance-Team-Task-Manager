@@ -12,11 +12,7 @@ type TaskFormProps = {
   user: any;
 };
 
-<<<<<<< HEAD
-export default function TaskForm({ onClose, onSuccess, settings, usersList = [], initialData }: TaskFormProps) {
-=======
 export default function TaskForm({ onClose, onSuccess, settings, usersList = [], initialData, user }: TaskFormProps) {
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [changeRequestType, setChangeRequestType] = useState(false);
@@ -28,15 +24,8 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
     taskType: initialData?.taskType || "",
     departmentName: initialData?.departmentName || "",
     requestFrom: initialData?.requestFrom || "",
-<<<<<<< HEAD
-    ownerName: "",
-    reviewerName: "",
-    dueDate: "",
-    mailLink: "",
-=======
     dueDate: initialData?.dueDate || "",
     mailLink: initialData?.mailLink || "",
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     linkedRequestId: initialData?.linkedRequestId || null,
     transferStatus: initialData?.transferStatus || 'O',
     originalRequestType: initialData?.originalRequestType || null
@@ -268,15 +257,6 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-<<<<<<< HEAD
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Entity Name *</label>
-                  <select name="entityName" required value={formData.entityName} onChange={handleChange} style={inputStyle}>
-                    <option value="">Choose</option>
-                    {settings?.masterEntities?.split(',').filter((e: string) => e.trim()).map((entity: string) => (
-                      <option key={entity.trim()} value={entity.trim()}>{entity.trim()}</option>
-                    ))}
-                  </select>
-=======
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Select Entities *</label>
                     <button 
@@ -310,7 +290,6 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                       </label>
                     ))}
                   </div>
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
                 </div>
                 <div>
                   <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Type *</label>
@@ -323,48 +302,6 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                 </div>
               </div>
 
-<<<<<<< HEAD
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
-                  <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
-                    <option value="">Choose</option>
-                    {settings?.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => (
-                      <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
-                  <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Owner Name *</label>
-                  <select name="ownerName" required value={formData.ownerName} onChange={handleChange} style={inputStyle}>
-                    <option value="">Choose</option>
-                    {usersList
-                      .filter(u => u.department === 'Finance' && u.isApproved !== false)
-                      .map(u => (
-                        <option key={u.email} value={u.name || u.email}>{u.name || u.email}</option>
-                      ))
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Reviewer Name</label>
-                  <select name="reviewerName" value={formData.reviewerName} onChange={handleChange} style={inputStyle}>
-                    <option value="">Not Applicable / None</option>
-                    {usersList
-                      .filter(u => u.department === 'Finance' && u.isApproved !== false)
-                      .map(u => (
-                        <option key={u.email} value={u.name || u.email}>{u.name || u.email}</option>
-                      ))
-                    }
-                  </select>
-=======
               {/* Assignment Grid */}
               {selectedEntities.length > 0 && (
                 <div style={{ marginTop: "4px" }}>
@@ -428,7 +365,6 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                 <div>
                   <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
                   <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
->>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
                 </div>
               </div>
 
