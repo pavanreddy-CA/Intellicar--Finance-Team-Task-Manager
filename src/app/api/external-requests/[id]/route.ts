@@ -11,9 +11,6 @@ export async function PATCH(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
-
-    // Ensure the column exists
-    await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferredBy" TEXT`;
     
     // Fetch current state first if we need to check for transfers
     let currentRequest = null;
@@ -22,41 +19,34 @@ export async function PATCH(
       currentRequest = existing[0];
     }
 
-    const updates: string[] = [];
+    const updateData: any = {};
     
-    if (body.status !== undefined) {
-      updates.push(`status = '${body.status}'`);
-    }
-    if (body.convertedTaskId !== undefined) {
-      updates.push(`"convertedTaskId" = ${body.convertedTaskId}`);
-    }
-    if (body.rejectReason !== undefined) {
-      updates.push(`"rejectReason" = '${body.rejectReason}'`);
-    }
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.convertedTaskId !== undefined) updateData.convertedTaskId = body.convertedTaskId;
+    if (body.rejectReason !== undefined) updateData.rejectReason = body.rejectReason;
+    
     if (body.requestType !== undefined) {
-      updates.push(`"requestType" = '${body.requestType}'`);
+      updateData.requestType = body.requestType;
       // If the new requestType is different from the originalRequestType, it's a transfer
       if (currentRequest && body.requestType !== currentRequest.originalRequestType) {
-        updates.push(`"transferStatus" = 'T'`);
+        updateData.transferStatus = 'T';
       }
     }
     
     if (body.transferredBy !== undefined) {
-      updates.push(`"transferredBy" = '${body.transferredBy}'`);
+      updateData.transferredBy = body.transferredBy;
     }
     
-    if (updates.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ message: 'No fields to update' }, { status: 400 });
     }
     
-    const query = `
+    const updatedRequests = await sql`
       UPDATE "ExternalRequest"
-      SET ${updates.join(', ')}, "updatedAt" = NOW()
+      SET ${sql(updateData)}, "updatedAt" = NOW()
       WHERE id = ${id}
       RETURNING *
     `;
-
-    const updatedRequests = await sql.unsafe(query) as unknown as any[];
     
     return NextResponse.json(updatedRequests[0]);
   } catch (error) {
