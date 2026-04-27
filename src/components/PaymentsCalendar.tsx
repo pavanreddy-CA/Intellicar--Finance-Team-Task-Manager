@@ -46,7 +46,7 @@ interface PaymentOccurrence {
 
 import { resolveTaskName, getPeriodKey, getOccurrencesBetween } from "@/lib/recurringUtils";
 
-export default function PaymentsCalendar({ user, isAdmin, t, settings }: { user: any; isAdmin: boolean; t: any; settings: any }) {
+export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: { user: any; isAdmin: boolean; t: any; theme: string; settings: any }) {
   const [activeTab, setActiveTab] = useState<'TRACKER' | 'MASTER'>('TRACKER');
   const [templates, setTemplates] = useState<PaymentTemplate[]>([]);
   const [occurrences, setOccurrences] = useState<PaymentOccurrence[]>([]);
