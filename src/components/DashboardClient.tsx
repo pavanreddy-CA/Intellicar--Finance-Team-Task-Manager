@@ -373,9 +373,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       console.error("Failed to fetch payment requests", error);
     }
   };
-      console.error("Failed to fetch payment requests", error);
-    }
-  };
 
   const handleApprovePaymentEdit = async (occId: number) => {
     try {
