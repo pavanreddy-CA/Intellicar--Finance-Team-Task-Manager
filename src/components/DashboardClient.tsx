@@ -154,6 +154,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [editValue, setEditValue] = useState("");
   const [editingLO, setEditingLO] = useState<LearningOpportunity | null>(null);
 
+  // Universal Navigation Watcher: Auto-collapses sub-menus when switching modules
+  useEffect(() => {
+    // If we are not in the TASKS or RECURRING views, close the Tasks menu
+    if (activeView !== 'TASKS' && activeView !== 'RECURRING') {
+      setIsTasksMenuOpen(false);
+    }
+    
+    // Future-proof: Add similar logic here for Learning or other modules
+    // if (activeView !== 'LOS') setIsLearningMenuOpen(false);
+  }, [activeView]);
+
   // Advanced Controls State
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
