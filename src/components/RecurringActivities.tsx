@@ -75,8 +75,8 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
     taskType: "External",
     departmentName: "Finance",
     financeFunction: "",
-    frequency: "MONTHLY",
-    dayOffset: 15,
+    frequency: "M" as Frequency,
+    dayOffset: 1,
     monthOffset: 0,
     defaultOwner: "",
     defaultReviewer: "",
@@ -743,37 +743,21 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Logic Frequency</label>
+                  <label style={labelStyle}>Frequency (Logic & Master)</label>
                   <select 
-                    value={templateForm.frequency || "MONTHLY"} 
+                    value={templateForm.frequency || "M"} 
                     onChange={e => {
                       const freq = e.target.value as any;
-                      const mapping: any = {
-                        'DAILY': 'D',
-                        'WEEKLY': 'W',
-                        'MONTHLY': 'M',
-                        'QUARTERLY': 'Q',
-                        'HALF_YEARLY': 'H',
-                        'YEARLY': 'Y',
-                        '2_YEARLY': '2Y'
-                      };
                       setTemplateForm({
                         ...templateForm, 
                         frequency: freq,
-                        freqLabel: templateForm.freqLabel || mapping[freq] || ""
+                        freqLabel: freq 
                       });
                     }} 
                     style={inputStyle}
                   >
-                    {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Categorical Freq (Master)</label>
-                  <select value={templateForm.freqLabel || ""} onChange={e => setTemplateForm({...templateForm, freqLabel: e.target.value})} style={inputStyle}>
-                    <option value="">Select Frequency Category...</option>
-                    {(settings.masterFrequencies || "").split(',').map((f: string) => <option key={f} value={f.trim()}>{f.trim()}</option>)}
+                    <option value="">Select Frequency...</option>
+                    {(settings.masterFrequencies || "").split(',').map((f: string) => <option key={f.trim()} value={f.trim()}>{f.trim()}</option>)}
                   </select>
                 </div>
 

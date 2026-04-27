@@ -2,9 +2,9 @@
  * Helper utilities for Recurring Tasks
  */
 
-export type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'YEARLY' | '2_YEARLY';
+export type Frequency = 'D' | 'W' | 'M' | 'Q' | 'H' | 'Y' | '2Y' | 'BW' | 'Ad';
 
-export const FREQUENCIES: Frequency[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'HALF_YEARLY', 'YEARLY', '2_YEARLY'];
+export const FREQUENCIES: Frequency[] = ['D', 'W', 'M', 'Q', 'H', 'Y', '2Y', 'BW', 'Ad'];
 
 export const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -37,26 +37,37 @@ export function getPeriodKey(frequency: Frequency, date: Date): string {
   const month = date.getMonth() + 1;
   
   switch (frequency) {
-    case 'DAILY':
+    case 'D':
       return `${year}-${month.toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-    case 'WEEKLY':
+    case 'W':
       const firstDayOfYear = new Date(year, 0, 1);
       const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
       const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
       return `${year}-W${weekNum.toString().padStart(2, '0')}`;
-    case 'MONTHLY':
+    case 'BW':
+      // For BiWeekly, we use year and week number / 2 or just the date
+      return `${year}-BW-${formatDateShort(date)}`;
+    case 'M':
       return `${year}-${month.toString().padStart(2, '0')}`;
-    case 'QUARTERLY':
+    case 'Q':
       const q = Math.floor(date.getMonth() / 3) + 1;
       return `${year}-Q${q}`;
-    case 'HALF_YEARLY':
+    case 'H':
       const h = date.getMonth() < 6 ? 1 : 2;
       return `${year}-H${h}`;
-    case 'YEARLY':
+    case 'Y':
       return `${year}`;
+    case '2Y':
+      return `${year}-2Y`;
+    case 'Ad':
+      return `Adhoc-${year}-${month}-${date.getDate()}`;
     default:
       return `${year}-${month}`;
   }
+}
+
+function formatDateShort(d: Date) {
+  return `${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate().toString().padStart(2,'0')}`;
 }
 
 /**
@@ -77,10 +88,14 @@ export function getOccurrencesBetween(
   
   // Align current to search window
   while (current < searchStart) {
-      if (template.frequency === 'WEEKLY') current.setDate(current.getDate() + 7);
-      else if (template.frequency === 'MONTHLY') current.setMonth(current.getMonth() + 1);
-      else if (template.frequency === 'QUARTERLY') current.setMonth(current.getMonth() + 3);
-      else if (template.frequency === 'YEARLY') current.setFullYear(current.getFullYear() + 1);
+      if (template.frequency === 'D') current.setDate(current.getDate() + 1);
+      else if (template.frequency === 'W') current.setDate(current.getDate() + 7);
+      else if (template.frequency === 'BW') current.setDate(current.getDate() + 14);
+      else if (template.frequency === 'M') current.setMonth(current.getMonth() + 1);
+      else if (template.frequency === 'Q') current.setMonth(current.getMonth() + 3);
+      else if (template.frequency === 'H') current.setMonth(current.getMonth() + 6);
+      else if (template.frequency === 'Y') current.setFullYear(current.getFullYear() + 1);
+      else if (template.frequency === '2Y') current.setFullYear(current.getFullYear() + 2);
       else break;
       if (current > searchEnd) break;
   }
@@ -94,7 +109,7 @@ export function getOccurrencesBetween(
         
         let occurrenceDate = new Date(current);
         // Handle specific Weekday for Weekly tasks
-        if (template.frequency === 'WEEKLY' && template.weeklyDay) {
+        if (template.frequency === 'W' && template.weeklyDay) {
             const targetDayIndex = WEEKDAYS.indexOf(template.weeklyDay); // 0=Mon, 6=Sun
             // getDay() returns 0=Sun, 1=Mon...
             const currentDayIndex = occurrenceDate.getDay(); 
@@ -108,11 +123,14 @@ export function getOccurrencesBetween(
     }
     
     // Advance
-    if (template.frequency === 'DAILY') current.setDate(current.getDate() + 1);
-    else if (template.frequency === 'WEEKLY') current.setDate(current.getDate() + 7);
-    else if (template.frequency === 'MONTHLY') current.setMonth(current.getMonth() + 1);
-    else if (template.frequency === 'QUARTERLY') current.setMonth(current.getMonth() + 3);
-    else if (template.frequency === 'YEARLY') current.setFullYear(current.getFullYear() + 1);
+    if (template.frequency === 'D') current.setDate(current.getDate() + 1);
+    else if (template.frequency === 'W') current.setDate(current.getDate() + 7);
+    else if (template.frequency === 'BW') current.setDate(current.getDate() + 14);
+    else if (template.frequency === 'M') current.setMonth(current.getMonth() + 1);
+    else if (template.frequency === 'Q') current.setMonth(current.getMonth() + 3);
+    else if (template.frequency === 'H') current.setMonth(current.getMonth() + 6);
+    else if (template.frequency === 'Y') current.setFullYear(current.getFullYear() + 1);
+    else if (template.frequency === '2Y') current.setFullYear(current.getFullYear() + 2);
     else break;
 
     if (occurrences.length > 500) break; 
@@ -127,14 +145,17 @@ export function isWithinLeadTime(frequency: Frequency, dueDate: Date): boolean {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   switch (frequency) {
-    case 'YEARLY':
-    case 'QUARTERLY':
+    case 'Y':
+    case '2Y':
+    case 'Q':
+    case 'H':
       return diffDays <= 45;
-    case 'MONTHLY':
+    case 'M':
+    case 'BW':
       return diffDays <= 15;
-    case 'WEEKLY':
+    case 'W':
       return diffDays <= 7;
-    case 'DAILY':
+    case 'D':
       return diffDays <= 1;
     default:
       return diffDays <= 15;
