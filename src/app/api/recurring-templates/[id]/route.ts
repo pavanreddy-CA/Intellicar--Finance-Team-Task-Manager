@@ -17,8 +17,9 @@ export async function PATCH(
 
     const data = await req.json();
     const allowedFields = [
-      "taskNamePattern", "entityName", "taskType", "departmentName",
-      "frequency", "dayOffset", "monthOffset", "defaultOwner", "defaultReviewer", "isActive"
+      "taskNamePattern", "entityName", "taskType", "departmentName", "financeFunction",
+      "frequency", "dayOffset", "monthOffset", "defaultOwner", "defaultReviewer", 
+      "isActive", "startDate", "endDate", "stopDate", "isStopped"
     ];
 
     const updates: any = {};
@@ -30,14 +31,7 @@ export async function PATCH(
       return NextResponse.json({ error: "No fields to update" }, { status: 400 });
     }
 
-    const setClause = Object.keys(updates)
-      .map((key) => `"${key}" = ${key === 'dayOffset' || key === 'monthOffset' ? Number(updates[key]) : `'${updates[key]}'`}`)
-      .join(", ");
-    
-    // Using raw string for SET because dynamic keys in postgres.js are tricky with template strings
-    // but better to use a loop with sql interpolation for security.
-    
-    // Refactored for security:
+    // Dynamic update building
     const result = await sql`
       UPDATE "RecurringTemplate"
       SET 
@@ -45,12 +39,17 @@ export async function PATCH(
         "entityName" = ${updates.entityName !== undefined ? updates.entityName : sql`"entityName"`},
         "taskType" = ${updates.taskType !== undefined ? updates.taskType : sql`"taskType"`},
         "departmentName" = ${updates.departmentName !== undefined ? updates.departmentName : sql`"departmentName"`},
+        "financeFunction" = ${updates.financeFunction !== undefined ? updates.financeFunction : sql`"financeFunction"`},
         "frequency" = ${updates.frequency !== undefined ? updates.frequency : sql`"frequency"`},
         "dayOffset" = ${updates.dayOffset !== undefined ? Number(updates.dayOffset) : sql`"dayOffset"`},
         "monthOffset" = ${updates.monthOffset !== undefined ? Number(updates.monthOffset) : sql`"monthOffset"`},
         "defaultOwner" = ${updates.defaultOwner !== undefined ? updates.defaultOwner : sql`"defaultOwner"`},
         "defaultReviewer" = ${updates.defaultReviewer !== undefined ? updates.defaultReviewer : sql`"defaultReviewer"`},
         "isActive" = ${updates.isActive !== undefined ? updates.isActive : sql`"isActive"`},
+        "startDate" = ${updates.startDate !== undefined ? (updates.startDate ? new Date(updates.startDate) : null) : sql`"startDate"`},
+        "endDate" = ${updates.endDate !== undefined ? (updates.endDate ? new Date(updates.endDate) : null) : sql`"endDate"`},
+        "stopDate" = ${updates.stopDate !== undefined ? (updates.stopDate ? new Date(updates.stopDate) : null) : sql`"stopDate"`},
+        "isStopped" = ${updates.isStopped !== undefined ? updates.isStopped : sql`"isStopped"`},
         "updatedAt" = NOW()
       WHERE id = ${id}
       RETURNING *
@@ -66,6 +65,9 @@ export async function PATCH(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+// Support PUT as an alias for PATCH for compatibility
+export const PUT = PATCH;
 
 // DELETE /api/recurring-templates/[id]
 export async function DELETE(

@@ -43,12 +43,12 @@ export async function POST(req: NextRequest) {
 
         const newTasks = await sql`
           INSERT INTO "Task" (
-            "taskName", "entityName", "taskType", "departmentName", "requestFrom",
+            "taskName", "entityName", "taskType", "departmentName", "financeFunction", "requestFrom",
             "ownerName", "reviewerName", "dueDate", "taskStatus", "reviewStatus",
             "templateId", "periodKey", "createdAt", "updatedAt"
           )
           VALUES (
-            ${taskItem.taskName}, ${taskItem.entityName}, ${taskItem.taskType}, 'Finance', 'System (Recurring)',
+            ${taskItem.taskName}, ${taskItem.entityName}, ${taskItem.taskType}, ${taskItem.departmentName || 'Finance'}, ${taskItem.financeFunction || null}, 'System (Recurring)',
             ${taskItem.ownerName}, ${resolvedReviewer}, ${taskItem.dueDate ? new Date(taskItem.dueDate).toISOString() : null},
             'Pending', ${reviewStatus},
             ${taskItem.templateId}, ${taskItem.periodKey}, NOW(), NOW()

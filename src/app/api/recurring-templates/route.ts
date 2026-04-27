@@ -11,6 +11,20 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // --- Self-Healing Migration: Add new columns if they don't exist ---
+    await (sql as any).query(`
+      ALTER TABLE "RecurringTemplate" 
+      ADD COLUMN IF NOT EXISTS "financeFunction" TEXT,
+      ADD COLUMN IF NOT EXISTS "startDate" DATE,
+      ADD COLUMN IF NOT EXISTS "endDate" DATE,
+      ADD COLUMN IF NOT EXISTS "stopDate" DATE,
+      ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE;
+      
+      ALTER TABLE "Task"
+      ADD COLUMN IF NOT EXISTS "financeFunction" TEXT;
+    `).catch((err: any) => console.error("Migration check error:", err));
+    // ------------------------------------------------------------------
+
     const templates = await sql`
       SELECT * FROM "RecurringTemplate"
       ORDER BY "createdAt" DESC
@@ -39,11 +53,14 @@ export async function POST(req: NextRequest) {
       entityName,
       taskType,
       departmentName,
+      financeFunction,
       frequency,
       dayOffset,
       monthOffset,
       defaultOwner,
-      defaultReviewer
+      defaultReviewer,
+      startDate,
+      endDate
     } = data;
 
     if (!taskNamePattern || !entityName || !taskType || !frequency) {
@@ -52,14 +69,16 @@ export async function POST(req: NextRequest) {
 
     const result = await sql`
       INSERT INTO "RecurringTemplate" (
-        "taskNamePattern", "entityName", "taskType", "departmentName",
+        "taskNamePattern", "entityName", "taskType", "departmentName", "financeFunction",
         "frequency", "dayOffset", "monthOffset", "defaultOwner", "defaultReviewer",
+        "startDate", "endDate",
         "isActive", "createdAt", "updatedAt"
       )
       VALUES (
-        ${taskNamePattern}, ${entityName}, ${taskType}, ${departmentName || "Finance"},
+        ${taskNamePattern}, ${entityName}, ${taskType}, ${departmentName || "Finance"}, ${financeFunction || null},
         ${frequency}, ${Number(dayOffset) || 0}, ${Number(monthOffset) || 0},
         ${defaultOwner || null}, ${defaultReviewer || null},
+        ${startDate ? new Date(startDate) : null}, ${endDate ? new Date(endDate) : null},
         TRUE, NOW(), NOW()
       )
       RETURNING *
