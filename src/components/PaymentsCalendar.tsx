@@ -314,6 +314,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
   const handleRequestEdit = async () => {
     if (!activeOccurrence || !requestEditData.reason.trim()) return;
     setIsSubmitting(true);
+    console.log("Requesting edit for occurrence:", activeOccurrence.id, "Reason:", requestEditData.reason);
     try {
       const res = await fetch(`/api/payments/tracker/${activeOccurrence.id}`, {
         method: "PATCH",
@@ -321,12 +322,17 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
         body: JSON.stringify({ editRequested: true, editRequestReason: requestEditData.reason })
       });
       if (res.ok) {
+        alert("Edit request sent successfully!");
         setShowRequestEditModal(false);
         setRequestEditData({ reason: "" });
         fetchData();
+      } else {
+        const err = await res.json();
+        alert(`Error: ${err.error || 'Failed to send request'}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Request edit error:", err);
+      alert(`Network error: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
