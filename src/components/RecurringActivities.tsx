@@ -94,6 +94,19 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
     ccInput: ""
   });
 
+  // Daily Tasks State
+  const [dailyDateFilter, setDailyDateFilter] = useState({ 
+    from: formatDate(firstDay), 
+    to: formatDate(lastDay) 
+  });
+  const [dailySearch, setDailySearch] = useState("");
+  const [dailyOwnerFilter, setDailyOwnerFilter] = useState("ALL");
+  const [dailyCompletionData, setDailyCompletionData] = useState<any[]>([]);
+  const [selectedDailyOccs, setSelectedDailyOccs] = useState<string[]>([]);
+  const [dailySortConfig, setDailySortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [dailyDownloadMenu, setDailyDownloadMenu] = useState(false);
+  const [dailyShareModal, setDailyShareModal] = useState(false);
+
   const [templateForm, setTemplateForm] = useState<Partial<RecurringTemplate>>({
     taskNamePattern: "",
     entityName: "",
@@ -115,7 +128,19 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
 
   useEffect(() => {
     fetchTemplates();
-  }, [dateFilter, freqFilter, showConverted]);
+    if (activeSubTab === 'D') fetchDailyData();
+  }, [dateFilter, freqFilter, showConverted, activeSubTab, dailyDateFilter]);
+
+  const fetchDailyData = async () => {
+    try {
+      const res = await fetch(`/api/daily-tasks?from=${dailyDateFilter.from}&to=${dailyDateFilter.to}`);
+      if (res.ok) {
+        setDailyCompletionData(await res.json());
+      }
+    } catch (err) {
+      console.error("Fetch daily data error:", err);
+    }
+  };
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -500,6 +525,187 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
         ...shareData,
         [type]: shareData[type].filter((_, i) => i !== idx)
     });
+  };
+
+  const handleUpdateDailyStatus = async (templateId: number, date: string, status: 'Completed' | 'Not Completed') => {
+    try {
+      const res = await fetch("/api/daily-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks: [{ templateId, taskDate: date, status }] })
+      });
+      if (res.ok) {
+        fetchDailyData();
+      }
+    } catch (err) {
+      console.error("Update daily status error:", err);
+    }
+  };
+
+  const handleBulkDailyStatus = async (status: 'Completed' | 'Not Completed') => {
+    const tasks = selectedDailyOccs.map(idDate => {
+      const [tId, date] = idDate.split('_');
+      return { templateId: parseInt(tId), taskDate: date, status };
+    });
+
+    if (tasks.length === 0) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/daily-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks })
+      });
+      if (res.ok) {
+        setSelectedDailyOccs([]);
+        fetchDailyData();
+      }
+    } catch (err) {
+      console.error("Bulk daily status error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDailyOccurrences = () => {
+    const occs: any[] = [];
+    const fromDate = new Date(dailyDateFilter.from);
+    const toDate = new Date(dailyDateFilter.to);
+    const dailyTemplates = templates.filter(t => t.frequency === 'D' && t.isActive);
+
+    for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = formatDate(d);
+      dailyTemplates.forEach(t => {
+        // Simple date check: must be >= start date and <= end date (if exists)
+        const tStart = t.startDate ? new Date(t.startDate) : null;
+        const tEnd = t.endDate ? new Date(t.endDate) : null;
+        const tStop = t.stopDate ? new Date(t.stopDate) : null;
+
+        if (tStart && d < tStart) return;
+        if (tEnd && d > tEnd) return;
+        if (tStop && d >= tStop) return;
+
+        const completion = dailyCompletionData.find(c => c.templateId === t.id && formatDate(new Date(c.taskDate)) === dateStr);
+        
+        occs.push({
+          id: `${t.id}_${dateStr}`,
+          templateId: t.id,
+          taskName: t.taskNamePattern,
+          entityName: t.entityName,
+          taskType: t.taskType,
+          ownerName: t.defaultOwner,
+          reviewerName: t.defaultReviewer,
+          targetDate: dateStr,
+          status: completion ? completion.status : 'Not Completed',
+          completedAt: completion?.completedAt,
+          completedBy: completion?.completedBy
+        });
+      });
+    }
+    return occs;
+  };
+
+  const exportDailyExcel = async (data: any[]) => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Daily Tasks Report');
+    worksheet.columns = [
+      { header: 'Sl No', key: 'sl', width: 8 },
+      { header: 'Task Details', key: 'taskName', width: 35 },
+      { header: 'Entity', key: 'entityName', width: 25 },
+      { header: 'Task Type', key: 'taskType', width: 15 },
+      { header: 'Owner', key: 'ownerName', width: 20 },
+      { header: 'Reviewer', key: 'reviewerName', width: 20 },
+      { header: 'Target Date', key: 'targetDate', width: 15 },
+      { header: 'Status', key: 'status', width: 15 }
+    ];
+    data.forEach((row, i) => worksheet.addRow({ ...row, sl: i + 1 }));
+    worksheet.getRow(1).font = { bold: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Daily_Tasks_Report_${dailyDateFilter.from}.xlsx`);
+  };
+
+  const exportDailyPDF = (data: any[]) => {
+    const doc = new jsPDF('l', 'mm', 'a4');
+    doc.text(`Daily Tasks Report (${dailyDateFilter.from} to ${dailyDateFilter.to})`, 14, 15);
+    autoTable(doc, {
+      head: [['Sl No', 'Task Details', 'Entity', 'Type', 'Owner', 'Reviewer', 'Target Date', 'Status']],
+      body: data.map((r, i) => [i+1, r.taskName, r.entityName, r.taskType, r.ownerName, r.reviewerName, r.targetDate, r.status]),
+      startY: 20
+    });
+    doc.save(`Daily_Tasks_Report_${dailyDateFilter.from}.pdf`);
+  };
+
+  const handleDailyShareViaEmail = async () => {
+    if (shareData.recipients.length === 0) {
+      alert("Please add at least one recipient email.");
+      return;
+    }
+    setShareLoading(true);
+    try {
+      let buffer: ArrayBuffer | Uint8Array;
+      let contentType = "";
+      let attachmentName = "";
+      const data = getDailyOccurrences();
+
+      if (shareData.format === 'excel') {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Daily Tasks Report');
+        worksheet.columns = [
+          { header: 'Sl No', key: 'sl', width: 8 },
+          { header: 'Task Details', key: 'taskName', width: 35 },
+          { header: 'Entity', key: 'entityName', width: 25 },
+          { header: 'Task Type', key: 'taskType', width: 15 },
+          { header: 'Owner', key: 'ownerName', width: 20 },
+          { header: 'Reviewer', key: 'reviewerName', width: 20 },
+          { header: 'Target Date', key: 'targetDate', width: 15 },
+          { header: 'Status', key: 'status', width: 15 }
+        ];
+        data.forEach((row, i) => worksheet.addRow({ ...row, sl: i + 1 }));
+        buffer = await workbook.xlsx.writeBuffer();
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        attachmentName = `Daily_Tasks_Report_${dailyDateFilter.from}.xlsx`;
+      } else {
+        const doc = new jsPDF('l', 'mm', 'a4');
+        autoTable(doc, {
+          head: [['Sl No', 'Task Details', 'Entity', 'Type', 'Owner', 'Reviewer', 'Target Date', 'Status']],
+          body: data.map((r, i) => [i+1, r.taskName, r.entityName, r.taskType, r.ownerName, r.reviewerName, r.targetDate, r.status]),
+        });
+        buffer = doc.output('arraybuffer');
+        contentType = 'application/pdf';
+        attachmentName = `Daily_Tasks_Report_${dailyDateFilter.from}.pdf`;
+      }
+
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(new Blob([buffer as any]));
+      });
+
+      const res = await fetch("/api/reports/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail: shareData.recipients.join(','),
+          ccEmail: shareData.cc.join(','),
+          subject: shareData.subject || `Daily Tasks Report (${dailyDateFilter.from} to ${dailyDateFilter.to})`,
+          attachmentName,
+          attachmentBuffer: base64,
+          contentType
+        })
+      });
+
+      if (res.ok) {
+        alert("Report shared successfully via email!");
+        setDailyShareModal(false);
+      } else {
+        alert("Failed to share report.");
+      }
+    } catch (error) {
+      console.error("Daily Share error", error);
+    } finally {
+      setShareLoading(false);
+    }
   };
 
   const thStyle = { padding: "12px 16px", textAlign: "left" as const, fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.05em" };
@@ -1212,26 +1418,217 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
       )}
 
       {activeSubTab === 'D' && (
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "32px" }}>
-             <h2 style={{ fontSize: "1.5rem", color: "#0f172a", marginBottom: "8px" }}>Daily Task Checklist</h2>
-             <p style={{ color: "#64748b" }}>Complete your repetitive daily activities with a single click.</p>
-          </div>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-             {templates.filter(t => t.frequency === 'D' && t.isActive).map(t => (
-               <div key={t.id} style={{ background: "white", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "16px", transition: "transform 0.2s" }} className="hover-scale">
-                  <input type="checkbox" style={{ width: "24px", height: "24px", cursor: "pointer" }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: "#1e293b" }}>{t.taskNamePattern} - {t.entityName}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{t.financeFunction} | Owner: {t.defaultOwner}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {/* Daily Filters Bar */}
+          <div style={{ background: "white", padding: "16px 20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>FROM:</label>
+               <input type="date" value={dailyDateFilter.from} onChange={e => setDailyDateFilter({...dailyDateFilter, from: e.target.value})} style={{...inputStyle, width: "135px"}} />
+             </div>
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>TO:</label>
+               <input type="date" value={dailyDateFilter.to} onChange={e => setDailyDateFilter({...dailyDateFilter, to: e.target.value})} style={{...inputStyle, width: "135px"}} />
+             </div>
+
+             <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "4px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "240px" }}>
+               <Search size={16} color="#64748b" />
+               <input 
+                 type="text" 
+                 placeholder="Search daily tasks..." 
+                 value={dailySearch}
+                 onChange={e => setDailySearch(e.target.value)}
+                 style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", width: "100%", color: "#334155" }}
+               />
+             </div>
+
+             <select 
+               value={dailyOwnerFilter} 
+               onChange={e => setDailyOwnerFilter(e.target.value)} 
+               style={{ ...inputStyle, width: "130px" }}
+             >
+               <option value="ALL">All Owners</option>
+               {Array.from(new Set(templates.filter(t => t.frequency === 'D').map(t => t.defaultOwner))).filter(Boolean).map(owner => (
+                 <option key={owner} value={owner!}>{owner}</option>
+               ))}
+             </select>
+
+             <div style={{ flex: 1 }}></div>
+
+             <div style={{ position: "relative" }}>
+                <button 
+                  onClick={() => setDailyDownloadMenu(!dailyDownloadMenu)}
+                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#334155", fontSize: "0.875rem", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                >
+                  <Download size={18} /> Download
+                  <ChevronDown size={16} />
+                </button>
+                {dailyDownloadMenu && (
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: "200px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)", zIndex: 100, padding: "8px" }}>
+                    <button onClick={() => { exportDailyExcel(getDailyOccurrences()); setDailyDownloadMenu(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#166534", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                      <TableIcon size={18} /> Excel
+                    </button>
+                    <button onClick={() => { exportDailyPDF(getDailyOccurrences()); setDailyDownloadMenu(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#991b1b", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                      <FileText size={18} /> PDF
+                    </button>
+                    <button onClick={() => { setDailyShareModal(true); setDailyDownloadMenu(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#075985", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                      <Mail size={18} /> Share Email
+                    </button>
                   </div>
-                  <div style={{ fontSize: "0.875rem", color: "#94a3b8" }}>Ready for Daily Checklist</div>
-               </div>
-             ))}
-             {templates.filter(t => t.frequency === 'D' && t.isActive).length === 0 && (
-                <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>No daily templates defined.</div>
-             )}
+                )}
+             </div>
+          </div>
+
+          {/* Bulk Action for Daily */}
+          {selectedDailyOccs.length > 0 && (
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", gap: "16px", animation: "slideDown 0.3s ease" }}>
+               <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#166534" }}>{selectedDailyOccs.length} occurrences selected</span>
+               <button 
+                 onClick={() => handleBulkDailyStatus('Completed')}
+                 style={{ padding: "8px 16px", borderRadius: "8px", border: "none", background: "#16a34a", color: "white", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}
+               >
+                 Mark as Completed
+               </button>
+               <button 
+                 onClick={() => setSelectedDailyOccs([])}
+                 style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #bbf7d0", background: "white", color: "#166534", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}
+               >
+                 Cancel
+               </button>
+            </div>
+          )}
+
+          {/* Daily Tracker Table */}
+          <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#f8fafc" }}>
+                  <th style={{ ...thStyle, width: "40px" }}>
+                    <input 
+                      type="checkbox" 
+                      onChange={e => {
+                        const all = getDailyOccurrences().filter(o => o.status !== 'Completed').map(o => o.id);
+                        setSelectedDailyOccs(e.target.checked ? all : []);
+                      }}
+                      checked={selectedDailyOccs.length > 0 && selectedDailyOccs.length === getDailyOccurrences().filter(o => o.status !== 'Completed').length}
+                    />
+                  </th>
+                  <th style={thStyle}>Sl No</th>
+                  <th style={thStyle}>Task Details</th>
+                  <th style={thStyle}>Type</th>
+                  <th style={thStyle}>Owner</th>
+                  <th style={thStyle}>Reviewer</th>
+                  <th style={thStyle}>Target Date</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getDailyOccurrences()
+                  .filter(o => {
+                    const search = dailySearch.toLowerCase();
+                    const matchesSearch = o.taskName.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search) || o.ownerName?.toLowerCase().includes(search);
+                    const matchesOwner = dailyOwnerFilter === "ALL" || o.ownerName === dailyOwnerFilter;
+                    return matchesSearch && matchesOwner;
+                  })
+                  .sort((a, b) => {
+                    // Date descending, then templateId
+                    const dateDiff = new Date(b.targetDate).getTime() - new Date(a.targetDate).getTime();
+                    if (dateDiff !== 0) return dateDiff;
+                    return a.templateId - b.templateId;
+                  })
+                  .map((occ, idx) => (
+                  <tr key={occ.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td style={tdStyle}>
+                      <input 
+                        type="checkbox" 
+                        disabled={occ.status === 'Completed'}
+                        checked={selectedDailyOccs.includes(occ.id)}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedDailyOccs([...selectedDailyOccs, occ.id]);
+                          else setSelectedDailyOccs(selectedDailyOccs.filter(id => id !== occ.id));
+                        }}
+                      />
+                    </td>
+                    <td style={tdStyle}>{idx + 1}</td>
+                    <td style={tdStyle}>
+                      <div style={{ fontWeight: 600 }}>{occ.taskName}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{occ.entityName}</div>
+                    </td>
+                    <td style={tdStyle}>{occ.taskType}</td>
+                    <td style={tdStyle}>{occ.ownerName}</td>
+                    <td style={tdStyle}>{occ.reviewerName}</td>
+                    <td style={tdStyle}>{new Date(occ.targetDate).toLocaleDateString('en-GB')}</td>
+                    <td style={tdStyle}>
+                      <span style={{ 
+                        padding: "4px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700,
+                        background: occ.status === 'Completed' ? "#dcfce7" : "#fee2e2",
+                        color: occ.status === 'Completed' ? "#16a34a" : "#ef4444"
+                      }}>
+                        {occ.status}
+                      </span>
+                    </td>
+                    <td style={tdStyle}>
+                      {occ.status !== 'Completed' ? (
+                        <button 
+                          onClick={() => handleUpdateDailyStatus(occ.templateId, occ.targetDate, 'Completed')}
+                          style={{ padding: "6px 12px", borderRadius: "8px", border: "none", background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                        >
+                          Mark Completed
+                        </button>
+                      ) : (
+                        <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+                          By {occ.completedBy} at {new Date(occ.completedAt).toLocaleTimeString()}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Share Modal */}
+      {dailyShareModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "550px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px", background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <Mail size={24} />
+                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Share Daily Report</h3>
+              </div>
+              <button onClick={() => setDailyShareModal(false)} style={{ background: "none", border: "none", color: "white", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={labelStyle}>Recipients</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", background: "#f8fafc" }}>
+                  {shareData.recipients.map((email, idx) => (
+                    <div key={idx} style={{ background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                      {email} <X size={14} style={{ cursor: "pointer" }} onClick={() => removeEmail('recipients', idx)} />
+                    </div>
+                  ))}
+                  <input 
+                    type="text" 
+                    value={shareData.recipientInput}
+                    onChange={e => setShareData({...shareData, recipientInput: e.target.value})}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddEmail('recipients', shareData.recipientInput); }}
+                    style={{ border: "none", background: "none", outline: "none", flex: 1 }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Subject</label>
+                <input type="text" value={shareData.subject} onChange={e => setShareData({...shareData, subject: e.target.value})} style={inputStyle} />
+              </div>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button onClick={() => setDailyShareModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                <button onClick={handleDailyShareViaEmail} disabled={shareLoading} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#16a34a", color: "white", fontWeight: 600, cursor: "pointer" }}>
+                  {shareLoading ? "Sending..." : "Send Email"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
