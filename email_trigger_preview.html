@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Trigger Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .modal {
+            background: white;
+            border-radius: 20px;
+            width: 900px;
+            height: 650px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            padding: 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 200px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            padding: 16px;
+        }
+        .sidebar-btn {
+            width: 100%;
+            padding: 12px;
+            text-align: left;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-btn.active {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+        .tab-title {
+            margin: 0 0 24px 0;
+            font-size: 1.5rem;
+            color: #0f172a;
+        }
+        .card {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 1px solid #bae6fd;
+        }
+        .card-title {
+            margin: 0 0 16px 0;
+            font-size: 1rem;
+            color: #0369a1;
+            font-weight: 700;
+        }
+        .email-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .email-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #475569;
+        }
+        .email-list-container {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+        }
+        .email-item {
+            background: #f8fafc;
+            color: #334155;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 8px;
+        }
+        .email-item.lo {
+            background: #fdf4ff;
+            color: #701a75;
+            border-color: #fae8ff;
+        }
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.875rem;
+            outline: none;
+        }
+        .add-btn {
+            background: #2563eb;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .save-btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 32px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            float: right;
+        }
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="header">
+            <div class="header-title">
+                <i data-lucide="shield-check" color="#4f46e5"></i>
+                <h2>Control Center</h2>
+            </div>
+            <button class="close-btn">×</button>
+        </div>
+        <div class="content-area">
+            <div class="sidebar">
+                <div class="sidebar-btn">Account</div>
+                <div class="sidebar-btn active">Email Trigger</div>
+                <div class="sidebar-btn">Manual Mails</div>
+                <div class="sidebar-btn">User Management</div>
+                <div class="sidebar-btn">Edit Request</div>
+                <div class="sidebar-btn">Master Data</div>
+                <div class="sidebar-btn">Bulk Import</div>
+                <div class="sidebar-btn">Matrix Module</div>
+                <div class="sidebar-btn">Home Hub</div>
+            </div>
+            <div class="main-content">
+                <h3 class="tab-title">Email Trigger & Schedule</h3>
+                
+                <div class="card">
+                    <h4 class="card-title">Report Recipients</h4>
+                    
+                    <div class="email-section">
+                        <!-- Primary Emails -->
+                        <div class="email-group">
+                            <label>Primary Emails</label>
+                            <div class="email-list-container">
+                                <div class="email-item">
+                                    <span>pavankumar.reddy@intellicar.in</span>
+                                    <i data-lucide="x" size="14" style="cursor:pointer; color:#94a3b8"></i>
+                                </div>
+                                <div class="input-row">
+                                    <input type="email" placeholder="Add email...">
+                                    <button class="add-btn">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Primary LO Mails -->
+                        <div class="email-group">
+                            <label>Primary LO Mails</label>
+                            <div class="email-list-container">
+                                <div class="email-item lo">
+                                    <span>pavankumar.reddy@intellicar.in</span>
+                                    <i data-lucide="x" size="14" style="cursor:pointer; color:#d8b4fe"></i>
+                                </div>
+                                <div class="input-row">
+                                    <input type="email" placeholder="Add email...">
+                                    <button class="add-btn">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="save-btn">Save Automation Settings</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

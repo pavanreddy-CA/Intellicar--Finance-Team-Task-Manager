@@ -12,9 +12,11 @@ const transporter = nodemailer.createTransport({
 
 export const getEmailFromName = (name: string | null) => {
   if (!name || name === "Not Applicable" || name === "Choose") return null;
-  // A simple mapping if needed. Or just construct standard emails.
+  
+  const normalized = name.trim();
   const emailMap: Record<string, string> = {
     "Pavan": "pavanreddy@intellicar.in",
+    "Pavan Reddy": "pavanreddy@intellicar.in",
     "Saikath": "saikatdas@intellicar.in",
     "Sami": "sami@intellicar.in",
     "Hanusha": "hanusha@intellicar.in",
@@ -26,7 +28,11 @@ export const getEmailFromName = (name: string | null) => {
     "Sidharth Saneja": "saneja@intellicar.in"
   };
   
-  return emailMap[name] || `${name.toLowerCase()}@intellicar.in`;
+  if (emailMap[normalized]) return emailMap[normalized];
+  
+  // Clean up name for default email generation
+  const cleanName = normalized.toLowerCase().replace(/\s+/g, '');
+  return `${cleanName}@intellicar.in`;
 };
 
 export async function sendEmail({

@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     "/login", 
     "/register", 
+<<<<<<< HEAD
     "/test-login",
     "/api/login",
     "/api/debug-login", 
@@ -30,6 +31,11 @@ export async function middleware(request: NextRequest) {
     "/api/auth/forgot-password",
     "/api/auth/verify-otp",
     "/api/auth/reset-password",
+=======
+    "/api/login", 
+    "/api/auth/register",
+    "/api/auth", // NextAuth endpoints
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     "/api/public-settings"
   ];
   

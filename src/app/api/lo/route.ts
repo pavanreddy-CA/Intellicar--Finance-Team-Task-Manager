@@ -3,25 +3,14 @@ import { getDb } from "@/lib/db";
 import { getServerSession } from "@/lib/session";
 
 
-const EMAIL_TO_NAME: Record<string, string> = {
-  "pavanreddy@intellicar.in": "Pavan",
-  "saikatdas@intellicar.in": "Saikath",
-  "sami@intellicar.in": "Sami",
-  "hanusha@intellicar.in": "Hanusha",
-  "sreenivasulu.t@intellicar.in": "Sreenivas",
-  "sharath.shetty@intellicar.in": "Sharath",
-  "chandanak@intellicar.in": "Chandana",
-  "nikhat@intellicar.in": "Nikhat",
-  "venkata.g@intellicar.in": "Venkat",
-  "saneja@intellicar.in": "Siddharth"
-};
+// Using session name directly
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession();
   if (!session || !session.user?.email) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const isAdmin = session.user.email === "pavanreddy@intellicar.in" || (session.user as any)?.role === "ADMIN";
-  const shortName = EMAIL_TO_NAME[session.user.email] || session.user.name || "";
+  const shortName = session.user.name || "";
 
   try {
     const sql = getDb();

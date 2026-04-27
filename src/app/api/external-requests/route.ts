@@ -42,15 +42,26 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const body = await request.json();
+  const { requestFrom, requesterEmail, natureOfRequest, departmentName, requestType, entityNames } = body;
+
   try {
     const sql = getDb();
-    const body = await request.json();
-    const { requestFrom, requesterEmail, natureOfRequest, departmentName, requestType } = body;
+    
+    // Self-healing migration
+    try {
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+    } catch (e) {
+      console.log("ExternalRequest migration check failed/skipped");
+    }
 
-    if (!requestFrom || !requesterEmail || !natureOfRequest || !departmentName || !requestType) {
+    if (!requestFrom || !requesterEmail || !natureOfRequest || !departmentName || !requestType || !entityNames || !entityNames.length) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
+<<<<<<< HEAD
     const newRequests = await sql`
       INSERT INTO "ExternalRequest" (
         "requestFrom", "requesterEmail", "natureOfRequest", "departmentName", 
@@ -62,10 +73,29 @@ export async function POST(request: Request) {
       )
       RETURNING *
     `;
+=======
+    const createdRequests = [];
+    for (const entityName of entityNames) {
+      const result = await sql`
+        INSERT INTO "ExternalRequest" (
+          "requestFrom", "requesterEmail", "natureOfRequest", "departmentName", 
+          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "createdAt", "updatedAt"
+        )
+        VALUES (
+          ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${departmentName},
+          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, NOW(), NOW()
+        )
+        RETURNING *
+      `;
+      createdRequests.push(result[0]);
+    }
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
 
-    return NextResponse.json(newRequests[0], { status: 201 });
-  } catch (error) {
+    return NextResponse.json(createdRequests, { status: 201 });
+  } catch (error: any) {
     console.error('Error creating external request:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    console.error('External Request Full Data:', { requestFrom, requesterEmail, natureOfRequest, departmentName, requestType, entityNames });
+    console.error('Error Details:', error);
+    return NextResponse.json({ message: 'Internal Server Error', error: error.message }, { status: 500 });
   }
 }

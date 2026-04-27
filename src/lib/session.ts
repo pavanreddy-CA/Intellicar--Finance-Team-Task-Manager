@@ -101,9 +101,58 @@ export async function authenticate(
     // Find user in database using Neon serverless
     const sql = getDb();
     
+<<<<<<< HEAD
     // Skip migrations during auth to avoid delays and errors
     // All tables should already exist from initial setup
     
+=======
+    // --- Self-healing Migration ---
+    try {
+      // Add isSuspended column
+      await sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isSuspended" BOOLEAN DEFAULT FALSE`;
+      
+      // Add Recurring Activities column to SystemSettings
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "recurringMatrix" TEXT DEFAULT '{}'`;
+
+      // Add Entity Controls column to SystemSettings
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "entityMatrix" TEXT DEFAULT '{}'`;
+
+      // Add Home Content column to SystemSettings
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "homeContent" TEXT DEFAULT '{}'`;
+
+      // Add missing columns to ExternalRequest
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+
+      // Add Recurring fields to Task table for tracking
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "periodKey" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "templateId" INTEGER`;
+
+      // Create RecurringTemplate table
+      await sql`
+        CREATE TABLE IF NOT EXISTS "RecurringTemplate" (
+          id SERIAL PRIMARY KEY,
+          "taskNamePattern" TEXT NOT NULL,
+          "entityName" TEXT NOT NULL,
+          "taskType" TEXT NOT NULL,
+          "departmentName" TEXT NOT NULL,
+          frequency TEXT NOT NULL,
+          "dayOffset" INTEGER DEFAULT 0,
+          "monthOffset" INTEGER DEFAULT 0,
+          "defaultOwner" TEXT,
+          "defaultReviewer" TEXT,
+          "isActive" BOOLEAN DEFAULT TRUE,
+          "lastGeneratedPeriod" TEXT,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+      `;
+    } catch (e) {
+      console.log("Migration check done/failed gracefully");
+    }
+
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     const users = await sql`
       SELECT id, email, name, password, role, department, "isApproved", "isSuspended"
       FROM "User"
@@ -113,16 +162,22 @@ export async function authenticate(
     
     const user = users[0];
     
+<<<<<<< HEAD
     console.log("[v0] Auth debug - User found:", !!user, user?.email);
     
+=======
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     if (!user) {
       return { success: false, error: "Invalid email address" };
     }
     
+<<<<<<< HEAD
     console.log("[v0] Auth debug - Password exists:", !!user.password);
     console.log("[v0] Auth debug - Is suspended:", user.isSuspended);
     console.log("[v0] Auth debug - Is approved:", user.isApproved);
     
+=======
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
     if (!user.password) {
       return { success: false, error: "Account error: No password set" };
     }

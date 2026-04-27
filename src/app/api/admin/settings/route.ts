@@ -34,6 +34,12 @@ export async function PATCH(request: Request) {
           "masterRequestTypes",
           "moduleAccessMatrix", 
           "allocationMatrix",
+<<<<<<< HEAD
+=======
+          "entityMatrix",
+          "recurringMatrix",
+          "homeContent",
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
           "reminderFrequency",
           "reminderTimes",
           "managerReportFrequency",
@@ -51,6 +57,12 @@ export async function PATCH(request: Request) {
           ${body.masterRequestTypes || ''},
           ${body.moduleAccessMatrix || '{}'},
           ${body.allocationMatrix || '{}'},
+<<<<<<< HEAD
+=======
+          ${body.entityMatrix || '{}'},
+          ${body.recurringMatrix || '{}'},
+          ${body.homeContent || '{}'},
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
           ${body.reminderFrequency || 'DAILY'},
           ${body.reminderTimes || '09:00,18:00'},
           ${body.managerReportFrequency || 'DAILY'},
@@ -79,6 +91,12 @@ export async function PATCH(request: Request) {
         "masterRequestTypes" = ${body.masterRequestTypes ?? existingSettings[0].masterRequestTypes},
         "moduleAccessMatrix" = ${body.moduleAccessMatrix ?? existingSettings[0].moduleAccessMatrix},
         "allocationMatrix" = ${body.allocationMatrix ?? existingSettings[0].allocationMatrix},
+<<<<<<< HEAD
+=======
+        "entityMatrix" = ${body.entityMatrix ?? existingSettings[0].entityMatrix},
+        "recurringMatrix" = ${body.recurringMatrix ?? existingSettings[0].recurringMatrix},
+        "homeContent" = ${body.homeContent ?? existingSettings[0].homeContent},
+>>>>>>> 72d784980c559b53ba095da66d5223e7b7ce6bba
         "reminderFrequency" = ${body.reminderFrequency ?? existingSettings[0].reminderFrequency},
         "reminderTimes" = ${body.reminderTimes ?? existingSettings[0].reminderTimes},
         "managerReportFrequency" = ${body.managerReportFrequency ?? existingSettings[0].managerReportFrequency},

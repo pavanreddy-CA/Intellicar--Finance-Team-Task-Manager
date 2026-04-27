@@ -13,14 +13,28 @@ type ExternalRequestFormProps = {
 export default function ExternalRequestForm({ onClose, onSuccess, settings, user }: ExternalRequestFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [formData, setFormData] = useState({
     requestFrom: user?.name || "",
     requesterEmail: user?.email || "",
     natureOfRequest: "",
     departmentName: "",
     requestType: "",
+    entityNames: [] as string[],
   });
+
+  const [allowedEntities, setAllowedEntities] = useState<string[]>([]);
+
+  useEffect(() => {
+    const matrix = JSON.parse(settings.entityMatrix || '{}');
+    const userPerms = matrix[user.id] || [];
+    const allEntities = settings?.masterEntities?.split(',').map((e: string) => e.trim()).filter((e: string) => e) || [];
+    
+    if (userPerms.includes('ALL')) {
+      setAllowedEntities(allEntities);
+    } else {
+      setAllowedEntities(allEntities.filter((e: string) => userPerms.includes(e)));
+    }
+  }, [settings, user.id]);
 
   useEffect(() => {
     if (user?.department && !formData.departmentName) {
@@ -28,12 +42,33 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     }
   }, [user, formData.departmentName]);
 
+  const handleEntityToggle = (entity: string) => {
+    setFormData(prev => {
+      const current = prev.entityNames;
+      const updated = current.includes(entity) 
+        ? current.filter(e => e !== entity) 
+        : [...current, entity];
+      return { ...prev, entityNames: updated };
+    });
+  };
+
+  const handleSelectAll = () => {
+    setFormData(prev => {
+      const isAllSelected = prev.entityNames.length === allowedEntities.length;
+      return { ...prev, entityNames: isAllSelected ? [] : [...allowedEntities] };
+    });
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.entityNames.length === 0) {
+      setError("Please select at least one entity.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -99,6 +134,43 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
                 value={formData.departmentName} 
                 style={{ ...inputStyle, background: "#f8fafc", cursor: "not-allowed" }} 
               />
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <label style={{ ...labelStyle, marginBottom: 0 }}>Select Entities *</label>
+              <button 
+                type="button" 
+                onClick={handleSelectAll}
+                style={{ fontSize: "0.7rem", color: "#4f46e5", background: "none", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
+              >
+                {formData.entityNames.length === allowedEntities.length ? "Deselect All" : "Consolidate (Select All)"}
+              </button>
+            </div>
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", 
+              gap: "8px", 
+              maxHeight: "150px", 
+              overflowY: "auto",
+              padding: "12px",
+              background: "#f8fafc",
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0"
+            }}>
+              {allowedEntities.map(entity => (
+                <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: "pointer", padding: "4px", borderRadius: "4px", transition: "background 0.2s" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.entityNames.includes(entity)} 
+                    onChange={() => handleEntityToggle(entity)}
+                    style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
+                  />
+                  {entity}
+                </label>
+              ))}
+              {allowedEntities.length === 0 && <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>No entities assigned to you.</span>}
             </div>
           </div>
 
