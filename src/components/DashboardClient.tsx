@@ -5312,7 +5312,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <div>
                           <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "16px" }}>Define which departments can access specific modules.</p>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
-                            {['Tasks', 'Requests', 'Learning', 'Payments'].map(module => (
+                            {['Tasks', 'Requests', 'Learning', 'Payments'].map((module: string) => (
                               <div key={module} style={{ padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
                                 <div style={{ fontWeight: 600, color: "#1e293b", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
                                   {module === 'Tasks' && <Briefcase size={16} />}
@@ -5322,7 +5322,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   {module} Module
                                 </div>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                                  {settings.masterDepartments.split(',').map(dept => {
+                                  {settings.masterDepartments.split(',').map((dept: string) => {
                                     const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
                                     const isAllowed = matrix[module]?.includes(dept.trim());
                                     return (
@@ -5390,10 +5390,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
 
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-                        {usersList.filter(u => u.department === 'Finance' && (u as any).isApproved !== false).length === 0 ? (
+                        {usersList.filter((u: any) => u.department === 'Finance' && (u as any).isApproved !== false).length === 0 ? (
                           <p style={{ fontSize: "0.875rem", color: "#94a3b8", italic: "true" } as any}>No users found in Finance department.</p>
                         ) : (
-                          usersList.filter(u => u.department === 'Finance' && (u as any).isApproved !== false).map(u => (
+                          usersList.filter((u: any) => u.department === 'Finance' && (u as any).isApproved !== false).map((u: any) => (
                             <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
                               <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#2563eb", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.875rem" }}>
                                 {u.name ? u.name[0].toUpperCase() : u.email[0].toUpperCase()}
@@ -5428,18 +5428,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <thead>
                                 <tr style={{ background: "#f8fafc" }}>
                                   <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Department</th>
-                                  {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map(module => (
+                                  {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map((module: string) => (
                                     <th key={module} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>{module}</th>
                                   ))}
                                 </tr>
                               </thead>
                               <tbody>
-                                {settings.masterDepartments.split(',').filter(d => d.trim()).map((dept) => {
+                                {settings.masterDepartments.split(',').filter((d: string) => d.trim()).map((dept: string) => {
                                   const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
                                   return (
                                     <tr key={dept} style={{ borderBottom: "1px solid #f1f5f9" }}>
                                       <td style={{ padding: "12px", fontWeight: 600, color: "#1e293b", fontSize: "0.875rem" }}>{dept}</td>
-                                      {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map(module => (
+                                      {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map((module: string) => (
                                         <td key={module} style={{ padding: "12px", textAlign: "center" }}>
                                           <input 
                                             type="checkbox" 

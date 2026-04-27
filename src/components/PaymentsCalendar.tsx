@@ -304,7 +304,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
               style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", minWidth: "150px" }}
             >
               <option value="ALL">All Entities</option>
-              {settings.masterEntities.split(',').map(e => <option key={e} value={e.trim()}>{e.trim()}</option>)}
+              {settings.masterEntities.split(',').map((e: string) => <option key={e} value={e.trim()}>{e.trim()}</option>)}
             </select>
           </div>
 
@@ -397,7 +397,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                 {templates.length === 0 ? (
                   <tr><td colSpan={7} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No payment templates found.</td></tr>
                 ) : (
-                  templates.map(temp => (
+                  templates.map((temp: PaymentTemplate) => (
                     <tr key={temp.id} style={{ borderBottom: `1px solid ${t.border}` }}>
                       <td style={tdStyle}>{temp.entityName}</td>
                       <td style={tdStyle}>{temp.paymentDescription}</td>
@@ -445,7 +445,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                   style={inputStyle}
                 >
                   <option value="">Select Entity</option>
-                  {settings.masterEntities.split(',').map(e => <option key={e} value={e.trim()}>{e.trim()}</option>)}
+                  {settings.masterEntities.split(',').map((e: string) => <option key={e} value={e.trim()}>{e.trim()}</option>)}
                 </select>
               </div>
 
@@ -493,7 +493,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                   onChange={e => setFormData({...formData, departmentName: e.target.value})}
                   style={inputStyle}
                 >
-                  {settings.masterDepartments.split(',').map(d => <option key={d} value={d.trim()}>{d.trim()}</option>)}
+                  {settings.masterDepartments.split(',').map((d: string) => <option key={d} value={d.trim()}>{d.trim()}</option>)}
                 </select>
               </div>
 
@@ -505,7 +505,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                   style={inputStyle}
                 >
                   <option value="">Select Function</option>
-                  {settings.masterRequestTypes.split(',').map(f => <option key={f} value={f.trim()}>{f.trim()}</option>)}
+                  {settings.masterRequestTypes.split(',').map((f: string) => <option key={f} value={f.trim()}>{f.trim()}</option>)}
                 </select>
               </div>
 
