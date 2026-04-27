@@ -13,6 +13,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    // --- Ensure Task table is ready for recurring fields ---
+    try {
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "templateId" INTEGER`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "periodKey" TEXT`;
+    } catch (e) {
+      console.log("Task migration check failed in GET");
+    }
+
     const userEmail = session.user?.email;
     const userRole = (session.user as any)?.role;
     

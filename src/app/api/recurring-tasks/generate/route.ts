@@ -12,6 +12,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // --- Ensure Task table is ready for recurring fields ---
+    try {
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "templateId" INTEGER`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "periodKey" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "financeFunction" TEXT`;
+    } catch (err) {
+      console.error("Migration error in task generation:", err);
+    }
+
     const { tasks } = await req.json(); // Array of { templateId, entityName, taskName, ownerName, reviewerName, dueDate, periodKey }
 
     if (!Array.isArray(tasks) || tasks.length === 0) {
