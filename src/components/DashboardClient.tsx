@@ -142,7 +142,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     moduleAccessMatrix: '{}',
     allocationMatrix: '{}',
     entityMatrix: '{}',
-    homeContent: '{}'
+    homeContent: '{}',
+    masterFrequencies: 'Ad,M,Y,2Y,H,Q,W,BW,D'
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
