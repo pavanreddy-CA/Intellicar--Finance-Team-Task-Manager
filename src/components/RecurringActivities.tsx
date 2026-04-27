@@ -27,6 +27,7 @@ type RecurringTemplate = {
   isStopped: boolean;
   weeklyDay: string | null;
   excludedDates: string[] | null;
+  startDate: string | null;
 };
 
 type StagingTask = {
