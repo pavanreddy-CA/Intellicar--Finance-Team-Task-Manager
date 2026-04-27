@@ -50,6 +50,7 @@ model Task {
   // Link to External Request
   linkedRequestId     Int?
   requestStatus       String?   @default("Pending")
+  frequency           String?
 }
 
 model LearningOpportunity {
@@ -85,6 +86,7 @@ model ExternalRequest {
   assignedAllocatorEmail String?
   convertedTaskId     Int?
   rejectReason        String?
+  frequency           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 }
@@ -107,6 +109,7 @@ model SystemSettings {
   masterDepartments     String   @default("Finance,HR,IT,Operations,Sales,Marketing,Admin")
   masterEntities        String   @default("Intellicar-BLR,Intellicar-DEL,Intellicar-MUM,ITPL-Bangalore")
   masterTaskTypes       String   @default("Daily,Weekly,Monthly,Quarterly,Yearly,Statutory,Internal")
+  masterFrequencies     String   @default("Daily,Weekly,Fortnightly,Monthly,Quarterly,Half Yearly,Yearly,Ad-hoc")
   masterCommunicationModes String  @default("Email,Verbal Discussion,Hangouts,Whatsapp-IC Group")
   masterRequestTypes    String   @default("Accounts Receivable,Accounts Payable,General & Administration,Payroll")
   masterRequestStatuses String   @default("Under Process,Pending for Review,Processed")

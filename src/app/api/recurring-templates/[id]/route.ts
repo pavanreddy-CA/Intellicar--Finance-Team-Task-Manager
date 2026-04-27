@@ -43,6 +43,7 @@ export async function PATCH(
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "excludedDates" JSONB`;
+      await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "freqLabel" TEXT`;
     } catch (err) {
       console.error("Migration error in PATCH:", err);
     }
@@ -51,7 +52,7 @@ export async function PATCH(
     const allowedFields = [
       "taskNamePattern", "entityName", "taskType", "departmentName", "financeFunction", "frequency",
       "dayOffset", "monthOffset", "defaultOwner", "defaultReviewer", "isActive", "startDate", 
-      "endDate", "stopDate", "isStopped", "weeklyDay", "excludedDates"
+      "endDate", "stopDate", "isStopped", "weeklyDay", "excludedDates", "freqLabel"
     ];
 
     const updates: any = {};
@@ -84,6 +85,7 @@ export async function PATCH(
         "isStopped" = ${updates.isStopped !== undefined ? updates.isStopped : sql`"isStopped"`},
         "weeklyDay" = ${updates.weeklyDay !== undefined ? updates.weeklyDay : sql`"weeklyDay"`},
         "excludedDates" = ${updates.excludedDates !== undefined ? (updates.excludedDates ? JSON.stringify(updates.excludedDates) : null) : sql`"excludedDates"`},
+        "freqLabel" = ${updates.freqLabel !== undefined ? updates.freqLabel : sql`"freqLabel"`},
         "updatedAt" = NOW()
       WHERE id = ${id}
       RETURNING *

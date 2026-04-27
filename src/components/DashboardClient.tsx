@@ -473,7 +473,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       requestFrom: req.requestFrom,
       linkedRequestId: req.id,
       transferStatus: req.transferStatus,
-      originalRequestType: req.originalRequestType
+      originalRequestType: req.originalRequestType,
+      frequency: req.frequency
     });
     setShowForm(true);
   };
@@ -2443,6 +2444,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       Task Type {taskSortConfig?.key === 'taskType' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('frequency')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Frequency {taskSortConfig?.key === 'frequency' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Request From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -2544,6 +2550,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             )
                           )}
                         </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{ 
+                          padding: "2px 6px", background: "#f1f5f9", color: "#475569", 
+                          borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, border: "1px solid #e2e8f0" 
+                        }}>
+                          {task.frequency || "--"}
+                        </span>
                       </td>
                       <td style={tdStyle}>{task.requestFrom}</td>
                       <td style={tdStyle}>{task.ownerName}</td>
@@ -4761,6 +4775,48 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   const val = e.currentTarget.value.trim();
                                   if (val) {
                                     setSettings({...settings, masterCommunicationModes: (settings.masterCommunicationModes || "") + (settings.masterCommunicationModes?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Master Frequencies */}
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                          <RefreshCw size={18} color="#ec4899" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Master Frequencies</h4>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {(settings.masterFrequencies || "").split(',').filter(t => t.trim()).map((freq, idx) => (
+                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {freq.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterFrequencies.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterFrequencies: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add frequency..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    setSettings({...settings, masterFrequencies: (settings.masterFrequencies || "") + (settings.masterFrequencies?.trim() ? "," : "") + val});
                                     e.currentTarget.value = "";
                                   }
                                 }

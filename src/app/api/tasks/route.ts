@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     try {
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "templateId" INTEGER`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "periodKey" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "frequency" TEXT`;
     } catch (e) {
       console.log("Task migration check failed in GET");
     }
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "frequency" TEXT`;
     } catch (e) {
       console.log("Task migration check skipped/failed");
     }
@@ -137,12 +139,12 @@ export async function POST(req: NextRequest) {
         INSERT INTO "Task" (
           "taskName", "entityName", "taskType", "departmentName", "requestFrom",
           "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
-          "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "createdAt", "updatedAt"
+          "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "frequency", "createdAt", "updatedAt"
         )
         VALUES (
           ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
           ${ownerName}, ${resolvedReviewer}, ${parseDate(dueDate)}, ${mailLink || null}, 'Pending',
-          ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, NOW(), NOW()
+          ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, ${data.frequency || null}, NOW(), NOW()
         )
         RETURNING *
       `;

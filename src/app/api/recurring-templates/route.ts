@@ -36,6 +36,7 @@ export async function GET() {
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "endDate" DATE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "stopDate" DATE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "freqLabel" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "financeFunction" TEXT`;
     } catch (err) {
       console.error("Migration error:", err);
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "excludedDates" JSONB`;
+      await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "freqLabel" TEXT`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterWeekDays" TEXT DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday'`;
     } catch (err) {
       console.error("Migration error in POST:", err);
@@ -110,7 +112,8 @@ export async function POST(req: NextRequest) {
       defaultReviewer,
       startDate,
       endDate,
-      weeklyDay
+      weeklyDay,
+      freqLabel
     } = data;
 
     if (!taskNamePattern || !entityName || !frequency) {
@@ -121,7 +124,7 @@ export async function POST(req: NextRequest) {
       INSERT INTO "RecurringTemplate" (
         "taskNamePattern", "entityName", "taskType", "departmentName", "financeFunction",
         "frequency", "dayOffset", "monthOffset", "defaultOwner", "defaultReviewer",
-        "startDate", "endDate", "weeklyDay",
+        "startDate", "endDate", "weeklyDay", "freqLabel",
         "isActive", "createdAt", "updatedAt"
       )
       VALUES (
@@ -129,7 +132,7 @@ export async function POST(req: NextRequest) {
         ${frequency}, ${Number(dayOffset) || 0}, ${Number(monthOffset) || 0},
         ${defaultOwner || null}, ${defaultReviewer || null},
         ${startDate ? new Date(startDate) : null}, ${endDate ? new Date(endDate) : null},
-        ${weeklyDay || null},
+        ${weeklyDay || null}, ${freqLabel || null},
         TRUE, NOW(), NOW()
       )
       RETURNING *

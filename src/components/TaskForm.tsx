@@ -29,7 +29,8 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
     mailLink: initialData?.mailLink || "",
     linkedRequestId: initialData?.linkedRequestId || null,
     transferStatus: initialData?.transferStatus || 'O',
-    originalRequestType: initialData?.originalRequestType || null
+    originalRequestType: initialData?.originalRequestType || null,
+    frequency: initialData?.frequency || ""
   });
 
   const [selectedEntities, setSelectedEntities] = useState<string[]>(initialData?.entityName ? [initialData.entityName] : []);
@@ -325,6 +326,27 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                 </div>
               </div>
 
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "16px" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Frequency (Freq) *</label>
+                  <select name="frequency" required value={formData.frequency} onChange={handleChange} style={inputStyle}>
+                    <option value="">Choose Frequency</option>
+                    {settings?.masterFrequencies?.split(',').filter((t: string) => t.trim()).map((freq: string) => (
+                      <option key={freq.trim()} value={freq.trim()}>{freq.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
+                  <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
+                    <option value="">Choose</option>
+                    {settings?.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => (
+                      <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               {/* Assignment Grid */}
               {selectedEntities.length > 0 && (
                 <div style={{ marginTop: "4px" }}>
@@ -375,20 +397,9 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                 </div>
               )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
-                  <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
-                    <option value="">Choose</option>
-                    {settings?.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => (
-                      <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
-                  <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
-                </div>
+              <div style={{ marginTop: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
+                <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>

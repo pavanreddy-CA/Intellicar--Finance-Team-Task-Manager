@@ -20,6 +20,7 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     departmentName: "",
     requestType: "",
     entityNames: [] as string[],
+    frequency: "",
   });
 
   const [allowedEntities, setAllowedEntities] = useState<string[]>([]);
@@ -174,20 +175,37 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
             </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Finance Function *</label>
-            <select 
-              name="requestType" 
-              required 
-              value={formData.requestType} 
-              onChange={handleChange} 
-              style={inputStyle}
-            >
-              <option value="">Select Function</option>
-              {settings?.masterRequestTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
-                <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
-              ))}
-            </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div>
+              <label style={labelStyle}>Finance Function *</label>
+              <select 
+                name="requestType" 
+                required 
+                value={formData.requestType} 
+                onChange={handleChange} 
+                style={inputStyle}
+              >
+                <option value="">Select Function</option>
+                {settings?.masterRequestTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
+                  <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Frequency (Freq) *</label>
+              <select 
+                name="frequency" 
+                required 
+                value={formData.frequency} 
+                onChange={handleChange} 
+                style={inputStyle}
+              >
+                <option value="">Select Frequency</option>
+                {settings?.masterFrequencies?.split(',').filter((t: string) => t.trim()).map((freq: string) => (
+                  <option key={freq.trim()} value={freq.trim()}>{freq.trim()}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>

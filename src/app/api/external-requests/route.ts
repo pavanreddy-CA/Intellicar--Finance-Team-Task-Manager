@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { requestFrom, requesterEmail, natureOfRequest, departmentName, requestType, entityNames } = body;
+  const { requestFrom, requesterEmail, natureOfRequest, departmentName, requestType, entityNames, frequency } = body;
 
   try {
     const sql = getDb();
@@ -54,6 +54,7 @@ export async function POST(request: Request) {
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferredBy" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "frequency" TEXT`;
     } catch (e) {
       console.log("ExternalRequest migration check failed/skipped");
     }
@@ -67,11 +68,11 @@ export async function POST(request: Request) {
       const result = await sql`
         INSERT INTO "ExternalRequest" (
           "requestFrom", "requesterEmail", "natureOfRequest", "departmentName", 
-          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "createdAt", "updatedAt"
+          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "frequency", "createdAt", "updatedAt"
         )
         VALUES (
           ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${departmentName},
-          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, NOW(), NOW()
+          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, ${frequency || null}, NOW(), NOW()
         )
         RETURNING *
       `;

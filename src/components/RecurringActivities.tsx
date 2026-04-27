@@ -28,6 +28,7 @@ type RecurringTemplate = {
   weeklyDay: string | null;
   excludedDates: string[] | null;
   startDate: string | null;
+  freqLabel: string | null;
 };
 
 type StagingTask = {
@@ -45,6 +46,7 @@ type StagingTask = {
   isReady: boolean;
   isConverted?: boolean;
   convertedTaskId?: number;
+  freqLabel?: string | null;
 };
 
 export default function RecurringActivities({ settings, usersList = [] }: { settings: any; usersList: any[] }) {
@@ -80,7 +82,8 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
     defaultReviewer: "",
     isActive: true,
     startDate: new Date().toISOString().split('T')[0],
-    endDate: ""
+    endDate: "",
+    freqLabel: ""
   });
 
   const financeUsers = usersList.filter(u => u.department === 'Finance' && u.isApproved !== false);
@@ -146,7 +149,8 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
             reviewerName: converted.reviewerName,
             isReady: true,
             isConverted: true,
-            convertedTaskId: converted.id
+            convertedTaskId: converted.id,
+            freqLabel: converted.frequency || t.freqLabel
           });
         } else {
           // It's a pending task
@@ -166,7 +170,8 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
             ownerName: t.defaultOwner || "",
             reviewerName: t.defaultReviewer || "",
             isReady: !!t.defaultOwner,
-            isConverted: false
+            isConverted: false,
+            freqLabel: t.freqLabel
           });
         }
       });
@@ -738,9 +743,37 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Frequency</label>
-                  <select value={templateForm.frequency || "MONTHLY"} onChange={e => setTemplateForm({...templateForm, frequency: e.target.value as any})} style={inputStyle}>
+                  <label style={labelStyle}>Logic Frequency</label>
+                  <select 
+                    value={templateForm.frequency || "MONTHLY"} 
+                    onChange={e => {
+                      const freq = e.target.value as any;
+                      const mapping: any = {
+                        'DAILY': 'D',
+                        'WEEKLY': 'W',
+                        'MONTHLY': 'M',
+                        'QUARTERLY': 'Q',
+                        'HALF_YEARLY': 'H',
+                        'YEARLY': 'Y',
+                        '2_YEARLY': '2Y'
+                      };
+                      setTemplateForm({
+                        ...templateForm, 
+                        frequency: freq,
+                        freqLabel: templateForm.freqLabel || mapping[freq] || ""
+                      });
+                    }} 
+                    style={inputStyle}
+                  >
                     {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Categorical Freq (Master)</label>
+                  <select value={templateForm.freqLabel || ""} onChange={e => setTemplateForm({...templateForm, freqLabel: e.target.value})} style={inputStyle}>
+                    <option value="">Select Frequency Category...</option>
+                    {(settings.masterFrequencies || "").split(',').map((f: string) => <option key={f} value={f.trim()}>{f.trim()}</option>)}
                   </select>
                 </div>
 
