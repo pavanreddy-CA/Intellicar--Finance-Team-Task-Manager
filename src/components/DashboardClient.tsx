@@ -10,6 +10,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExternalRequestForm from "@/components/ExternalRequestForm";
 import RecurringActivities from "@/components/RecurringActivities";
+import { COMPLETION_STATUSES } from "@/lib/taskUtils";
 
 type Task = {
   id: number;
@@ -2310,7 +2311,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "#f8fafc", color: "#475569" }}
               >
                 <option value="ALL">All Statuses</option>
-                {uniqueTaskStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                <option value="Not Yet Due">Not Yet Due</option>
+                <option value="Due on Today">Due on Today</option>
+                <option value="Over Due">Over Due</option>
+                <option value="On-Time">On-Time</option>
+                <option value="Early Closure">Early Closure</option>
+                <option value="Delay in Closure">Delay in Closure</option>
               </select>
 
               <select 
@@ -2570,14 +2576,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         )}
                       </td>
 
-                      <td style={tdStyle}>
-                        <StatusPill 
-                          status={task.taskStatus} 
-                          type="task" 
-                          taskId={task.id} 
-                          onUpdate={handleUpdate} 
-                          disabled={isOwnerLocked}
-                        />
+                      <td 
+                        style={{ ...tdStyle, fontWeight: 600, cursor: isOwnerLocked ? "default" : "pointer" }}
+                        onClick={() => {
+                          if (isOwnerLocked) return;
+                          if (COMPLETION_STATUSES.includes(task.taskStatus)) return;
+                          if (window.confirm(`Mark "${task.taskName}" as Completed?`)) {
+                            handleUpdate(task.id, "taskStatus", "Completed");
+                          }
+                        }}
+                        title={!isOwnerLocked && !COMPLETION_STATUSES.includes(task.taskStatus) ? "Click to mark as completed" : ""}
+                      >
+                        {task.taskStatus}
                       </td>
                       <td style={tdStyle}>{task.reviewerName === "Not Applicable" ? <span style={{ color: "#94a3b8" }}>N/A</span> : task.reviewerName}</td>
                       

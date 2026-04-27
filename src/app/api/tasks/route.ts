@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getServerSession } from "@/lib/session";
 import { sendEmail, getEmailFromName } from "@/lib/email";
+import { getTrackingStatus, COMPLETION_STATUSES } from "@/lib/taskUtils";
 
 
 // GET /api/tasks
@@ -30,7 +31,12 @@ export async function GET(req: NextRequest) {
         SELECT * FROM "Task"
         ORDER BY "createdAt" DESC
       `;
-      return NextResponse.json(tasks, { status: 200 });
+      // Transform statuses for display
+      const transformed = tasks.map(t => ({
+        ...t,
+        taskStatus: getTrackingStatus(t as any)
+      }));
+      return NextResponse.json(transformed, { status: 200 });
     }
 
     // Regular users only see tasks assigned to them or created by them
@@ -39,7 +45,10 @@ export async function GET(req: NextRequest) {
       ORDER BY "createdAt" DESC
     `;
 
-    const filteredTasks = allTasks.filter(task => {
+    const filteredTasks = allTasks.map(t => ({
+      ...t,
+      taskStatus: getTrackingStatus(t as any)
+    })).filter(task => {
       const ownerEmail = getEmailFromName(task.ownerName);
       const reviewerEmail = getEmailFromName(task.reviewerName);
       
@@ -48,7 +57,7 @@ export async function GET(req: NextRequest) {
       
       // Reviewer can only see the task if the owner has finished it
       if (reviewerEmail === userEmail) {
-        return task.taskStatus === "Completed" || task.reviewStatus === "Pending" || task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required";
+        return COMPLETION_STATUSES.includes(task.taskStatus) || task.reviewStatus === "Pending" || task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required";
       }
 
       return false;
