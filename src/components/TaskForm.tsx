@@ -101,11 +101,14 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
           transferredBy: user.name || user.email
         }),
       });
-      if (!res.ok) throw new Error("Failed to transfer request");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.details || "Failed to transfer request");
+      }
       alert(`Request transferred successfully!`);
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
+      setError(`Transfer Failed: ${err.message}`);
     } finally {
       setTransferring(false);
     }

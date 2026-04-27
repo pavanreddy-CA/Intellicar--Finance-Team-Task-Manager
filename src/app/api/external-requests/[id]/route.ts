@@ -65,9 +65,12 @@ export async function PATCH(
     const updatedRequest = result[0];
     
     return NextResponse.json(updatedRequest);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating external request:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'Failed to transfer request', 
+      details: error.message 
+    }, { status: 500 });
   }
 }
 

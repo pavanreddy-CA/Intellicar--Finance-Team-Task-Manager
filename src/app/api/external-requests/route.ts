@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "entityName" TEXT`;
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferredBy" TEXT`;
     } catch (e) {
       console.log("ExternalRequest migration check failed/skipped");
     }
