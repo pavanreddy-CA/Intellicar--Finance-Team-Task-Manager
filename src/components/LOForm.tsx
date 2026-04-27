@@ -16,7 +16,7 @@ export default function LOForm({ onClose, onSuccess, settings, usersList = [], u
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const finalEmployees = ['Sreenivas', 'Pavan Reddy'];
+  const finalEmployees = usersList.filter(u => u.department === 'Finance' && u.isApproved !== false).map(u => u.name || u.email);
 
   const [formData, setFormData] = useState({
     entity: "",
