@@ -82,6 +82,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
   const [entityFilterStaging, setEntityFilterStaging] = useState("ALL");
   const [searchMaster, setSearchMaster] = useState("");
   const [stagingSortConfig, setStagingSortConfig] = useState<{ key: keyof StagingTask; direction: 'asc' | 'desc' } | null>(null);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   const [templateForm, setTemplateForm] = useState<Partial<RecurringTemplate>>({
     taskNamePattern: "",
@@ -508,10 +509,48 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
 
              <div style={{ flex: 1 }}></div>
 
-             <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={exportToExcel} title="Export to Excel" style={{ padding: "8px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", color: "#166534" }}><TableIcon size={18} /></button>
-                <button onClick={exportToPDF} title="Export to PDF" style={{ padding: "8px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", color: "#991b1b" }}><FileText size={18} /></button>
-                <button onClick={handleShare} title="Share Summary" style={{ padding: "8px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", color: "#075985" }}><Share2 size={18} /></button>
+             <div style={{ position: "relative" }}>
+                <button 
+                  onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#334155", fontSize: "0.875rem", fontWeight: 700, cursor: "pointer", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", transition: "all 0.2s" }}
+                >
+                  <Download size={18} />
+                  Download Report
+                  <ChevronDown size={16} style={{ transform: showDownloadMenu ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+                </button>
+
+                {showDownloadMenu && (
+                  <>
+                    <div 
+                      onClick={() => setShowDownloadMenu(false)} 
+                      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 40 }}
+                    />
+                    <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: "200px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)", zIndex: 50, padding: "8px", animation: "slideDown 0.2s ease" }}>
+                      <button 
+                        onClick={() => { exportToExcel(); setShowDownloadMenu(false); }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#166534", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}
+                        className="hover:bg-slate-50"
+                      >
+                        <TableIcon size={18} /> Export to Excel
+                      </button>
+                      <button 
+                        onClick={() => { exportToPDF(); setShowDownloadMenu(false); }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#991b1b", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}
+                        className="hover:bg-slate-50"
+                      >
+                        <FileText size={18} /> Export to PDF
+                      </button>
+                      <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }} />
+                      <button 
+                        onClick={() => { handleShare(); setShowDownloadMenu(false); }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#075985", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}
+                        className="hover:bg-slate-50"
+                      >
+                        <Share2 size={18} /> Share Summary
+                      </button>
+                    </div>
+                  </>
+                )}
              </div>
           </div>
 
