@@ -199,18 +199,32 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
     try {
       const url = editingTemplate ? `/api/recurring-templates/${editingTemplate.id}` : "/api/recurring-templates";
       const method = editingTemplate ? "PATCH" : "POST";
+      
+      // Clean dates to avoid "Invalid Date" errors
+      const submissionData = {
+        ...templateForm,
+        startDate: templateForm.startDate || null,
+        endDate: templateForm.endDate || null
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(templateForm)
+        body: JSON.stringify(submissionData)
       });
+
       if (res.ok) {
         setShowTemplateForm(false);
         setEditingTemplate(null);
         fetchTemplates();
+        alert(editingTemplate ? "Rule updated successfully!" : "Recurring rule created successfully!");
+      } else {
+        const err = await res.json();
+        alert(`Failed to save: ${err.error || 'Unknown error'}`);
       }
     } catch (err) {
       console.error("Save template error:", err);
+      alert("A network error occurred. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -579,7 +593,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
               }}
               style={{ padding: "10px 20px", background: "#2563eb", color: "white", borderRadius: "10px", border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
             >
-              <Plus size={18} /> Add New Template
+              <Plus size={18} /> Add Recurring Task
             </button>
           </div>
 
