@@ -48,9 +48,10 @@ export async function PATCH(
       return NextResponse.json({ message: 'No fields to update' }, { status: 400 });
     }
     
+    // Use the dynamic sql helper which correctly handles case-sensitive CamelCase column names by quoting them
     const updatedRequests = await sql`
       UPDATE "ExternalRequest"
-      SET ${sql(updateData)}, "updatedAt" = NOW()
+      SET ${sql(updateData, Object.keys(updateData))}, "updatedAt" = NOW()
       WHERE id = ${id}
       RETURNING *
     `;
