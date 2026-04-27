@@ -564,8 +564,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         { header: 'Resolution', key: 'resolutionProvided', width: 40 },
       ];
       worksheet.addRow(['Sample Entity', '2026-04-21', 'Sample LO description...', 'Name A', 'Name B', 'Done']);
-    } else {
-      // Recurring Template
+    } else if (type === 'recurring') {
       worksheet.columns = [
         { header: 'Task Name Pattern', key: 'taskNamePattern', width: 30 },
         { header: 'Entity Name', key: 'entityName', width: 20 },
