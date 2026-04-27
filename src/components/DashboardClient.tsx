@@ -2204,11 +2204,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <button onClick={() => setShowForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(37, 99, 235, 0.3)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
                   <Plus size={18} /> New Task
                 </button>
-              ) : activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? null : (
+              ) : activeView === 'LOS' ? (
                 <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#0f172a", padding: "10px 20px", borderRadius: "12px", border: "1px solid #e2e8f0", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
                   <Lightbulb size={18} color="#f59e0b" /> Update LO
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -2319,7 +2319,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
             </div>
           ) : null
-        ) : (
+        ) : activeView === 'LOS' ? (
           <div style={{ 
             marginBottom: "32px", 
             padding: "40px", 
@@ -2352,7 +2352,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <div style={{ marginTop: "16px", height: "4px", width: "60px", background: "rgba(255,255,255,0.3)", borderRadius: "2px", margin: "16px auto 0" }}></div>
             </div>
           </div>
-        )}
+        ) : null}
 
         {activeView === 'TASKS' && activeSubView === 'MAIN' && (
           <div className="main-tasks-view">
