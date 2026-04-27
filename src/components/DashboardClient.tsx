@@ -3029,23 +3029,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                 <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f1f5f9", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
                                   {req.requestType}
                                 </span>
-                                {(isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && (
-                                  req.transferStatus === 'T' ? (
-                                    <span 
-                                      title={`Transferred Request (Original: ${req.originalRequestType || 'Unknown'})`}
-                                      style={{ cursor: "help", fontSize: "1rem" }}
-                                    >
-                                      🔴
-                                    </span>
-                                  ) : (
-                                    <span 
-                                      title="Original Request"
-                                      style={{ cursor: "help", fontSize: "1rem" }}
-                                    >
-                                      🟢
-                                    </span>
-                                  )
-                                )}
                               </div>
                             </td>
                             <td style={{ ...tdStyle, maxWidth: "300px", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
