@@ -2118,6 +2118,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </button>
                   )}
 
+                  {canSeeLearning && (
                     <button 
                       onClick={() => { setActiveView('LOS'); setActiveMainView('DASHBOARD'); }}
                       style={{ 
