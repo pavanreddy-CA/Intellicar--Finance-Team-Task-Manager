@@ -21,6 +21,8 @@ interface PaymentTemplate {
   defaultOwner: string;
   defaultReviewer: string;
   leadTime: number;
+  dueDay?: number;
+  weeklyDay?: string;
   startDate: string;
   endDate: string;
   stopDate: string;
@@ -73,6 +75,8 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
     defaultOwner: user?.name || "",
     defaultReviewer: "",
     leadTime: 7,
+    dueDay: 1,
+    weeklyDay: "Monday",
     startDate: "",
     endDate: ""
   });
@@ -525,9 +529,40 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                 </select>
               </div>
 
+              {['M', 'Q', 'H', 'Y', '2Y'].includes(formData.frequency) && (
+                <div>
+                  <label style={labelStyle}>Due Day (Date of Month)</label>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max="31"
+                    placeholder="e.g. 5"
+                    value={formData.dueDay || ""}
+                    onChange={e => setFormData({...formData, dueDay: Number(e.target.value)})}
+                    style={inputStyle}
+                  />
+                  <p style={{ fontSize: "0.65rem", color: "#64748b", marginTop: "4px" }}>Payment will be due on this date every period.</p>
+                </div>
+              )}
+
+              {formData.frequency === 'W' && (
+                <div>
+                  <label style={labelStyle}>Weekly Day</label>
+                  <select 
+                    value={formData.weeklyDay}
+                    onChange={e => setFormData({...formData, weeklyDay: e.target.value})}
+                    style={inputStyle}
+                  >
+                    {(settings.masterWeekDays || "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday").split(',').map((day: string) => (
+                      <option key={day.trim()} value={day.trim()}>{day.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <label style={labelStyle}>Lead Time (Days)</label>
+                  <label style={labelStyle}>Generation Window (Days)</label>
                   <div title="How many days before the due date this payment should appear in the tracker." style={{ cursor: "help" }}>
                     <AlertTriangle size={14} color="#94a3b8" />
                   </div>
@@ -539,7 +574,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                   style={inputStyle}
                   min={0}
                 />
-                <p style={{ fontSize: "0.65rem", color: "#64748b", marginTop: "4px" }}>Visibility window in tracker.</p>
+                <p style={{ fontSize: "0.65rem", color: "#64748b", marginTop: "4px" }}>Replaced "Lead Time". Sets when entry appears in tracker.</p>
               </div>
 
               <div>

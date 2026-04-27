@@ -119,7 +119,13 @@ export function getOccurrencesBetween(
     
     if (current >= searchStart && !template.isStopped && !excluded.includes(pk)) {
       if (!template.stopDate || current <= new Date(template.stopDate)) {
-        occurrences.push({ date: new Date(current), periodKey: pk });
+        // Apply dayOffset / dueDay override for Monthly+ frequencies
+        const finalDate = new Date(current);
+        const offset = template.dayOffset || template.dueDay;
+        if (offset && ['M', 'Q', 'H', 'Y', '2Y'].includes(template.frequency)) {
+          finalDate.setDate(Number(offset));
+        }
+        occurrences.push({ date: finalDate, periodKey: pk });
       }
     }
     

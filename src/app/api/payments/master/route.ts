@@ -28,6 +28,8 @@ export async function GET() {
           "defaultOwner" TEXT,
           "defaultReviewer" TEXT,
           "leadTime" INTEGER DEFAULT 0,
+          "dueDay" INTEGER,
+          "weeklyDay" TEXT,
           "startDate" DATE,
           "endDate" DATE,
           "stopDate" DATE,
@@ -51,6 +53,10 @@ export async function GET() {
       `;
 
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterPaymentTypes" TEXT DEFAULT 'AMC,Rent,Electricity,Subscriptions,Salaries,Vendor Payment'`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "dueDay" INTEGER`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "lastGeneratedPeriod" TEXT`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN DEFAULT TRUE`;
     } catch (err) {
       console.error("Payment migration error:", err);
     }
@@ -90,6 +96,8 @@ export async function POST(req: NextRequest) {
       defaultOwner,
       defaultReviewer,
       leadTime,
+      dueDay,
+      weeklyDay,
       startDate,
       endDate
     } = data;
@@ -115,6 +123,8 @@ export async function POST(req: NextRequest) {
           "defaultOwner" = ${defaultOwner},
           "defaultReviewer" = ${defaultReviewer},
           "leadTime" = ${Number(leadTime) || 0},
+          "dueDay" = ${dueDay ? Number(dueDay) : null},
+          "weeklyDay" = ${weeklyDay || null},
           "startDate" = ${startDate ? new Date(startDate) : null},
           "endDate" = ${endDate ? new Date(endDate) : null},
           "updatedAt" = NOW()
@@ -129,12 +139,14 @@ export async function POST(req: NextRequest) {
           "entityName", "paymentDescription", "vendorName", "paymentType",
           "departmentName", "financeFunction", "frequency", "vendorEmail",
           "prodEmail", "defaultOwner", "defaultReviewer", "leadTime",
+          "dueDay", "weeklyDay",
           "startDate", "endDate", "isActive", "createdAt", "updatedAt"
         )
         VALUES (
           ${entityName}, ${paymentDescription}, ${vendorName}, ${paymentType},
           ${departmentName}, ${financeFunction}, ${frequency}, ${vendorEmail},
           ${prodEmail}, ${defaultOwner}, ${defaultReviewer}, ${Number(leadTime) || 0},
+          ${dueDay ? Number(dueDay) : null}, ${weeklyDay || null},
           ${startDate ? new Date(startDate) : null}, ${endDate ? new Date(endDate) : null},
           TRUE, NOW(), NOW()
         )

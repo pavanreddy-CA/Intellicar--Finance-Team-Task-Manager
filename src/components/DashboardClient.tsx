@@ -537,9 +537,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const downloadBulkTemplate = async (type: 'tasks' | 'lo' | 'recurring') => {
+  const downloadBulkTemplate = async (type: 'tasks' | 'lo' | 'recurring' | 'payments') => {
     const workbook = new ExcelJS.Workbook();
-    const sheetName = type === 'tasks' ? 'Tasks' : type === 'lo' ? 'LOs' : 'RecurringTemplates';
+    const sheetName = type === 'tasks' ? 'Tasks' : type === 'lo' ? 'LOs' : type === 'recurring' ? 'RecurringTemplates' : 'PaymentsMaster';
     const worksheet = workbook.addWorksheet(sheetName);
     
     if (type === 'tasks') {
@@ -598,13 +598,35 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         'TRUE', 
         'Monthly'
       ]);
+    } else if (type === 'payments') {
+      worksheet.columns = [
+        { header: 'Entity Name', key: 'entityName', width: 25 },
+        { header: 'Description', key: 'paymentDescription', width: 30 },
+        { header: 'Vendor Name', key: 'vendorName', width: 25 },
+        { header: 'Payment Type', key: 'paymentType', width: 20 },
+        { header: 'Department', key: 'departmentName', width: 20 },
+        { header: 'Finance Function', key: 'financeFunction', width: 20 },
+        { header: 'Frequency (M/Q/Y/W/BW/H/D)', key: 'frequency', width: 25 },
+        { header: 'Due Day (1-31)', key: 'dueDay', width: 15 },
+        { header: 'Weekly Day (Monday...)', key: 'weeklyDay', width: 20 },
+        { header: 'Vendor Email', key: 'vendorEmail', width: 25 },
+        { header: 'Prod Email', key: 'prodEmail', width: 25 },
+        { header: 'Owner', key: 'defaultOwner', width: 20 },
+        { header: 'Reviewer', key: 'defaultReviewer', width: 20 },
+        { header: 'Start Date (YYYY-MM-DD)', key: 'startDate', width: 25 },
+        { header: 'End Date (YYYY-MM-DD)', key: 'endDate', width: 25 },
+        { header: 'Gen Window (Days)', key: 'leadTime', width: 20 },
+      ];
+      worksheet.addRow([
+        'Intellicar-BLR', 'Office Rent', 'Landlord Name', 'Rent', 'Finance', 'Payroll', 'M', '5', '', 'vendor@example.com', 'production@intellicar.in', 'Pavan Reddy', '', '2026-04-01', '', '7'
+      ]);
     }
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `${type}_import_template.xlsx`);
   };
 
-  const handleExcelBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'tasks' | 'lo' | 'recurring') => {
+  const handleExcelBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'tasks' | 'lo' | 'recurring' | 'payments') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -655,15 +677,39 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           isActive: String(values[13]).toUpperCase() === 'TRUE',
           freqLabel: values[14],
         });
+      } else if (type === 'payments') {
+        rows.push({
+          entityName: values[1],
+          paymentDescription: values[2],
+          vendorName: values[3],
+          paymentType: values[4],
+          departmentName: values[5],
+          financeFunction: values[6],
+          frequency: values[7],
+          dueDay: values[8],
+          weeklyDay: values[9],
+          vendorEmail: values[10],
+          prodEmail: values[11],
+          defaultOwner: values[12],
+          defaultReviewer: values[13],
+          startDate: values[14],
+          endDate: values[15],
+          leadTime: values[16],
+        });
       }
     });
 
     if (confirm(`Detected ${rows.length} records. Proceed with import?`)) {
-      const endpoint = type === 'tasks' ? '/api/tasks/bulk' : type === 'lo' ? '/api/lo/bulk' : '/api/recurring-templates/bulk';
+      const endpoint = 
+        type === 'tasks' ? '/api/tasks/bulk' : 
+        type === 'lo' ? '/api/lo/bulk' : 
+        type === 'payments' ? '/api/payments/bulk-import' :
+        '/api/recurring-templates/bulk';
+      
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rows)
+        body: JSON.stringify(type === 'payments' ? { items: rows } : rows)
       });
       if (res.ok) {
         alert("Import successful!");
@@ -5213,6 +5259,29 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#8b5cf6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
                             <Plus size={14} /> Upload Excel
                             <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'recurring')} />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Payments Import Section */}
+                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#ecfdf5", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Wallet size={24} color="#10b981" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Payments Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Master Payments Sheet data.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('payments')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #10b981", background: "white", color: "#10b981", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#10b981", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'payments')} />
                           </label>
                         </div>
                       </div>
