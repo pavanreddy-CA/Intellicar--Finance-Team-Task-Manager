@@ -458,18 +458,18 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
       {activeSubTab === 'STAGING' && (
         <div>
           {/* Advanced Filters Bar */}
-          <div style={{ background: "white", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", marginBottom: "24px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "20px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ background: "white", padding: "16px 20px", borderRadius: "16px", border: "1px solid #e2e8f0", marginBottom: "24px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>FROM:</label>
-               <input type="date" value={dateFilter.from} onChange={e => setDateFilter({...dateFilter, from: e.target.value})} style={{...inputStyle, width: "140px"}} />
+               <input type="date" value={dateFilter.from} onChange={e => setDateFilter({...dateFilter, from: e.target.value})} style={{...inputStyle, width: "135px"}} />
              </div>
-             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>TO:</label>
-               <input type="date" value={dateFilter.to} onChange={e => setDateFilter({...dateFilter, to: e.target.value})} style={{...inputStyle, width: "140px"}} />
+               <input type="date" value={dateFilter.to} onChange={e => setDateFilter({...dateFilter, to: e.target.value})} style={{...inputStyle, width: "135px"}} />
              </div>
-             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-               <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>FREQUENCY:</label>
-               <select value={freqFilter} onChange={e => setFreqFilter(e.target.value)} style={{...inputStyle, width: "130px"}}>
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>FREQ:</label>
+               <select value={freqFilter} onChange={e => setFreqFilter(e.target.value)} style={{...inputStyle, width: "110px"}}>
                  <option value="ALL">ALL Freq</option>
                  {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
                </select>
@@ -480,14 +480,14 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                 style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", background: showConverted ? "#f0fdf4" : "white", color: showConverted ? "#15803d" : "#64748b", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}
              >
                 {showConverted ? <Eye size={16} /> : <EyeOff size={16} />}
-                {showConverted ? "Showing History" : "Hide History"}
+                {showConverted ? "History" : "History"}
              </button>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "4px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "300px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "4px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "240px" }}>
                 <Search size={16} color="#64748b" />
                 <input 
                   type="text" 
-                  placeholder="Search staging tasks..." 
+                  placeholder="Search staging..." 
                   value={searchStaging}
                   onChange={e => setSearchStaging(e.target.value)}
                   style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", width: "100%", color: "#334155" }}
@@ -498,7 +498,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                 <select 
                   value={entityFilterStaging} 
                   onChange={e => setEntityFilterStaging(e.target.value)} 
-                  style={{ ...inputStyle, width: "150px" }}
+                  style={{ ...inputStyle, width: "130px" }}
                 >
                   <option value="ALL">All Entities</option>
                   {Array.from(new Set(stagingTasks.map(t => t.entityName))).sort().map(entity => (
