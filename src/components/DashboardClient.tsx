@@ -2509,7 +2509,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     todayDate.setHours(0, 0, 0, 0);
                     const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < todayDate;
 
-                    const isOwnerLocked = task.taskStatus === "Completed" && !isAdmin;
+                    const isOwnerLocked = COMPLETION_STATUSES.includes(task.taskStatus) && !isAdmin;
                     const isReviewerLocked = (task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required") && !isAdmin;
                     
                     const canEditReviewFields = isAdmin || isCurrentUserReviewer;
@@ -2752,7 +2752,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                       {/* Delete / Request Edit / Request Delete Action */}
                       <td style={{ ...tdStyle, textAlign: "center" }}>
-                           <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                                      <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: "center" }}>
+                             <button 
+                               onClick={() => { setPreFilledTask(task); setShowForm(true); }}
+                               style={{ 
+                                 background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0", 
+                                 cursor: "pointer", padding: "6px", borderRadius: "8px", 
+                                 display: "flex", alignItems: "center", justifyContent: "center",
+                                 transition: "all 0.2s"
+                                }}
+                                title="Edit Task"
+                                onMouseOver={e => { e.currentTarget.style.color = "#2563eb"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#eff6ff"; }}
+                                onMouseOut={e => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#f8fafc"; }}
+                              >
+                                <Edit2 size={14} />
+                              </button>
+
                              <button 
                                onClick={() => handleRequestDelete(task.id)}
                                disabled={task.deleteRequested}
@@ -2769,15 +2784,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                              </button>
                              <button 
                                onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
-                               disabled={task.editRequested}
+                               disabled={task.editRequested || !COMPLETION_STATUSES.includes(task.taskStatus)}
                                style={{ 
-                                 background: task.editRequested ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
-                                 color: task.editRequested ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
-                                 border: task.editRequested ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
-                                 cursor: task.editRequested ? "not-allowed" : "pointer", 
+                                 background: (task.editRequested || !COMPLETION_STATUSES.includes(task.taskStatus)) ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
+                                 color: (task.editRequested || !COMPLETION_STATUSES.includes(task.taskStatus)) ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
+                                 border: (task.editRequested || !COMPLETION_STATUSES.includes(task.taskStatus)) ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
+                                 cursor: (task.editRequested || !COMPLETION_STATUSES.includes(task.taskStatus)) ? "not-allowed" : "pointer", 
                                  padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
                                }}
-                               title={task.editRequested ? "Edit Pending" : "Edit Req"}
+                               title={task.editRequested ? "Edit Pending" : (!COMPLETION_STATUSES.includes(task.taskStatus) ? "Task is still Pending" : "Request Edit")}
                              >
                                {task.editRequested ? "Requested" : "Edit Req"}
                              </button>
@@ -3380,38 +3395,56 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
                           <td style={tdStyle}>{lo.modeOfCommunication}</td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
-                              <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                                <button 
-                                  onClick={() => handleRequestDeleteLO(lo.id)}
-                                  disabled={lo.deleteRequested}
-                                  style={{ 
-                                    padding: "6px 12px", borderRadius: "6px", border: "1px solid",
-                                    background: lo.deleteRequested ? "#f1f5f9" : "#fef2f2",
-                                    color: lo.deleteRequested ? "#94a3b8" : "#ef4444",
-                                    borderColor: lo.deleteRequested ? "#cbd5e1" : "#fca5a5",
-                                    fontSize: "0.75rem", fontWeight: 600,
-                                    cursor: lo.deleteRequested ? "not-allowed" : "pointer",
-                                    transition: "all 0.2s"
-                                  }}
-                                >
-                                  {lo.deleteRequested ? "Requested" : "Del Req"}
-                                </button>
-                                <button 
-                                  onClick={() => handleRequestEditLO(lo.id)}
-                                  disabled={lo.editRequested}
-                                  style={{ 
-                                    padding: "6px 12px", borderRadius: "6px", border: "1px solid",
-                                    background: lo.editRequested ? "#f1f5f9" : "#eff6ff",
-                                    color: lo.editRequested ? "#94a3b8" : "#3b82f6",
-                                    borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe",
-                                    fontSize: "0.75rem", fontWeight: 600,
-                                    cursor: lo.editRequested ? "not-allowed" : "pointer",
-                                    transition: "all 0.2s"
-                                  }}
-                                >
-                                  {lo.editRequested ? "Requested" : "Edit Req"}
-                                </button>
-                              </div>
+                                <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
+                                  <button 
+                                    onClick={() => { setEditingLO(lo); setShowLOForm(true); }}
+                                    disabled={!isAdmin && !lo.editApproved}
+                                    style={{ 
+                                      background: (!isAdmin && !lo.editApproved) ? "#f1f5f9" : "#f8fafc", 
+                                      color: (!isAdmin && !lo.editApproved) ? "#94a3b8" : "#64748b", 
+                                      border: "1px solid #e2e8f0", 
+                                      cursor: (!isAdmin && !lo.editApproved) ? "not-allowed" : "pointer", 
+                                      padding: "6px", borderRadius: "8px", 
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                      transition: "all 0.2s"
+                                    }}
+                                    title={(!isAdmin && !lo.editApproved) ? "Request edit first" : "Edit LO"}
+                                    onMouseOver={e => { if (isAdmin || lo.editApproved) { e.currentTarget.style.color = "#2563eb"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#eff6ff"; } }}
+                                    onMouseOut={e => { if (isAdmin || lo.editApproved) { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#f8fafc"; } }}
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleRequestDeleteLO(lo.id)}
+                                    disabled={lo.deleteRequested}
+                                    style={{ 
+                                      padding: "6px 12px", borderRadius: "6px", border: "1px solid",
+                                      background: lo.deleteRequested ? "#f1f5f9" : "#fef2f2",
+                                      color: lo.deleteRequested ? "#94a3b8" : "#ef4444",
+                                      borderColor: lo.deleteRequested ? "#cbd5e1" : "#fca5a5",
+                                      fontSize: "0.75rem", fontWeight: 600,
+                                      cursor: lo.deleteRequested ? "not-allowed" : "pointer",
+                                      transition: "all 0.2s"
+                                    }}
+                                  >
+                                    {lo.deleteRequested ? "Requested" : "Del Req"}
+                                  </button>
+                                  <button 
+                                    onClick={() => handleRequestEditLO(lo.id)}
+                                    disabled={lo.editRequested || lo.editApproved}
+                                    style={{ 
+                                      padding: "6px 12px", borderRadius: "6px", border: "1px solid",
+                                      background: (lo.editRequested || lo.editApproved) ? "#f1f5f9" : "#eff6ff",
+                                      color: (lo.editRequested || lo.editApproved) ? "#94a3b8" : "#3b82f6",
+                                      borderColor: (lo.editRequested || lo.editApproved) ? "#cbd5e1" : "#bfdbfe",
+                                      fontSize: "0.75rem", fontWeight: 600,
+                                      cursor: (lo.editRequested || lo.editApproved) ? "not-allowed" : "pointer",
+                                      transition: "all 0.2s"
+                                    }}
+                                  >
+                                    {lo.editRequested ? "Requested" : (lo.editApproved ? "Approved" : "Edit Req")}
+                                  </button>
+                                </div>
                           </td>
                         </tr>
                       ))

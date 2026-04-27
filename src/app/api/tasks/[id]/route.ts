@@ -100,7 +100,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const updatedTasks = await sql`
       UPDATE "Task"
-      SET "taskStatus" = ${taskStatus},
+      SET "taskName" = ${data.taskName !== undefined ? data.taskName : existingTask.taskName},
+          "entityName" = ${data.entityName !== undefined ? data.entityName : existingTask.entityName},
+          "taskType" = ${data.taskType !== undefined ? data.taskType : existingTask.taskType},
+          "departmentName" = ${data.departmentName !== undefined ? data.departmentName : existingTask.departmentName},
+          "requestFrom" = ${data.requestFrom !== undefined ? data.requestFrom : existingTask.requestFrom},
+          "ownerName" = ${data.ownerName !== undefined ? data.ownerName : existingTask.ownerName},
+          "reviewerName" = ${data.reviewerName !== undefined ? data.reviewerName : existingTask.reviewerName},
+          "dueDate" = ${data.dueDate !== undefined ? (data.dueDate ? new Date(data.dueDate).toISOString() : null) : existingTask.dueDate},
+          "mailLink" = ${data.mailLink !== undefined ? data.mailLink : existingTask.mailLink},
+          "taskStatus" = ${taskStatus},
           "reviewStatus" = ${reviewStatus},
           "completionDate" = ${completionDate},
           "reviewCompletionDate" = ${reviewCompletionDate},

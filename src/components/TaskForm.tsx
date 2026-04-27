@@ -18,13 +18,14 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
   const [changeRequestType, setChangeRequestType] = useState(false);
   const [newRequestType, setNewRequestType] = useState("");
   const [transferring, setTransferring] = useState(false);
+  const isEditing = !!initialData?.id;
 
   const [formData, setFormData] = useState({
     taskName: initialData?.taskName || "",
     taskType: initialData?.taskType || "",
     departmentName: initialData?.departmentName || "",
     requestFrom: initialData?.requestFrom || "",
-    dueDate: initialData?.dueDate || "",
+    dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : "",
     mailLink: initialData?.mailLink || "",
     linkedRequestId: initialData?.linkedRequestId || null,
     transferStatus: initialData?.transferStatus || 'O',
@@ -32,7 +33,11 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
   });
 
   const [selectedEntities, setSelectedEntities] = useState<string[]>(initialData?.entityName ? [initialData.entityName] : []);
-  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>(initialData?.id ? [{
+    entityName: initialData.entityName,
+    ownerName: initialData.ownerName,
+    reviewerName: initialData.reviewerName || ""
+  }] : []);
   const [allowedEntities, setAllowedEntities] = useState<string[]>([]);
 
   // Initialize allowed entities based on Matrix C
@@ -130,15 +135,24 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
     setError("");
 
     try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
+      const url = isEditing ? `/api/tasks/${initialData.id}` : "/api/tasks";
+      const method = isEditing ? "PUT" : "POST";
+      const body = isEditing ? { 
+        ...formData, 
+        entityName: assignments[0].entityName,
+        ownerName: assignments[0].ownerName,
+        reviewerName: assignments[0].reviewerName
+      } : { ...formData, assignments };
+
+      const res = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, assignments }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.message || "Failed to create tasks");
+        throw new Error(errData.message || `Failed to ${isEditing ? 'update' : 'create'} tasks`);
       }
 
       onSuccess();
@@ -162,7 +176,7 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
         position: "relative"
       }}>
         <div style={{ padding: "24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "white", zIndex: 10 }}>
-          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#111827" }}>Create New Task</h2>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#111827" }}>{isEditing ? "Edit Task" : "Create New Task"}</h2>
           <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b7280" }}>
             <X size={24} />
           </button>
@@ -283,14 +297,16 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                     padding: "12px",
                     background: "#f8fafc",
                     borderRadius: "8px",
-                    border: "1px solid #e2e8f0"
+                    border: "1px solid #e2e8f0",
+                    pointerEvents: isEditing ? "none" : "auto",
+                    opacity: isEditing ? 0.7 : 1
                   }}>
                     {allowedEntities.map(entity => (
-                      <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: "pointer", padding: "4px", borderRadius: "4px" }}>
+                      <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: isEditing ? "default" : "pointer", padding: "4px", borderRadius: "4px" }}>
                         <input 
                           type="checkbox" 
                           checked={selectedEntities.includes(entity)} 
-                          onChange={() => handleEntityToggle(entity)}
+                          onChange={() => !isEditing && handleEntityToggle(entity)}
                           style={{ width: "16px", height: "16px", accentColor: "#2563eb" }}
                         />
                         {entity}
@@ -391,7 +407,7 @@ export default function TaskForm({ onClose, onSuccess, settings, usersList = [],
                   Cancel
                 </button>
                 <button type="submit" disabled={loading} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "white", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer" }}>
-                  {loading ? "Creating..." : "Create Task"}
+                  {loading ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Task")}
                 </button>
               </div>
             </>
