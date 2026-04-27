@@ -56,6 +56,13 @@ export async function GET() {
       await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
       await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "lastGeneratedPeriod" TEXT`;
       await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN DEFAULT TRUE`;
+      
+      // New columns for PaymentOccurrence
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "isHold" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "holdReason" TEXT`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "editRequestReason" TEXT`;
     } catch (err) {
       console.error("Payment migration error:", err);
     }

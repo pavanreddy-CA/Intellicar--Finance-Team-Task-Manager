@@ -43,6 +43,11 @@ interface PaymentOccurrence {
   departmentName: string;
   financeFunction: string;
   frequency: string;
+  isHold: boolean;
+  holdReason?: string;
+  editRequested: boolean;
+  editApproved: boolean;
+  editRequestReason?: string;
 }
 
 import { resolveTaskName, getPeriodKey, getOccurrencesBetween } from "@/lib/recurringUtils";
@@ -126,6 +131,15 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
     type: 'payments'
   });
   const [isSharing, setIsSharing] = useState(false);
+
+  const [showHoldModal, setShowHoldModal] = useState(false);
+  const [holdData, setHoldData] = useState({ reason: "" });
+  
+  const [showRequestEditModal, setShowRequestEditModal] = useState(false);
+  const [requestEditData, setRequestEditData] = useState({ reason: "" });
+  
+  const [showEditOccModal, setShowEditOccModal] = useState(false);
+  const [editOccData, setEditOccData] = useState({ actualDate: "", amountPaid: "" });
 
   useEffect(() => {
     if (settings?.paymentReportEmail) {
@@ -262,13 +276,111 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
     }
   };
 
+  const handleHoldPayment = async () => {
+    if (!activeOccurrence || !holdData.reason.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/payments/tracker/${activeOccurrence.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isHold: true, holdReason: holdData.reason })
+      });
+      if (res.ok) {
+        setShowHoldModal(false);
+        setHoldData({ reason: "" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Hold error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReleaseHold = async (occ: PaymentOccurrence) => {
+    if (!confirm("Release this payment from hold?")) return;
+    try {
+      await fetch(`/api/payments/tracker/${occ.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isHold: false, holdReason: "" })
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Release hold error:", err);
+    }
+  };
+
+  const handleRequestEdit = async () => {
+    if (!activeOccurrence || !requestEditData.reason.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/payments/tracker/${activeOccurrence.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editRequested: true, editRequestReason: requestEditData.reason })
+      });
+      if (res.ok) {
+        setShowRequestEditModal(false);
+        setRequestEditData({ reason: "" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Request edit error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleApproveEdit = async (occ: PaymentOccurrence) => {
+    if (!confirm(`Approve edit request for ${occ.vendorName}?`)) return;
+    try {
+      const res = await fetch(`/api/payments/tracker/${occ.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editApproved: true })
+      });
+      if (res.ok) fetchData();
+    } catch (err) {
+      console.error("Approve edit error:", err);
+    }
+  };
+
+  const handleSaveEditOcc = async () => {
+    if (!activeOccurrence) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/payments/tracker/${activeOccurrence.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actualDate: editOccData.actualDate || null,
+          amountPaid: editOccData.amountPaid || null
+        })
+      });
+      if (res.ok) {
+        setShowEditOccModal(false);
+        setActiveOccurrence(null);
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Save edit occ error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getStatus = (occ: PaymentOccurrence) => {
+    if (occ.isHold) return "ON HOLD";
     if (occ.isPaid) {
       const due = new Date(occ.dueDate);
       const actual = new Date(occ.actualDate!);
       due.setHours(0,0,0,0);
       actual.setHours(0,0,0,0);
-      return actual > due ? "PAID (DELAYED)" : "PAID (ON TIME)";
+      
+      if (actual.getTime() === due.getTime()) return "Paid on due date";
+      if (actual.getTime() < due.getTime()) return "Paid Before due date";
+      return "Paid After due date";
     }
     const due = new Date(occ.dueDate);
     const today = new Date();
@@ -280,8 +392,10 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "OVERDUE": return { bg: "#fee2e2", text: "#ef4444", border: "#fecaca" };
-      case "PAID (ON TIME)": return { bg: "#dcfce7", text: "#22c55e", border: "#bbf7d0" };
-      case "PAID (DELAYED)": return { bg: "#fef3c7", text: "#f59e0b", border: "#fde68a" };
+      case "Paid on due date": return { bg: "#dcfce7", text: "#22c55e", border: "#bbf7d0" };
+      case "Paid Before due date": return { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" };
+      case "Paid After due date": return { bg: "#fef3c7", text: "#f59e0b", border: "#fde68a" };
+      case "ON HOLD": return { bg: "#f1f5f9", text: "#475569", border: "#e2e8f0" };
       case "NOT YET DUE": return { bg: "#eff6ff", text: "#3b82f6", border: "#bfdbfe" };
       default: return { bg: "#f1f5f9", text: "#64748b", border: "#e2e8f0" };
     }
@@ -348,7 +462,8 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
       { header: "Due Date", key: "due", width: 15 },
       { header: "Actual Date", key: "actual", width: 15 },
       { header: "Amount", key: "amount", width: 15 },
-      { header: "Status", key: "status", width: 20 }
+      { header: "Status", key: "status", width: 20 },
+      { header: "Remarks", key: "remarks", width: 30 }
     ];
 
     filteredOccurrences.forEach(occ => {
@@ -361,7 +476,8 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
         due: new Date(occ.dueDate).toLocaleDateString('en-GB'),
         actual: occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
         amount: occ.amountPaid || 0,
-        status: getStatus(occ)
+        status: getStatus(occ),
+        remarks: occ.isHold ? `HOLD: ${occ.holdReason}` : (occ.editRequested ? `EDIT REQ: ${occ.editRequestReason}` : "")
       });
     });
 
@@ -391,8 +507,15 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
     ]);
 
     autoTable(doc, {
-      head: [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status']],
-      body: tableData,
+      head: [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status', 'Remarks']],
+      body: filteredOccurrences.map(occ => [
+        occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency,
+        new Date(occ.dueDate).toLocaleDateString('en-GB'),
+        occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
+        occ.amountPaid ? formatCurrency(occ.amountPaid) : "--",
+        getStatus(occ),
+        occ.holdReason || ""
+      ]),
       startY: 20,
       theme: 'grid',
       headStyles: { fillColor: [37, 99, 235] }
@@ -659,6 +782,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                   </th>
                   <th style={thStyle}>Amount</th>
                   <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Hold</th>
                   <th style={thStyle}>Action</th>
                 </tr>
               </thead>
@@ -694,16 +818,70 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                           </span>
                         </td>
                         <td style={tdStyle}>
-                          {!occ.isPaid && (
+                          {occ.isHold ? (
                             <button 
-                              onClick={() => { setActiveOccurrence(occ); setShowPayModal(true); }}
-                              style={{ padding: "6px 12px", borderRadius: "8px", border: "none", background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", transition: "transform 0.2s" }}
-                              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                              onClick={() => handleReleaseHold(occ)}
+                              style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #e2e8f0", background: "#f8fafc", color: "#64748b", fontSize: "0.7rem", cursor: "pointer" }}
                             >
-                              Mark Paid
+                              Release
                             </button>
+                          ) : (
+                            !occ.isPaid && (
+                              <button 
+                                onClick={() => { setActiveOccurrence(occ); setShowHoldModal(true); }}
+                                style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #e2e8f0", background: "white", color: "#ef4444", fontSize: "0.7rem", cursor: "pointer" }}
+                              >
+                                Hold
+                              </button>
+                            )
                           )}
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            {!occ.isPaid && !occ.isHold && (
+                              <button 
+                                onClick={() => { setActiveOccurrence(occ); setShowPayModal(true); }}
+                                style={{ padding: "6px 12px", borderRadius: "8px", border: "none", background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                              >
+                                Mark Paid
+                              </button>
+                            )}
+                            
+                            {occ.isPaid && !occ.editRequested && !occ.editApproved && (
+                                <button 
+                                    onClick={() => { setActiveOccurrence(occ); setShowRequestEditModal(true); }}
+                                    style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontSize: "0.7rem", cursor: "pointer" }}
+                                >
+                                    Request Edit
+                                </button>
+                            )}
+
+                            {occ.editRequested && isAdmin && !occ.editApproved && (
+                                <button 
+                                    onClick={() => handleApproveEdit(occ)}
+                                    style={{ padding: "6px 10px", borderRadius: "8px", border: "none", background: "#16a34a", color: "white", fontSize: "0.7rem", cursor: "pointer" }}
+                                >
+                                    Approve Edit
+                                </button>
+                            )}
+
+                            {occ.editRequested && !isAdmin && !occ.editApproved && (
+                                <span style={{ fontSize: "0.65rem", color: "#f59e0b", fontStyle: "italic" }}>Pending Approval</span>
+                            )}
+
+                            {occ.editApproved && (
+                                <button 
+                                    onClick={() => { 
+                                        setActiveOccurrence(occ); 
+                                        setEditOccData({ actualDate: occ.actualDate || "", amountPaid: occ.amountPaid?.toString() || "" });
+                                        setShowEditOccModal(true); 
+                                    }}
+                                    style={{ padding: "6px", borderRadius: "8px", border: "1px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", cursor: "pointer" }}
+                                >
+                                    <Edit2 size={16} />
+                                </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1138,6 +1316,104 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                   }}
                 >
                   {isSharing ? "Sharing..." : <><Send size={18} /> Share Report</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Hold Modal */}
+      {showHoldModal && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: "450px" }}>
+            <div style={{ padding: "20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fef2f2" }}>
+              <h3 style={{ margin: 0, fontWeight: 700, color: "#ef4444" }}>Hold Payment</h3>
+              <button onClick={() => setShowHoldModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X /></button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              <label style={labelStyle}>Reason for Hold</label>
+              <textarea 
+                value={holdData.reason}
+                onChange={e => setHoldData({ reason: e.target.value })}
+                style={{ ...inputStyle, minHeight: "100px", resize: "none" }}
+                placeholder="e.g., Discrepancy in invoice amount..."
+              />
+              <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+                <button onClick={() => setShowHoldModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "white", fontWeight: 600 }}>Cancel</button>
+                <button onClick={handleHoldPayment} disabled={isSubmitting} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#ef4444", color: "white", fontWeight: 600 }}>
+                  {isSubmitting ? "Holding..." : "Confirm Hold"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Edit Modal */}
+      {showRequestEditModal && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: "450px" }}>
+            <div style={{ padding: "20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fffbeb" }}>
+              <h3 style={{ margin: 0, fontWeight: 700, color: "#f59e0b" }}>Request Payment Edit</h3>
+              <button onClick={() => setShowRequestEditModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X /></button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              <label style={labelStyle}>Reason for Edit</label>
+              <textarea 
+                value={requestEditData.reason}
+                onChange={e => setRequestEditData({ reason: e.target.value })}
+                style={{ ...inputStyle, minHeight: "100px", resize: "none" }}
+                placeholder="e.g., Wrong payment date entered..."
+              />
+              <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+                <button onClick={() => setShowRequestEditModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "white", fontWeight: 600 }}>Cancel</button>
+                <button onClick={handleRequestEdit} disabled={isSubmitting} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#f59e0b", color: "white", fontWeight: 600 }}>
+                  {isSubmitting ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Occurrence Modal (The "Pen" action) */}
+      {showEditOccModal && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: "450px" }}>
+            <div style={{ padding: "20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#eff6ff" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <Edit2 size={20} color="#2563eb" />
+                <h3 style={{ margin: 0, fontWeight: 700, color: "#2563eb" }}>Edit Payment Details</h3>
+              </div>
+              <button onClick={() => setShowEditOccModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X /></button>
+            </div>
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>Actual Payment Date</label>
+                <input 
+                  type="date" 
+                  value={editOccData.actualDate ? new Date(editOccData.actualDate).toISOString().split('T')[0] : ""}
+                  onChange={e => setEditOccData({ ...editOccData, actualDate: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Amount Paid</label>
+                <input 
+                  type="number" 
+                  value={editOccData.amountPaid}
+                  onChange={e => setEditOccData({ ...editOccData, amountPaid: e.target.value })}
+                  style={inputStyle}
+                  placeholder="Enter amount..."
+                />
+              </div>
+              <p style={{ fontSize: "0.75rem", color: "#64748b", fontStyle: "italic" }}>
+                Note: Clearing both fields will mark this as unpaid.
+              </p>
+              <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
+                <button onClick={() => setShowEditOccModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "white", fontWeight: 600 }}>Cancel</button>
+                <button onClick={handleSaveEditOcc} disabled={isSubmitting} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#2563eb", color: "white", fontWeight: 600 }}>
+                  {isSubmitting ? "Saving..." : "Update Payment"}
                 </button>
               </div>
             </div>
