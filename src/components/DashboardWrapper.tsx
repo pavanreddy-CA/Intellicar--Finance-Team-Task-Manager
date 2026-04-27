@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import HomeHub from "@/components/HomeHub";
+import HomeHub from "@/components/HomeHubPremium";
 import DashboardClient from "@/components/DashboardClient";
 
 export default function DashboardWrapper({ user }: { user: any }) {

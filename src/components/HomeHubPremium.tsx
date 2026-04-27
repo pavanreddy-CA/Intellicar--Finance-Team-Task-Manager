@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export default function HomeHub() {
+export default function HomeHubPremium() {
   const [content, setContent] = useState<any>({
     mission: "Empowering the Finance Team through transparency, real-time collaboration, and operational excellence.",
     stories: [
