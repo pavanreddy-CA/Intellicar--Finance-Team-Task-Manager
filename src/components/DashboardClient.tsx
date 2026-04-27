@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet } from "lucide-react";
+import RecurringActivities from "@/components/RecurringActivities";
+import LearningDashboard from "@/components/LearningDashboard";
+import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExternalRequestForm from "@/components/ExternalRequestForm";
-import RecurringActivities from "@/components/RecurringActivities";
 import { COMPLETION_STATUSES } from "@/lib/taskUtils";
 
 type Task = {
@@ -113,7 +115,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [editingCell, setEditingCell] = useState<{ id: number; field: string } | null>(null);
   const [activeValue, setActiveValue] = useState("");
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'PENDING_ACTION' | 'PENDING_REVIEW' | 'COMPLETED'>('ALL');
-  const [activeView, setActiveView] = useState<'HOME' | 'TASKS' | 'RECURRING' | 'LOS'>('HOME');
+  const [activeView, setActiveView] = useState<'HOME' | 'TASKS' | 'RECURRING' | 'LOS' | 'PAYMENTS'>('HOME');
   const [usersList, setUsersList] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [showLOForm, setShowLOForm] = useState(false);
@@ -144,7 +146,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     allocationMatrix: '{}',
     entityMatrix: '{}',
     homeContent: '{}',
-    masterFrequencies: 'Ad,M,Y,2Y,H,Q,W,BW,D'
+    masterFrequencies: 'Ad,M,Y,2Y,H,Q,W,BW,D',
+    masterPaymentTypes: 'AMC,Rent,Electricity,Subscriptions,Salaries,Vendor Payment'
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -1997,6 +2000,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               const canSeeTasks = isAdmin || matrix['Tasks']?.includes(user?.department);
               const canSeeRequests = isAdmin || matrix['Requests']?.includes(user?.department);
               const canSeeLearning = isAdmin || matrix['Learning']?.includes(user?.department);
+              const canSeePayments = isAdmin || matrix['Payments']?.includes(user?.department);
 
               return (
                 <>
@@ -2114,7 +2118,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </button>
                   )}
 
-                  {canSeeLearning && (
                     <button 
                       onClick={() => { setActiveView('LOS'); setActiveMainView('DASHBOARD'); }}
                       style={{ 
@@ -2128,6 +2131,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     >
                       <Lightbulb size={24} color={activeView === 'LOS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8"} />
                       <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Learning</span>
+                    </button>
+                  )}
+
+                  {canSeePayments && (
+                    <button 
+                      onClick={() => { setActiveView('PAYMENTS'); setActiveMainView('DASHBOARD'); }}
+                      style={{ 
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", 
+                        background: activeView === 'PAYMENTS' && activeMainView === 'DASHBOARD' ? "rgba(59, 130, 246, 0.15)" : "transparent", 
+                        border: "none", color: activeView === 'PAYMENTS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8", 
+                        cursor: "pointer", padding: "16px 0", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
+                        width: "100%", borderRadius: "16px",
+                        boxShadow: activeView === 'PAYMENTS' && activeMainView === 'DASHBOARD' ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
+                      }}
+                    >
+                      <Wallet size={24} color={activeView === 'PAYMENTS' && activeMainView === 'DASHBOARD' ? "#60a5fa" : "#94a3b8"} />
+                      <span style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.02em" }}>Payments</span>
                     </button>
                   )}
 
@@ -2161,19 +2181,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
                   <span style={{ color: "#cbd5e1" }}>/</span>
                   <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#64748b" }}>
-                    {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : "Development"}
+                    {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : 
+                     activeView === 'PAYMENTS' ? "Treasury" : "Development"}
                   </span>
                 </div>
               )}
               <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: t.text, letterSpacing: "-0.03em", transition: "all 0.3s ease" }}>
                 {activeView === 'HOME' ? "" : 
-                 activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : "Learning Opportunities"}
+                 activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : 
+                 activeView === 'PAYMENTS' ? "Payments Calendar" : "Learning Opportunities"}
               </h2>
               <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.95rem", fontWeight: 500 }}>
                 {activeView === 'HOME' ? "" : 
                  activeView === 'TASKS' ? 
-                  (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") 
-                  : "Turning challenges into structured growth opportunities."}
+                  (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") :
+                 activeView === 'PAYMENTS' ? "Manage and track recurring vendor payments." :
+                 "Turning challenges into structured growth opportunities."}
               </p>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -3563,7 +3586,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       style={{ 
                                         padding: "6px 12px", borderRadius: "6px", border: "1px solid",
                                         background: lo.editRequested ? "#f1f5f9" : "#eff6ff",
-                                        color: lo.editRequested ? "#94a3b8" : "#3b82f6",
+                                        color: lo.editRequested ? "#3b82f6" : "#3b82f6",
                                         borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe",
                                         fontSize: "0.75rem", fontWeight: 600,
                                         cursor: lo.editRequested ? "not-allowed" : "pointer",
@@ -3583,6 +3606,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
              </div>
           </div>
         </div>
+      )}
+
+      {activeView === 'PAYMENTS' && (
+        <PaymentsCalendar user={user} isAdmin={isAdmin} t={t} settings={settings} />
       )}
 
       {showForm && (
@@ -5281,6 +5308,62 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
                   </div>
                 )}
+                {activeMatrixTab === 'ACCESS' && (
+                        <div>
+                          <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "16px" }}>Define which departments can access specific modules.</p>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+                            {['Tasks', 'Requests', 'Learning', 'Payments'].map(module => (
+                              <div key={module} style={{ padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                                <div style={{ fontWeight: 600, color: "#1e293b", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  {module === 'Tasks' && <Briefcase size={16} />}
+                                  {module === 'Requests' && <MessageSquare size={16} />}
+                                  {module === 'Learning' && <Lightbulb size={16} />}
+                                  {module === 'Payments' && <Wallet size={16} />}
+                                  {module} Module
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                  {settings.masterDepartments.split(',').map(dept => {
+                                    const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
+                                    const isAllowed = matrix[module]?.includes(dept.trim());
+                                    return (
+                                      <button
+                                        key={dept}
+                                        onClick={() => {
+                                          const currentMatrix = JSON.parse(settings.moduleAccessMatrix || '{}');
+                                          const currentDepts = currentMatrix[module] || [];
+                                          const newDepts = isAllowed 
+                                            ? currentDepts.filter((d: string) => d !== dept.trim())
+                                            : [...currentDepts, dept.trim()];
+                                          setSettings({
+                                            ...settings,
+                                            moduleAccessMatrix: JSON.stringify({
+                                              ...currentMatrix,
+                                              [module]: newDepts
+                                            })
+                                          });
+                                        }}
+                                        style={{
+                                          padding: "4px 10px",
+                                          borderRadius: "6px",
+                                          fontSize: "0.75rem",
+                                          fontWeight: 500,
+                                          cursor: "pointer",
+                                          background: isAllowed ? "#2563eb" : "white",
+                                          color: isAllowed ? "white" : "#64748b",
+                                          border: `1px solid ${isAllowed ? "#2563eb" : "#e2e8f0"}`,
+                                          transition: "all 0.2s ease"
+                                        }}
+                                      >
+                                        {dept.trim()}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                 {activeOptionsTab === 'MATRICES' && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
@@ -5345,7 +5428,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <thead>
                                 <tr style={{ background: "#f8fafc" }}>
                                   <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Department</th>
-                                  {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities'].map(module => (
+                                  {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map(module => (
                                     <th key={module} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>{module}</th>
                                   ))}
                                 </tr>
@@ -5356,7 +5439,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   return (
                                     <tr key={dept} style={{ borderBottom: "1px solid #f1f5f9" }}>
                                       <td style={{ padding: "12px", fontWeight: 600, color: "#1e293b", fontSize: "0.875rem" }}>{dept}</td>
-                                      {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities'].map(module => (
+                                      {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map(module => (
                                         <td key={module} style={{ padding: "12px", textAlign: "center" }}>
                                           <input 
                                             type="checkbox" 

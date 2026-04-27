@@ -22,11 +22,12 @@ export async function PATCH(request: Request) {
     const existingSettings = await sql`SELECT * FROM "SystemSettings" LIMIT 1`;
     console.log('PATCH /api/admin/settings - Existing settings found:', existingSettings.length);
 
-    // Self-healing migration for masterFrequencies
+    // Self-healing migration for masterFrequencies and masterPaymentTypes
     try {
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterFrequencies" TEXT DEFAULT 'Ad,M,Y,2Y,H,Q,W,BW,D'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterPaymentTypes" TEXT DEFAULT 'AMC,Rent,Electricity,Subscriptions,Salaries,Vendor Payment'`;
     } catch (e) {
-      console.log("Migration for masterFrequencies failed/skipped");
+      console.log("Migration for masterFrequencies/PaymentTypes failed/skipped");
     }
 
     if (!existingSettings || existingSettings.length === 0) {
@@ -52,7 +53,8 @@ export async function PATCH(request: Request) {
           "loReportTimes",
           "managerEmail",
           "loReportEmail",
-          "masterFrequencies"
+          "masterFrequencies",
+          "masterPaymentTypes"
         ) VALUES (
           'singleton',
           ${body.masterDepartments || ''},
@@ -73,7 +75,8 @@ export async function PATCH(request: Request) {
           ${body.loReportTimes || '10:00'},
           ${body.managerEmail || ''},
           ${body.loReportEmail || ''},
-          ${body.masterFrequencies || 'Ad,M,Y,2Y,H,Q,W,BW,D'}
+          ${body.masterFrequencies || 'Ad,M,Y,2Y,H,Q,W,BW,D'},
+          ${body.masterPaymentTypes || 'AMC,Rent,Electricity,Subscriptions,Salaries,Vendor Payment'}
         )
         RETURNING *
       `;
@@ -105,7 +108,8 @@ export async function PATCH(request: Request) {
         "loReportTimes" = ${body.loReportTimes ?? existingSettings[0].loReportTimes},
         "managerEmail" = ${body.managerEmail ?? existingSettings[0].managerEmail},
         "loReportEmail" = ${body.loReportEmail ?? existingSettings[0].loReportEmail},
-        "masterFrequencies" = ${body.masterFrequencies ?? existingSettings[0].masterFrequencies}
+        "masterFrequencies" = ${body.masterFrequencies ?? existingSettings[0].masterFrequencies},
+        "masterPaymentTypes" = ${body.masterPaymentTypes ?? existingSettings[0].masterPaymentTypes}
       WHERE id = ${settingsId}
       RETURNING *
     `;
