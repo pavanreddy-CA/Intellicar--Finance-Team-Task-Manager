@@ -404,14 +404,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
       const search = trackerSearch.toLowerCase();
       const status = getStatus(o);
       const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
-      let matchesStatus = trackerStatusFilter === "ALL";
-      if (!matchesStatus) {
-        if (trackerStatusFilter === "ON HOLD") matchesStatus = status === "ON HOLD";
-        else if (trackerStatusFilter === "OVERDUE") matchesStatus = status === "OVERDUE";
-        else if (trackerStatusFilter === "NOT YET DUE") matchesStatus = status === "NOT YET DUE";
-        else if (trackerStatusFilter === "PAID (ON TIME)") matchesStatus = status === "Paid on due date" || status === "Paid Before due date";
-        else if (trackerStatusFilter === "PAID (DELAYED)") matchesStatus = status === "Paid After due date";
-      }
+      const matchesStatus = trackerStatusFilter === "ALL" || status === trackerStatusFilter;
       const matchesEntity = trackerEntityFilter === "ALL" || o.entityName === trackerEntityFilter;
       const matchesType = trackerTypeFilter === "ALL" || o.paymentType === trackerTypeFilter;
       const matchesFreq = trackerFreqFilter === "ALL" || o.frequency === trackerFreqFilter;
@@ -716,8 +709,9 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
               <option value="ON HOLD">On Hold</option>
               <option value="OVERDUE">Overdue</option>
               <option value="NOT YET DUE">Upcoming</option>
-              <option value="PAID (ON TIME)">Paid (On Time)</option>
-              <option value="PAID (DELAYED)">Paid (Delayed)</option>
+              <option value="Paid Before due date">Paid Before due date</option>
+              <option value="Paid on due date">Paid on due date</option>
+              <option value="Paid After due date">Paid After due date</option>
             </select>
 
             <select 
