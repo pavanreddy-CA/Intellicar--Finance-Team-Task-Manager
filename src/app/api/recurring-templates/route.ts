@@ -50,6 +50,14 @@ export async function GET() {
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "excludedDates" JSONB`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "freqLabel" TEXT`;
+      
+      // Drop outdated check constraint if it exists
+      try {
+        await sql`ALTER TABLE "RecurringTemplate" DROP CONSTRAINT IF EXISTS "RecurringTemplate_frequency_check"`;
+      } catch (e) {
+        console.log("Constraint drop failed/already dropped");
+      }
+
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "financeFunction" TEXT`;
     } catch (err) {
       console.error("Migration error:", err);
@@ -115,6 +123,14 @@ export async function POST(req: NextRequest) {
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "excludedDates" JSONB`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "freqLabel" TEXT`;
+      
+      // Drop outdated check constraint if it exists
+      try {
+        await sql`ALTER TABLE "RecurringTemplate" DROP CONSTRAINT IF EXISTS "RecurringTemplate_frequency_check"`;
+      } catch (e) {
+        console.log("Constraint drop failed/already dropped in POST");
+      }
+
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterWeekDays" TEXT DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday'`;
     } catch (err) {
       console.error("Migration error in POST:", err);
