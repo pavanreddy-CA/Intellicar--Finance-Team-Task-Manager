@@ -692,7 +692,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
           <div style={{ background: "white", borderRadius: "24px", width: "100%", maxWidth: "600px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden", animation: "modalIn 0.3s ease-out" }}>
             <div style={{ padding: "24px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{editingTemplate ? "Edit Template" : "Add New Recurring Rule"}</h3>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{editingTemplate ? "Edit Template" : "Add Recurring Task"}</h3>
                 <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", opacity: 0.8 }}>Define how the system should generate this activity.</p>
               </div>
               <button onClick={() => setShowTemplateForm(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "white", cursor: "pointer", width: "32px", height: "32px", borderRadius: "8px" }}>×</button>
@@ -704,12 +704,20 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                   <label style={labelStyle}>Task Name Pattern</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. GSTR 3B for {{MONTH}} {{YEAR}}" 
+                    placeholder="e.g. Ageing report for {{MONTH}} {{YEAR}}" 
                     value={templateForm.taskNamePattern} 
                     onChange={e => setTemplateForm({...templateForm, taskNamePattern: e.target.value})} 
                     style={inputStyle} 
                   />
                   <p style={{ margin: "6px 0 0 0", fontSize: "0.7rem", color: "#94a3b8" }}>Tip: Use placeholders like {'{{MONTH}}'}, {'{{YEAR}}'}, {'{{QUARTER}}'}</p>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Task Type</label>
+                  <select value={templateForm.taskType} onChange={e => setTemplateForm({...templateForm, taskType: e.target.value})} style={inputStyle}>
+                    <option value="External">External</option>
+                    <option value="Internal">Internal</option>
+                  </select>
                 </div>
 
                 <div>

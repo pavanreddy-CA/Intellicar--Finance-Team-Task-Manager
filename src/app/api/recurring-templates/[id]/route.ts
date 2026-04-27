@@ -15,10 +15,24 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // --- Ensure Database is ready ---
+    await (sql as any).query(`
+      ALTER TABLE "RecurringTemplate" 
+      ADD COLUMN IF NOT EXISTS "departmentName" TEXT DEFAULT 'Finance',
+      ADD COLUMN IF NOT EXISTS "financeFunction" TEXT,
+      ADD COLUMN IF NOT EXISTS "startDate" DATE,
+      ADD COLUMN IF NOT EXISTS "endDate" DATE,
+      ADD COLUMN IF NOT EXISTS "stopDate" DATE,
+      ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT,
+      ADD COLUMN IF NOT EXISTS "excludedDates" JSONB;
+    `).catch(() => {});
+
     const data = await req.json();
     const allowedFields = [
-      "taskNamePattern", "entityName", "taskType", "departmentName", "financeFunction",
-        "defaultReviewer", "isActive", "startDate", "endDate", "stopDate", "isStopped", "weeklyDay", "excludedDates"
+      "taskNamePattern", "entityName", "taskType", "departmentName", "financeFunction", "frequency",
+      "dayOffset", "monthOffset", "defaultOwner", "defaultReviewer", "isActive", "startDate", 
+      "endDate", "stopDate", "isStopped", "weeklyDay", "excludedDates"
     ];
 
     const updates: any = {};
@@ -40,8 +54,8 @@ export async function PATCH(
         "departmentName" = ${updates.departmentName !== undefined ? updates.departmentName : sql`"departmentName"`},
         "financeFunction" = ${updates.financeFunction !== undefined ? updates.financeFunction : sql`"financeFunction"`},
         "frequency" = ${updates.frequency !== undefined ? updates.frequency : sql`"frequency"`},
-        "dayOffset" = ${updates.dayOffset !== undefined ? (updates.dayOffset === null || updates.dayOffset === undefined ? null : Number(updates.dayOffset)) : sql`"dayOffset"`},
-        "monthOffset" = ${updates.monthOffset !== undefined ? Number(updates.monthOffset) : sql`"monthOffset"`},
+        "dayOffset" = ${updates.dayOffset !== undefined ? (isNaN(Number(updates.dayOffset)) ? null : Number(updates.dayOffset)) : sql`"dayOffset"`},
+        "monthOffset" = ${updates.monthOffset !== undefined ? (isNaN(Number(updates.monthOffset)) ? 0 : Number(updates.monthOffset)) : sql`"monthOffset"`},
         "defaultOwner" = ${updates.defaultOwner !== undefined ? updates.defaultOwner : sql`"defaultOwner"`},
         "defaultReviewer" = ${updates.defaultReviewer !== undefined ? updates.defaultReviewer : sql`"defaultReviewer"`},
         "isActive" = ${updates.isActive !== undefined ? updates.isActive : sql`"isActive"`},
