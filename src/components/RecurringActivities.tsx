@@ -165,7 +165,10 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
         } else {
           // It's a pending task
           const dueDate = new Date(occ.date);
-          dueDate.setDate(t.dayOffset || 1);
+          // Only apply dayOffset override for monthly/longer frequencies
+          if (['M', 'Q', 'H', 'Y', '2Y'].includes(t.frequency)) {
+            dueDate.setDate(t.dayOffset || 1);
+          }
 
           staging.push({
             templateId: t.id,

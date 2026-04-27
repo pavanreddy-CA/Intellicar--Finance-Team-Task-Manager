@@ -45,8 +45,9 @@ export function getPeriodKey(frequency: Frequency, date: Date): string {
       const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
       return `${year}-W${weekNum.toString().padStart(2, '0')}`;
     case 'BW':
-      // For BiWeekly, we use year and week number / 2 or just the date
-      return `${year}-BW-${formatDateShort(date)}`;
+      // Semi-Monthly: Year-Month-1 or Year-Month-2
+      const isSecond = date.getDate() > 14 ? '2' : '1';
+      return `${year}-${month.toString().padStart(2, '0')}-BW${isSecond}`;
     case 'M':
       return `${year}-${month.toString().padStart(2, '0')}`;
     case 'Q':
@@ -125,7 +126,16 @@ export function getOccurrencesBetween(
     // Advance
     if (template.frequency === 'D') current.setDate(current.getDate() + 1);
     else if (template.frequency === 'W') current.setDate(current.getDate() + 7);
-    else if (template.frequency === 'BW') current.setDate(current.getDate() + 14);
+    else if (template.frequency === 'BW') {
+      // If we just did the first one (e.g. 1st), go to 15th
+      // If we just did the second one (e.g. 15th), go to 1st of next month
+      if (current.getDate() <= 14) {
+        current.setDate(current.getDate() + 14);
+      } else {
+        current.setMonth(current.getMonth() + 1);
+        current.setDate(templateStart.getDate());
+      }
+    }
     else if (template.frequency === 'M') current.setMonth(current.getMonth() + 1);
     else if (template.frequency === 'Q') current.setMonth(current.getMonth() + 3);
     else if (template.frequency === 'H') current.setMonth(current.getMonth() + 6);
