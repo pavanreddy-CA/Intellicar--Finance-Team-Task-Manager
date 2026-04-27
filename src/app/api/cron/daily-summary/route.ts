@@ -241,27 +241,27 @@ export async function GET(req: NextRequest) {
         if (settings.reminderFrequency !== 'OFF') {
           const rTimes = settings.reminderTimes.split(',').map((t: string) => t.trim());
           if (rTimes.includes(currentHHmm)) {
-            if (settings.reminderFrequency === 'DAILY') shouldRemind = true;
-            else if (settings.reminderFrequency === 'WEEKLY' && currentDay === 1) shouldRemind = true;
-            else if (settings.reminderFrequency === 'MONTHLY' && currentDate === 1) shouldRemind = true;
+            if (settings.reminderFrequency === 'D') shouldRemind = true;
+            else if (settings.reminderFrequency === 'W' && currentDay === 1) shouldRemind = true;
+            else if (settings.reminderFrequency === 'M' && currentDate === 1) shouldRemind = true;
           }
         }
 
         if (settings.managerReportFrequency !== 'OFF') {
           const mTimes = settings.managerReportTimes.split(',').map((t: string) => t.trim());
           if (mTimes.includes(currentHHmm)) {
-            if (settings.managerReportFrequency === 'DAILY') shouldReport = true;
-            else if (settings.managerReportFrequency === 'WEEKLY' && currentDay === 1) shouldReport = true;
-            else if (settings.managerReportFrequency === 'MONTHLY' && currentDate === 1) shouldReport = true;
+            if (settings.managerReportFrequency === 'D') shouldReport = true;
+            else if (settings.managerReportFrequency === 'W' && currentDay === 1) shouldReport = true;
+            else if (settings.managerReportFrequency === 'M' && currentDate === 1) shouldReport = true;
           }
         }
 
         if (settings.loReportFrequency !== 'OFF') {
           const loTimes = settings.loReportTimes.split(',').map((t: string) => t.trim());
           if (loTimes.includes(currentHHmm)) {
-            if (settings.loReportFrequency === 'DAILY') shouldLOReport = true;
-            else if (settings.loReportFrequency === 'WEEKLY' && currentDay === 1) shouldLOReport = true;
-            else if (settings.loReportFrequency === 'MONTHLY' && currentDate === 1) shouldLOReport = true;
+            if (settings.loReportFrequency === 'D') shouldLOReport = true;
+            else if (settings.loReportFrequency === 'W' && currentDay === 1) shouldLOReport = true;
+            else if (settings.loReportFrequency === 'M' && currentDate === 1) shouldLOReport = true;
           }
         }
 

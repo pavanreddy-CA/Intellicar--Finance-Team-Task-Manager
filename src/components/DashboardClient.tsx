@@ -124,11 +124,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [activeSubView, setActiveSubView] = useState<'MAIN' | 'OTHER_DEPT'>('MAIN');
   const [activeMainView, setActiveMainView] = useState<'DASHBOARD' | 'ADMIN_MATRIX'>('DASHBOARD');
   const [settings, setSettings] = useState({
-    reminderFrequency: 'DAILY',
+    reminderFrequency: 'D',
     reminderTimes: '09:00,18:00',
-    managerReportFrequency: 'DAILY',
+    managerReportFrequency: 'D',
     managerReportTimes: '10:00',
-    loReportFrequency: 'WEEKLY',
+    loReportFrequency: 'W',
     loReportTimes: '10:00',
     managerEmail: '',
     loReportEmail: '',
@@ -3905,9 +3905,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           onChange={(e) => setSettings({...settings, reminderFrequency: e.target.value})}
                           style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
                         >
-                          <option value="DAILY">Daily</option>
-                          <option value="WEEKLY">Weekly</option>
-                          <option value="MONTHLY">Monthly</option>
+                          <option value="D">Daily</option>
+                          <option value="W">Weekly</option>
+                          <option value="M">Monthly</option>
                           <option value="CUSTOM">Custom</option>
                           <option value="OFF">Turn Off</option>
                         </select>
@@ -3984,9 +3984,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           onChange={(e) => setSettings({...settings, managerReportFrequency: e.target.value})}
                           style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
                         >
-                          <option value="DAILY">Daily</option>
-                          <option value="WEEKLY">Weekly</option>
-                          <option value="MONTHLY">Monthly</option>
+                          <option value="D">Daily</option>
+                          <option value="W">Weekly</option>
+                          <option value="M">Monthly</option>
                           <option value="OFF">Turn Off</option>
                         </select>
                       </div>
@@ -4062,9 +4062,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           onChange={(e) => setSettings({...settings, loReportFrequency: e.target.value})}
                           style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
                         >
-                          <option value="DAILY">Daily</option>
-                          <option value="WEEKLY">Weekly</option>
-                          <option value="MONTHLY">Monthly</option>
+                          <option value="D">Daily</option>
+                          <option value="W">Weekly</option>
+                          <option value="M">Monthly</option>
                           <option value="OFF">Turn Off</option>
                         </select>
                       </div>

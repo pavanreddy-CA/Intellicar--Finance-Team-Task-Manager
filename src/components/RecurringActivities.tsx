@@ -50,7 +50,7 @@ type StagingTask = {
 };
 
 export default function RecurringActivities({ settings, usersList = [] }: { settings: any; usersList: any[] }) {
-  const [activeSubTab, setActiveSubTab] = useState<'STAGING' | 'MASTER' | 'DAILY'>('STAGING');
+  const [activeSubTab, setActiveSubTab] = useState<'STAGING' | 'MASTER' | 'D'>('STAGING');
   const [templates, setTemplates] = useState<RecurringTemplate[]>([]);
   const [stagingTasks, setStagingTasks] = useState<StagingTask[]>([]);
   const [loading, setLoading] = useState(false);
@@ -399,8 +399,8 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
           Master Template Registry
         </button>
         <button 
-          onClick={() => setActiveSubTab('DAILY')}
-          style={{ padding: "12px 4px", fontSize: "0.875rem", fontWeight: 600, color: activeSubTab === 'DAILY' ? "#2563eb" : "#64748b", borderBottom: activeSubTab === 'DAILY' ? "2px solid #2563eb" : "none", background: "none", cursor: "pointer" }}
+          onClick={() => setActiveSubTab('D')}
+          style={{ padding: "12px 4px", fontSize: "0.875rem", fontWeight: 600, color: activeSubTab === 'D' ? "#2563eb" : "#64748b", borderBottom: activeSubTab === 'D' ? "2px solid #2563eb" : "none", background: "none", cursor: "pointer" }}
         >
           Daily Checklist Module
         </button>
@@ -608,7 +608,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
                   taskType: "External",
                   departmentName: "Finance",
                   financeFunction: "",
-                  frequency: "MONTHLY",
+                  frequency: "M",
                   dayOffset: 15,
                   monthOffset: 0,
                   defaultOwner: "",
@@ -843,7 +843,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
         </div>
       )}
 
-      {activeSubTab === 'DAILY' && (
+      {activeSubTab === 'D' && (
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
              <h2 style={{ fontSize: "1.5rem", color: "#0f172a", marginBottom: "8px" }}>Daily Task Checklist</h2>
