@@ -11,8 +11,24 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // --- Self-Healing Migration: Add new columns if they don't exist ---
+    // --- Self-Healing Migration: Create table and add new columns ---
     await (sql as any).query(`
+      CREATE TABLE IF NOT EXISTS "RecurringTemplate" (
+        id SERIAL PRIMARY KEY,
+        "taskNamePattern" TEXT NOT NULL,
+        "entityName" TEXT NOT NULL,
+        "taskType" TEXT DEFAULT 'External',
+        "frequency" TEXT NOT NULL,
+        "dayOffset" INTEGER DEFAULT 0,
+        "monthOffset" INTEGER DEFAULT 0,
+        "defaultOwner" TEXT,
+        "defaultReviewer" TEXT,
+        "isActive" BOOLEAN DEFAULT TRUE,
+        "lastGeneratedPeriod" TEXT,
+        "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
       ALTER TABLE "RecurringTemplate" 
       ADD COLUMN IF NOT EXISTS "taskType" TEXT DEFAULT 'External',
       ADD COLUMN IF NOT EXISTS "financeFunction" TEXT,
@@ -48,6 +64,22 @@ export async function POST(req: NextRequest) {
 
     // --- Ensure Database is ready ---
     await (sql as any).query(`
+      CREATE TABLE IF NOT EXISTS "RecurringTemplate" (
+        id SERIAL PRIMARY KEY,
+        "taskNamePattern" TEXT NOT NULL,
+        "entityName" TEXT NOT NULL,
+        "taskType" TEXT DEFAULT 'External',
+        "frequency" TEXT NOT NULL,
+        "dayOffset" INTEGER DEFAULT 0,
+        "monthOffset" INTEGER DEFAULT 0,
+        "defaultOwner" TEXT,
+        "defaultReviewer" TEXT,
+        "isActive" BOOLEAN DEFAULT TRUE,
+        "lastGeneratedPeriod" TEXT,
+        "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
       ALTER TABLE "RecurringTemplate" 
       ADD COLUMN IF NOT EXISTS "taskType" TEXT DEFAULT 'External',
       ADD COLUMN IF NOT EXISTS "departmentName" TEXT DEFAULT 'Finance',
