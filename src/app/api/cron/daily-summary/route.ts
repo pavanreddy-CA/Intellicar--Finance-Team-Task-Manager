@@ -171,6 +171,59 @@ async function generateTaskExcelBuffer(tasks: any[], subtitle: string) {
   return Buffer.from(buffer);
 }
 
+// Payment Excel Generator
+async function generatePaymentExcelBuffer(payments: any[], subtitle: string) {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Payments");
+
+  worksheet.columns = [
+    { width: 8 }, { width: 20 }, { width: 25 }, { width: 35 }, { width: 20 }, { width: 15 }, 
+    { width: 18 }, { width: 18 }, { width: 20 }, { width: 20 }
+  ];
+
+  worksheet.mergeCells('A1:J1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'ITPL - Finance Payments Report';
+  titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+  worksheet.mergeCells('A2:J2');
+  const subCell = worksheet.getCell('A2');
+  subCell.value = subtitle;
+  subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+  subCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+  const headerRow = worksheet.getRow(3);
+  const headers = ['SI No', 'Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status'];
+  
+  headers.forEach((h, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = h;
+    cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+  });
+
+  payments.forEach((p, index) => {
+    const status = p.isPaid ? (new Date(p.actualDate) > new Date(p.dueDate) ? "PAID (DELAYED)" : "PAID (ON TIME)") : (new Date() > new Date(p.dueDate) ? "OVERDUE" : "NOT YET DUE");
+    const row = worksheet.addRow([
+      index + 1, p.entityName || "", p.vendorName || "", p.paymentDescription || "", p.paymentType || "", p.frequency || "",
+      formatDate(p.dueDate), formatDate(p.actualDate), p.amountPaid || "", status
+    ]);
+    row.alignment = { vertical: 'middle', wrapText: true };
+    row.eachCell((cell) => {
+      cell.font = { name: 'Calibri', size: 10 };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
 // Reusable HTML Table Generator
 function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
   let html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 100%; overflow-x: auto; margin-bottom: 40px;">`;
@@ -236,7 +289,7 @@ export async function GET(req: NextRequest) {
         const currentDay = istDate.getUTCDay();
         const currentDate = istDate.getUTCDate();
 
-        let shouldRemind = false, shouldReport = false, shouldLOReport = false;
+        let shouldRemind = false, shouldReport = false, shouldLOReport = false, shouldPaymentReport = false;
 
         if (settings.reminderFrequency !== 'OFF') {
           const rTimes = settings.reminderTimes.split(',').map((t: string) => t.trim());
@@ -265,11 +318,21 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        if (!shouldRemind && !shouldReport && !shouldLOReport) {
+        if (settings.paymentReportFrequency !== 'OFF' && settings.paymentReportFrequency) {
+          const pTimes = (settings.paymentReportTimes || "10:00").split(',').map((t: string) => t.trim());
+          if (pTimes.includes(currentHHmm)) {
+            if (settings.paymentReportFrequency === 'D') shouldPaymentReport = true;
+            else if (settings.paymentReportFrequency === 'W' && currentDay === 1) shouldPaymentReport = true;
+            else if (settings.paymentReportFrequency === 'M' && currentDate === 1) shouldPaymentReport = true;
+          }
+        }
+
+        if (!shouldRemind && !shouldReport && !shouldLOReport && !shouldPaymentReport) {
           return NextResponse.json({ message: `Skipping.` });
         }
 
-        if (shouldLOReport) type = "lo";
+        if (shouldPaymentReport) type = "payments";
+        else if (shouldLOReport) type = "lo";
         else if (shouldRemind && shouldReport) type = "all";
         else if (shouldRemind) type = "users";
         else if (shouldReport) type = "manager";
@@ -345,6 +408,55 @@ export async function GET(req: NextRequest) {
       });
 
       return NextResponse.json({ message: "LO Report sent successfully." });
+    }
+
+    if (type === "payments") {
+      const allOccurrences = await sql`
+        SELECT o.*, t."entityName", t."vendorName", t."paymentDescription", t."paymentType", t."departmentName", t."financeFunction", t.frequency
+        FROM "PaymentOccurrence" o
+        JOIN "PaymentTemplate" t ON o."templateId" = t.id
+        ORDER BY o."dueDate" DESC
+      `;
+      
+      const managerEmail = settings?.paymentReportEmail || "pavanreddy@intellicar.in";
+      const startOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+      const mtdOccurrences = allOccurrences.filter(o => new Date(o.dueDate) >= startOfMonth);
+      
+      const currentMonthName = `${FULL_MONTHS[referenceDate.getMonth()]} ${referenceDate.getFullYear()}`;
+      const currentMonthSubtitle = `Current Month Payments - ${currentMonthName}`;
+      const consolidatedSubtitle = `Consolidated Payment Report (All Entries)`;
+      
+      const currentMonthBuffer = await generatePaymentExcelBuffer(mtdOccurrences, currentMonthSubtitle);
+      const consolidatedBuffer = await generatePaymentExcelBuffer(allOccurrences, consolidatedSubtitle);
+
+      const statsHtml = `
+        <div style="font-family: sans-serif; color: #334155;">
+          <h2 style="color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Payments Summary Report</h2>
+          <div style="display: flex; gap: 20px; margin: 24px 0;">
+            <div style="background: #eff6ff; padding: 15px; border-radius: 8px; flex: 1; text-align: center;">
+              <div style="color: #2563eb; font-size: 12px; font-weight: bold;">MTD Payments</div>
+              <div style="font-size: 24px; font-weight: bold;">${mtdOccurrences.length}</div>
+            </div>
+            <div style="background: #fef2f2; padding: 15px; border-radius: 8px; flex: 1; text-align: center;">
+              <div style="color: #ef4444; font-size: 12px; font-weight: bold;">Unpaid (MTD)</div>
+              <div style="font-size: 24px; font-weight: bold;">${mtdOccurrences.filter(o => !o.isPaid).length}</div>
+            </div>
+          </div>
+          <p>Full reports are attached as Excel files.</p>
+        </div>
+      `;
+
+      await sendEmail({
+        to: managerEmail,
+        subject: `Finance Payments Report - ${formatDate(referenceDate)}`,
+        html: statsHtml,
+        attachments: [
+          { filename: `Current_Month_Payments_${formatDate(referenceDate)}.xlsx`, content: currentMonthBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+          { filename: `Consolidated_Payments_Report_${formatDate(referenceDate)}.xlsx`, content: consolidatedBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        ]
+      });
+
+      return NextResponse.json({ message: "Payment Report sent successfully." });
     }
 
     const allTasks = await sql`SELECT * FROM "Task" ORDER BY "createdAt" DESC`;

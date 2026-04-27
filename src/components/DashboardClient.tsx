@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -136,6 +136,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     loReportTimes: '10:00',
     managerEmail: '',
     loReportEmail: '',
+    paymentReportFrequency: 'OFF',
+    paymentReportTimes: '10:00',
+    paymentReportEmail: '',
     masterDepartments: 'SW - Engineering,Manufacturing and Supply Chain,Field Operations Technicians,HW - Engineering,Operations,CSM & Sales,Finance,HR and Admin,External People',
     masterEntities: 'Intellicar-BLR,Intellicar-MUM,Intellicar-DEL',
     masterTaskTypes: 'Accounts Receivable,Accounts Payable,MIS,Inventory,Banking & Treasury,Customer Reconciliations,Vendor Reconciliation,Reporting,Financial Audit,Tax Audit,Other Audits,Assements & Notices,Month Closure,Corporate Taxation,GST,Employee Laws,Due Diligence,Presentations & Trainings,Other Reconciallitions,MCA Filings,Miscellaneous Activities,Month End Billing,Credit Cards & Debt,Customizations / Automations',
@@ -191,6 +194,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [newManagerEmailInput, setNewManagerEmailInput] = useState("");
   const [newLOEmailInput, setNewLOEmailInput] = useState("");
+  const [newPaymentEmailInput, setNewPaymentEmailInput] = useState("");
 
   // Sorting and Filtering State
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
@@ -1147,8 +1151,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const handleTriggerEmail = async (type: "users" | "manager" | "lo") => {
-    const label = type === 'users' ? 'Employee Reminders' : type === 'manager' ? 'Manager Report' : 'LO Report';
+  const handleTriggerEmail = async (type: "users" | "manager" | "lo" | "payments") => {
+    const label = type === 'users' ? 'Employee Reminders' : type === 'manager' ? 'Manager Report' : type === 'lo' ? 'LO Report' : 'Payment Report';
     if (!window.confirm(`Are you sure you want to send the ${label} now?`)) return;
     
     try {
@@ -4078,6 +4082,65 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             </div>
                           </div>
                         </div>
+
+                        {/* Payment Report Recipients */}
+                        <div>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Payments Mails</label>
+                          <div style={{ background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                              {(settings.paymentReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
+                                <div key={`p-${idx}`} style={{ background: "#f8fafc", color: "#334155", padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #e2e8f0" }}>
+                                  <span style={{ fontFamily: "monospace" }}>{email.trim()}</span>
+                                  <button 
+                                    onClick={() => {
+                                      const emails = (settings.paymentReportEmail || "").split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, paymentReportEmail: emails.join(',')});
+                                    }}
+                                    style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
+                                    onMouseOver={e => e.currentTarget.style.color = "#ef4444"}
+                                    onMouseOut={e => e.currentTarget.style.color = "#94a3b8"}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <input 
+                                type="email" 
+                                placeholder="Add payment report email..."
+                                value={newPaymentEmailInput}
+                                onChange={(e) => setNewPaymentEmailInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (newPaymentEmailInput && newPaymentEmailInput.includes('@')) {
+                                      setSettings({...settings, paymentReportEmail: (settings.paymentReportEmail || "") + (settings.paymentReportEmail?.trim() ? "," : "") + newPaymentEmailInput.trim()});
+                                      setNewPaymentEmailInput("");
+                                    }
+                                  }
+                                }}
+                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", outline: "none" }} 
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const val = newPaymentEmailInput.trim();
+                                  if (val && val.includes('@')) {
+                                    setSettings(prev => {
+                                      const current = prev.paymentReportEmail || "";
+                                      return {...prev, paymentReportEmail: current.trim() ? `${current},${val}` : val};
+                                    });
+                                    setNewPaymentEmailInput("");
+                                  }
+                                }}
+                                style={{ background: "#2563eb", color: "white", padding: "8px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+                              >
+                                Add
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     {/* Reminders Schedule */}
@@ -4315,6 +4378,67 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       )}
                     </div>
 
+                    {/* Payment Report Schedule */}
+                    <div style={{ marginBottom: "32px", padding: "20px", background: "#fdf4ff", borderRadius: "12px", border: "1px solid #f5d0fe" }}>
+                      <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: "#a21caf", fontWeight: 700 }}>Payment Report Schedule</h4>
+                      <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
+                        {(['OFF', 'D', 'W', 'M'] as const).map((freq) => (
+                          <label key={freq} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", borderRadius: "10px", border: "1px solid", borderColor: settings.paymentReportFrequency === freq ? "#d946ef" : "#e2e8f0", background: settings.paymentReportFrequency === freq ? "#fdf4ff" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                            <input 
+                              type="radio" 
+                              name="paymentFreq" 
+                              checked={settings.paymentReportFrequency === freq} 
+                              onChange={() => setSettings({...settings, paymentReportFrequency: freq})}
+                              style={{ accentColor: "#d946ef" }}
+                            />
+                            <span style={{ fontSize: "0.875rem", fontWeight: 600, color: settings.paymentReportFrequency === freq ? "#a21caf" : "#64748b" }}>
+                              {freq === 'OFF' ? 'Off' : freq === 'D' ? 'Daily' : freq === 'W' ? 'Weekly' : 'Monthly'}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {settings.paymentReportFrequency !== 'OFF' && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                          {(settings.paymentReportTimes || "").split(',').filter(t => t.trim()).map((time, idx) => {
+                            const [h, m] = time.split(':');
+                            const h12 = parseInt(h) % 12 || 12;
+                            const suffix = parseInt(h) >= 12 ? 'PM' : 'AM';
+                            return (
+                              <div key={idx} style={{ background: "white", padding: "6px 10px", borderRadius: "8px", border: "1px solid #f5d0fe", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                                <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#a21caf" }}>{h12}:{m} {suffix}</span>
+                                <input 
+                                  type="time" 
+                                  value={time}
+                                  onChange={(e) => {
+                                    const times = (settings.paymentReportTimes || "").split(',').filter(t => t.trim());
+                                    times[idx] = e.target.value;
+                                    setSettings({...settings, paymentReportTimes: times.join(',')});
+                                  }}
+                                  style={{ border: "none", width: "20px", padding: 0, background: "transparent", cursor: "pointer" }}
+                                />
+                                <button 
+                                  onClick={() => {
+                                    const times = (settings.paymentReportTimes || "").split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, paymentReportTimes: times.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <button 
+                            onClick={() => setSettings({...settings, paymentReportTimes: (settings.paymentReportTimes || "") + (settings.paymentReportTimes?.trim() ? "," : "") + "10:00"})}
+                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #f5d0fe", background: "transparent", color: "#a21caf", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}
+                          >
+                            + Add Time
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
                       <button 
                         onClick={handleSaveSettings}
@@ -4323,6 +4447,54 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       >
                         {isSavingSettings ? "Saving..." : "Save Automation Settings"}
                       </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeOptionsTab === 'DATA' && (
+                  <div>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Data Management</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                      <div style={{ background: "#f8fafc", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                          <Database size={24} color="#2563eb" />
+                          <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Database Maintenance</h4>
+                        </div>
+                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "20px" }}>
+                          Use this to sync the database schema and ensure all new features (like Payment Reporting) are fully initialized in the system.
+                        </p>
+                        <button 
+                          onClick={async () => {
+                            if (!window.confirm("Are you sure you want to run the database migration/sync?")) return;
+                            try {
+                              const res = await fetch('/api/admin/migrate');
+                              const data = await res.json();
+                              alert(data.message || "Sync completed successfully!");
+                            } catch (err) {
+                              alert("Sync failed. Please check the logs.");
+                            }
+                          }}
+                          style={{ background: "#2563eb", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}
+                        >
+                          <RefreshCw size={18} /> Sync Database Schema
+                        </button>
+                      </div>
+
+                      <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                          <Download size={24} color="#10b981" />
+                          <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Bulk Import Tasks</h4>
+                        </div>
+                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "20px" }}>
+                          Download the template and upload your tasks in bulk.
+                        </p>
+                        <button 
+                          onClick={() => { /* Existing logic if any or just a placeholder */ }}
+                          style={{ background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 600 }}
+                        >
+                          Open Bulk Importer
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -4350,6 +4522,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontWeight: 600 }}>Send LO Report</div>
                           <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the Learning Opportunity summary to Admin.</div>
+                        </div>
+                      </button>
+                      <button onClick={() => handleTriggerEmail("payments")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                        <Mail size={24} color="#2563eb" />
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontWeight: 600 }}>Send Payment Report</div>
+                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the Payments summary report.</div>
                         </div>
                       </button>
                     </div>

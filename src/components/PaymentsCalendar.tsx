@@ -59,6 +59,22 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
   const [trackerSearch, setTrackerSearch] = useState("");
   const [trackerStatusFilter, setTrackerStatusFilter] = useState("ALL");
   const [trackerEntityFilter, setTrackerEntityFilter] = useState("ALL");
+  const [trackerTypeFilter, setTrackerTypeFilter] = useState("ALL");
+  const [trackerFreqFilter, setTrackerFreqFilter] = useState("ALL");
+  
+  // Date range defaults: 1st of current month to last of current month
+  const getInitialDates = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    return { firstDay, lastDay };
+  };
+  
+  const { firstDay, lastDay } = getInitialDates();
+  const [trackerFromDate, setTrackerFromDate] = useState(firstDay);
+  const [trackerToDate, setTrackerToDate] = useState(lastDay);
+  
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'dueDate', direction: 'asc' });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -238,14 +254,53 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
   };
 
-  const filteredOccurrences = occurrences.filter(o => {
-    const search = trackerSearch.toLowerCase();
-    const status = getStatus(o);
-    const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
-    const matchesStatus = trackerStatusFilter === "ALL" || status === trackerStatusFilter;
-    const matchesEntity = trackerEntityFilter === "ALL" || o.entityName === trackerEntityFilter;
-    return matchesSearch && matchesStatus && matchesEntity;
-  });
+  const filteredOccurrences = occurrences
+    .filter(o => {
+      const search = trackerSearch.toLowerCase();
+      const status = getStatus(o);
+      const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
+      const matchesStatus = trackerStatusFilter === "ALL" || status === trackerStatusFilter;
+      const matchesEntity = trackerEntityFilter === "ALL" || o.entityName === trackerEntityFilter;
+      const matchesType = trackerTypeFilter === "ALL" || o.paymentType === trackerTypeFilter;
+      const matchesFreq = trackerFreqFilter === "ALL" || o.frequency === trackerFreqFilter;
+      
+      const occDate = new Date(o.dueDate);
+      const from = new Date(trackerFromDate);
+      const to = new Date(trackerToDate);
+      from.setHours(0,0,0,0);
+      to.setHours(23,59,59,999);
+      const matchesDate = occDate >= from && occDate <= to;
+      
+      return matchesSearch && matchesStatus && matchesEntity && matchesType && matchesFreq && matchesDate;
+    })
+    .sort((a: any, b: any) => {
+      if (!sortConfig) return 0;
+      const { key, direction } = sortConfig;
+      let valA = a[key];
+      let valB = b[key];
+      
+      if (key === 'dueDate' || key === 'actualDate') {
+        valA = valA ? new Date(valA).getTime() : 0;
+        valB = valB ? new Date(valB).getTime() : 0;
+      }
+      
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (!sortConfig || sortConfig.key !== column) return <ArrowUp size={12} style={{ opacity: 0.2 }} />;
+    return sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
+  };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -269,32 +324,76 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
       {activeTab === 'TRACKER' ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           {/* Tracker Filters */}
-          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: "250px", position: "relative" }}>
-              <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ flex: "1 1 200px", position: "relative" }}>
+              <Search size={16} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
               <input 
                 type="text" 
-                placeholder="Search vendor, description..." 
+                placeholder="Search..." 
                 value={trackerSearch}
                 onChange={e => setTrackerSearch(e.target.value)}
-                style={{ width: "100%", padding: "10px 10px 10px 40px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none" }}
+                style={{ width: "100%", padding: "8px 8px 8px 34px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem" }}
               />
             </div>
+
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ fontSize: "0.75rem", color: t.textMuted, fontWeight: 600 }}>From:</span>
+              <input 
+                type="date" 
+                value={trackerFromDate}
+                onChange={e => setTrackerFromDate(e.target.value)}
+                style={{ padding: "7px 10px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem" }}
+              />
+              <span style={{ fontSize: "0.75rem", color: t.textMuted, fontWeight: 600 }}>To:</span>
+              <input 
+                type="date" 
+                value={trackerToDate}
+                onChange={e => setTrackerToDate(e.target.value)}
+                style={{ padding: "7px 10px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem" }}
+              />
+            </div>
+
             <select 
               value={trackerStatusFilter}
               onChange={e => setTrackerStatusFilter(e.target.value)}
-              style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", minWidth: "150px" }}
+              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
             >
-              <option value="ALL">All Statuses</option>
+              <option value="ALL">All Status</option>
               <option value="OVERDUE">Overdue</option>
-              <option value="NOT YET DUE">Not Yet Due</option>
+              <option value="NOT YET DUE">Upcoming</option>
               <option value="PAID (ON TIME)">Paid (On Time)</option>
               <option value="PAID (DELAYED)">Paid (Delayed)</option>
             </select>
+
+            <select 
+              value={trackerTypeFilter}
+              onChange={e => setTrackerTypeFilter(e.target.value)}
+              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
+            >
+              <option value="ALL">All Types</option>
+              {(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => (
+                <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
+              ))}
+            </select>
+
+            <select 
+              value={trackerFreqFilter}
+              onChange={e => setTrackerFreqFilter(e.target.value)}
+              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
+            >
+              <option value="ALL">All Freq</option>
+              <option value="M">Monthly</option>
+              <option value="Q">Quarterly</option>
+              <option value="Y">Yearly</option>
+              <option value="W">Weekly</option>
+              <option value="BW">Bi-Weekly</option>
+              <option value="D">Daily</option>
+            </select>
+
             <select 
               value={trackerEntityFilter}
               onChange={e => setTrackerEntityFilter(e.target.value)}
-              style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", minWidth: "150px" }}
+              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
             >
               <option value="ALL">All Entities</option>
               {settings.masterEntities.split(',').map((e: string) => <option key={e} value={e.trim()}>{e.trim()}</option>)}
@@ -302,15 +401,28 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
           </div>
 
           {/* Tracker Table */}
-          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
+          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: theme === 'DARK' ? "rgba(255,255,255,0.02)" : "#f8fafc" }}>
-                  <th style={thStyle}>Entity</th>
-                  <th style={thStyle}>Vendor</th>
-                  <th style={thStyle}>Description</th>
-                  <th style={thStyle}>Due Date</th>
-                  <th style={thStyle}>Actual Date</th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('entityName')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Entity <SortIcon column="entityName" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('vendorName')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Vendor <SortIcon column="vendorName" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('paymentDescription')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Description <SortIcon column="paymentDescription" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('paymentType')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Type <SortIcon column="paymentType" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('dueDate')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Due Date <SortIcon column="dueDate" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('actualDate')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Actual Date <SortIcon column="actualDate" /></div>
+                  </th>
                   <th style={thStyle}>Amount</th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Action</th>
@@ -324,13 +436,15 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                     const status = getStatus(occ);
                     const style = getStatusStyle(status);
                     return (
-                      <tr key={occ.id} style={{ borderBottom: `1px solid ${t.border}` }}>
+                      <tr key={occ.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.background = theme === 'DARK' ? "rgba(255,255,255,0.02)" : "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
                         <td style={tdStyle}>{occ.entityName}</td>
                         <td style={tdStyle}>
                           <div style={{ fontWeight: 600 }}>{occ.vendorName}</div>
-                          <div style={{ fontSize: "0.7rem", color: t.textMuted }}>{occ.paymentType}</div>
                         </td>
                         <td style={tdStyle}>{occ.paymentDescription}</td>
+                        <td style={tdStyle}>
+                          <span style={{ fontSize: "0.7rem", color: t.textMuted, background: theme === 'DARK' ? "rgba(255,255,255,0.05)" : "#f1f5f9", padding: "2px 8px", borderRadius: "4px" }}>{occ.paymentType}</span>
+                        </td>
                         <td style={tdStyle}>{new Date(occ.dueDate).toLocaleDateString('en-GB')}</td>
                         <td style={tdStyle}>{occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--"}</td>
                         <td style={tdStyle}>{occ.amountPaid ? formatCurrency(occ.amountPaid) : "--"}</td>
@@ -346,7 +460,9 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
                           {!occ.isPaid && (
                             <button 
                               onClick={() => { setActiveOccurrence(occ); setShowPayModal(true); }}
-                              style={{ padding: "6px 12px", borderRadius: "8px", border: "none", background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                              style={{ padding: "6px 12px", borderRadius: "8px", border: "none", background: "#2563eb", color: "white", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", transition: "transform 0.2s" }}
+                              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                             >
                               Mark Paid
                             </button>

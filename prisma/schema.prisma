@@ -105,6 +105,9 @@ model SystemSettings {
   lastLoReportSentAt    DateTime?
   managerEmail          String   @default("pavanreddy@intellicar.in")
   loReportEmail         String   @default("pavanreddy@intellicar.in")
+  paymentReportFrequency String  @default("OFF")
+  paymentReportTimes     String  @default("10:00")
+  paymentReportEmail     String  @default("pavanreddy@intellicar.in")
 
   // Master Data Lists (Comma separated)
   masterDepartments     String   @default("Finance,HR,IT,Operations,Sales,Marketing,Admin")
