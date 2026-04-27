@@ -115,7 +115,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [trackerToDate]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -131,16 +131,25 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
       setOccurrences(allOccurrences);
 
       // --- Auto-Generation Logic ---
-      const now = new Date();
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0); // Check up to end of next month
+      // Generate up to trackerToDate to show all requested activities in the view
+      const lookAheadEnd = new Date(trackerToDate);
+      lookAheadEnd.setHours(23, 59, 59, 999);
+      
       const staging: any[] = [];
 
       allTemplates.forEach(t => {
         if (t.isStopped) return;
-        const potential = getOccurrencesBetween(t, new Date(t.startDate), nextMonth);
+        
+        // Start generating from template start date up to the filtered end date
+        const potential = getOccurrencesBetween(t, new Date(t.startDate), lookAheadEnd);
+        
         potential.forEach(p => {
-          // Check if already exists
-          const exists = allOccurrences.find(o => o.templateId === t.id && getPeriodKey(t.frequency as any, new Date(o.dueDate)) === p.periodKey);
+          // Check if already exists in current state or DB
+          const exists = allOccurrences.find(o => 
+            o.templateId === t.id && 
+            getPeriodKey(t.frequency as any, new Date(o.dueDate)) === p.periodKey
+          );
+          
           if (!exists) {
             staging.push({
               templateId: t.id,
@@ -152,7 +161,7 @@ export default function PaymentsCalendar({ user, isAdmin, t, theme, settings }: 
       });
 
       if (staging.length > 0) {
-        console.log("Generating payments:", staging.length);
+        console.log("Generating payments up to:", trackerToDate, "Count:", staging.length);
         const genRes = await fetch("/api/payments/tracker", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
