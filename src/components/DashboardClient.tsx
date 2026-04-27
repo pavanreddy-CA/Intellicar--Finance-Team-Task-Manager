@@ -31,6 +31,7 @@ type Task = {
   ownerComments: string | null;
   reviewerComments: string | null;
   editRequested?: boolean;
+  editApproved?: boolean;
   editRequestBy?: string | null;
   editRequestReason?: string | null;
   deleteRequested?: boolean;
