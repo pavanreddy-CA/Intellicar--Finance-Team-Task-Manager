@@ -4,17 +4,6 @@ export default function HomeHub() {
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "32px", background: "#f8fafc" }}>
       {/* Breadcrumb and Header */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
-          FINANCE HUB / Development
-        </div>
-        <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", marginBottom: "8px" }}>
-          Finance Home Hub
-        </h1>
-        <p style={{ fontSize: "0.875rem", color: "#64748b" }}>
-          Your central space for team mission, stories, and achievements.
-        </p>
-      </div>
 
       {/* Mission Section */}
       <div style={{
