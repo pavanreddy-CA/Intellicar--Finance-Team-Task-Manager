@@ -2065,10 +2065,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             <div style={{ fontSize: "0.75rem", color: t.textMuted }}>{user.email}</div>
           </div>
           
-          <div style={{ height: "30px", width: "1px", background: "#f1f5f9" }}></div>
+          <div style={{ height: "30px", width: "1px", background: t.bg }}></div>
 
 
-          <button onClick={() => { setShowOptionsModal(true); if (isAdmin) { fetchUsersList(); fetchSettings(); } else { setActiveOptionsTab('ACCOUNT'); } }} style={{ padding: "8px 16px", background: "#f8fafc", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.875rem" }}>
+          <button onClick={() => { setShowOptionsModal(true); if (isAdmin) { fetchUsersList(); fetchSettings(); } else { setActiveOptionsTab('ACCOUNT'); } }} style={{ padding: "8px 16px", background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.875rem" }}>
             {isAdmin ? <ShieldCheck size={16} /> : <Sliders size={16} />}
             {isAdmin ? "Control Center" : "Account Settings"}
           </button>
@@ -2079,7 +2079,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               document.cookie = "session-token=; path=/; max-age=0";
               window.location.href = "/login";
             }} 
-            style={{ color: "#64748b", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", marginLeft: "10px" }}
+            style={{ color: t.textMuted, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", marginLeft: "10px" }}
           >
             <LogOut size={18} />
           </button>
@@ -2281,7 +2281,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                   <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
                   <span style={{ color: "#cbd5e1" }}>/</span>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#64748b" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 500, color: t.textMuted }}>
                     {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : 
                      activeView === 'PAYMENTS' ? "Treasury" : "Development"}
                   </span>
@@ -2292,7 +2292,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                  activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : 
                  activeView === 'PAYMENTS' ? "Payments Calendar" : "Learning Opportunities"}
               </h2>
-              <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.95rem", fontWeight: 500 }}>
+              <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.95rem", fontWeight: 500 }}>
                 {activeView === 'HOME' ? "" : 
                  activeView === 'TASKS' ? 
                   (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") :
@@ -2306,7 +2306,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <Plus size={18} /> New Task
                 </button>
               ) : activeView === 'LOS' ? (
-                <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#0f172a", padding: "10px 20px", borderRadius: "12px", border: "1px solid #e2e8f0", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
+                <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.text, padding: "10px 20px", borderRadius: "12px", border: `1px solid ${t.border}`, cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
                   <Lightbulb size={18} color="#f59e0b" /> Update LO
                 </button>
               ) : null}
@@ -2336,7 +2336,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <span style={{ fontSize: "0.875rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#60a5fa" }}>Our Mission</span>
                     </div>
                     <h2 style={{ fontSize: "2.5rem", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.02em" }}>{mission}</h2>
-                    <p style={{ marginTop: "24px", fontSize: "1.125rem", color: "#94a3b8", lineHeight: 1.6 }}>This platform is implemented to drive efficiency and ensure every team member has the data they need to succeed.</p>
+                    <p style={{ marginTop: "24px", fontSize: "1.125rem", color: t.textMuted, lineHeight: 1.6 }}>This platform is implemented to drive efficiency and ensure every team member has the data they need to succeed.</p>
                   </div>
                 </div>
               );
@@ -2359,20 +2359,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     ];
                     return stories.map((s: any) => (
                       <div key={s.id} style={{ 
-                        padding: "24px", borderRadius: "20px", background: "white", 
-                        border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+                        padding: "24px", borderRadius: "20px", background: t.card, 
+                        border: `1px solid ${t.border}`, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
                         transition: "transform 0.2s", cursor: "default"
                       }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
                         <div style={{ background: "#eff6ff", width: "40px", height: "40px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
                           <CheckCircle2 size={20} color="#3b82f6" />
                         </div>
                         <h4 style={{ margin: "0 0 8px 0", fontSize: "1rem", fontWeight: 700 }}>{s.title}</h4>
-                        <p style={{ margin: "0 0 16px 0", fontSize: "0.875rem", color: "#64748b", lineHeight: 1.5 }}>"{s.text}"</p>
+                        <p style={{ margin: "0 0 16px 0", fontSize: "0.875rem", color: t.textMuted, lineHeight: 1.5 }}>"{s.text}"</p>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#3b82f6", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700 }}>
                             {s.author[0]}
                           </div>
-                          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#1e293b" }}>{s.author}</span>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.text }}>{s.author}</span>
                         </div>
                       </div>
                     ));
@@ -2394,15 +2394,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     ];
                     return achievements.map((a: any) => (
                       <div key={a.id} style={{ 
-                        padding: "16px", borderRadius: "16px", background: "white", 
-                        border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "16px" 
+                        padding: "16px", borderRadius: "16px", background: t.card, 
+                        border: `1px solid ${t.border}`, display: "flex", alignItems: "center", gap: "16px" 
                       }}>
                         <div style={{ background: "#f0fdf4", padding: "8px", borderRadius: "10px" }}>
                           <ShieldCheck size={20} color="#10b981" />
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#1e293b" }}>{a.title}</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{a.date}</div>
+                          <div style={{ fontSize: "0.875rem", fontWeight: 700, color: t.text }}>{a.title}</div>
+                          <div style={{ fontSize: "0.75rem", color: t.textMuted }}>{a.date}</div>
                         </div>
                       </div>
                     ));
@@ -2414,10 +2414,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         ) : activeView === 'TASKS' ? (
           activeSubView === 'MAIN' ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px", marginBottom: "32px" }}>
-              <MetricCard title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={24} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
-              <MetricCard title="Pending Action" value={pendingActionCount} icon={<Clock size={24} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
-              <MetricCard title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={24} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
-              <MetricCard title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
+              <MetricCard t={t} title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={24} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
+              <MetricCard t={t} title="Pending Action" value={pendingActionCount} icon={<Clock size={24} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
+              <MetricCard t={t} title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={24} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
+              <MetricCard t={t} title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
             </div>
           ) : null
         ) : activeView === 'LOS' ? (
@@ -2461,12 +2461,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
           
           {/* Date Filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "white", padding: "8px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#475569" }}>Filter by Date:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", background: t.card, padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: t.textMuted }}>Filter by Date:</span>
             <select
               value={dateFilterPreset}
               onChange={(e) => handlePresetChange(e.target.value)}
-              style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a", background: "#f8fafc" }}
+              style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text, background: t.bg }}
             >
               <option value="ALL_TIME">All Time</option>
               <option value="CURRENT_MONTH">Current Month</option>
@@ -2483,14 +2483,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   type="date" 
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)}
-                  style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
+                  style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text }}
                 />
-                <span style={{ color: "#94a3b8" }}>to</span>
+                <span style={{ color: t.textMuted }}>to</span>
                 <input 
                   type="date" 
                   value={endDate} 
                   onChange={e => setEndDate(e.target.value)}
-                  style={{ border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: "#0f172a" }}
+                  style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text }}
                 />
                 {(startDate || endDate) && (
                   <button 
@@ -2506,15 +2506,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         </div>
           
           {/* Filter Bar */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", marginBottom: "16px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: t.card, padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", marginBottom: "16px", alignItems: "center" }}>
             <div style={{ position: "relative", flex: 1, minWidth: "250px" }}>
-              <Search style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} size={18} />
+              <Search style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={18} />
               <input 
                 type="text" 
                 placeholder="Search tasks, types, entities, owners..." 
                 value={taskSearchQuery}
                 onChange={e => setTaskSearchQuery(e.target.value)}
-                style={{ width: "100%", padding: "10px 10px 10px 40px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "#f8fafc" }} 
+                style={{ width: "100%", padding: "10px 10px 10px 40px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg }} 
               />
             </div>
 
@@ -2522,7 +2522,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <select 
                 value={taskEntityFilter} 
                 onChange={e => setTaskEntityFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "#f8fafc", color: "#475569" }}
+                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
               >
                 <option value="ALL">All Entities</option>
                 {uniqueTaskEntities.map(e => <option key={e} value={e}>{e}</option>)}
@@ -2531,7 +2531,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <select 
                 value={taskOwnerFilter} 
                 onChange={e => setTaskOwnerFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "#f8fafc", color: "#475569" }}
+                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
               >
                 <option value="ALL">All Owners</option>
                 {uniqueTaskOwners.map(o => <option key={o} value={o}>{o}</option>)}
@@ -2540,7 +2540,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <select 
                 value={taskStatusFilter} 
                 onChange={e => setTaskStatusFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "#f8fafc", color: "#475569" }}
+                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
               >
                 <option value="ALL">All Statuses</option>
                 <option value="Not Yet Due">Not Yet Due</option>
@@ -2554,15 +2554,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <select 
                 value={taskTypeFilter} 
                 onChange={e => setTaskTypeFilter(e.target.value as any)}
-                style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "#f8fafc", color: "#475569", fontWeight: 600 }}
+                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted, fontWeight: 600 }}
               >
                 <option value="ALL">All Task Types</option>
                 <option value="INTERNAL">Internal Only</option>
                 <option value="EXTERNAL">External Only</option>
               </select>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px", borderLeft: "1px solid #e2e8f0" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Rows:</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px", borderLeft: `1px solid ${t.border}` }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
                 <select 
                   value={itemsPerPage} 
                   onChange={e => setItemsPerPage(Number(e.target.value))}
@@ -2579,8 +2579,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <button 
                   onClick={() => setShowTaskDownloadDropdown(!showTaskDownloadDropdown)}
                   style={{ 
-                    display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", 
-                    padding: "8px 16px", borderRadius: "10px", border: "1px solid #cbd5e1", 
+                    display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
+                    padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
                     cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" 
                   }} 
                   onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
@@ -2591,7 +2591,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 {showTaskDownloadDropdown && (
                   <div style={{ 
                     position: "absolute", top: "100%", right: 0, marginTop: "8px", 
-                    background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", 
+                    background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
                     boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
                     minWidth: "160px", overflow: "hidden" 
                   }}>
@@ -2599,8 +2599,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       onClick={() => { exportToExcel(); setShowTaskDownloadDropdown(false); }}
                       style={{ 
                         width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                        padding: "12px 16px", border: "none", background: "white", 
-                        color: "#475569", cursor: "pointer", fontSize: "0.875rem", 
+                        padding: "12px 16px", border: "none", background: t.card, 
+                        color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
                         textAlign: "left", transition: "background 0.2s" 
                       }}
                       onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
@@ -2612,8 +2612,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       onClick={() => { exportToPDF(); setShowTaskDownloadDropdown(false); }}
                       style={{ 
                         width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                        padding: "12px 16px", border: "none", background: "white", 
-                        color: "#475569", cursor: "pointer", fontSize: "0.875rem", 
+                        padding: "12px 16px", border: "none", background: t.card, 
+                        color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
                         textAlign: "left", transition: "background 0.2s" 
                       }}
                       onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
@@ -2621,7 +2621,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     >
                       <FileText size={16} color="#991b1b" /> PDF Document
                     </button>
-                    <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }}></div>
+                    <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
                     <button 
                       onClick={() => { 
                         setShareData({...shareData, type: 'task', format: 'excel', subject: `Task Report - ${new Date().toISOString().split('T')[0]}`});
@@ -2630,7 +2630,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       }}
                       style={{ 
                         width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                        padding: "12px 16px", border: "none", background: "white", 
+                        padding: "12px 16px", border: "none", background: t.card, 
                         color: "#2563eb", cursor: "pointer", fontSize: "0.875rem", 
                         textAlign: "left", transition: "background 0.2s", fontWeight: 600
                       }}
@@ -2645,97 +2645,97 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           </div>
 
         {/* Data Table */}
-        <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)", overflow: "hidden" }}>
+        <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)", overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
               <thead>
                 <tr>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('id')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('id')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       ID {taskSortConfig?.key === 'id' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Created At {taskSortConfig?.key === 'createdAt' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('entityName')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('entityName')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('taskName')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskName')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Task Name {taskSortConfig?.key === 'taskName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('taskType')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskType')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Task Type {taskSortConfig?.key === 'taskType' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('frequency')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('frequency')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Frequency {taskSortConfig?.key === 'frequency' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Request From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('dueDate')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('dueDate')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Due Date {taskSortConfig?.key === 'dueDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('completionDate')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('completionDate')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Completion Date {taskSortConfig?.key === 'completionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('taskStatus')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskStatus')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Review Date {taskSortConfig?.key === 'reviewCompletionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('reviewStatus')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewStatus')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={thStyle}>Capture LO?</th>
-                  <th style={thStyle}>Owner Comments</th>
-                  <th style={thStyle}>Reviewer Comments</th>
-                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
+                  <th style={getThStyle(t)}>Capture LO?</th>
+                  <th style={getThStyle(t)}>Owner Comments</th>
+                  <th style={getThStyle(t)}>Reviewer Comments</th>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={{ ...thStyle, textAlign: "center" }}>Actions</th>
+                  <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={17} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading tasks...</td></tr>
+                  <tr><td colSpan={17} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading tasks...</td></tr>
                 ) : paginatedTasks.length === 0 ? (
-                  <tr><td colSpan={17} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No tasks found for the current filters.</td></tr>
+                  <tr><td colSpan={17} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No tasks found for the current filters.</td></tr>
                 ) : (
                   paginatedTasks.map((task) => {
                     const currentUserName = user?.name || user?.email;
@@ -2754,13 +2754,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     
                     return (
                     <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "all 0.2s", color: isOverdue ? "#ef4444" : "#334155", fontWeight: isOverdue ? 700 : 400 }} className="table-row">
-                      <td style={tdStyle}><span style={{ color: isOverdue ? "inherit" : "#94a3b8", fontWeight: isOverdue ? "inherit" : 500 }}>#{task.id}</span></td>
-                      <td style={{ ...tdStyle, whiteSpace: "nowrap" }}><span style={{ color: isOverdue ? "inherit" : "#64748b", fontWeight: isOverdue ? "inherit" : "normal" }}>{formatDateTime(task.createdAt)}</span></td>
-                      <td style={tdStyle}>{task.entityName}</td>
-                      <td style={{ ...tdStyle, fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "300px", maxWidth: "600px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
-                      <td style={tdStyle}>
+                      <td style={getTdStyle(t)}><span style={{ color: isOverdue ? "inherit" : "#94a3b8", fontWeight: isOverdue ? "inherit" : 500 }}>#{task.id}</span></td>
+                      <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}><span style={{ color: isOverdue ? "inherit" : "#64748b", fontWeight: isOverdue ? "inherit" : "normal" }}>{formatDateTime(task.createdAt)}</span></td>
+                      <td style={getTdStyle(t)}>{task.entityName}</td>
+                      <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "300px", maxWidth: "600px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
+                      <td style={getTdStyle(t)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
+                          <span style={{ padding: "4px 8px", background: t.bg, borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>
                             {task.taskType}
                           </span>
                           {(isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && task.linkedRequestId && (
@@ -2782,21 +2782,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           )}
                         </div>
                       </td>
-                      <td style={tdStyle}>
+                      <td style={getTdStyle(t)}>
                         <span style={{ 
-                          padding: "2px 6px", background: "#f1f5f9", color: "#475569", 
-                          borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, border: "1px solid #e2e8f0" 
+                          padding: "2px 6px", background: t.bg, color: t.textMuted, 
+                          borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, border: `1px solid ${t.border}` 
                         }}>
                           {task.frequency || "--"}
                         </span>
                       </td>
-                      <td style={tdStyle}>{task.requestFrom}</td>
-                      <td style={tdStyle}>{task.ownerName}</td>
-                      <td style={tdStyle}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
+                      <td style={getTdStyle(t)}>{task.requestFrom}</td>
+                      <td style={getTdStyle(t)}>{task.ownerName}</td>
+                      <td style={getTdStyle(t)}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
                       
                       {/* Editable Completion Date */}
                       <td 
-                        style={{ ...tdStyle, cursor: isOwnerLocked || !canEditOwnerFields ? "not-allowed" : "pointer", minWidth: "140px" }}
+                        style={{ ...getTdStyle(t), cursor: isOwnerLocked || !canEditOwnerFields ? "not-allowed" : "pointer", minWidth: "140px" }}
                         onClick={() => { 
                           if (isOwnerLocked || !canEditOwnerFields) return;
                           setEditingCell({ id: task.id, field: "completionDate" }); 
@@ -2811,7 +2811,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             onChange={(e) => setEditValue(e.target.value)}
                             onBlur={() => handleUpdate(task.id, "completionDate", editValue)}
                             onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "completionDate", editValue)}
-                            style={inputStyle}
+                            style={getInputStyle(t)}
                           />
                         ) : (
                           <span style={{ color: isOverdue ? "inherit" : (task.completionDate ? "#0f172a" : "#cbd5e1"), fontWeight: isOverdue ? 700 : 500 }}>
@@ -2822,7 +2822,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </td>
 
                       <td 
-                        style={{ ...tdStyle, fontWeight: 600, cursor: isOwnerLocked ? "default" : "pointer" }}
+                        style={{ ...getTdStyle(t), fontWeight: 600, cursor: isOwnerLocked ? "default" : "pointer" }}
                         onClick={() => {
                           if (isOwnerLocked) return;
                           if (COMPLETION_STATUSES.includes(task.taskStatus)) return;
@@ -2834,10 +2834,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       >
                         {task.taskStatus}
                       </td>
-                      <td style={tdStyle}>{task.reviewerName === "Not Applicable" ? <span style={{ color: "#94a3b8" }}>N/A</span> : task.reviewerName}</td>
+                      <td style={getTdStyle(t)}>{task.reviewerName === "Not Applicable" ? <span style={{ color: t.textMuted }}>N/A</span> : task.reviewerName}</td>
                       
                       <td 
-                        style={{ ...tdStyle, cursor: task.reviewerName === "Not Applicable" || isReviewerLocked || !canEditReviewFields ? "not-allowed" : "pointer", minWidth: "140px" }}
+                        style={{ ...getTdStyle(t), cursor: task.reviewerName === "Not Applicable" || isReviewerLocked || !canEditReviewFields ? "not-allowed" : "pointer", minWidth: "140px" }}
                         onClick={() => { 
                           if (task.reviewerName === "Not Applicable" || isReviewerLocked || !canEditReviewFields) return;
                           setEditingCell({ id: task.id, field: "reviewCompletionDate" }); 
@@ -2845,7 +2845,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         }}
                       >
                         {task.reviewerName === "Not Applicable" ? (
-                          <span style={{ color: "#94a3b8", fontWeight: 500 }}>N/A</span>
+                          <span style={{ color: t.textMuted, fontWeight: 500 }}>N/A</span>
                         ) : editingCell?.id === task.id && editingCell.field === "reviewCompletionDate" ? (
                           <input 
                             type="date"
@@ -2854,7 +2854,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             onChange={(e) => setEditValue(e.target.value)}
                             onBlur={() => handleUpdate(task.id, "reviewCompletionDate", editValue)}
                             onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "reviewCompletionDate", editValue)}
-                            style={inputStyle}
+                            style={getInputStyle(t)}
                           />
                         ) : (
                           <span style={{ color: isOverdue ? "inherit" : (task.reviewCompletionDate ? "#0f172a" : "#cbd5e1"), fontWeight: isOverdue ? 700 : 500 }}>
@@ -2864,8 +2864,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         )}
                       </td>
 
-                      <td style={tdStyle}>
-                        <StatusPill 
+                      <td style={getTdStyle(t)}>
+                        <StatusPill t={t} 
                           status={task.reviewerName === "Not Applicable" ? "Review Not Required" : task.reviewStatus} 
                           type="review" 
                           taskId={task.id} 
@@ -2874,9 +2874,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         />
                       </td>
 
-                      <td style={tdStyle}>
+                      <td style={getTdStyle(t)}>
                         {task.reviewerName === "Not Applicable" ? (
-                          <span style={{ color: "#94a3b8", fontWeight: 500 }}>N/A</span>
+                          <span style={{ color: t.textMuted, fontWeight: 500 }}>N/A</span>
                         ) : (isAdmin || isCurrentUserReviewer) && (task.reviewStatus === 'Completed') ? (
                           <select 
                             onChange={(e) => {
@@ -2897,8 +2897,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               }
                             }}
                             style={{ 
-                              padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", 
-                              fontSize: "0.75rem", fontWeight: 600, background: "#f8fafc", color: "#475569", cursor: "pointer" 
+                              padding: "4px 8px", borderRadius: "6px", border: `1px solid ${t.border}`, 
+                              fontSize: "0.75rem", fontWeight: 600, background: t.bg, color: t.textMuted, cursor: "pointer" 
                             }}
                           >
                             <option value="NO">No</option>
@@ -2911,7 +2911,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       
                       {/* Editable Owner Comments */}
                       <td 
-                        style={{ ...tdStyle, cursor: isOwnerLocked ? "not-allowed" : "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
+                        style={{ ...getTdStyle(t), cursor: isOwnerLocked ? "not-allowed" : "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
                         onClick={() => { 
                           if (isOwnerLocked) return;
                           setEditingCell({ id: task.id, field: "ownerComments" }); 
@@ -2925,7 +2925,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             onChange={(e) => setEditValue(e.target.value)}
                             onBlur={() => handleUpdate(task.id, "ownerComments", editValue)}
                             onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "ownerComments", editValue)}
-                            style={inputStyle}
+                            style={getInputStyle(t)}
                           />
                         ) : (
                           <span style={{ color: task.ownerComments ? "#475569" : "#cbd5e1" }}>{task.ownerComments || "Click to add..."}</span>
@@ -2933,7 +2933,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </td>
 
                       <td 
-                        style={{ ...tdStyle, cursor: isReviewerLocked || !canEditReviewFields ? "not-allowed" : "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
+                        style={{ ...getTdStyle(t), cursor: isReviewerLocked || !canEditReviewFields ? "not-allowed" : "text", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
                         onClick={() => { 
                           if (isReviewerLocked || !canEditReviewFields) return;
                           setEditingCell({ id: task.id, field: "reviewerComments" }); 
@@ -2947,7 +2947,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             onChange={(e) => setEditValue(e.target.value)}
                             onBlur={() => handleUpdate(task.id, "reviewerComments", editValue)}
                             onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "reviewerComments", editValue)}
-                            style={inputStyle}
+                            style={getInputStyle(t)}
                           />
                         ) : (
                           <span style={{ color: task.reviewerComments ? "#475569" : "#cbd5e1" }}>
@@ -2957,7 +2957,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         )}
                       </td>
 
-                      <td style={tdStyle}>
+                      <td style={getTdStyle(t)}>
                         {task.linkedRequestId ? (
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                             <span style={{ 
@@ -2991,18 +2991,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             )}
                           </div>
                         ) : (
-                          <span style={{ color: "#94a3b8", fontWeight: 500 }}>N/A</span>
+                          <span style={{ color: t.textMuted, fontWeight: 500 }}>N/A</span>
                         )}
                       </td>
 
                       {/* Delete / Request Edit / Request Delete Action */}
-                      <td style={{ ...tdStyle, textAlign: "center" }}>
+                      <td style={{ ...getTdStyle(t), textAlign: "center" }}>
                                                       <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: "center" }}>
                           {(isAdmin || task.editApproved) && (
                              <button 
                                onClick={() => { setPreFilledTask(task); setShowForm(true); }}
                                style={{ 
-                                 background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0", 
+                                 background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, 
                                  cursor: "pointer", padding: "6px", borderRadius: "8px", 
                                  display: "flex", alignItems: "center", justifyContent: "center",
                                  transition: "all 0.2s"
@@ -3058,15 +3058,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-              <div style={{ fontSize: "0.875rem", color: "#64748b" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${t.border}`, background: t.bg }}>
+              <div style={{ fontSize: "0.875rem", color: t.textMuted }}>
                 Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredTasksToDisplay.length)} of {filteredTasksToDisplay.length} tasks
               </div>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <button 
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #cbd5e1", borderRadius: "6px", color: currentPage === 1 ? "#94a3b8" : "#0f172a", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}
+                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: currentPage === 1 ? "#94a3b8" : "#0f172a", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}
                 >
                   <ChevronLeft size={16} /> Prev
                 </button>
@@ -3076,7 +3076,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <button 
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #cbd5e1", borderRadius: "6px", color: currentPage === totalPages ? "#94a3b8" : "#0f172a", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}
+                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: currentPage === totalPages ? "#94a3b8" : "#0f172a", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}
                 >
                   Next <ChevronRight size={16} />
                 </button>
@@ -3089,9 +3089,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
         {activeMainView === 'DASHBOARD' && activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && (
           <div className="other-dept-view">
-            <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
+            <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
               <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
-                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#0f172a" }}>Inter Dept Request</h3>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Inter Dept Request</h3>
                 <button 
                   onClick={() => setShowExtReqForm(true)}
                   style={{ display: "flex", alignItems: "center", gap: "8px", background: "#4f46e5", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)" }}
@@ -3101,8 +3101,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
               
               {/* Metric Cards for Inter-Dept */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", padding: "24px 32px", background: "white" }}>
-                <MetricCard 
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", padding: "24px 32px", background: t.card }}>
+                <MetricCard t={t} 
                   title="All Requests" 
                   value={visibleExternalRequests.length} 
                   icon={<FileText size={20} color="#ffffff" />} 
@@ -3110,7 +3110,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   isActive={extReqFilter === 'ALL'} 
                   onClick={() => setExtReqFilter('ALL')} 
                 />
-                <MetricCard 
+                <MetricCard t={t} 
                   title="Pending" 
                   value={visibleExternalRequests.filter(r => r.status === 'Pending' || !r.status || r.status === 'New' || r.status === '').length} 
                   icon={<Clock size={20} color="#ffffff" />} 
@@ -3118,7 +3118,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   isActive={extReqFilter === 'ALLOCATION'} 
                   onClick={() => setExtReqFilter('ALLOCATION')} 
                 />
-                <MetricCard 
+                <MetricCard t={t} 
                   title="Under Process" 
                   value={visibleExternalRequests.filter(r => r.status === 'Under Process').length} 
                   icon={<AlertCircle size={20} color="#ffffff" />} 
@@ -3126,7 +3126,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   isActive={extReqFilter === 'PROCESS'} 
                   onClick={() => setExtReqFilter('PROCESS')} 
                 />
-                <MetricCard 
+                <MetricCard t={t} 
                   title="Processed" 
                   value={visibleExternalRequests.filter(r => r.status === 'Processed').length} 
                   icon={<CheckCircle2 size={20} color="#ffffff" />} 
@@ -3134,7 +3134,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   isActive={extReqFilter === 'PROCESSED'} 
                   onClick={() => setExtReqFilter('PROCESSED')} 
                 />
-                <MetricCard 
+                <MetricCard t={t} 
                   title="Rejected" 
                   value={visibleExternalRequests.filter(r => r.status === 'Rejected').length} 
                   icon={<Trash2 size={20} color="#ffffff" />} 
@@ -3145,15 +3145,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
 
               {/* Enhanced Filter Bar */}
-              <div style={{ padding: "16px 32px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ padding: "16px 32px", background: t.bg, borderBottom: `1px solid ${t.border}`, display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
                 <div style={{ position: "relative", flex: 1, minWidth: "250px" }}>
-                  <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} size={16} />
+                  <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
                   <input 
                     type="text" 
                     placeholder="Search by name, email or request nature..." 
                     value={extReqSearch}
                     onChange={e => setExtReqSearch(e.target.value)}
-                    style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: "1px solid #e2e8f0", outline: "none", fontSize: "0.8125rem", width: "100%", background: "white" }} 
+                    style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
                   />
                 </div>
                 
@@ -3192,7 +3192,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <select 
                     value={requestTypeFilter} 
                     onChange={e => setRequestTypeFilter(e.target.value as any)}
-                    style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.875rem", background: "white", color: "#475569", fontWeight: 600 }}
+                    style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.card, color: t.textMuted, fontWeight: 600 }}
                   >
                     <option value="ALL">All Request Origins</option>
                     <option value="ORIGINAL">Original Only</option>
@@ -3203,16 +3203,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <div style={{ marginLeft: "auto", position: "relative" }}>
                   <button 
                     onClick={() => setShowExtReqDownloadDropdown(!showExtReqDownloadDropdown)}
-                    style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#2563eb", border: "1px solid #2563eb", padding: "10px 20px", borderRadius: "10px", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
+                    style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: "#2563eb", border: "1px solid #2563eb", padding: "10px 20px", borderRadius: "10px", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
                   >
                     <Download size={18} /> Download Report <ChevronDown size={16} />
                   </button>
 
                   {showExtReqDownloadDropdown && (
-                    <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: "white", borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)", border: "1px solid #e2e8f0", zIndex: 100, minWidth: "200px", overflow: "hidden" }}>
+                    <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: t.card, borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)", border: `1px solid ${t.border}`, zIndex: 100, minWidth: "200px", overflow: "hidden" }}>
                       <button 
                         onClick={() => { exportExtRequestsToExcel(); setShowExtReqDownloadDropdown(false); }}
-                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "white", color: "#166534", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
+                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#166534", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
                         onMouseOver={(e) => e.currentTarget.style.background = "#f0fdf4"}
                         onMouseOut={(e) => e.currentTarget.style.background = "white"}
                       >
@@ -3220,7 +3220,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </button>
                       <button 
                         onClick={() => { exportExtRequestsToPDF(); setShowExtReqDownloadDropdown(false); }}
-                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "white", color: "#991b1b", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
+                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#991b1b", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
                         onMouseOver={(e) => e.currentTarget.style.background = "#fef2f2"}
                         onMouseOut={(e) => e.currentTarget.style.background = "white"}
                       >
@@ -3237,7 +3237,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           setShowShareModal(true);
                           setShowExtReqDownloadDropdown(false);
                         }}
-                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "white", color: "#1e40af", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
+                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#1e40af", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
                         onMouseOver={(e) => e.currentTarget.style.background = "#eff6ff"}
                         onMouseOut={(e) => e.currentTarget.style.background = "white"}
                       >
@@ -3251,42 +3251,42 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <div style={{ padding: "32px", overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#f8fafc" }}>
-                      <th style={{ ...thStyle, width: "50px" }}>Sl No.</th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('requestFrom')}>
+                    <tr style={{ background: t.bg }}>
+                      <th style={{ ...getThStyle(t), width: "50px" }}>Sl No.</th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('requestFrom')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('createdAt')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('createdAt')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Date {extReqSortConfig?.key === 'createdAt' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('requestType')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('requestType')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Finance Function {extReqSortConfig?.key === 'requestType' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('natureOfRequest')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('natureOfRequest')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Nature of Request {extReqSortConfig?.key === 'natureOfRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleExtReqSort('status')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('status')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      {canAllocateAnything && <th style={thStyle}>Action</th>}
-                      <th style={thStyle}>Remarks</th>
+                      {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
+                      <th style={getThStyle(t)}>Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
                     {extReqLoading ? (
-                      <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading requests...</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading requests...</td></tr>
                     ) : sortedExternalRequests.length === 0 ? (
-                      <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No requests found.</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 8 : 7} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No requests found.</td></tr>
                     ) : (
                       sortedExternalRequests.map((req, idx) => {
                         const matrix = JSON.parse(settings.allocationMatrix || '{}');
@@ -3295,21 +3295,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         
                         return (
                           <tr key={req.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                            <td style={tdStyle}>{idx + 1}</td>
-                            <td style={tdStyle}>
-                              <div style={{ fontWeight: 600, color: "#0f172a" }}>{req.requestFrom}</div>
-                              <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{req.departmentName}</div>
+                            <td style={getTdStyle(t)}>{idx + 1}</td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ fontWeight: 600, color: t.text }}>{req.requestFrom}</div>
+                              <div style={{ fontSize: "0.7rem", color: t.textMuted }}>{req.departmentName}</div>
                             </td>
-                            <td style={tdStyle}>{new Date(req.createdAt).toLocaleDateString()}</td>
-                            <td style={tdStyle}>
+                            <td style={getTdStyle(t)}>{new Date(req.createdAt).toLocaleDateString()}</td>
+                            <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f1f5f9", fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>
+                                <span style={{ padding: "4px 10px", borderRadius: "6px", background: t.bg, fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>
                                   {req.requestType}
                                 </span>
                               </div>
                             </td>
-                            <td style={{ ...tdStyle, maxWidth: "300px", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
-                            <td style={tdStyle}>
+                            <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
+                            <td style={getTdStyle(t)}>
                                 {(!req.status || req.status === 'Pending' || req.status === 'New') && (
                                   <span style={{ padding: "4px 10px", borderRadius: "100px", background: "#fff7ed", fontSize: "0.75rem", fontWeight: 700, color: "#9a3412", border: "1px solid #ffedd5" }}>
                                     Pending
@@ -3355,14 +3355,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       }}>
                                         <div style={{ fontWeight: 700, marginBottom: "4px", color: "#f87171", fontSize: "0.65rem", textTransform: "uppercase" }}>Rejection Reason</div>
                                         { (req as any).rejectReason || "No reason specified" }
-                                        <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", border: "6px solid transparent", borderTopColor: "#1e293b" }}></div>
+                                        <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", border: "6px solid transparent", borderTopColor: t.text }}></div>
                                       </div>
                                     )}
                                   </div>
                                 )}
                             </td>
                             {canAllocateAnything && (
-                              <td style={tdStyle}>
+                              <td style={getTdStyle(t)}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                   {(req.status === 'Pending' && !req.convertedTaskId && isAuthorizedAllocator) && (
                                     <div style={{ display: "flex", gap: "8px" }}>
@@ -3374,7 +3374,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       </button>
                                       <button 
                                         onClick={() => { setRejectingReq(req); setShowRejectModal(true); }}
-                                        style={{ background: "white", color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                                        style={{ background: t.card, color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
                                       >
                                         Reject
                                       </button>
@@ -3386,7 +3386,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd" }}>
                                         TASK CREATED
                                       </span>
-                                      <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 500 }}>ID: {req.convertedTaskId}</span>
+                                      <span style={{ fontSize: "0.7rem", color: t.textMuted, fontWeight: 500 }}>ID: {req.convertedTaskId}</span>
                                     </div>
                                   )}
 
@@ -3399,7 +3399,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   {isAuthorizedAllocator && (
                                     <button 
                                       onClick={() => handleDeleteExtRequest(req.id)}
-                                      style={{ alignSelf: "flex-start", marginTop: "4px", background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "4px" }}
+                                      style={{ alignSelf: "flex-start", marginTop: "4px", background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "4px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "4px" }}
                                       onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
                                       onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
                                     >
@@ -3409,7 +3409,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                 </div>
                               </td>
                             )}
-                            <td style={{ ...tdStyle, maxWidth: "280px", whiteSpace: "normal", color: "#64748b", fontSize: "0.8rem" }}>
+                            <td style={{ ...getTdStyle(t), maxWidth: "280px", whiteSpace: "normal", color: t.textMuted, fontSize: "0.8rem" }}>
                               {req.status === 'Rejected' ? (
                                 <span style={{ color: "#ef4444", fontWeight: 500 }}>
                                   {(req as any).rejectReason || "No reason specified"}
@@ -3435,10 +3435,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         {activeView === 'LOS' && (
           <div className="lo-view">
           {/* LO View */}
-          <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
+          <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
              <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#0f172a" }}>Learning Opportunities</h3>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
                   <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
                     <button 
                       onClick={() => setLoActiveFilter('ALL')}
@@ -3483,19 +3483,19 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 </div>
                 <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
                   <div style={{ position: "relative", minWidth: "250px" }}>
-                    <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} size={16} />
+                    <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
                     <input 
                       type="text" 
                       placeholder="Search LOs, entities, names..." 
                       value={loSearchQuery}
                       onChange={e => setLoSearchQuery(e.target.value)}
-                      style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: "1px solid #e2e8f0", outline: "none", fontSize: "0.8125rem", width: "100%", background: "white" }} 
+                      style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
                     />
                   </div>
                   <select 
                     value={loEntityFilter} 
                     onChange={e => setLoEntityFilter(e.target.value)}
-                    style={{ padding: "8px", borderRadius: "10px", border: "1px solid #e2e8f0", outline: "none", fontSize: "0.8125rem", background: "white", color: "#475569" }}
+                    style={{ padding: "8px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", background: t.card, color: t.textMuted }}
                   >
                     <option value="ALL">All Entities</option>
                     {uniqueLOEntities.map(e => <option key={e} value={e}>{e}</option>)}
@@ -3504,8 +3504,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     <button 
                       onClick={() => setShowLODownloadDropdown(!showLODownloadDropdown)}
                       style={{ 
-                        display: "flex", alignItems: "center", gap: "8px", background: "white", color: "#475569", 
-                        padding: "8px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", 
+                        display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
+                        padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
                         cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, 
                         boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", transition: "all 0.2s" 
                       }} 
@@ -3517,7 +3517,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     {showLODownloadDropdown && (
                       <div style={{ 
                         position: "absolute", top: "100%", right: 0, marginTop: "8px", 
-                        background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", 
+                        background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
                         boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
                         minWidth: "160px", overflow: "hidden" 
                       }}>
@@ -3525,8 +3525,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           onClick={() => { exportLOsToExcel(); setShowLODownloadDropdown(false); }}
                           style={{ 
                             width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                            padding: "10px 16px", border: "none", background: "white", 
-                            color: "#475569", cursor: "pointer", fontSize: "0.8125rem", 
+                            padding: "10px 16px", border: "none", background: t.card, 
+                            color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", 
                             textAlign: "left", transition: "background 0.2s" 
                           }}
                           onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
@@ -3538,8 +3538,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           onClick={() => { exportLOsToPDF(); setShowLODownloadDropdown(false); }}
                           style={{ 
                             width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                            padding: "10px 16px", border: "none", background: "white", 
-                            color: "#475569", cursor: "pointer", fontSize: "0.8125rem", 
+                            padding: "10px 16px", border: "none", background: t.card, 
+                            color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", 
                             textAlign: "left", transition: "background 0.2s" 
                           }}
                           onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
@@ -3547,7 +3547,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         >
                           <FileText size={14} color="#991b1b" /> PDF Document
                         </button>
-                        <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }}></div>
+                        <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
                         <button 
                           onClick={() => { 
                             setShareData({...shareData, type: 'lo', format: 'excel', subject: `LO Report - ${new Date().toISOString().split('T')[0]}`});
@@ -3556,7 +3556,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           }}
                           style={{ 
                             width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                            padding: "10px 16px", border: "none", background: "white", 
+                            padding: "10px 16px", border: "none", background: t.card, 
                             color: "#4f46e5", cursor: "pointer", fontSize: "0.8125rem", 
                             textAlign: "left", transition: "background 0.2s", fontWeight: 600
                           }}
@@ -3574,58 +3574,58 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>SI No</th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('dateOfIdentification')}>
+                      <th style={getThStyle(t)}>SI No</th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('dateOfIdentification')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Date {loSortConfig?.key === 'dateOfIdentification' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('entity')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('entity')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Entity {loSortConfig?.key === 'entity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Learning Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('identifiedBy')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('identifiedBy')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Identified By {loSortConfig?.key === 'identifiedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('committedBy')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('committedBy')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Committed By {loSortConfig?.key === 'committedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleLOSort('modeOfCommunication')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('modeOfCommunication')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Communication Mode {loSortConfig?.key === 'modeOfCommunication' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Actions</th>
+                      <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loLoading ? (
-                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading Learning Opportunities...</td></tr>
+                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading Learning Opportunities...</td></tr>
                     ) : los.length === 0 ? (
-                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No Learning Opportunities recorded.</td></tr>
+                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No Learning Opportunities recorded.</td></tr>
                     ) : (
                       sortedLOs.map((lo, idx) => (
                         <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s" }} className="table-row">
-                          <td style={tdStyle}><span style={{ color: "#94a3b8", fontWeight: 500 }}>{idx + 1}</span></td>
-                          <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
-                          <td style={tdStyle}>{lo.entity}</td>
-                          <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
-                          <td style={tdStyle}>
+                          <td style={getTdStyle(t)}><span style={{ color: t.textMuted, fontWeight: 500 }}>{idx + 1}</span></td>
+                          <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
+                          <td style={getTdStyle(t)}>{lo.entity}</td>
+                          <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
+                          <td style={getTdStyle(t)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                               {lo.identifiedBy}
                               {lo.identifiedBy === (user?.name || user?.email) && (
@@ -3633,7 +3633,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               )}
                             </div>
                           </td>
-                          <td style={tdStyle}>
+                          <td style={getTdStyle(t)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                               {lo.committedBy}
                               {lo.committedBy === (user?.name || user?.email) && (
@@ -3641,17 +3641,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               )}
                             </div>
                           </td>
-                          <td style={{ ...tdStyle, minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
-                          <td style={tdStyle}>{lo.modeOfCommunication}</td>
-                          <td style={{ ...tdStyle, textAlign: "center" }}>
+                          <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
+                          <td style={getTdStyle(t)}>{lo.modeOfCommunication}</td>
+                          <td style={{ ...getTdStyle(t), textAlign: "center" }}>
                                 <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
                                   {(isAdmin || lo.editApproved) && (
                                     <button 
                                       onClick={() => { setEditingLO(lo); setShowLOForm(true); }}
                                       style={{ 
-                                        background: "#f8fafc", 
-                                        color: "#64748b", 
-                                        border: "1px solid #e2e8f0", 
+                                        background: t.bg, 
+                                        color: t.textMuted, 
+                                        border: `1px solid ${t.border}`, 
                                         cursor: "pointer", 
                                         padding: "6px", borderRadius: "8px", 
                                         display: "flex", alignItems: "center", justifyContent: "center",
@@ -3772,7 +3772,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       )}
       {showLOCaptureModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
-          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "600px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+          <div style={{ background: t.card, borderRadius: "20px", width: "100%", maxWidth: "600px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
             <div style={{ padding: "24px", background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Capture Learning Opportunity</h3>
@@ -3784,51 +3784,51 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Entity</label>
-                  <input type="text" readOnly value={loCaptureForm.entity} style={{ ...inputStyle, background: "#f8fafc", cursor: "not-allowed" }} />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Entity</label>
+                  <input type="text" readOnly value={loCaptureForm.entity} style={{ ...getInputStyle(t), background: t.bg, cursor: "not-allowed" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Date of Identification</label>
-                  <input type="text" readOnly value={formatDate(loCaptureForm.dateOfIdentification)} style={{ ...inputStyle, background: "#f8fafc", cursor: "not-allowed" }} />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Date of Identification</label>
+                  <input type="text" readOnly value={formatDate(loCaptureForm.dateOfIdentification)} style={{ ...getInputStyle(t), background: t.bg, cursor: "not-allowed" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Identified By</label>
-                  <input type="text" readOnly value={loCaptureForm.identifiedBy} style={{ ...inputStyle, background: "#f8fafc", cursor: "not-allowed" }} />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Identified By</label>
+                  <input type="text" readOnly value={loCaptureForm.identifiedBy} style={{ ...getInputStyle(t), background: t.bg, cursor: "not-allowed" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Committed By</label>
-                  <input type="text" readOnly value={loCaptureForm.committedBy} style={{ ...inputStyle, background: "#f8fafc", cursor: "not-allowed" }} />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Committed By</label>
+                  <input type="text" readOnly value={loCaptureForm.committedBy} style={{ ...getInputStyle(t), background: t.bg, cursor: "not-allowed" }} />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Mistake / Learning Opportunity</label>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Mistake / Learning Opportunity</label>
                 <textarea 
                   rows={3} 
                   placeholder="Describe the learning opportunity..."
                   value={loCaptureForm.learningOpportunity}
                   onChange={e => setLOCaptureForm({...loCaptureForm, learningOpportunity: e.target.value})}
-                  style={{ ...inputStyle, resize: "none" }}
+                  style={{ ...getInputStyle(t), resize: "none" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Resolution Provided</label>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Resolution Provided</label>
                 <textarea 
                   rows={3} 
                   placeholder="Describe the resolution/correction..."
                   value={loCaptureForm.resolutionProvided}
                   onChange={e => setLOCaptureForm({...loCaptureForm, resolutionProvided: e.target.value})}
-                  style={{ ...inputStyle, resize: "none" }}
+                  style={{ ...getInputStyle(t), resize: "none" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Mode of Communication</label>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Mode of Communication</label>
                 <select 
                   value={loCaptureForm.modeOfCommunication}
                   onChange={e => setLOCaptureForm({...loCaptureForm, modeOfCommunication: e.target.value})}
-                  style={inputStyle}
+                  style={getInputStyle(t)}
                 >
                   <option value="">Choose</option>
                   {settings?.masterCommunicationModes?.split(',').filter((m: string) => m.trim()).map((mode: string) => (
@@ -3840,7 +3840,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
                 <button 
                   onClick={() => setShowLOCaptureModal(false)}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.textMuted, fontWeight: 600, cursor: "pointer" }}
                 >
                   Cancel
                 </button>
@@ -3857,18 +3857,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       )}
       {showOptionsModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}>
-          <div style={{ background: "white", borderRadius: "16px", width: "100%", maxWidth: "800px", height: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)", overflow: "hidden" }}>
-            <div style={{ padding: "24px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
+          <div style={{ background: t.card, borderRadius: "16px", width: "100%", maxWidth: "800px", height: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)", overflow: "hidden" }}>
+            <div style={{ padding: "24px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: t.bg }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 {isAdmin ? <ShieldCheck size={24} color="#4f46e5" /> : <Sliders size={24} color="#4f46e5" />}
-                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#0f172a" }}>{isAdmin ? "Control Center" : "Account Settings"}</h2>
+                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>{isAdmin ? "Control Center" : "Account Settings"}</h2>
               </div>
-              <button onClick={() => setShowOptionsModal(false)} style={{ background: "transparent", border: "none", color: "#64748b", cursor: "pointer", fontSize: "1.5rem", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+              <button onClick={() => setShowOptionsModal(false)} style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", fontSize: "1.5rem", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             </div>
             
             <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
               {/* Sidebar Tabs */}
-              <div style={{ width: "200px", background: "#f8fafc", borderRight: "1px solid #e2e8f0", padding: "16px" }}>
+              <div style={{ width: "200px", background: t.bg, borderRight: `1px solid ${t.border}`, padding: "16px" }}>
                 <button 
                   onClick={() => setActiveOptionsTab('ACCOUNT')} 
                   style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'ACCOUNT' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'ACCOUNT' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginBottom: "8px" }}
@@ -3939,7 +3939,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 {activeOptionsTab === 'ACCOUNT' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Account Settings</h3>
-                    <p style={{ color: "#64748b", marginBottom: "24px" }}>Update your password to keep your account secure.</p>
+                    <p style={{ color: t.textMuted, marginBottom: "24px" }}>Update your password to keep your account secure.</p>
                     
                     <form onSubmit={handlePasswordChange} style={{ maxWidth: "400px", display: "flex", flexDirection: "column", gap: "20px" }}>
                       <div>
@@ -3949,7 +3949,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           required
                           value={passwordData.current}
                           onChange={e => setPasswordData({...passwordData, current: e.target.value})}
-                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} 
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: `1px solid ${t.border}`, outline: "none" }} 
                         />
                       </div>
                       <div>
@@ -3959,7 +3959,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           required
                           value={passwordData.new}
                           onChange={e => setPasswordData({...passwordData, new: e.target.value})}
-                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} 
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: `1px solid ${t.border}`, outline: "none" }} 
                         />
                       </div>
                       <div>
@@ -3969,7 +3969,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           required
                           value={passwordData.confirm}
                           onChange={e => setPasswordData({...passwordData, confirm: e.target.value})}
-                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} 
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: `1px solid ${t.border}`, outline: "none" }} 
                         />
                       </div>
                       <button 
@@ -3981,27 +3981,27 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </button>
                     </form>
 
-                    <div style={{ marginTop: "48px", paddingTop: "32px", borderTop: "1px solid #e2e8f0" }}>
-                      <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: "#0f172a", fontWeight: 700 }}>Profile Information</h4>
+                    <div style={{ marginTop: "48px", paddingTop: "32px", borderTop: `1px solid ${t.border}` }}>
+                      <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: t.text, fontWeight: 700 }}>Profile Information</h4>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", maxWidth: "600px" }}>
                         <div>
-                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Full Name</p>
-                          <p style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 500 }}>{user?.name || "Not Set"}</p>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Full Name</p>
+                          <p style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 500 }}>{user?.name || "Not Set"}</p>
                         </div>
                         <div>
-                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Email Address</p>
-                          <p style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 500 }}>{user?.email}</p>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Email Address</p>
+                          <p style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 500 }}>{user?.email}</p>
                         </div>
                         <div>
-                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Role</p>
-                          <p style={{ margin: 0, fontSize: "0.875rem", display: "inline-block", padding: "4px 12px", background: "#f1f5f9", borderRadius: "9999px", color: "#475569", fontWeight: 600 }}>{user?.role || "USER"}</p>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Role</p>
+                          <p style={{ margin: 0, fontSize: "0.875rem", display: "inline-block", padding: "4px 12px", background: t.bg, borderRadius: "9999px", color: t.textMuted, fontWeight: 600 }}>{user?.role || "USER"}</p>
                         </div>
                         <div>
-                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Assigned Department</p>
-                          <p style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 500 }}>{user?.department || "Finance (Default)"}</p>
+                          <p style={{ margin: "0 0 4px 0", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Assigned Department</p>
+                          <p style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 500 }}>{user?.department || "Finance (Default)"}</p>
                         </div>
                       </div>
-                      <p style={{ marginTop: "24px", fontSize: "0.8125rem", color: "#94a3b8", fontStyle: "italic" }}>
+                      <p style={{ marginTop: "24px", fontSize: "0.8125rem", color: t.textMuted, fontStyle: "italic" }}>
                         Note: If your department is incorrect, please contact an Administrator to update it in User Management.
                       </p>
                     </div>
@@ -4019,18 +4019,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                         {/* Task Report Managers */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Emails</label>
-                          <div style={{ background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: t.textMuted }}>Primary Emails</label>
+                          <div style={{ background: t.card, padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                               {(settings.managerEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
-                                <div key={`m-${idx}`} style={{ background: "#f8fafc", color: "#334155", padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #e2e8f0" }}>
+                                <div key={`m-${idx}`} style={{ background: t.bg, color: t.text, padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: `1px solid ${t.border}` }}>
                                   <span style={{ fontFamily: "monospace" }}>{email.trim()}</span>
                                   <button 
                                     onClick={() => {
                                       const emails = (settings.managerEmail || "").split(',').filter((_, i) => i !== idx);
                                       setSettings({...settings, managerEmail: emails.join(',')});
                                     }}
-                                    style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
+                                    style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
                                     onMouseOver={e => e.currentTarget.style.color = "#ef4444"}
                                     onMouseOut={e => e.currentTarget.style.color = "#94a3b8"}
                                   >
@@ -4054,7 +4054,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     }
                                   }
                                 }}
-                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", outline: "none" }}
+                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem", outline: "none" }}
                               />
                               <button 
                                 type="button"
@@ -4078,8 +4078,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                         {/* LO Report Admins */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary LO Mails</label>
-                          <div style={{ background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: t.textMuted }}>Primary LO Mails</label>
+                          <div style={{ background: t.card, padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                               {(settings.loReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
                                 <div key={`l-${idx}`} style={{ background: "#fdf4ff", color: "#701a75", padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #fae8ff" }}>
@@ -4113,7 +4113,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     }
                                   }
                                 }}
-                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", outline: "none" }}
+                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem", outline: "none" }}
                               />
                               <button 
                                 type="button"
@@ -4137,18 +4137,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                         {/* Payment Report Recipients */}
                         <div>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: "#475569" }}>Primary Payments Mails</label>
-                          <div style={{ background: "white", padding: "16px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600, color: t.textMuted }}>Primary Payments Mails</label>
+                          <div style={{ background: t.card, padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                               {(settings.paymentReportEmail || "").split(',').filter(e => e.trim()).map((email, idx) => (
-                                <div key={`p-${idx}`} style={{ background: "#f8fafc", color: "#334155", padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #e2e8f0" }}>
+                                <div key={`p-${idx}`} style={{ background: t.bg, color: t.text, padding: "8px 12px", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "space-between", border: `1px solid ${t.border}` }}>
                                   <span style={{ fontFamily: "monospace" }}>{email.trim()}</span>
                                   <button 
                                     onClick={() => {
                                       const emails = (settings.paymentReportEmail || "").split(',').filter((_, i) => i !== idx);
                                       setSettings({...settings, paymentReportEmail: emails.join(',')});
                                     }}
-                                    style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
+                                    style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", fontSize: "1.25rem", display: "flex", alignItems: "center", padding: "4px" }}
                                     onMouseOver={e => e.currentTarget.style.color = "#ef4444"}
                                     onMouseOut={e => e.currentTarget.style.color = "#94a3b8"}
                                   >
@@ -4172,7 +4172,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     }
                                   }
                                 }}
-                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", outline: "none" }} 
+                                style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem", outline: "none" }} 
                               />
                               <button 
                                 type="button"
@@ -4196,13 +4196,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
                     </div>
                     {/* Reminders Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ marginBottom: "32px", padding: "20px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                        <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 600 }}>Pending Reminders (Owners)</h4>
+                        <h4 style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 600 }}>Pending Reminders (Owners)</h4>
                         <select 
                           value={settings.reminderFrequency}
                           onChange={(e) => setSettings({...settings, reminderFrequency: e.target.value})}
-                          style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
+                          style={{ padding: "6px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem" }}
                         >
                           <option value="D">Daily</option>
                           <option value="W">Weekly</option>
@@ -4214,10 +4214,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                       {settings.reminderFrequency !== 'OFF' && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
-                          {settings.reminderTimes.split(',').map((t, idx) => {
-                            const timeObj = convertTo12h(t.trim());
+                          {settings.reminderTimes.split(',').map((timeStr, idx) => {
+                            const timeObj = convertTo12h(timeStr.trim());
                             return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: "white", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: t.card, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
                                 <select 
                                   value={timeObj.h}
                                   onChange={(e) => {
@@ -4266,7 +4266,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           })}
                           <button 
                             onClick={() => setSettings({...settings, reminderTimes: settings.reminderTimes + ",09:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: "0.875rem" }}
+                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: t.textMuted, cursor: "pointer", fontSize: "0.875rem" }}
                           >
                             + Add Time
                           </button>
@@ -4275,13 +4275,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Manager Report Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ marginBottom: "32px", padding: "20px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                        <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 600 }}>Manager Report Summary</h4>
+                        <h4 style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 600 }}>Manager Report Summary</h4>
                         <select 
                           value={settings.managerReportFrequency}
                           onChange={(e) => setSettings({...settings, managerReportFrequency: e.target.value})}
-                          style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
+                          style={{ padding: "6px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem" }}
                         >
                           <option value="D">Daily</option>
                           <option value="W">Weekly</option>
@@ -4292,10 +4292,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                       {settings.managerReportFrequency !== 'OFF' && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
-                          {settings.managerReportTimes.split(',').map((t, idx) => {
-                            const timeObj = convertTo12h(t.trim());
+                          {settings.managerReportTimes.split(',').map((timeStr, idx) => {
+                            const timeObj = convertTo12h(timeStr.trim());
                             return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: "white", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: t.card, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
                                 <select 
                                   value={timeObj.h}
                                   onChange={(e) => {
@@ -4344,7 +4344,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           })}
                           <button 
                             onClick={() => setSettings({...settings, managerReportTimes: settings.managerReportTimes + ",10:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: "0.875rem" }}
+                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: t.textMuted, cursor: "pointer", fontSize: "0.875rem" }}
                           >
                             + Add Time
                           </button>
@@ -4353,13 +4353,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* LO Report Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ marginBottom: "32px", padding: "20px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                        <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a", fontWeight: 600 }}>LO Report (Learning Opportunities)</h4>
+                        <h4 style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 600 }}>LO Report (Learning Opportunities)</h4>
                         <select 
                           value={settings.loReportFrequency}
                           onChange={(e) => setSettings({...settings, loReportFrequency: e.target.value})}
-                          style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
+                          style={{ padding: "6px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem" }}
                         >
                           <option value="D">Daily</option>
                           <option value="W">Weekly</option>
@@ -4370,10 +4370,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                       {settings.loReportFrequency !== 'OFF' && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
-                          {settings.loReportTimes.split(',').map((t, idx) => {
-                            const timeObj = convertTo12h(t.trim());
+                          {settings.loReportTimes.split(',').map((timeStr, idx) => {
+                            const timeObj = convertTo12h(timeStr.trim());
                             return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: "white", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: t.card, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
                                 <select 
                                   value={timeObj.h}
                                   onChange={(e) => {
@@ -4422,7 +4422,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           })}
                           <button 
                             onClick={() => setSettings({...settings, loReportTimes: settings.loReportTimes + ",10:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: "0.875rem" }}
+                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: t.textMuted, cursor: "pointer", fontSize: "0.875rem" }}
                           >
                             + Add Time
                           </button>
@@ -4457,7 +4457,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             const h12 = parseInt(h) % 12 || 12;
                             const suffix = parseInt(h) >= 12 ? 'PM' : 'AM';
                             return (
-                              <div key={idx} style={{ background: "white", padding: "6px 10px", borderRadius: "8px", border: "1px solid #f5d0fe", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                              <div key={idx} style={{ background: t.card, padding: "6px 10px", borderRadius: "8px", border: "1px solid #f5d0fe", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                                 <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#a21caf" }}>{h12}:{m} {suffix}</span>
                                 <input 
                                   type="time" 
@@ -4507,12 +4507,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Data Management</h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                      <div style={{ background: "#f8fafc", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                      <div style={{ background: t.bg, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
                           <Database size={24} color="#2563eb" />
                           <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Database Maintenance</h4>
                         </div>
-                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "20px" }}>
+                        <p style={{ fontSize: "0.875rem", color: t.textMuted, marginBottom: "20px" }}>
                           Use this to sync the database schema and ensure all new features (like Payment Reporting) are fully initialized in the system.
                         </p>
                         <button 
@@ -4532,12 +4532,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         </button>
                       </div>
 
-                      <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                      <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
                           <Download size={24} color="#10b981" />
                           <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Bulk Import Tasks</h4>
                         </div>
-                        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "20px" }}>
+                        <p style={{ fontSize: "0.875rem", color: t.textMuted, marginBottom: "20px" }}>
                           Download the template and upload your tasks in bulk.
                         </p>
                         <button 
@@ -4555,32 +4555,32 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Manual Triggers</h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <button onClick={() => handleTriggerEmail("users")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                      <button onClick={() => handleTriggerEmail("users")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
                         <Mail size={24} color="#2563eb" />
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontWeight: 600 }}>Send Pending Reminders</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail all owners about their pending tasks.</div>
+                          <div style={{ fontSize: "0.75rem", color: t.textMuted }}>Instantly mail all owners about their pending tasks.</div>
                         </div>
                       </button>
-                      <button onClick={() => handleTriggerEmail("manager")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                      <button onClick={() => handleTriggerEmail("manager")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
                         <Mail size={24} color="#2563eb" />
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontWeight: 600 }}>Send Manager Report</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the consolidated summary to Admin.</div>
+                          <div style={{ fontSize: "0.75rem", color: t.textMuted }}>Instantly mail the consolidated summary to Admin.</div>
                         </div>
                       </button>
-                      <button onClick={() => handleTriggerEmail("lo")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                      <button onClick={() => handleTriggerEmail("lo")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
                         <Mail size={24} color="#2563eb" />
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontWeight: 600 }}>Send LO Report</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the Learning Opportunity summary to Admin.</div>
+                          <div style={{ fontSize: "0.75rem", color: t.textMuted }}>Instantly mail the Learning Opportunity summary to Admin.</div>
                         </div>
                       </button>
-                      <button onClick={() => handleTriggerEmail("payments")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
+                      <button onClick={() => handleTriggerEmail("payments")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}>
                         <Mail size={24} color="#2563eb" />
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontWeight: 600 }}>Send Payment Report</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Instantly mail the Payments summary report.</div>
+                          <div style={{ fontSize: "0.75rem", color: t.textMuted }}>Instantly mail the Payments summary report.</div>
                         </div>
                       </button>
                     </div>
@@ -4592,13 +4592,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     <h3 style={{ margin: "0 0 24px 0" }}>User Management</h3>
                     
                     {/* Pending Access Requests Section */}
-                    <div style={{ marginBottom: "40px", padding: "24px", background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)" }}>
+                    <div style={{ marginBottom: "40px", padding: "24px", background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <div style={{ padding: "8px", background: "#fef3c7", borderRadius: "10px" }}>
                             <UserCheck size={20} color="#d97706" />
                           </div>
-                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: "#1e293b" }}>Pending Access Requests</h4>
+                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: t.text }}>Pending Access Requests</h4>
                         </div>
                         <span style={{ background: "#fef3c7", color: "#92400e", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
                           {usersList.filter(u => (u as any).isApproved === false).length} WAITING
@@ -4606,9 +4606,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
 
                       {usersLoading ? (
-                        <p style={{ color: "#64748b", fontSize: "0.875rem" }}>Loading requests...</p>
+                        <p style={{ color: t.textMuted, fontSize: "0.875rem" }}>Loading requests...</p>
                       ) : usersList.filter(u => (u as any).isApproved === false).length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "32px", border: "1px dashed #e2e8f0", borderRadius: "12px", color: "#94a3b8" }}>
+                        <div style={{ textAlign: "center", padding: "32px", border: "1px dashed #e2e8f0", borderRadius: "12px", color: t.textMuted }}>
                            No pending access requests at the moment.
                         </div>
                       ) : (
@@ -4616,17 +4616,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
                             <thead>
                               <tr style={{ borderBottom: "1px solid #f1f5f9", textAlign: "left" }}>
-                                <th style={{ padding: "12px 16px", color: "#64748b", fontWeight: 600 }}>Name</th>
-                                <th style={{ padding: "12px 16px", color: "#64748b", fontWeight: 600 }}>Email</th>
-                                <th style={{ padding: "12px 16px", color: "#64748b", fontWeight: 600 }}>Requested Dept</th>
-                                <th style={{ padding: "12px 16px", color: "#64748b", fontWeight: 600, textAlign: "right" }}>Actions</th>
+                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600 }}>Name</th>
+                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600 }}>Email</th>
+                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600 }}>Requested Dept</th>
+                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600, textAlign: "right" }}>Actions</th>
                               </tr>
                             </thead>
                             <tbody>
                               {usersList.filter(u => (u as any).isApproved === false).map(u => (
                                 <tr key={u.id} style={{ borderBottom: "1px solid #f8fafc" }}>
                                   <td style={{ padding: "16px", fontWeight: 500 }}>{u.name}</td>
-                                  <td style={{ padding: "16px", color: "#64748b" }}>{u.email}</td>
+                                  <td style={{ padding: "16px", color: t.textMuted }}>{u.email}</td>
                                   <td style={{ padding: "16px" }}>
                                     <select 
                                       value={pendingUserUpdates[u.id]?.department !== undefined ? pendingUserUpdates[u.id].department : (u.department || "")}
@@ -4649,7 +4649,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       </button>
                                       <button 
                                         onClick={() => handleRejectUser(u.id)}
-                                        style={{ padding: "6px 12px", background: "white", color: "#ef4444", borderRadius: "8px", border: "1px solid #fee2e2", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
+                                        style={{ padding: "6px 12px", background: t.card, color: "#ef4444", borderRadius: "8px", border: "1px solid #fee2e2", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
                                       >
                                         Reject
                                       </button>
@@ -4668,7 +4668,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <div style={{ padding: "8px", background: "#dcfce7", borderRadius: "10px" }}>
                             <Users size={20} color="#166534" />
                           </div>
-                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: "#1e293b" }}>Active Employees</h4>
+                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: t.text }}>Active Employees</h4>
                         </div>
                         <div style={{ display: "flex", gap: "12px" }}>
                           {Object.keys(pendingUserUpdates).length > 0 && (
@@ -4682,7 +4682,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           )}
                           <button 
                             onClick={handleBulkAddUsers}
-                            style={{ background: "#f1f5f9", color: "#475569", padding: "8px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", cursor: "pointer", fontWeight: 500, fontSize: "0.8125rem", display: "flex", alignItems: "center", gap: "6px" }}
+                            style={{ background: t.bg, color: t.textMuted, padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, cursor: "pointer", fontWeight: 500, fontSize: "0.8125rem", display: "flex", alignItems: "center", gap: "6px" }}
                           >
                             <Users size={14} /> Import All Employees
                           </button>
@@ -4695,7 +4695,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <div style={{ overflowX: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
                           <thead>
-                            <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left" }}>
+                            <tr style={{ borderBottom: `1px solid ${t.border}`, textAlign: "left" }}>
                                <th style={{ padding: "12px 8px" }}>Name</th>
                                <th style={{ padding: "12px 8px" }}>Email</th>
                                <th style={{ padding: "12px 8px" }}>Department</th>
@@ -4753,7 +4753,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       justifyContent: (pendingUserUpdates[u.id]?.isSuspended !== undefined ? pendingUserUpdates[u.id].isSuspended : (u as any).isSuspended) ? "flex-end" : "flex-start"
                                     }}
                                   >
-                                    <div style={{ width: "18px", height: "18px", background: "white", borderRadius: "50%", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}></div>
+                                    <div style={{ width: "18px", height: "18px", background: t.card, borderRadius: "50%", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}></div>
                                     <span style={{ 
                                       position: "absolute", 
                                       left: (pendingUserUpdates[u.id]?.isSuspended !== undefined ? pendingUserUpdates[u.id].isSuspended : (u as any).isSuspended) ? "6px" : "24px", 
@@ -4779,7 +4779,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     </button>
                                     <button 
                                       onClick={() => handleRemoveUser(u.id)}
-                                      style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "6px" }}
+                                      style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "4px", borderRadius: "6px" }}
                                       title="Remove User"
                                       onMouseOver={e => e.currentTarget.style.color = "#ef4444"}
                                       onMouseOut={e => e.currentTarget.style.color = "#94a3b8"}
@@ -4835,7 +4835,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                 {activeOptionsTab === 'EDIT_REQUESTS' && (
                   <div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "24px", borderBottom: "1px solid #e2e8f0", paddingBottom: "16px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "24px", borderBottom: `1px solid ${t.border}`, paddingBottom: "16px" }}>
                       <button 
                         onClick={() => setEditRequestSubTab('TASK_EDIT')}
                         style={{ 
@@ -4904,22 +4904,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                     {editRequestSubTab === 'TASK_EDIT' ? (
                       <div>
-                        <h3 style={{ margin: "0 0 16px 0", color: "#0f172a" }}>Pending Task Edit Requests</h3>
-                        <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "0.875rem" }}>Review and manage requests from users to unlock and edit completed tasks.</p>
+                        <h3 style={{ margin: "0 0 16px 0", color: t.text }}>Pending Task Edit Requests</h3>
+                        <p style={{ color: t.textMuted, marginBottom: "24px", fontSize: "0.875rem" }}>Review and manage requests from users to unlock and edit completed tasks.</p>
                         
                         {tasks.filter(t => t.editRequested).length === 0 ? (
-                          <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                            <p style={{ color: "#64748b", margin: 0 }}>No pending task edit requests.</p>
+                          <div style={{ padding: "40px", textAlign: "center", background: t.bg, borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                            <p style={{ color: t.textMuted, margin: 0 }}>No pending task edit requests.</p>
                           </div>
                         ) : (
                           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                             {tasks.filter(t => t.editRequested).map(task => (
-                              <div key={`task-edit-${task.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                              <div key={`task-edit-${task.id}`} style={{ padding: "20px", background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                                   <div>
-                                    <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>Task #{task.id}: {task.taskName}</h4>
-                                    <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
-                                      Requested by: <strong style={{ color: "#0f172a" }}>{task.editRequestBy === "OWNER" ? task.ownerName : task.reviewerName}</strong> ({task.editRequestBy})
+                                    <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: t.text }}>Task #{task.id}: {task.taskName}</h4>
+                                    <p style={{ margin: 0, fontSize: "0.875rem", color: t.textMuted }}>
+                                      Requested by: <strong style={{ color: t.text }}>{task.editRequestBy === "OWNER" ? task.ownerName : task.reviewerName}</strong> ({task.editRequestBy})
                                     </p>
                                   </div>
                                   <div style={{ display: "flex", gap: "8px" }}>
@@ -4937,7 +4937,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     </button>
                                   </div>
                                 </div>
-                                <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
+                                <div style={{ padding: "12px", background: t.bg, borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #cbd5e1" }}>
                                   <strong>Reason:</strong> {task.editRequestReason}
                                 </div>
                               </div>
@@ -4947,22 +4947,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
                     ) : editRequestSubTab === 'TASK_DELETE' ? (
                       <div>
-                        <h3 style={{ margin: "0 0 16px 0", color: "#0f172a" }}>Pending Task Deletion Requests</h3>
-                        <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "0.875rem" }}>Review and manage requests from users to permanently delete tasks.</p>
+                        <h3 style={{ margin: "0 0 16px 0", color: t.text }}>Pending Task Deletion Requests</h3>
+                        <p style={{ color: t.textMuted, marginBottom: "24px", fontSize: "0.875rem" }}>Review and manage requests from users to permanently delete tasks.</p>
                         
                         {tasks.filter(t => t.deleteRequested).length === 0 ? (
-                          <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                            <p style={{ color: "#64748b", margin: 0 }}>No pending task deletion requests.</p>
+                          <div style={{ padding: "40px", textAlign: "center", background: t.bg, borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                            <p style={{ color: t.textMuted, margin: 0 }}>No pending task deletion requests.</p>
                           </div>
                         ) : (
                           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                             {tasks.filter(t => t.deleteRequested).map(task => (
-                              <div key={`task-del-${task.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                              <div key={`task-del-${task.id}`} style={{ padding: "20px", background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                                   <div>
-                                    <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>Task #{task.id}: {task.taskName}</h4>
-                                    <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
-                                      Requested by: <strong style={{ color: "#0f172a" }}>{task.ownerName}</strong>
+                                    <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: t.text }}>Task #{task.id}: {task.taskName}</h4>
+                                    <p style={{ margin: 0, fontSize: "0.875rem", color: t.textMuted }}>
+                                      Requested by: <strong style={{ color: t.text }}>{task.ownerName}</strong>
                                     </p>
                                   </div>
                                   <div style={{ display: "flex", gap: "8px" }}>
@@ -4992,8 +4992,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                               <div>
-                                <h3 style={{ margin: "0 0 8px 0", color: "#0f172a" }}>Learning Opportunity (LO) Admin</h3>
-                                <p style={{ color: "#64748b", margin: 0, fontSize: "0.875rem" }}>Manage LO edit requests and view/export all records.</p>
+                                <h3 style={{ margin: "0 0 8px 0", color: t.text }}>Learning Opportunity (LO) Admin</h3>
+                                <p style={{ color: t.textMuted, margin: 0, fontSize: "0.875rem" }}>Manage LO edit requests and view/export all records.</p>
                               </div>
                               <button onClick={exportLOsToExcel} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                                 <FileSpreadsheet size={18} /> Export All
@@ -5002,26 +5002,26 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     
                             {/* LO Edit Requests Section */}
                             <div style={{ marginBottom: "32px" }}>
-                              <h4 style={{ fontSize: "0.9375rem", color: "#475569", marginBottom: "12px", fontWeight: 600 }}>Pending LO Edit Requests</h4>
+                              <h4 style={{ fontSize: "0.9375rem", color: t.textMuted, marginBottom: "12px", fontWeight: 600 }}>Pending LO Edit Requests</h4>
                               {los.filter(l => l.editRequested).length === 0 ? (
-                                <div style={{ padding: "24px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                                  <p style={{ color: "#64748b", margin: 0, fontSize: "0.875rem" }}>No pending LO edit requests.</p>
+                                <div style={{ padding: "24px", textAlign: "center", background: t.bg, borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                                  <p style={{ color: t.textMuted, margin: 0, fontSize: "0.875rem" }}>No pending LO edit requests.</p>
                                 </div>
                               ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                   {los.filter(l => l.editRequested).map(lo => (
-                                    <div key={`lo-${lo.id}`} style={{ padding: "16px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                                    <div key={`lo-${lo.id}`} style={{ padding: "16px", background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                                         <div>
-                                          <h5 style={{ margin: "0 0 4px 0", fontSize: "0.9375rem", color: "#0f172a" }}>LO #{lo.id}: {lo.entity}</h5>
-                                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Submitted by: <strong>{lo.identifiedBy}</strong></p>
+                                          <h5 style={{ margin: "0 0 4px 0", fontSize: "0.9375rem", color: t.text }}>LO #{lo.id}: {lo.entity}</h5>
+                                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Submitted by: <strong>{lo.identifiedBy}</strong></p>
                                         </div>
                                         <div style={{ display: "flex", gap: "8px" }}>
                                           <button onClick={() => handleApproveEditLO(lo.id, 'APPROVE')} style={{ background: "#22c55e", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Approve</button>
                                           <button onClick={() => handleApproveEditLO(lo.id, 'REJECT')} style={{ background: "#ef4444", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Reject</button>
                                         </div>
                                       </div>
-                                      <div style={{ padding: "10px", background: "#f8fafc", borderRadius: "6px", fontSize: "0.8125rem", borderLeft: "3px solid #cbd5e1" }}>
+                                      <div style={{ padding: "10px", background: t.bg, borderRadius: "6px", fontSize: "0.8125rem", borderLeft: "3px solid #cbd5e1" }}>
                                         <strong>Reason:</strong> {lo.editRequestReason}
                                       </div>
                                     </div>
@@ -5032,21 +5032,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           </div>
                         ) : (
                           <div>
-                            <h3 style={{ margin: "0 0 16px 0", color: "#0f172a" }}>Pending Payment Edit Requests</h3>
-                            <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "0.875rem" }}>Review requests to update payment dates or amounts for processed payments.</p>
+                            <h3 style={{ margin: "0 0 16px 0", color: t.text }}>Pending Payment Edit Requests</h3>
+                            <p style={{ color: t.textMuted, marginBottom: "24px", fontSize: "0.875rem" }}>Review requests to update payment dates or amounts for processed payments.</p>
                             
                             {paymentRequests.length === 0 ? (
-                              <div style={{ padding: "40px", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                                <p style={{ color: "#64748b", margin: 0 }}>No pending payment edit requests.</p>
+                              <div style={{ padding: "40px", textAlign: "center", background: t.bg, borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                                <p style={{ color: t.textMuted, margin: 0 }}>No pending payment edit requests.</p>
                               </div>
                             ) : (
                               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                                 {paymentRequests.map(req => (
-                                  <div key={`pay-req-${req.id}`} style={{ padding: "20px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                                  <div key={`pay-req-${req.id}`} style={{ padding: "20px", background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                                       <div>
-                                        <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: "#0f172a" }}>{req.templateVendor}</h4>
-                                        <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>{req.templateDesc}</p>
+                                        <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: t.text }}>{req.templateVendor}</h4>
+                                        <p style={{ margin: 0, fontSize: "0.875rem", color: t.textMuted }}>{req.templateDesc}</p>
                                         <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: "#3b82f6", fontWeight: 600 }}>Due Date: {new Date(req.dueDate).toLocaleDateString('en-GB')}</p>
                                       </div>
                                       <div style={{ display: "flex", gap: "8px" }}>
@@ -5064,7 +5064,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                         </button>
                                       </div>
                                     </div>
-                                    <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #f59e0b" }}>
+                                    <div style={{ padding: "12px", background: t.bg, borderRadius: "8px", fontSize: "0.875rem", borderLeft: "4px solid #f59e0b" }}>
                                       <strong>Request Reason:</strong> {req.editRequestReason}
                                     </div>
                                   </div>
@@ -5079,7 +5079,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 {activeOptionsTab === 'MASTER_DATA' && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                      <h3 style={{ margin: 0, color: "#0f172a" }}>Master Data Hub</h3>
+                      <h3 style={{ margin: 0, color: t.text }}>Master Data Hub</h3>
                       <button 
                         onClick={handleSaveSettings}
                         disabled={isSavingSettings}
@@ -5088,15 +5088,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         {isSavingSettings ? "Saving..." : "Save Changes"}
                       </button>
                     </div>
-                    <p style={{ color: "#64748b", marginBottom: "32px", fontSize: "0.875rem" }}>
+                    <p style={{ color: t.textMuted, marginBottom: "32px", fontSize: "0.875rem" }}>
                       Manage the global dropdown lists used across all forms (Task Submission, LO Identification, etc.). 
                       Changes here will reflect instantly across the entire platform.
                     </p>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
                       {/* Departments */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <Users size={18} color="#3b82f6" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Departments</h4>
                         </div>
@@ -5135,22 +5135,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Entities */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <Building2 size={18} color="#f59e0b" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Entities</h4>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {settings.masterEntities.split(',').filter(e => e.trim()).map((ent, idx) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {ent.trim()}
                                 <button 
                                   onClick={() => {
@@ -5182,22 +5182,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Task Types */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <Tag size={18} color="#10b981" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Task Type</h4>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {settings.masterTaskTypes.split(',').filter(t => t.trim()).map((type, idx) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {type.trim()}
                                 <button 
                                   onClick={() => {
@@ -5229,21 +5229,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>
                       {/* Communication Modes */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <Send size={18} color="#8b5cf6" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Communication Modes</h4>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {(settings.masterCommunicationModes || "").split(',').filter(t => t.trim()).map((mode, idx) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {mode.trim()}
                                 <button 
                                   onClick={() => {
@@ -5275,22 +5275,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Master Frequencies */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <RefreshCw size={18} color="#ec4899" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Master Frequencies</h4>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {(settings.masterFrequencies || "").split(',').filter(t => t.trim()).map((freq, idx) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {freq.trim()}
                                 <button 
                                   onClick={() => {
@@ -5322,23 +5322,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Request Types */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <FileText size={18} color="#8b5cf6" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Finance Functions</h4>
                         </div>
-                        <p style={{ fontSize: "0.75rem", color: "#64748b", margin: "0 0 12px 0" }}>Used in Inter Department Request form.</p>
+                        <p style={{ fontSize: "0.75rem", color: t.textMuted, margin: "0 0 12px 0" }}>Used in Inter Department Request form.</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {(settings.masterRequestTypes || "").split(',').filter(t => t.trim()).map((type, idx) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {type.trim()}
                                 <button 
                                   onClick={() => {
@@ -5370,23 +5370,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Week Days */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <Clock size={18} color="#0ea5e9" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Week Days</h4>
                         </div>
-                        <p style={{ fontSize: "0.75rem", color: "#64748b", margin: "0 0 12px 0" }}>Used for Weekly recurring task day selection.</p>
+                        <p style={{ fontSize: "0.75rem", color: t.textMuted, margin: "0 0 12px 0" }}>Used for Weekly recurring task day selection.</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {(settings.masterWeekDays || "").split(',').filter((t: string) => t.trim()).map((day: string, idx: number) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {day.trim()}
                                 <button 
                                   onClick={() => {
@@ -5418,20 +5418,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
                       </div>                      {/* Payment Types */}
-                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: "#0f172a" }}>
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <Wallet size={18} color="#3b82f6" />
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Payment Types</h4>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                             {(settings.masterPaymentTypes || "").split(',').filter(t => t.trim()).map((type, idx) => (
-                              <div key={idx} style={{ background: "white", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 {type.trim()}
                                 <button 
                                   onClick={() => {
@@ -5463,7 +5463,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   }
                                 }
                               }}
-                              style={{ ...inputStyle, padding: "8px 12px", fontSize: "0.8125rem" }} 
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
                             />
                           </div>
                         </div>
@@ -5476,23 +5476,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 {activeOptionsTab === 'DATA' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Bulk Data Import</h3>
-                    <p style={{ color: "#64748b", marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. All imports follow a strictly defined schema.</p>
+                    <p style={{ color: t.textMuted, marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. All imports follow a strictly defined schema.</p>
                     
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
                       
                       {/* Task Import Section */}
-                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                         <div style={{ background: "#eff6ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <FileSpreadsheet size={24} color="#3b82f6" />
                         </div>
                         <div>
                           <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Task Bulk Import</h4>
-                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Standard one-time task uploads.</p>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Standard one-time task uploads.</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                           <button 
                             onClick={() => downloadBulkTemplate('tasks')}
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #3b82f6", background: "white", color: "#3b82f6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #3b82f6", background: t.card, color: "#3b82f6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                           >
                             <Download size={14} /> Template
                           </button>
@@ -5504,18 +5504,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
 
                       {/* LO Import Section */}
-                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                         <div style={{ background: "#fef2f2", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <Lightbulb size={24} color="#ef4444" />
                         </div>
                         <div>
                           <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>LO Bulk Import</h4>
-                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Learning Opportunities tracker.</p>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Learning Opportunities tracker.</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                           <button 
                             onClick={() => downloadBulkTemplate('lo')}
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #ef4444", background: "white", color: "#ef4444", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #ef4444", background: t.card, color: "#ef4444", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                           >
                             <Download size={14} /> Template
                           </button>
@@ -5527,18 +5527,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
 
                       {/* Recurring Import Section */}
-                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                         <div style={{ background: "#f5f3ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <Repeat size={24} color="#8b5cf6" />
                         </div>
                         <div>
                           <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Recurring Bulk Import</h4>
-                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Master Recurring Template data.</p>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Master Recurring Template data.</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                           <button 
                             onClick={() => downloadBulkTemplate('recurring')}
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #8b5cf6", background: "white", color: "#8b5cf6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #8b5cf6", background: t.card, color: "#8b5cf6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                           >
                             <Download size={14} /> Template
                           </button>
@@ -5550,18 +5550,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
 
                       {/* Payments Import Section */}
-                      <div style={{ padding: "24px", border: "1px solid #e2e8f0", borderRadius: "16px", background: "white", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                         <div style={{ background: "#ecfdf5", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <Wallet size={24} color="#10b981" />
                         </div>
                         <div>
                           <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Payments Bulk Import</h4>
-                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#64748b" }}>Master Payments Sheet data.</p>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Master Payments Sheet data.</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
                           <button 
                             onClick={() => downloadBulkTemplate('payments')}
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #10b981", background: "white", color: "#10b981", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #10b981", background: t.card, color: "#10b981", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                           >
                             <Download size={14} /> Template
                           </button>
@@ -5591,7 +5591,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Mission Editor */}
-                    <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
                       <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px" }}><Building2 size={20} color="#2563eb" /> Edit Mission Statement</h4>
                       <textarea 
                         value={JSON.parse(settings.homeContent || '{}').mission || ""}
@@ -5600,16 +5600,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           setSettings({ ...settings, homeContent: JSON.stringify({ ...content, mission: e.target.value }) });
                         }}
                         placeholder="Enter the implementation mission..."
-                        style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
+                        style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical" }}
                       />
                     </div>
 
                     {/* Stories Editor */}
-                    <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
                       <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px" }}><Quote size={20} color="#2563eb" /> Manage Success Stories</h4>
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
                         {(JSON.parse(settings.homeContent || '{}').stories || []).map((s: any, idx: number) => (
-                          <div key={idx} style={{ padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", position: "relative" }}>
+                          <div key={idx} style={{ padding: "16px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}`, position: "relative" }}>
                             <button 
                               onClick={() => {
                                 const content = JSON.parse(settings.homeContent || '{}');
@@ -5621,23 +5621,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <Trash2 size={16} />
                             </button>
                             <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{s.title}</div>
-                            <div style={{ fontSize: "0.8125rem", color: "#64748b" }}>{s.text}</div>
+                            <div style={{ fontSize: "0.8125rem", color: t.textMuted }}>{s.text}</div>
                             <div style={{ fontSize: "0.75rem", fontWeight: 600, marginTop: "4px" }}>- {s.author}</div>
                           </div>
                         ))}
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr auto", gap: "8px", alignItems: "end" }}>
                         <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b" }}>Title</label>
-                          <input id="story-title" type="text" style={inputStyle} />
+                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Title</label>
+                          <input id="story-title" type="text" style={getInputStyle(t)} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b" }}>Story Text</label>
-                          <input id="story-text" type="text" style={inputStyle} />
+                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Story Text</label>
+                          <input id="story-text" type="text" style={getInputStyle(t)} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b" }}>Author</label>
-                          <input id="story-author" type="text" style={inputStyle} />
+                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Author</label>
+                          <input id="story-author" type="text" style={getInputStyle(t)} />
                         </div>
                         <button 
                           onClick={() => {
@@ -5660,14 +5660,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Achievements Editor */}
-                    <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
                       <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px" }}><Tag size={20} color="#2563eb" /> Manage Achievements</h4>
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                         {(JSON.parse(settings.homeContent || '{}').achievements || []).map((a: any, idx: number) => (
-                          <div key={idx} style={{ padding: "12px 16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div key={idx} style={{ padding: "12px 16px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <div>
                               <span style={{ fontWeight: 700, fontSize: "0.875rem" }}>{a.title}</span>
-                              <span style={{ marginLeft: "8px", fontSize: "0.75rem", color: "#64748b" }}>({a.date})</span>
+                              <span style={{ marginLeft: "8px", fontSize: "0.75rem", color: t.textMuted }}>({a.date})</span>
                             </div>
                             <button 
                               onClick={() => {
@@ -5684,12 +5684,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: "8px", alignItems: "end" }}>
                         <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b" }}>Achievement</label>
-                          <input id="ach-title" type="text" placeholder="e.g. 500 Tasks Milestone" style={inputStyle} />
+                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Achievement</label>
+                          <input id="ach-title" type="text" placeholder="e.g. 500 Tasks Milestone" style={getInputStyle(t)} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b" }}>Date</label>
-                          <input id="ach-date" type="text" placeholder="e.g. May 2026" style={inputStyle} />
+                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Date</label>
+                          <input id="ach-date" type="text" placeholder="e.g. May 2026" style={getInputStyle(t)} />
                         </div>
                         <button 
                           onClick={() => {
@@ -5725,29 +5725,29 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Finance Team Overview */}
-                    <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}`, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
                         <div style={{ padding: "8px", background: "#eff6ff", borderRadius: "10px" }}>
                           <Users size={20} color="#2563eb" />
                         </div>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: "#1e293b" }}>Finance Team Members</h4>
-                          <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>These users are available as Authorized Allocators.</p>
+                          <h4 style={{ margin: 0, fontSize: "1.125rem", color: t.text }}>Finance Team Members</h4>
+                          <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted }}>These users are available as Authorized Allocators.</p>
                         </div>
                       </div>
 
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                         {usersList.filter((u: any) => u.department === 'Finance' && (u as any).isApproved !== false).length === 0 ? (
-                          <p style={{ fontSize: "0.875rem", color: "#94a3b8", italic: "true" } as any}>No users found in Finance department.</p>
+                          <p style={{ fontSize: "0.875rem", color: t.textMuted, italic: "true" } as any}>No users found in Finance department.</p>
                         ) : (
                           usersList.filter((u: any) => u.department === 'Finance' && (u as any).isApproved !== false).map((u: any) => (
-                            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
                               <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#2563eb", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.875rem" }}>
                                 {u.name ? u.name[0].toUpperCase() : u.email[0].toUpperCase()}
                               </div>
                               <div>
-                                <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1e293b" }}>{u.name || "--"}</div>
-                                <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{u.email}</div>
+                                <div style={{ fontSize: "0.875rem", fontWeight: 600, color: t.text }}>{u.name || "--"}</div>
+                                <div style={{ fontSize: "0.7rem", color: t.textMuted }}>{u.email}</div>
                               </div>
                             </div>
                           ))
@@ -5756,7 +5756,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Matrix A: Module Access (Accordion) */}
-                    <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                    <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                       <div 
                         onClick={() => setActiveMatrixTab(activeMatrixTab === 'ACCESS' ? '' : 'ACCESS')}
                         style={{ padding: "20px 24px", background: activeMatrixTab === 'ACCESS' ? "#f8fafc" : "white", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: activeMatrixTab === 'ACCESS' ? "1px solid #e2e8f0" : "none", transition: "all 0.2s" }}
@@ -5764,19 +5764,19 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px", color: activeMatrixTab === 'ACCESS' ? "#2563eb" : "#0f172a" }}>
                           <Shield size={20} /> Matrix A : Module Access
                         </h4>
-                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ACCESS' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: "#64748b" }} />
+                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ACCESS' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: t.textMuted }} />
                       </div>
                       
                       {activeMatrixTab === 'ACCESS' && (
                         <div style={{ padding: "24px", animation: "slideDown 0.3s ease-out" }}>
-                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: "#64748b" }}>Define which departments have access to specific modules.</p>
+                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: t.textMuted }}>Define which departments have access to specific modules.</p>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: "#f8fafc" }}>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Department</th>
+                                <tr style={{ background: t.bg }}>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>Department</th>
                                   {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map((module: string) => (
-                                    <th key={module} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>{module}</th>
+                                    <th key={module} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>{module}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -5785,7 +5785,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
                                   return (
                                     <tr key={dept} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                                      <td style={{ padding: "12px", fontWeight: 600, color: "#1e293b", fontSize: "0.875rem" }}>{dept}</td>
+                                      <td style={{ padding: "12px", fontWeight: 600, color: t.text, fontSize: "0.875rem" }}>{dept}</td>
                                       {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map((module: string) => (
                                         <td key={module} style={{ padding: "12px", textAlign: "center" }}>
                                           <input 
@@ -5816,7 +5816,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Matrix B: Request Allocation (Accordion) */}
-                    <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                    <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                       <div 
                         onClick={() => setActiveMatrixTab(activeMatrixTab === 'ALLOCATION' ? '' : 'ALLOCATION')}
                         style={{ padding: "20px 24px", background: activeMatrixTab === 'ALLOCATION' ? "#f8fafc" : "white", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: activeMatrixTab === 'ALLOCATION' ? "1px solid #e2e8f0" : "none", transition: "all 0.2s" }}
@@ -5824,18 +5824,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px", color: activeMatrixTab === 'ALLOCATION' ? "#2563eb" : "#0f172a" }}>
                           <Users size={20} /> Matrix B : Request Allocation
                         </h4>
-                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ALLOCATION' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: "#64748b" }} />
+                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ALLOCATION' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: t.textMuted }} />
                       </div>
 
                       {activeMatrixTab === 'ALLOCATION' && (
                         <div style={{ padding: "24px", animation: "slideDown 0.3s ease-out" }}>
-                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: "#64748b" }}>Assign authorized allocators for each type of inter-departmental request.</p>
+                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: t.textMuted }}>Assign authorized allocators for each type of inter-departmental request.</p>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: "#f8fafc" }}>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Finance Function</th>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>Authorized Allocator</th>
+                                <tr style={{ background: t.bg }}>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>Finance Function</th>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>Authorized Allocator</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -5843,13 +5843,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   const matrix = JSON.parse(settings.allocationMatrix || '{}');
                                   return (
                                     <tr key={type} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                                      <td style={{ padding: "12px", fontWeight: 600, color: "#1e293b", fontSize: "0.875rem" }}>{type}</td>
+                                      <td style={{ padding: "12px", fontWeight: 600, color: t.text, fontSize: "0.875rem" }}>{type}</td>
                                       <td style={{ padding: "12px" }}>
                                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                                             {(() => {
                                               const allocators = Array.isArray(matrix[type]) ? matrix[type] : (matrix[type] ? [matrix[type]] : []);
-                                              if (allocators.length === 0) return <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontStyle: "italic" }}>No Allocators Assigned</span>;
+                                              if (allocators.length === 0) return <span style={{ fontSize: "0.75rem", color: t.textMuted, fontStyle: "italic" }}>No Allocators Assigned</span>;
                                               return allocators.map((email: string) => (
                                                 <div key={email} style={{ 
                                                   background: "#f0f9ff", border: "1px solid #bae6fd", 
@@ -5882,7 +5882,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                                 allocationMatrix: JSON.stringify({ ...matrix, [type]: [...allocators, e.target.value] })
                                               });
                                             }}
-                                            style={{ width: "100%", padding: "6px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.8125rem" }}
+                                            style={{ width: "100%", padding: "6px", borderRadius: "6px", border: `1px solid ${t.border}`, fontSize: "0.8125rem" }}
                                           >
                                             <option value="">+ Add Allocator</option>
                                             {usersList
@@ -5905,7 +5905,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     </div>
 
                     {/* Matrix C: Entity Controls (Accordion) */}
-                    <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                    <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                       <div 
                         onClick={() => setActiveMatrixTab(activeMatrixTab === 'ENTITY' ? '' : 'ENTITY')}
                         style={{ padding: "20px 24px", background: activeMatrixTab === 'ENTITY' ? "#f8fafc" : "white", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: activeMatrixTab === 'ENTITY' ? "1px solid #e2e8f0" : "none", transition: "all 0.2s" }}
@@ -5913,20 +5913,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px", color: activeMatrixTab === 'ENTITY' ? "#2563eb" : "#0f172a" }}>
                           <Briefcase size={20} /> Matrix C : Entity Controls
                         </h4>
-                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ENTITY' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: "#64748b" }} />
+                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'ENTITY' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: t.textMuted }} />
                       </div>
                       
                       {activeMatrixTab === 'ENTITY' && (
                         <div style={{ padding: "24px", animation: "slideDown 0.3s ease-out" }}>
-                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: "#64748b" }}>Control which users have access to specific entities in Task and Request forms.</p>
+                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: t.textMuted }}>Control which users have access to specific entities in Task and Request forms.</p>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: "#f8fafc" }}>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>User Name / Email</th>
+                                <tr style={{ background: t.bg }}>
+                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>User Name / Email</th>
                                   <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#2563eb", fontSize: "0.7rem", textTransform: "uppercase", background: "#eff6ff" }}>Consolidated (ALL)</th>
                                   {settings.masterEntities.split(',').filter(e => e.trim()).map(entity => (
-                                    <th key={entity} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#64748b", fontSize: "0.7rem", textTransform: "uppercase" }}>{entity.trim()}</th>
+                                    <th key={entity} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>{entity.trim()}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -5939,10 +5939,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   return (
                                     <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                                       <td style={{ padding: "12px", fontSize: "0.875rem" }}>
-                                        <div style={{ fontWeight: 600, color: "#1e293b" }}>{u.name || "--"}</div>
-                                        <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{u.email}</div>
+                                        <div style={{ fontWeight: 600, color: t.text }}>{u.name || "--"}</div>
+                                        <div style={{ fontSize: "0.7rem", color: t.textMuted }}>{u.email}</div>
                                       </td>
-                                      <td style={{ padding: "12px", textAlign: "center", background: "#f8fafc" }}>
+                                      <td style={{ padding: "12px", textAlign: "center", background: t.bg }}>
                                         <input 
                                           type="checkbox" 
                                           checked={isConsolidated} 
@@ -5998,7 +5998,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
       {showShareModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
-          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "500px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+          <div style={{ background: t.card, borderRadius: "20px", width: "100%", maxWidth: "500px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
             <div style={{ padding: "24px", background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Share Report via Email</h3>
@@ -6009,8 +6009,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             
             <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Recipient Emails *</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "45px", background: "#f8fafc" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Recipient Emails *</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: `1px solid ${t.border}`, borderRadius: "10px", minHeight: "45px", background: t.bg }}>
                   {recipientTags.map((email, idx) => (
                     <div key={idx} style={{ background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                       {email}
@@ -6038,10 +6038,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>CC Emails (Optional)</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "45px", background: "#f8fafc" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>CC Emails (Optional)</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: `1px solid ${t.border}`, borderRadius: "10px", minHeight: "45px", background: t.bg }}>
                   {ccTags.map((email, idx) => (
-                    <div key={idx} style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div key={idx} style={{ background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                       {email}
                       <X size={14} style={{ cursor: "pointer" }} onClick={() => setCcTags(prev => prev.filter((_, i) => i !== idx))} />
                     </div>
@@ -6068,11 +6068,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
               <div style={{ display: "flex", gap: "12px" }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Report Format</label>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Report Format</label>
                   <select 
                     value={shareData.format}
                     onChange={e => setShareData({...shareData, format: e.target.value as any})}
-                    style={inputStyle}
+                    style={getInputStyle(t)}
                   >
                     <option value="excel">Excel Spreadsheet (.xlsx)</option>
                     <option value="pdf">PDF Document (.pdf)</option>
@@ -6081,12 +6081,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Subject</label>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Subject</label>
                 <input 
                   type="text" 
                   value={shareData.subject}
                   onChange={e => setShareData({...shareData, subject: e.target.value})}
-                  style={inputStyle} 
+                  style={getInputStyle(t)} 
                 />
               </div>
 
@@ -6103,7 +6103,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
                 <button 
                   onClick={() => setShowShareModal(false)}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.textMuted, fontWeight: 600, cursor: "pointer" }}
                 >
                   Cancel
                 </button>
@@ -6122,7 +6122,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
       {showRejectModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
-          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "450px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+          <div style={{ background: t.card, borderRadius: "20px", width: "100%", maxWidth: "450px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
             <div style={{ padding: "24px", background: "#fef2f2", borderBottom: "1px solid #fee2e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{ background: "#fee2e2", color: "#ef4444", padding: "10px", borderRadius: "12px" }}>
@@ -6133,22 +6133,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#b91c1c", opacity: 0.8 }}>Please provide a reason for rejection.</p>
                 </div>
               </div>
-              <button onClick={() => setShowRejectModal(false)} style={{ background: "white", border: "1px solid #fee2e2", color: "#ef4444", cursor: "pointer", width: "32px", height: "32px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem" }}>×</button>
+              <button onClick={() => setShowRejectModal(false)} style={{ background: t.card, border: "1px solid #fee2e2", color: "#ef4444", cursor: "pointer", width: "32px", height: "32px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem" }}>×</button>
             </div>
             
             <div style={{ padding: "24px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Rejection Reason</label>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rejection Reason</label>
               <textarea 
                 placeholder="Explain why this request is being rejected..."
                 value={rejectReason}
                 onChange={e => setRejectReason(e.target.value)}
-                style={{ ...inputStyle, minHeight: "120px", resize: "none", padding: "12px" }} 
+                style={{ ...getInputStyle(t), minHeight: "120px", resize: "none", padding: "12px" }} 
               />
               
               <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                 <button 
                   onClick={() => setShowRejectModal(false)}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.textMuted, fontWeight: 600, cursor: "pointer" }}
                 >
                   Cancel
                 </button>
@@ -6179,12 +6179,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
 // Subcomponents
 
-function MetricCard({ title, value, icon, bg, isActive, onClick }: { title: string, value: number, icon: any, bg: string, isActive?: boolean, onClick?: () => void }) {
+function MetricCard({ title, value, icon, bg, isActive, onClick, t }: { title: string, value: number, icon: any, bg: string, isActive?: boolean, onClick?: () => void, t: any }) {
   return (
     <div 
       onClick={onClick}
       style={{ 
-        background: "white", 
+        background: t.card, 
         padding: "24px", 
         borderRadius: "12px", 
         border: isActive ? "2px solid #2563eb" : "1px solid #e2e8f0", 
@@ -6200,14 +6200,14 @@ function MetricCard({ title, value, icon, bg, isActive, onClick }: { title: stri
         {icon}
       </div>
       <div>
-        <p style={{ margin: "0 0 4px 0", fontSize: "0.875rem", color: "#64748b", fontWeight: 500 }}>{title}</p>
-        <p style={{ margin: 0, fontSize: "1.875rem", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.025em" }}>{value}</p>
+        <p style={{ margin: "0 0 4px 0", fontSize: "0.875rem", color: t.textMuted, fontWeight: 500 }}>{title}</p>
+        <p style={{ margin: 0, fontSize: "1.875rem", fontWeight: 700, color: t.text, letterSpacing: "-0.025em" }}>{value}</p>
       </div>
     </div>
   );
 }
 
-function StatusPill({ status, type, taskId, onUpdate, disabled }: { status: string, type: "task" | "review", taskId: number, onUpdate: any, disabled?: boolean }) {
+function StatusPill({ status, type, taskId, onUpdate, disabled, t }: { status: string, type: "task" | "review", taskId: number, onUpdate: any, disabled?: boolean, t: any }) {
   let bg = "#f1f5f9";
   let color = "#475569";
 
@@ -6256,30 +6256,30 @@ function StatusPill({ status, type, taskId, onUpdate, disabled }: { status: stri
 
 // Styles
 
-const thStyle = {
-  background: "#f8fafc",
-  color: "#64748b",
+const getThStyle = (t: any) => ({
+  background: t.bg,
+  color: t.textMuted,
   padding: "16px 24px",
   fontWeight: 600,
   fontSize: "0.75rem",
   textTransform: "uppercase" as const,
   letterSpacing: "0.05em",
-  borderBottom: "1px solid #e2e8f0",
+  borderBottom: `1px solid ${t.border}`,
   whiteSpace: "nowrap" as const,
-};
+});
 
-const tdStyle = {
+const getTdStyle = (t: any) => ({
   padding: "16px 24px",
   verticalAlign: "middle" as const,
-};
+});
 
-const inputStyle = {
+const getInputStyle = (t: any) => ({
   width: "100%", 
-  border: "1px solid #cbd5e1", 
+  border: `1px solid ${t.border}`, 
   borderRadius: "6px", 
   padding: "8px 12px", 
   fontSize: "0.875rem", 
   outline: "none", 
   boxShadow: "0 0 0 2px rgba(59,130,246,0.2)",
   fontFamily: "inherit"
-};
+});
