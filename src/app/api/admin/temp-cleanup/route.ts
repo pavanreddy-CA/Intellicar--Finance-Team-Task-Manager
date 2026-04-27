@@ -32,8 +32,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ 
-      message: `Database cleanup complete. Deleted ${deletedCount} hardcoded users.`,
-      status: "success"
+      message: `Database cleanup complete. Deleted ${deletedCount} hardcoded users. If this was already run, 0 users were deleted.`,
+      status: "success",
+      deletedCount
     });
   } catch (error: any) {
     console.error("Cleanup error:", error);

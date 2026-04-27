@@ -662,6 +662,28 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  const handleCleanupDatabase = async () => {
+    if (!window.confirm("DANGER: This will permanently delete the 9 old hardcoded user records (Venkat, Sharath, etc.) from the database. Are you sure?")) return;
+    
+    setUsersLoading(true);
+    try {
+      const res = await fetch("/api/admin/temp-cleanup");
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message || "Database cleanup successful!");
+        fetchUsersList();
+      } else {
+        const data = await res.json();
+        alert("Cleanup failed: " + (data.message || "Unauthorized"));
+      }
+    } catch (error) {
+      console.error("Cleanup failed", error);
+      alert("An error occurred during cleanup.");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   const handleResetUserPassword = async (userId: number, userName: string) => {
     const newPassword = prompt(`Enter new password for ${userName}:`);
     if (!newPassword || newPassword.trim().length < 6) {
@@ -4246,6 +4268,42 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         </table>
                       </div>
                     )}
+
+                    {/* Database Maintenance Section */}
+                    <div style={{ marginTop: "40px", padding: "24px", background: "#fff1f2", borderRadius: "16px", border: "1px solid #fecaca" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                          <div style={{ padding: "12px", background: "#fee2e2", borderRadius: "12px" }}>
+                            <Trash2 size={24} color="#dc2626" />
+                          </div>
+                          <div>
+                            <h4 style={{ margin: "0 0 4px 0", color: "#991b1b", fontSize: "1rem", fontWeight: 700 }}>Database Maintenance</h4>
+                            <p style={{ color: "#b91c1c", margin: 0, fontSize: "0.8125rem", maxWidth: "400px", lineHeight: 1.5 }}>
+                              Remove the 9 legacy hardcoded user records (Venkat, Sharath, Sami, etc.) that are no longer active in the Finance team. This will clean up your dropdowns instantly.
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={handleCleanupDatabase}
+                          style={{ 
+                            background: "#ef4444", 
+                            color: "white", 
+                            padding: "12px 24px", 
+                            borderRadius: "10px", 
+                            border: "none", 
+                            cursor: "pointer", 
+                            fontWeight: 700, 
+                            fontSize: "0.875rem",
+                            boxShadow: "0 4px 6px -1px rgba(239, 68, 68, 0.3)",
+                            transition: "all 0.2s ease"
+                          }}
+                          onMouseOver={e => e.currentTarget.style.background = "#dc2626"}
+                          onMouseOut={e => e.currentTarget.style.background = "#ef4444"}
+                        >
+                          Cleanup Database
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
