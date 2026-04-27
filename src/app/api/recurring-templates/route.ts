@@ -19,23 +19,36 @@ export async function GET() {
           "taskNamePattern" TEXT NOT NULL,
           "entityName" TEXT NOT NULL,
           "taskType" TEXT DEFAULT 'External',
+          "departmentName" TEXT DEFAULT 'Finance',
+          "financeFunction" TEXT,
           "frequency" TEXT NOT NULL,
           "dayOffset" INTEGER DEFAULT 0,
           "monthOffset" INTEGER DEFAULT 0,
           "defaultOwner" TEXT,
           "defaultReviewer" TEXT,
           "isActive" BOOLEAN DEFAULT TRUE,
+          "startDate" DATE,
+          "endDate" DATE,
+          "stopDate" DATE,
+          "isStopped" BOOLEAN DEFAULT FALSE,
+          "weeklyDay" TEXT,
+          "excludedDates" JSONB,
+          "freqLabel" TEXT,
           "lastGeneratedPeriod" TEXT,
           "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
       `;
+      // Individual column migrations for safety
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "taskType" TEXT DEFAULT 'External'`;
+      await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "departmentName" TEXT DEFAULT 'Finance'`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "financeFunction" TEXT`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "startDate" DATE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "endDate" DATE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "stopDate" DATE`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "isStopped" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "weeklyDay" TEXT`;
+      await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "excludedDates" JSONB`;
       await sql`ALTER TABLE "RecurringTemplate" ADD COLUMN IF NOT EXISTS "freqLabel" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "financeFunction" TEXT`;
     } catch (err) {
@@ -72,12 +85,21 @@ export async function POST(req: NextRequest) {
           "taskNamePattern" TEXT NOT NULL,
           "entityName" TEXT NOT NULL,
           "taskType" TEXT DEFAULT 'External',
+          "departmentName" TEXT DEFAULT 'Finance',
+          "financeFunction" TEXT,
           "frequency" TEXT NOT NULL,
           "dayOffset" INTEGER DEFAULT 0,
           "monthOffset" INTEGER DEFAULT 0,
           "defaultOwner" TEXT,
           "defaultReviewer" TEXT,
           "isActive" BOOLEAN DEFAULT TRUE,
+          "startDate" DATE,
+          "endDate" DATE,
+          "stopDate" DATE,
+          "isStopped" BOOLEAN DEFAULT FALSE,
+          "weeklyDay" TEXT,
+          "excludedDates" JSONB,
+          "freqLabel" TEXT,
           "lastGeneratedPeriod" TEXT,
           "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()

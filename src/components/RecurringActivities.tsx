@@ -250,7 +250,7 @@ export default function RecurringActivities({ settings, usersList = [] }: { sett
         alert(editingTemplate ? "Rule updated successfully!" : "Recurring rule created successfully!");
       } else {
         const err = await res.json();
-        alert(`Failed to save: ${err.error || 'Unknown error'}`);
+        alert(`Failed to save: ${err.error || 'Unknown error'}\n\nDetails: ${err.details || 'No details available'}`);
       }
     } catch (err) {
       console.error("Save template error:", err);
