@@ -6181,39 +6181,39 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       {notification.type && (
         <div style={{
           position: "fixed",
-          top: "50%",
+          top: "36px",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          zIndex: 9999,
-          animation: "fadeIn 0.3s ease-out"
+          zIndex: 10000,
+          animation: "toast-slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
         }}>
           <div style={{
-            background: theme === 'DARK' ? "rgba(30, 41, 59, 0.8)" : "rgba(255, 255, 255, 0.8)",
+            background: theme === 'DARK' ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
             backdropFilter: "blur(12px)",
-            padding: "16px 32px",
-            borderRadius: "16px",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)",
+            padding: "10px 24px",
+            borderRadius: "12px",
+            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
             border: `1px solid ${theme === 'DARK' ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)"}`,
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            minWidth: "300px"
+            minWidth: "280px"
           }}>
             <div style={{
               background: notification.type === 'success' ? "#22c55e" : "#ef4444",
-              width: "28px",
-              height: "28px",
+              width: "24px",
+              height: "24px",
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "white"
             }}>
-              {notification.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+              {notification.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
             </div>
             <p style={{
               margin: 0,
-              fontSize: "1rem",
+              fontSize: "0.9rem",
               fontWeight: 600,
               color: t.text,
               letterSpacing: "-0.01em"
@@ -6222,8 +6222,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             </p>
           </div>
           <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes fadeIn {
-              from { opacity: 0; transform: translate(-50%, -40%); }
+            @keyframes toast-slide-down {
+              from { opacity: 0; transform: translate(-50%, -100%); }
               to { opacity: 1; transform: translate(-50%, -50%); }
             }
           `}} />
