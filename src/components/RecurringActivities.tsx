@@ -49,7 +49,7 @@ type StagingTask = {
   freqLabel?: string | null;
 };
 
-export default function RecurringActivities({  settings, usersList = [] , showNotification }: { settings: any; usersList: any[] ; showNotification: any; }) {
+export default function RecurringActivities({   settings, usersList = [] , showNotification , showConfirm }: { settings: any; usersList: any[] ; showNotification: any;  showConfirm: any; }) {
   const [activeSubTab, setActiveSubTab] = useState<'STAGING' | 'MASTER' | 'D'>('STAGING');
   const [templates, setTemplates] = useState<RecurringTemplate[]>([]);
   const [stagingTasks, setStagingTasks] = useState<StagingTask[]>([]);
@@ -247,26 +247,27 @@ export default function RecurringActivities({  settings, usersList = [] , showNo
   };
 
   const handleDismissOccurrence = async (templateId: number, periodKey: string) => {
-    if (!confirm("Are you sure you want to dismiss this occurrence? It will no longer show in the pending list.")) return;
-    
-    const template = templates.find(t => t.id === templateId);
-    if (!template) return;
+    showConfirm("Are you sure you want to dismiss this occurrence? It will no longer show in the pending list.", async () => {
+      const template = templates.find(t => t.id === templateId);
+      if (!template) return;
 
-    const excluded = Array.isArray(template.excludedDates) ? [...template.excludedDates] : [];
-    if (!excluded.includes(periodKey)) {
-        excluded.push(periodKey);
-    }
+      const excluded = Array.isArray(template.excludedDates) ? [...template.excludedDates] : [];
+      if (!excluded.includes(periodKey)) {
+          excluded.push(periodKey);
+      }
 
-    try {
-        await fetch(`/api/recurring-templates/${templateId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ excludedDates: excluded })
-        });
-        fetchTemplates();
-    } catch (err) {
-        console.error("Dismiss error:", err);
-    }
+      try {
+          await fetch(`/api/recurring-templates/${templateId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ excludedDates: excluded })
+          });
+          fetchTemplates();
+          showNotification("Occurrence dismissed.");
+      } catch (err) {
+          console.error("Dismiss error:", err);
+      }
+    });
   };
 
   const handleBulkApply = () => {
@@ -338,13 +339,15 @@ export default function RecurringActivities({  settings, usersList = [] , showNo
   };
 
   const handleDeleteTemplate = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this template?")) return;
-    try {
-      await fetch(`/api/recurring-templates/${id}`, { method: "DELETE" });
-      fetchTemplates();
-    } catch (err) {
-      console.error("Delete template error:", err);
-    }
+    showConfirm("Are you sure you want to delete this template?", async () => {
+      try {
+        await fetch(`/api/recurring-templates/${id}`, { method: "DELETE" });
+        fetchTemplates();
+        showNotification("Template deleted successfully.");
+      } catch (err) {
+        console.error("Delete template error:", err);
+      }
+    });
   };
 
   const handleGenerateTasks = async () => {

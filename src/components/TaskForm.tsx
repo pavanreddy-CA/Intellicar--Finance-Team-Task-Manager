@@ -10,9 +10,9 @@ type TaskFormProps = {
   usersList?: any[];
   initialData?: any;
   user: any;
- showNotification: any;};
+ showNotification: any; showConfirm: any;};
 
-export default function TaskForm({  onClose, onSuccess, settings, usersList = [], initialData, user , showNotification }: TaskFormProps) {
+export default function TaskForm({   onClose, onSuccess, settings, usersList = [], initialData, user , showNotification , showConfirm }: TaskFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [changeRequestType, setChangeRequestType] = useState(false);

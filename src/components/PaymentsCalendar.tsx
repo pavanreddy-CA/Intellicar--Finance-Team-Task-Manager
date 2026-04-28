@@ -52,7 +52,7 @@ interface PaymentOccurrence {
 
 import { resolveTaskName, getPeriodKey, getOccurrencesBetween } from "@/lib/recurringUtils";
 
-export default function PaymentsCalendar({  user, isAdmin, t, theme, settings , showNotification }: { user: any; isAdmin: boolean; t: any; theme: string; settings: any ; showNotification: any; }) {
+export default function PaymentsCalendar({   user, isAdmin, t, theme, settings , showNotification , showConfirm }: { user: any; isAdmin: boolean; t: any; theme: string; settings: any ; showNotification: any;  showConfirm: any; }) {
   const [activeTab, setActiveTab] = useState<'TRACKER' | 'MASTER'>('TRACKER');
   const [templates, setTemplates] = useState<PaymentTemplate[]>([]);
   const [occurrences, setOccurrences] = useState<PaymentOccurrence[]>([]);
@@ -298,17 +298,19 @@ export default function PaymentsCalendar({  user, isAdmin, t, theme, settings , 
   };
 
   const handleReleaseHold = async (occ: PaymentOccurrence) => {
-    if (!confirm("Release this payment from hold?")) return;
-    try {
-      await fetch(`/api/payments/tracker/${occ.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isHold: false, holdReason: "" })
-      });
-      fetchData();
-    } catch (err) {
-      console.error("Release hold error:", err);
-    }
+    showConfirm("Release this payment from hold?", async () => {
+      try {
+        await fetch(`/api/payments/tracker/${occ.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isHold: false, holdReason: "" })
+        });
+        fetchData();
+        showNotification("Payment released from hold.");
+      } catch (err) {
+        console.error("Release hold error:", err);
+      }
+    });
   };
 
   const handleRequestEdit = async () => {

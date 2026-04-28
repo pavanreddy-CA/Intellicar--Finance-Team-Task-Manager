@@ -112,10 +112,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | null }>({ message: "", type: null });
+  const [confirmState, setConfirmState] = useState<{ message: string; onConfirm: () => void; isOpen: boolean }>({ message: "", onConfirm: () => {}, isOpen: false });
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: "", type: null }), 4000);
+  };
+
+  const showConfirm = (message: string, onConfirm: () => void) => {
+    setConfirmState({ message, onConfirm, isOpen: true });
   };
 
   const [showForm, setShowForm] = useState(false);
@@ -568,15 +573,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleDeleteExtRequest = async (id: number) => {
-    if (!confirm("Are you sure you want to permanently delete this request?")) return;
-    try {
-      const res = await fetch(`/api/external-requests/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setExternalRequests(prev => prev.filter(r => r.id !== id));
+    showConfirm("Are you sure you want to permanently delete this request?", async () => {
+      try {
+        const res = await fetch(`/api/external-requests/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setExternalRequests(prev => prev.filter(r => r.id !== id));
+          showNotification("Request deleted successfully.");
+        }
+      } catch (err) {
+        console.error("Delete error:", err);
       }
-    } catch (err) {
-      console.error("Delete error:", err);
-    }
+    });
   };
 
   const handleRejectExtRequest = async () => {
@@ -828,46 +835,32 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const handleBulkAddUsers = async () => {
-    if (!window.confirm("Are you sure you want to import all predefined employees? This will create accounts with the default password 'Intellicar@123' for those who don't have one yet.")) return;
-    
-    setUsersLoading(true);
-    try {
-      const res = await fetch("/api/admin/bulk-add-users", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        alert(data.message + "\n\nDefault Password: " + data.defaultPassword);
-        fetchUsersList();
-      } else {
-        showNotification("Failed to bulk add users.");
+  const handleImportPredefined = async () => {
+    showConfirm("Are you sure you want to import all predefined employees? This will create accounts with the default password 'Intellicar@123' for those who don't have one yet.", async () => {
+      try {
+        const res = await fetch("/api/admin/users/import-predefined", { method: "POST" });
+        if (res.ok) {
+          showNotification("Predefined employees imported successfully.");
+          fetchUsersList();
+        }
+      } catch (err) {
+        console.error("Import failed", err);
       }
-    } catch (error) {
-      console.error("Bulk add failed", error);
-    } finally {
-      setUsersLoading(false);
-    }
+    });
   };
 
-  const handleCleanupDatabase = async () => {
-    if (!window.confirm("DANGER: This will permanently delete the 9 old hardcoded user records (Venkat, Sharath, etc.) from the database. Are you sure?")) return;
-    
-    setUsersLoading(true);
-    try {
-      const res = await fetch("/api/admin/temp-cleanup");
-      if (res.ok) {
-        const data = await res.json();
-        alert(data.message || "Database cleanup successful!");
-        fetchUsersList();
-      } else {
-        const data = await res.json();
-        showNotification("Cleanup failed: " + (data.message || "Unauthorized"));
+  const handleDeleteHardcoded = async () => {
+    showConfirm("DANGER: This will permanently delete the 9 old hardcoded user records (Venkat, Sharath, etc.) from the database. Are you sure?", async () => {
+      try {
+        const res = await fetch("/api/admin/users/delete-hardcoded", { method: "DELETE" });
+        if (res.ok) {
+          showNotification("Hardcoded users removed.");
+          fetchUsersList();
+        }
+      } catch (err) {
+        console.error("Delete failed", err);
       }
-    } catch (error) {
-      console.error("Cleanup failed", error);
-      showNotification("An error occurred during cleanup.");
-    } finally {
-      setUsersLoading(false);
-    }
+    });
   };
 
   const handleResetUserPassword = async (userId: number, userName: string) => {
@@ -897,18 +890,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleApproveUser = async (id: string) => {
-    if (!window.confirm("Approve this user for access?")) return;
-    try {
-      const res = await fetch(`/api/admin/users/${id}/approve`, { method: "POST" });
-      if (res.ok) {
-        showNotification("User approved successfully!");
-        fetchUsersList();
-      } else {
-        showNotification("Failed to approve user.");
+    showConfirm("Approve this user for access?", async () => {
+      try {
+        const res = await fetch("/api/admin/users/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: id }),
+        });
+        if (res.ok) {
+          showNotification("User approved successfully.");
+          fetchUsersList();
+        } else {
+          showNotification("Failed to approve user.");
+        }
+      } catch (error) {
+        console.error("Approval failed", error);
       }
-    } catch (error) {
-      console.error("Approval failed", error);
-    }
+    });
   };
 
   const handleRejectUser = async (id: string) => {
@@ -933,19 +931,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRemoveUser = async (id: string) => {
-    if (!window.confirm("Are you sure you want to PERMANENTLY remove this employee? This action cannot be undone.")) return;
-    try {
-      const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        showNotification("Employee removed successfully.");
-        fetchUsersList();
-      } else {
-        const data = await res.json();
-        alert(data.message || "Failed to remove employee.");
+    showConfirm("Are you sure you want to PERMANENTLY remove this employee? This action cannot be undone.", async () => {
+      try {
+        const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          showNotification("Employee removed successfully.");
+          fetchUsersList();
+        } else {
+          const data = await res.json();
+          showNotification(data.message || "Failed to remove employee.", 'error');
+        }
+      } catch (error) {
+        console.error("Removal failed", error);
       }
-    } catch (error) {
-      console.error("Removal failed", error);
-    }
+    });
   };
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
@@ -1035,19 +1034,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     setEditingCell(null);
   };
 
-  const handleDelete = async (taskId: number) => {
-    if (!window.confirm("Are you sure you want to completely delete this task? This cannot be undone.")) return;
-    
-    try {
-      const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-      if (res.ok) {
-        fetchTasks();
-      } else {
-        showNotification("Failed to delete. You do not have permission.");
+  const handleDeleteTask = async (id: number) => {
+    showConfirm("Are you sure you want to completely delete this task? This cannot be undone.", async () => {
+      try {
+        const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setTasks(tasks.filter(t => t.id !== id));
+          showNotification("Task deleted successfully.");
+        }
+      } catch (err) {
+        console.error("Delete error:", err);
       }
-    } catch (error) {
-      console.error("Failed to delete task", error);
-    }
+    });
   };
 
   const handleRequestDelete = async (taskId: number) => {
@@ -1092,41 +1090,43 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleApproveEdit = async (taskId: number, action: 'APPROVE' | 'REJECT') => {
-    if (!window.confirm(`Are you sure you want to ${action.toLowerCase()} this edit request?`)) return;
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/approve-edit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action })
-      });
-      if (res.ok) {
-        showNotification(`Edit request ${action.toLowerCase()}d successfully.`);
-        fetchTasks();
-      } else {
-        showNotification("Failed to process edit request.");
+    showConfirm(`Are you sure you want to ${action.toLowerCase()} this edit request?`, async () => {
+      try {
+        const res = await fetch(`/api/tasks/${taskId}/approve-edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action })
+        });
+        if (res.ok) {
+          showNotification(`Edit request ${action.toLowerCase()}d successfully.`);
+          fetchTasks();
+        } else {
+          showNotification("Failed to process edit request.", 'error');
+        }
+      } catch (error) {
+        console.error("Failed to process edit", error);
       }
-    } catch (error) {
-      console.error("Failed to process edit", error);
-    }
+    });
   };
 
   const handleApproveDelete = async (taskId: number, action: 'APPROVE' | 'REJECT') => {
-    if (!window.confirm(`Are you sure you want to ${action.toLowerCase()} this deletion request?`)) return;
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/approve-delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action })
-      });
-      if (res.ok) {
-        showNotification(`Deletion request ${action.toLowerCase()}d successfully.`);
-        fetchTasks();
-      } else {
-        showNotification("Failed to process deletion request.");
+    showConfirm(`Are you sure you want to ${action.toLowerCase()} this deletion request?`, async () => {
+      try {
+        const res = await fetch(`/api/tasks/${taskId}/approve-delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action })
+        });
+        if (res.ok) {
+          showNotification(`Deletion request ${action.toLowerCase()}d successfully.`);
+          fetchTasks();
+        } else {
+          showNotification("Failed to process deletion request.", 'error');
+        }
+      } catch (error) {
+        console.error("Failed to process deletion", error);
       }
-    } catch (error) {
-      console.error("Failed to process deletion", error);
-    }
+    });
   };
 
   const handleRequestEditLO = async (loId: number) => {
@@ -1166,20 +1166,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleApproveEditLO = async (loId: number, action: 'APPROVE' | 'REJECT') => {
-    if (!window.confirm(`Are you sure you want to ${action.toLowerCase()} this edit request?`)) return;
-    try {
-      const res = await fetch(`/api/lo/${loId}/approve-edit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action })
-      });
-      if (res.ok) {
-        showNotification(`Edit request ${action.toLowerCase()}d successfully.`);
-        fetchLOs();
+    showConfirm(`Are you sure you want to ${action.toLowerCase()} this edit request?`, async () => {
+      try {
+        const res = await fetch(`/api/lo/${loId}/approve-edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action })
+        });
+        if (res.ok) {
+          showNotification(`Edit request ${action.toLowerCase()}d successfully.`);
+          fetchLOs();
+        }
+      } catch (error) {
+        console.error("Failed to process edit for LO", error);
       }
-    } catch (error) {
-      console.error("Failed to process edit for LO", error);
-    }
+    });
   };
 
   const handleSubmitLOCapture = async () => {
@@ -1210,25 +1211,25 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   const handleTriggerEmail = async (type: "users" | "manager" | "lo" | "payments") => {
     const label = type === 'users' ? 'Employee Reminders' : type === 'manager' ? 'Manager Report' : type === 'lo' ? 'LO Report' : 'Payment Report';
-    if (!window.confirm(`Are you sure you want to send the ${label} now?`)) return;
-    
-    try {
-      const now = new Date();
-      const offsetMs = now.getTimezoneOffset() * 60 * 1000;
-      const localIso = new Date(now.getTime() - offsetMs).toISOString().split('T')[0];
-      
-      const res = await fetch(`/api/cron/daily-summary?type=${type}&clientDate=${localIso}`, {
-        headers: { "Authorization": "Bearer intellicar-cron-123" }
-      });
-      if (res.ok) {
-        showNotification("Emails sent successfully!");
-      } else {
-        const data = await res.json();
-        showNotification(`Failed to send emails: ${data.error || data.message || "Unknown error"}`);
+    showConfirm(`Are you sure you want to send the ${label} now?`, async () => {
+      try {
+        const now = new Date();
+        const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+        const localIso = new Date(now.getTime() - offsetMs).toISOString().split('T')[0];
+        
+        const res = await fetch(`/api/cron/daily-summary?type=${type}&clientDate=${localIso}`, {
+          headers: { "Authorization": "Bearer intellicar-cron-123" }
+        });
+        if (res.ok) {
+          showNotification("Emails sent successfully!");
+        } else {
+          const data = await res.json();
+          showNotification(`Failed to send emails: ${data.error || data.message || "Unknown error"}`, 'error');
+        }
+      } catch (error) {
+        console.error("Failed to trigger emails", error);
       }
-    } catch (error) {
-      console.error("Failed to trigger emails", error);
-    }
+    });
   };
 
   const pendingActionCount = tasks.filter(t => t.taskStatus !== "Completed").length;
@@ -2266,7 +2267,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         {/* Content Area */}
         <main style={{ flex: 1, overflow: "auto", padding: activeView === 'RECURRING' ? "0" : "32px", background: t.bg, transition: "all 0.3s ease" }}>
           {activeView === 'RECURRING' && (
-            <RecurringActivities settings={settings} usersList={usersList} showNotification={showNotification} />
+            <RecurringActivities settings={settings} usersList={usersList} showNotification={showNotification} showConfirm={showConfirm} />
           )}
 
           {activeView !== 'RECURRING' && (
@@ -2831,9 +2832,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         onClick={() => {
                           if (isOwnerLocked) return;
                           if (COMPLETION_STATUSES.includes(task.taskStatus)) return;
-                          if (window.confirm(`Mark "${task.taskName}" as Completed?`)) {
+                          showConfirm(`Mark "${task.taskName}" as Completed?`, () => {
                             handleUpdate(task.id, "taskStatus", "Completed");
-                          }
+                          });
                         }}
                         title={!isOwnerLocked && !COMPLETION_STATUSES.includes(task.taskStatus) ? "Click to mark as completed" : ""}
                       >
@@ -3715,7 +3716,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       )}
 
       {activeView === 'PAYMENTS' && (
-        <PaymentsCalendar user={user} isAdmin={isAdmin} t={t} theme={theme} settings={settings} showNotification={showNotification} />
+        <PaymentsCalendar user={user} isAdmin={isAdmin} t={t} theme={theme} settings={settings} showNotification={showNotification} showConfirm={showConfirm} />
       )}
 
       {showForm && (
@@ -3725,6 +3726,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           initialData={preFilledTask}
           user={user}
           showNotification={showNotification}
+          showConfirm={showConfirm}
           onClose={() => {
             setShowForm(false);
             setPreFilledTask(null);
@@ -4523,14 +4525,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         </p>
                         <button 
                           onClick={async () => {
-                            if (!window.confirm("Are you sure you want to run the database migration/sync?")) return;
-                            try {
-                              const res = await fetch('/api/admin/migrate');
-                              const data = await res.json();
-                              alert(data.message || "Sync completed successfully!");
-                            } catch (err) {
-                              showNotification("Sync failed. Please check the logs.");
-                            }
+                            showConfirm("Are you sure you want to run the database migration/sync?", async () => {
+                              try {
+                                const res = await fetch('/api/admin/migrate');
+                                const data = await res.json();
+                                showNotification(data.message || "Sync completed successfully!");
+                              } catch (err) {
+                                showNotification("Sync failed. Please check the logs.", 'error');
+                              }
+                            });
                           }}
                           style={{ background: "#2563eb", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}
                         >
@@ -6225,6 +6228,50 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             @keyframes toast-slide-down {
               from { opacity: 0; transform: translate(-50%, -100%); }
               to { opacity: 1; transform: translate(-50%, -50%); }
+            }
+          `}} />
+        </div>
+      )}
+
+      {confirmState.isOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 11000
+        }}>
+          <div style={{
+            background: theme === 'DARK' ? "rgba(30, 41, 59, 0.95)" : "white",
+            padding: "32px", borderRadius: "24px", width: "400px", maxWidth: "90%",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            border: `1px solid ${t.border}`, textAlign: "center",
+            animation: "modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+          }}>
+             <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
+               <div style={{ background: "#fee2e2", padding: "12px", borderRadius: "16px" }}>
+                 <AlertTriangle size={32} color="#ef4444" />
+               </div>
+             </div>
+             <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: t.text, marginBottom: "12px" }}>Confirmation Required</h3>
+             <p style={{ color: t.textMuted, fontSize: "0.95rem", lineHeight: 1.5, marginBottom: "32px" }}>{confirmState.message}</p>
+             <div style={{ display: "flex", gap: "12px" }}>
+               <button 
+                 onClick={() => setConfirmState({ ...confirmState, isOpen: false })}
+                 style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `1px solid ${t.border}`, background: "transparent", color: t.text, fontWeight: 600, cursor: "pointer" }}
+               >
+                 Cancel
+               </button>
+               <button 
+                 onClick={() => { confirmState.onConfirm(); setConfirmState({ ...confirmState, isOpen: false }); }}
+                 style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: "#ef4444", color: "white", fontWeight: 600, cursor: "pointer" }}
+               >
+                 Yes, Proceed
+               </button>
+             </div>
+          </div>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes modal-pop {
+              from { opacity: 0; transform: scale(0.9); }
+              to { opacity: 1; transform: scale(1); }
             }
           `}} />
         </div>
