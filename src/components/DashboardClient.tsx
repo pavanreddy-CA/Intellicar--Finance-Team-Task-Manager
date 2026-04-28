@@ -871,7 +871,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleResetUserPassword = async (userId: number, userName: string) => {
-    showPrompt(`Enter new password for ${userName}:`, async (newPassword) => {
+    showPrompt(`Enter new password for ${userName}:`, async (newPassword: string) => {
       if (!newPassword || newPassword.trim().length < 6) {
         showNotification("Password must be at least 6 characters.", "error");
         return;
@@ -919,7 +919,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRejectUser = async (id: string) => {
-    showPrompt("Please provide a reason for rejecting this access request (this will be emailed to the user):", async (comment) => {
+    showPrompt("Please provide a reason for rejecting this access request (this will be emailed to the user):", async (comment: string) => {
       try {
         const res = await fetch(`/api/admin/users/${id}/reject`, { 
           method: "POST",
@@ -1058,7 +1058,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRequestDelete = async (taskId: number) => {
-    showPrompt("Please provide a reason for deleting this task:", async (comment) => {
+    showPrompt("Please provide a reason for deleting this task:", async (comment: string) => {
       try {
         const res = await fetch(`/api/tasks/${taskId}/request-delete`, {
           method: "POST",
@@ -1077,7 +1077,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRequestEdit = async (taskId: number, roleType: 'OWNER' | 'REVIEWER') => {
-    showPrompt("Please provide a reason for editing this completed task:", async (reason) => {
+    showPrompt("Please provide a reason for editing this completed task:", async (reason: string) => {
       try {
         const res = await fetch(`/api/tasks/${taskId}/request-edit`, {
           method: "POST",
@@ -1137,7 +1137,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRequestEditLO = async (loId: number) => {
-    showPrompt("Please provide a reason for editing this LO submission:", async (reason) => {
+    showPrompt("Please provide a reason for editing this LO submission:", async (reason: string) => {
       try {
         const res = await fetch(`/api/lo/${loId}/request-edit`, {
           method: "POST",
@@ -1155,7 +1155,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRequestDeleteLO = async (loId: number) => {
-    showPrompt("Please provide a reason for deleting this LO entry:", async (comment) => {
+    showPrompt("Please provide a reason for deleting this LO entry:", async (comment: string) => {
       try {
         const res = await fetch(`/api/lo/${loId}/request-delete`, {
           method: "POST",
@@ -2274,7 +2274,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         {/* Content Area */}
         <main style={{ flex: 1, overflow: "auto", padding: activeView === 'RECURRING' ? "0" : "32px", background: t.bg, transition: "all 0.3s ease" }}>
           {activeView === 'RECURRING' && (
-            <RecurringActivities settings={settings} usersList={usersList} showNotification={showNotification} showConfirm={showConfirm} />
+            <RecurringActivities settings={settings} usersList={usersList} showNotification={showNotification} showConfirm={showConfirm} showPrompt={showPrompt} />
           )}
 
           {activeView !== 'RECURRING' && (

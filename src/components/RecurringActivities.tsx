@@ -49,7 +49,7 @@ type StagingTask = {
   freqLabel?: string | null;
 };
 
-export default function RecurringActivities({   settings, usersList = [] , showNotification , showConfirm }: { settings: any; usersList: any[] ; showNotification: any;  showConfirm: any; }) {
+export default function RecurringActivities({   settings, usersList = [] , showNotification , showConfirm, showPrompt }: { settings: any; usersList: any[] ; showNotification: any;  showConfirm: any; showPrompt: any; }) {
   const [activeSubTab, setActiveSubTab] = useState<'STAGING' | 'MASTER' | 'D'>('STAGING');
   const [templates, setTemplates] = useState<RecurringTemplate[]>([]);
   const [stagingTasks, setStagingTasks] = useState<StagingTask[]>([]);
@@ -323,7 +323,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   };
 
   const handleStopTemplate = async (id: number) => {
-    showPrompt("Enter the effective Stop Date (YYYY-MM-DD):", async (stopDate) => {
+    showPrompt("Enter the effective Stop Date (YYYY-MM-DD):", async (stopDate: string) => {
       try {
         await fetch(`/api/recurring-templates/${id}`, {
           method: "PATCH",
