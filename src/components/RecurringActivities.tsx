@@ -323,19 +323,19 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   };
 
   const handleStopTemplate = async (id: number) => {
-    const stopDate = prompt("Enter the effective Stop Date (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-    if (!stopDate) return;
-
-    try {
-      await fetch(`/api/recurring-templates/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isStopped: true, stopDate: stopDate, isActive: false })
-      });
-      fetchTemplates();
-    } catch (err) {
-      console.error("Stop error:", err);
-    }
+    showPrompt("Enter the effective Stop Date (YYYY-MM-DD):", async (stopDate) => {
+      try {
+        await fetch(`/api/recurring-templates/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isStopped: true, stopDate: stopDate, isActive: false })
+        });
+        fetchTemplates();
+        showNotification("Template stopped successfully.");
+      } catch (err) {
+        console.error("Stop error:", err);
+      }
+    }, new Date().toISOString().split('T')[0]);
   };
 
   const handleDeleteTemplate = async (id: number) => {

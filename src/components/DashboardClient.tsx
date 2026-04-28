@@ -113,6 +113,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | null }>({ message: "", type: null });
   const [confirmState, setConfirmState] = useState<{ message: string; onConfirm: () => void; isOpen: boolean }>({ message: "", onConfirm: () => {}, isOpen: false });
+  const [promptState, setPromptState] = useState<{ message: string; defaultValue: string; onConfirm: (val: string) => void; isOpen: boolean }>({ message: "", defaultValue: "", onConfirm: () => {}, isOpen: false });
+  const [promptValue, setPromptValue] = useState("");
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
@@ -121,6 +123,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   const showConfirm = (message: string, onConfirm: () => void) => {
     setConfirmState({ message, onConfirm, isOpen: true });
+  };
+
+  const showPrompt = (message: string, onConfirm: (val: string) => void, defaultValue: string = "") => {
+    setPromptValue(defaultValue);
+    setPromptState({ message, defaultValue, onConfirm, isOpen: true });
   };
 
   const [showForm, setShowForm] = useState(false);
@@ -864,29 +871,31 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleResetUserPassword = async (userId: number, userName: string) => {
-    const newPassword = prompt(`Enter new password for ${userName}:`);
-    if (!newPassword || newPassword.trim().length < 6) {
-      if (newPassword !== null) showNotification("Password must be at least 6 characters.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/users/${userId}/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword: newPassword.trim() })
-      });
-
-      if (res.ok) {
-        showNotification(`Password for ${userName} has been reset successfully!`);
-      } else {
-        const data = await res.json();
-        showNotification(`Error: ${data.error || "Failed to reset password"}`);
+    showPrompt(`Enter new password for ${userName}:`, async (newPassword) => {
+      if (!newPassword || newPassword.trim().length < 6) {
+        showNotification("Password must be at least 6 characters.", "error");
+        return;
       }
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      showNotification("Network error. Failed to reset password.");
-    }
+      setPasswordLoading(true);
+      try {
+        const res = await fetch(`/api/users/${userId}/reset-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newPassword: newPassword.trim() })
+        });
+        if (res.ok) {
+          showNotification(`Password for ${userName} reset successfully!`);
+        } else {
+          const data = await res.json();
+          showNotification(`Error: ${data.error || "Failed to reset password"}`, "error");
+        }
+      } catch (error) {
+        console.error("Error resetting password:", error);
+        showNotification("Network error. Failed to reset password.", "error");
+      } finally {
+        setPasswordLoading(false);
+      }
+    }, "Intellicar@123");
   };
 
   const handleApproveUser = async (id: string) => {
@@ -910,24 +919,24 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRejectUser = async (id: string) => {
-    const comment = window.prompt("Please provide a reason for rejecting this access request (this will be emailed to the user):");
-    if (comment === null) return; // User cancelled
-    
-    try {
-      const res = await fetch(`/api/admin/users/${id}/reject`, { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment })
-      });
-      if (res.ok) {
-        showNotification("Request rejected.");
-        fetchUsersList();
-      } else {
-        showNotification("Failed to reject request.");
+    showPrompt("Please provide a reason for rejecting this access request (this will be emailed to the user):", async (comment) => {
+      try {
+        const res = await fetch(`/api/admin/users/${id}/reject`, { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment })
+        });
+        if (res.ok) {
+          showNotification("Request rejected.");
+          fetchUsersList();
+        } else {
+          showNotification("Failed to reject request.", "error");
+        }
+      } catch (error) {
+        console.error("Rejection failed", error);
+        showNotification("An error occurred during rejection.", "error");
       }
-    } catch (error) {
-      console.error("Rejection failed", error);
-    }
+    });
   };
 
   const handleRemoveUser = async (id: string) => {
@@ -1049,44 +1058,42 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRequestDelete = async (taskId: number) => {
-    const comment = window.prompt("Please provide a reason for deleting this task:");
-    if (comment === null) return; // User cancelled
-    
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/request-delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment })
-      });
-      if (res.ok) {
-        showNotification("Deletion request sent to Master Admin successfully.");
-      } else {
-        showNotification("Failed to send deletion request.");
+    showPrompt("Please provide a reason for deleting this task:", async (comment) => {
+      try {
+        const res = await fetch(`/api/tasks/${taskId}/request-delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment })
+        });
+        if (res.ok) {
+          showNotification("Deletion request sent to Master Admin successfully.");
+        } else {
+          showNotification("Failed to send deletion request.");
+        }
+      } catch (error) {
+        console.error("Failed to request delete", error);
       }
-    } catch (error) {
-      console.error("Failed to request delete", error);
-    }
+    });
   };
 
   const handleRequestEdit = async (taskId: number, roleType: 'OWNER' | 'REVIEWER') => {
-    const reason = window.prompt("Please provide a reason for editing this completed task:");
-    if (!reason) return;
-    
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/request-edit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason, requestedBy: roleType })
-      });
-      if (res.ok) {
-        showNotification("Edit request sent to Admin successfully.");
-        fetchTasks();
-      } else {
-        showNotification("Failed to send edit request.");
+    showPrompt("Please provide a reason for editing this completed task:", async (reason) => {
+      try {
+        const res = await fetch(`/api/tasks/${taskId}/request-edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason, requestedBy: roleType })
+        });
+        if (res.ok) {
+          showNotification("Edit request sent to Admin successfully.");
+          fetchTasks();
+        } else {
+          showNotification("Failed to send edit request.");
+        }
+      } catch (error) {
+        console.error("Failed to request edit", error);
       }
-    } catch (error) {
-      console.error("Failed to request edit", error);
-    }
+    });
   };
 
   const handleApproveEdit = async (taskId: number, action: 'APPROVE' | 'REJECT') => {
@@ -1130,39 +1137,39 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleRequestEditLO = async (loId: number) => {
-    const reason = window.prompt("Please provide a reason for editing this LO submission:");
-    if (!reason) return;
-    try {
-      const res = await fetch(`/api/lo/${loId}/request-edit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason })
-      });
-      if (res.ok) {
-        showNotification("Edit request sent to Admin successfully.");
-        fetchLOs();
+    showPrompt("Please provide a reason for editing this LO submission:", async (reason) => {
+      try {
+        const res = await fetch(`/api/lo/${loId}/request-edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason })
+        });
+        if (res.ok) {
+          showNotification("Edit request sent to Admin successfully.");
+          fetchLOs();
+        }
+      } catch (error) {
+        console.error("Failed to request edit for LO", error);
       }
-    } catch (error) {
-      console.error("Failed to request edit for LO", error);
-    }
+    });
   };
 
   const handleRequestDeleteLO = async (loId: number) => {
-    const comment = window.prompt("Please provide a reason for deleting this LO entry:");
-    if (comment === null) return;
-    try {
-      const res = await fetch(`/api/lo/${loId}/request-delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment })
-      });
-      if (res.ok) {
-        showNotification("Deletion request sent to Admin successfully.");
-        fetchLOs();
+    showPrompt("Please provide a reason for deleting this LO entry:", async (comment) => {
+      try {
+        const res = await fetch(`/api/lo/${loId}/request-delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment })
+        });
+        if (res.ok) {
+          showNotification("Deletion request sent to Admin successfully.");
+          fetchLOs();
+        }
+      } catch (error) {
+        console.error("Failed to request delete for LO", error);
       }
-    } catch (error) {
-      console.error("Failed to request delete for LO", error);
-    }
+    });
   };
 
   const handleApproveEditLO = async (loId: number, action: 'APPROVE' | 'REJECT') => {
@@ -6274,6 +6281,64 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               to { opacity: 1; transform: scale(1); }
             }
           `}} />
+        </div>
+      )}
+
+      {promptState.isOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 12000
+        }}>
+          <div style={{
+            background: theme === 'DARK' ? "rgba(30, 41, 59, 0.98)" : "white",
+            padding: "32px", borderRadius: "24px", width: "450px", maxWidth: "90%",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+            border: `1px solid ${t.border}`,
+            animation: "modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+          }}>
+             <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
+               <div style={{ background: "#eff6ff", padding: "10px", borderRadius: "12px" }}>
+                 <MessageSquare size={24} color="#3b82f6" />
+               </div>
+               <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: t.text, margin: 0 }}>Input Required</h3>
+             </div>
+             <p style={{ color: t.textMuted, fontSize: "0.95rem", lineHeight: 1.5, marginBottom: "20px", textAlign: "left" }}>{promptState.message}</p>
+             
+             <textarea 
+               autoFocus
+               value={promptValue}
+               onChange={(e) => setPromptValue(e.target.value)}
+               placeholder="Enter details here..."
+               style={{ 
+                 width: "100%", minHeight: "100px", padding: "16px", borderRadius: "16px", 
+                 border: `1px solid ${t.border}`, background: t.bg, color: t.text,
+                 fontSize: "0.95rem", outline: "none", marginBottom: "24px", resize: "none",
+                 boxShadow: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)"
+               }}
+             />
+
+             <div style={{ display: "flex", gap: "12px" }}>
+               <button 
+                 onClick={() => setPromptState({ ...promptState, isOpen: false })}
+                 style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `1px solid ${t.border}`, background: "transparent", color: t.text, fontWeight: 600, cursor: "pointer" }}
+               >
+                 Cancel
+               </button>
+               <button 
+                 onClick={() => { promptState.onConfirm(promptValue); setPromptState({ ...promptState, isOpen: false }); }}
+                 disabled={!promptValue.trim()}
+                 style={{ 
+                   flex: 1, padding: "12px", borderRadius: "12px", border: "none", 
+                   background: !promptValue.trim() ? t.border : "#3b82f6", color: "white", 
+                   fontWeight: 600, cursor: !promptValue.trim() ? "not-allowed" : "pointer",
+                   boxShadow: !promptValue.trim() ? "none" : "0 4px 12px rgba(59, 130, 246, 0.3)"
+                 }}
+               >
+                 Confirm
+               </button>
+             </div>
+          </div>
         </div>
       )}
   </div>
