@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -2146,7 +2146,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             }}
             title={`Switch to ${theme === 'DARK' ? 'Light' : 'Dark'} Mode`}
           >
-            {theme === 'DARK' ? <Lightbulb size={20} color="#f59e0b" /> : <Clock size={20} color="#64748b" />}
+            {theme === 'DARK' ? <Sun size={20} color="#f59e0b" /> : <Moon size={20} color="#64748b" />}
           </button>
 
           <div style={{ textAlign: "right" }}>
