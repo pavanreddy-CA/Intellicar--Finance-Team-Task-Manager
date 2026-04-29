@@ -2054,8 +2054,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "all 0.3s ease"
       }}>
         {/* Brand Area */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
           <img src="/logo.png" alt="Logo" style={{ height: "40px", width: "auto", objectFit: "contain" }} />
+          <div style={{ height: "24px", width: "1px", background: t.border, opacity: 0.5 }}></div>
+          <div style={{ animation: "fade-in 0.5s ease-out" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#3b82f6", margin: 0, letterSpacing: "-0.01em" }}>
+              {(() => {
+                const hour = new Date().getHours();
+                let g = "Good Evening";
+                if (hour < 12) g = "Good Morning";
+                else if (hour < 17) g = "Good Afternoon";
+                return `${g}, ${user?.name || "User"}`;
+              })()}
+            </h3>
+            <p style={{ margin: "2px 0 0 0", color: t.textMuted, fontSize: "0.7rem", fontWeight: 500 }}>Finance Hub • Welcome back!</p>
+          </div>
         </div>
 
         {/* Global Actions Area */}
@@ -6279,6 +6292,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             @keyframes modal-pop {
               from { opacity: 0; transform: scale(0.9); }
               to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes fade-in {
+              from { opacity: 0; transform: translateY(-5px); }
+              to { opacity: 1; transform: translateY(0); }
             }
           `}} />
         </div>
