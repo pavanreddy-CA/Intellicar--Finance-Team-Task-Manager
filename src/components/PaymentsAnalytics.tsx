@@ -512,9 +512,10 @@ export default function PaymentsAnalytics({
                       stroke="none"
                       animationBegin={500}
                       animationDuration={1500}
+                      cornerRadius={10}
                     >
                       {stats.pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} cornerRadius={10} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
