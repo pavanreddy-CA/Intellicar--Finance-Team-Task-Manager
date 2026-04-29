@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit2, CheckCircle2, AlertTriangle, Calendar, Users, Briefcase, Filter, Search, ChevronRight, ListChecks, StopCircle, Download, Share2, FileText, Table as TableIcon, Eye, EyeOff, ArrowUp, ArrowDown, ChevronDown, Mail, X, FileSpreadsheet, Send, Wallet, ArrowRight } from "lucide-react";
+import { Plus, Trash2, Edit2, CheckCircle2, AlertTriangle, Calendar, Users, Briefcase, Filter, Search, ChevronRight, ListChecks, StopCircle, Download, Share2, FileText, Table as TableIcon, Eye, EyeOff, ArrowUp, ArrowDown, ChevronDown, Mail, X, FileSpreadsheet, Send, Wallet, ArrowRight, TrendingUp } from "lucide-react";
+import PaymentsAnalytics from "./PaymentsAnalytics";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -53,7 +54,7 @@ interface PaymentOccurrence {
 import { resolveTaskName, getPeriodKey, getOccurrencesBetween } from "@/lib/recurringUtils";
 
 export default function PaymentsCalendar({   user, isAdmin, t, theme, settings , showNotification , showConfirm }: { user: any; isAdmin: boolean; t: any; theme: string; settings: any ; showNotification: any;  showConfirm: any; }) {
-  const [activeTab, setActiveTab] = useState<'TRACKER' | 'MASTER'>('TRACKER');
+  const [activeTab, setActiveTab] = useState<'TRACKER' | 'MASTER' | 'ANALYTICS'>('TRACKER');
   const [templates, setTemplates] = useState<PaymentTemplate[]>([]);
   const [occurrences, setOccurrences] = useState<PaymentOccurrence[]>([]);
   const [loading, setLoading] = useState(true);
@@ -670,6 +671,12 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           >
             Payments Master Sheet
           </button>
+          <button 
+            onClick={() => setActiveTab('ANALYTICS')}
+            style={{ padding: "8px 16px", borderRadius: "8px", border: "none", background: activeTab === 'ANALYTICS' ? "#2563eb" : "transparent", color: activeTab === 'ANALYTICS' ? "white" : t.textMuted, fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <TrendingUp size={16} /> Analytics
+          </button>
         </div>
       </div>
 
@@ -883,7 +890,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             </table>
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'MASTER' ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           {/* Master Actions */}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -941,6 +948,16 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             </table>
           </div>
         </div>
+      ) : (
+        <PaymentsAnalytics 
+          user={user} 
+          theme={theme} 
+          t={t} 
+          settings={settings} 
+          trackerOccurrences={occurrences} 
+          showNotification={showNotification}
+          showConfirm={showConfirm}
+        />
       )}
 
       {/* Setup Form Modal */}
