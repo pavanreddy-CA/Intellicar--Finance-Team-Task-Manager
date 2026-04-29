@@ -4708,11 +4708,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <div style={{ overflowX: "auto" }}>
                           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
                             <thead>
-                              <tr style={{ borderBottom: "1px solid #f1f5f9", textAlign: "left" }}>
-                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600 }}>Name</th>
-                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600 }}>Email</th>
-                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600 }}>Requested Dept</th>
-                                <th style={{ padding: "12px 16px", color: t.textMuted, fontWeight: 600, textAlign: "right" }}>Actions</th>
+                              <tr style={{ background: "#1e293b" }}>
+                                <th style={{ padding: "12px 16px", color: "white", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>Name</th>
+                                <th style={{ padding: "12px 16px", color: "white", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>Email</th>
+                                <th style={{ padding: "12px 16px", color: "white", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>Requested Dept</th>
+                                <th style={{ padding: "12px 16px", color: "white", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6", textAlign: "right" }}>Actions</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -5866,10 +5866,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: t.bg }}>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>Department</th>
+                                <tr style={{ background: "#1e293b" }}>
+                                  <th style={{ padding: "12px 16px", textAlign: "left", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>Department</th>
                                   {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map((module: string) => (
-                                    <th key={module} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>{module}</th>
+                                    <th key={module} style={{ padding: "12px 16px", textAlign: "center", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>{module}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -5926,9 +5926,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: t.bg }}>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>Finance Function</th>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>Authorized Allocator</th>
+                                <tr style={{ background: "#1e293b" }}>
+                                  <th style={{ padding: "12px 16px", textAlign: "left", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>Finance Function</th>
+                                  <th style={{ padding: "12px 16px", textAlign: "left", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>Authorized Allocator</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -6015,11 +6015,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: t.bg }}>
-                                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>User Name / Email</th>
-                                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: "#2563eb", fontSize: "0.7rem", textTransform: "uppercase", background: "#eff6ff" }}>Consolidated (ALL)</th>
+                                <tr style={{ background: "#1e293b" }}>
+                                  <th style={{ padding: "12px 16px", textAlign: "left", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>User Name / Email</th>
+                                  <th style={{ padding: "12px 16px", textAlign: "center", color: "#ffffff", fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", background: "#1e40af", borderBottom: "2px solid #60a5fa" }}>Consolidated (ALL)</th>
                                   {settings.masterEntities.split(',').filter(e => e.trim()).map(entity => (
-                                    <th key={entity} style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #e2e8f0", color: t.textMuted, fontSize: "0.7rem", textTransform: "uppercase" }}>{entity.trim()}</th>
+                                    <th key={entity} style={{ padding: "12px 16px", textAlign: "center", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #3b82f6" }}>{entity.trim()}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -6130,10 +6130,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                               <thead>
-                                <tr style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)" }}>
-                                  <th style={{ padding: "16px", textAlign: "left", color: "#ffffff", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>User & Department</th>
+                                <tr style={{ background: "#1e293b" }}>
+                                  <th style={{ padding: "14px 20px", textAlign: "left", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "2px solid #3b82f6" }}>User & Department</th>
                                   {['Home', 'Tasks', 'Requests', 'Learning', 'Recurring Activities', 'Payments'].map(module => (
-                                    <th key={module} style={{ padding: "16px", textAlign: "center", color: "#ffffff", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>{module}</th>
+                                    <th key={module} style={{ padding: "14px 20px", textAlign: "center", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "2px solid #3b82f6" }}>{module}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -6646,14 +6646,14 @@ function StatusPill({ status, type, taskId, onUpdate, disabled, t }: { status: s
 // Styles
 
 const getThStyle = (t: any) => ({
-  background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
+  background: "#1e293b",
   color: "#ffffff",
-  padding: "20px 24px",
+  padding: "14px 24px",
   fontWeight: 700,
-  fontSize: "0.75rem",
+  fontSize: "0.7rem",
   textTransform: "uppercase" as const,
   letterSpacing: "0.1em",
-  borderBottom: "1px solid rgba(255,255,255,0.1)",
+  borderBottom: "2px solid #3b82f6",
   whiteSpace: "nowrap" as const,
 });
 
