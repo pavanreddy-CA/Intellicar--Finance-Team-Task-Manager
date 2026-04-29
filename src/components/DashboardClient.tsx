@@ -259,6 +259,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [showExtReqForm, setShowExtReqForm] = useState(false);
   const [extReqFilter, setExtReqFilter] = useState<'ALL' | 'ALLOCATION' | 'PROCESS' | 'PROCESSED' | 'REJECTED' | 'CONVERT_PENDING'>('ALL');
   const [extReqSearch, setExtReqSearch] = useState("");
+  const [matrixDeptFilter, setMatrixDeptFilter] = useState("ALL");
   const [extReqStatusFilter, setExtReqStatusFilter] = useState("ALL");
   const [loEntityFilter, setLoEntityFilter] = useState("ALL");
   const [loSortConfig, setLoSortConfig] = useState<{ key: keyof LearningOpportunity; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
@@ -6100,14 +6101,29 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <h5 style={{ margin: "0 0 4px 0", fontSize: "1rem", color: t.text }}>Granular User Exceptions</h5>
                               <p style={{ margin: 0, fontSize: "0.875rem", color: t.textMuted }}>Disable specific modules for individual users, even if their department has access.</p>
                             </div>
-                            <div style={{ position: "relative" }}>
-                              <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} />
-                              <input 
-                                type="text" 
-                                placeholder="Search users..." 
-                                onChange={(e) => setExtReqSearch(e.target.value)} 
-                                style={{ padding: "8px 12px 8px 36px", borderRadius: "10px", border: `1px solid ${t.border}`, fontSize: "0.875rem", width: "250px" }}
-                              />
+                            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                              {/* Department Filter */}
+                              <select 
+                                value={matrixDeptFilter}
+                                onChange={(e) => setMatrixDeptFilter(e.target.value)}
+                                style={{ padding: "8px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, fontSize: "0.875rem", background: t.card, color: t.text, cursor: "pointer" }}
+                              >
+                                <option value="ALL">All Departments</option>
+                                {settings.masterDepartments?.split(',').map(d => d.trim()).filter(Boolean).sort().map(dept => (
+                                  <option key={dept} value={dept}>{dept}</option>
+                                ))}
+                              </select>
+
+                              <div style={{ position: "relative" }}>
+                                <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} />
+                                <input 
+                                  type="text" 
+                                  placeholder="Search users..." 
+                                  value={extReqSearch}
+                                  onChange={(e) => setExtReqSearch(e.target.value)} 
+                                  style={{ padding: "8px 12px 8px 36px", borderRadius: "10px", border: `1px solid ${t.border}`, fontSize: "0.875rem", width: "200px", background: t.card, color: t.text }}
+                                />
+                              </div>
                             </div>
                           </div>
 
@@ -6124,6 +6140,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <tbody>
                                 {usersList
                                   .filter(u => !extReqSearch || (u.name || u.email).toLowerCase().includes(extReqSearch.toLowerCase()))
+                                  .filter(u => matrixDeptFilter === 'ALL' || u.department === matrixDeptFilter)
                                   .filter(u => (u as any).isApproved !== false)
                                   .map((u) => {
                                     const accessMatrix = JSON.parse(settings.moduleAccessMatrix || '{}');
