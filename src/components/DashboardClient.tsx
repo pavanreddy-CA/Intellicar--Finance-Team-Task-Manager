@@ -144,6 +144,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [activeMatrixTab, setActiveMatrixTab] = useState<'ACCESS' | 'ALLOCATION' | 'ENTITY' | 'USER_CONTROLS' | ''>('ACCESS');
   const [isTasksMenuOpen, setIsTasksMenuOpen] = useState(false);
   const [activeSubView, setActiveSubView] = useState<'MAIN' | 'OTHER_DEPT'>('MAIN');
+  const [isHydrated, setIsHydrated] = useState(false);
   const [activeMainView, setActiveMainView] = useState<'DASHBOARD' | 'ADMIN_MATRIX'>('DASHBOARD');
   const [settings, setSettings] = useState({
     reminderFrequency: 'D',
@@ -191,8 +192,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [editValue, setEditValue] = useState("");
   const [editingLO, setEditingLO] = useState<LearningOpportunity | null>(null);
 
-  // Universal Navigation Watcher: Auto-collapses sub-menus when switching modules
+  // Universal Navigation Watcher: Persists view state and handles menu auto-collapse
   useEffect(() => {
+    if (!isHydrated) return; // Prevent overwriting localStorage before hydration is complete
+    
     // If we are not in the TASKS or RECURRING views, close the Tasks menu
     if (activeView !== 'TASKS' && activeView !== 'RECURRING') {
       setIsTasksMenuOpen(false);
@@ -201,14 +204,31 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     // Persist active view
     localStorage.setItem('finpulse_active_view', activeView);
     localStorage.setItem('finpulse_active_subview', activeSubView);
-  }, [activeView, activeSubView]);
+    localStorage.setItem('finpulse_active_mainview', activeMainView);
+  }, [activeView, activeSubView, activeMainView, isHydrated]);
 
   // Load persisted view on mount
   useEffect(() => {
-    const savedView = localStorage.getItem('finpulse_active_view');
-    const savedSubView = localStorage.getItem('finpulse_active_subview');
-    if (savedView) setActiveView(savedView as any);
-    if (savedSubView) setActiveSubView(savedSubView as any);
+    // sessionStorage persists across refreshes but is cleared on new tab/login
+    const isSessionActive = sessionStorage.getItem('finpulse_session_active');
+    
+    if (!isSessionActive) {
+      // Fresh Login / New Session: Always start at Home
+      setActiveView('HOME');
+      setActiveSubView('MAIN');
+      setActiveMainView('DASHBOARD');
+      sessionStorage.setItem('finpulse_session_active', 'true');
+    } else {
+      // Browser Refresh: Restore previous state
+      const savedView = localStorage.getItem('finpulse_active_view');
+      const savedSubView = localStorage.getItem('finpulse_active_subview');
+      const savedMainView = localStorage.getItem('finpulse_active_mainview');
+      if (savedView) setActiveView(savedView as any);
+      if (savedSubView) setActiveSubView(savedSubView as any);
+      if (savedMainView) setActiveMainView(savedMainView as any);
+    }
+    
+    setIsHydrated(true);
   }, []);
 
   // Advanced Controls State
@@ -505,6 +525,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   // SMART REDIRECTION LOGIC
   useEffect(() => {
+    // Block redirection until settings are loaded and view is hydrated
+    if (settingsLoading || !isHydrated) return;
+
     if (settings.moduleAccessMatrix && user?.department) {
       const canSeeTasks = isModuleAllowed('Tasks');
       if (!canSeeTasks && activeView === 'TASKS' && activeSubView === 'MAIN') {
@@ -518,7 +541,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         }
       }
     }
-  }, [settings.moduleAccessMatrix, settings.userModuleExceptions, user?.department, activeView, activeSubView]);
+  }, [settingsLoading, isHydrated, settings.moduleAccessMatrix, settings.userModuleExceptions, user?.department, activeView, activeSubView]);
 
   const fetchSettings = async () => {
     try {
@@ -2073,6 +2096,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  if (!isHydrated || settingsLoading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: t.bg, flexDirection: "column", gap: "20px" }}>
+        <style dangerouslySetInnerHTML={{ __html: `@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }` }} />
+        <Activity size={48} color="#2563eb" style={{ animation: "pulse 2s infinite" }} />
+        <p style={{ color: t.textMuted, fontWeight: 500, fontSize: "0.9rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>Initializing Workspace...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: t.bg, color: t.text, overflow: "hidden", transition: "all 0.3s ease" }}>
       {/* Top Navigation Bar (Full Width) */}
@@ -2130,6 +2163,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           
           <button 
             onClick={async () => {
+              // Clear navigation persistence on logout
+              sessionStorage.removeItem('finpulse_session_active');
+              localStorage.removeItem('finpulse_active_view');
+              localStorage.removeItem('finpulse_active_subview');
+              localStorage.removeItem('finpulse_active_mainview');
+              
               await fetch("/api/logout", { method: "POST", credentials: "include" });
               document.cookie = "session-token=; path=/; max-age=0";
               window.location.href = "/login";
