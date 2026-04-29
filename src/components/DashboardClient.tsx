@@ -4639,22 +4639,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <RefreshCw size={18} /> Sync Database Schema
                         </button>
                       </div>
-
-                      <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-                          <Download size={24} color="#10b981" />
-                          <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Bulk Import Tasks</h4>
-                        </div>
-                        <p style={{ fontSize: "0.875rem", color: t.textMuted, marginBottom: "20px" }}>
-                          Download the template and upload your tasks in bulk.
-                        </p>
-                        <button 
-                          onClick={() => { /* Existing logic if any or just a placeholder */ }}
-                          style={{ background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 600 }}
-                        >
-                          Open Bulk Importer
-                        </button>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -5611,6 +5595,29 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         </div>
                       </div>
 
+                      {/* Recurring Import Section */}
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#f5f3ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Repeat size={24} color="#8b5cf6" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Recurring Task Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Master Recurring Template data.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('recurring')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #8b5cf6", background: t.card, color: "#8b5cf6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#8b5cf6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'recurring')} />
+                          </label>
+                        </div>
+                      </div>
+
                       {/* LO Import Section */}
                       <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                         <div style={{ background: "#fef2f2", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -5630,29 +5637,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#ef4444", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
                             <Plus size={14} /> Upload Excel
                             <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'lo')} />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Recurring Import Section */}
-                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-                        <div style={{ background: "#f5f3ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Repeat size={24} color="#8b5cf6" />
-                        </div>
-                        <div>
-                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Recurring Bulk Import</h4>
-                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Master Recurring Template data.</p>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
-                          <button 
-                            onClick={() => downloadBulkTemplate('recurring')}
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #8b5cf6", background: t.card, color: "#8b5cf6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-                          >
-                            <Download size={14} /> Template
-                          </button>
-                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#8b5cf6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
-                            <Plus size={14} /> Upload Excel
-                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'recurring')} />
                           </label>
                         </div>
                       </div>
