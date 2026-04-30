@@ -2501,7 +2501,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         </nav>
 
         {/* Content Area */}
-        <main style={{ flex: 1, overflow: "auto", padding: activeView === 'RECURRING' ? "0" : "32px", background: t.bg, transition: "all 0.3s ease" }}>
+        <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: activeView === 'RECURRING' ? "0" : "32px", background: t.bg, transition: "all 0.3s ease" }}>
           {activeView === 'RECURRING' && (
             <RecurringActivities settings={settings} usersList={usersList} showNotification={showNotification} showConfirm={showConfirm} showPrompt={showPrompt} />
           )}
@@ -2897,7 +2897,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
         {/* Data Table */}
         <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)", overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
-          <div style={{ overflowX: "auto", minWidth: "1600px" }}>
+          <div style={{ minWidth: "1600px" }}>
             <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
               <thead>
                 <tr>
@@ -3503,7 +3503,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
 
               <div style={{ padding: "32px", overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
-                <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: t.bg }}>
                       <th style={{ ...getThStyle(t), width: "50px" }}>Sl No.</th>

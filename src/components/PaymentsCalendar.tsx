@@ -838,7 +838,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
 
           {/* Tracker Table */}
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", overflowY: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
-            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", minWidth: "1500px", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#1e293b" }}>
                   <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('entityName')}>
@@ -1004,7 +1004,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
 
           {/* Master Table */}
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
-            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", minWidth: "1500px", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#1e293b" }}>
                   <th style={thStyle}>Entity</th>

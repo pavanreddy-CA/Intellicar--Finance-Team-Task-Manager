@@ -1038,7 +1038,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
           )}
 
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflowX: "auto", overflowY: "hidden", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)" }} className="custom-scrollbar">
-            <table style={{ width: "100%", minWidth: "1300px", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", minWidth: "1500px", borderCollapse: "collapse" }}>
               <thead style={{ background: "#f8fafc" }}>
                 <tr>
                   <th style={{ width: "40px", padding: "12px 16px" }}>
