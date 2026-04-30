@@ -122,6 +122,31 @@ export async function POST(req: NextRequest) {
       const reviewStatus = resolvedReviewer === "Not Applicable" ? "Review Not Required" : "Task Pending From Owner";
       const requestStatus = linkedRequestId ? "Pending" : "Not Applicable";
 
+      // Generate MMYY-XX Display ID
+      const now = new Date();
+      const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+      const yearStr = String(now.getFullYear()).slice(-2);
+      const prefix = `${monthStr}${yearStr}`;
+
+      let displayId = "";
+      try {
+        // Ensure displayId and TaskSequence exist
+        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "displayId" TEXT`;
+        await sql`CREATE TABLE IF NOT EXISTS "TaskSequence" ("monthYear" TEXT PRIMARY KEY, "nextVal" INTEGER DEFAULT 1)`;
+        
+        const sequences = await sql`
+          INSERT INTO "TaskSequence" ("monthYear", "nextVal")
+          VALUES (${prefix}, 1)
+          ON CONFLICT ("monthYear")
+          DO UPDATE SET "nextVal" = "TaskSequence"."nextVal" + 1
+          RETURNING "nextVal"
+        `;
+        const nextVal = sequences[0].nextVal;
+        displayId = `${prefix}-${String(nextVal).padStart(2, '0')}`;
+      } catch (e) {
+        console.error("Display ID generation error", e);
+      }
+
       const parseDate = (d: string) => {
         if (!d) return null;
         const parsed = new Date(d);
@@ -141,12 +166,12 @@ export async function POST(req: NextRequest) {
         INSERT INTO "Task" (
           "taskName", "entityName", "taskType", "departmentName", "requestFrom",
           "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
-          "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "frequency", "createdAt", "updatedAt"
+          "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "frequency", "displayId", "createdAt", "updatedAt"
         )
         VALUES (
           ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
           ${ownerName}, ${resolvedReviewer}, ${parseDate(dueDate)}, ${mailLink || null}, 'Pending',
-          ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, ${data.frequency || null}, NOW(), NOW()
+          ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, ${data.frequency || null}, ${displayId || null}, NOW(), NOW()
         )
         RETURNING *
       `;

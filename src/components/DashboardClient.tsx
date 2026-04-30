@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2 } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -140,7 +140,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [showLOForm, setShowLOForm] = useState(false);
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
-  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA' | 'MASTER_DATA' | 'MATRICES' | 'HOME_HUB'>('ACCOUNT');
+  const [activeOptionsTab, setActiveOptionsTab] = useState<'USERS' | 'MAILS' | 'SCHEDULE' | 'EDIT_REQUESTS' | 'LO_REPORT' | 'ACCOUNT' | 'DATA' | 'MASTER_DATA' | 'MATRICES' | 'HOME_HUB' | 'MASTER_RESET'>('ACCOUNT');
   const [activeMatrixTab, setActiveMatrixTab] = useState<'ACCESS' | 'ALLOCATION' | 'ENTITY' | 'USER_CONTROLS' | ''>('');
   const [isTasksMenuOpen, setIsTasksMenuOpen] = useState(false);
   const [showWorkplaceFlyout, setShowWorkplaceFlyout] = useState(false);
@@ -2883,9 +2883,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
               <thead>
                 <tr>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('id')}>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('displayId')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      ID {taskSortConfig?.key === 'id' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      Task ID {taskSortConfig?.key === 'displayId' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
                   <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
@@ -4169,6 +4169,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                     >
                       Home Hub
                     </button>
+                    <button 
+                      onClick={() => setActiveOptionsTab('MASTER_RESET')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MASTER_RESET' ? "#fee2e2" : "transparent", color: activeOptionsTab === 'MASTER_RESET' ? "#b91c1c" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                    >
+                      <RotateCcw size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Master Reset
+                    </button>
                   </>
                 )}
               </div>
@@ -4247,6 +4253,101 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   </div>
                 )}
 
+                {activeOptionsTab === 'MASTER_RESET' && (
+                  <div style={{ maxWidth: "600px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+                      <div style={{ background: "#fee2e2", padding: "10px", borderRadius: "10px" }}>
+                        <RotateCcw size={24} color="#ef4444" />
+                      </div>
+                      <h3 style={{ margin: 0 }}>Master Reset Protocol</h3>
+                    </div>
+
+                    <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "12px", padding: "24px", marginBottom: "32px" }}>
+                      <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+                        <AlertTriangle color="#f97316" size={20} />
+                        <h4 style={{ margin: 0, color: "#c2410c", fontWeight: 700 }}>Critical Action Required</h4>
+                      </div>
+                      <p style={{ margin: 0, fontSize: "0.875rem", color: "#9a3412", lineHeight: 1.6 }}>
+                        Performing a Master Reset will **permanently delete** all operational data across all modules, including Tasks, Learning Opportunities, Inter-departmental Requests, and Recurring Activities.
+                      </p>
+                      <ul style={{ marginTop: "12px", fontSize: "0.8125rem", color: "#9a3412", paddingLeft: "20px" }}>
+                        <li>All Task transactions will be wiped.</li>
+                        <li>All Recurring Task templates will be cleared.</li>
+                        <li>All ID sequences will be reset to 01.</li>
+                        <li style={{ fontWeight: 700 }}>Master Data (Entities, Depts) and Users will NOT be deleted.</li>
+                      </ul>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                      <div style={{ border: `1px solid ${t.border}`, borderRadius: "12px", padding: "20px" }}>
+                        <h5 style={{ margin: "0 0 12px 0", fontWeight: 700 }}>1. Execute Master Reset</h5>
+                        <p style={{ fontSize: "0.8125rem", color: t.textMuted, marginBottom: "20px" }}>
+                          Use this to clear the database for a fresh start. A snapshot is automatically saved.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            showConfirm("CRITICAL: Are you absolutely sure? This will delete all transactions and reset task IDs. A snapshot will be saved for safety.", async () => {
+                              try {
+                                const res = await fetch("/api/admin/master-reset", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ action: "RESET" })
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                  showNotification(data.message);
+                                  // Refresh everything
+                                  window.location.reload();
+                                } else {
+                                  showNotification(data.message, "error");
+                                }
+                              } catch (e) {
+                                showNotification("Reset failed", "error");
+                              }
+                            });
+                          }}
+                          style={{ background: "#ef4444", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", fontWeight: 600, cursor: "pointer" }}
+                        >
+                          Execute Master Reset
+                        </button>
+                      </div>
+
+                      <div style={{ border: `1px solid ${t.border}`, borderRadius: "12px", padding: "20px", background: "#f8fafc" }}>
+                        <h5 style={{ margin: "0 0 12px 0", fontWeight: 700 }}>2. Reverse Previous Reset</h5>
+                        <p style={{ fontSize: "0.8125rem", color: t.textMuted, marginBottom: "20px" }}>
+                          Accidentally reset? This will restore all data from the most recent snapshot.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            showConfirm("Restore data from the latest snapshot? Current data will be replaced.", async () => {
+                              try {
+                                const res = await fetch("/api/admin/master-reset", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ action: "REVERSE" })
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                  showNotification(data.message);
+                                  // Refresh everything
+                                  window.location.reload();
+                                } else {
+                                  showNotification(data.message, "error");
+                                }
+                              } catch (e) {
+                                showNotification("Restore failed", "error");
+                              }
+                            });
+                          }}
+                          style={{ background: "#0f172a", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", fontWeight: 600, cursor: "pointer" }}
+                        >
+                          Reverse Previous Reset
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {activeOptionsTab === 'SCHEDULE' && (
                   <div>
                     <h3 style={{ margin: "0 0 24px 0" }}>Email Trigger & Schedule</h3>
