@@ -31,6 +31,8 @@ interface PaymentTemplate {
   editRequested?: boolean;
   editApproved?: boolean;
   editRequestReason?: string;
+  deleteRequested?: boolean;
+  deleteRequestReason?: string;
 }
 
 interface PaymentOccurrence {
