@@ -1115,6 +1115,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                         >
                             <option value="excel">Excel Spreadsheet</option>
                             <option value="pdf">PDF Document</option>
+                            <option value="both">Both (Excel & PDF)</option>
                         </select>
                     </div>
                   </div>
@@ -1124,7 +1125,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                     <div>
                       <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>Attachment Ready</p>
                       <p style={{ margin: 0, fontSize: "0.75rem", color: "#0ea5e9" }}>
-                        Conversion report from {dateFilter.from} to {dateFilter.to}
+                        {shareMode === 'MASTER' ? "Master Registry rule definitions" : `Conversion report from ${dateFilter.from} to ${dateFilter.to}`}
                       </p>
                     </div>
                   </div>
