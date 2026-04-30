@@ -1072,7 +1072,6 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                           }}
                           style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
                         />
-                      </div>
                       <button 
                         onClick={() => handleAddEmail('recipients', shareData.recipientInput)}
                         style={{ marginTop: "4px", padding: "4px 12px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#475569", cursor: "pointer" }}
