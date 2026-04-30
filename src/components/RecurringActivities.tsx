@@ -612,7 +612,13 @@ export default function RecurringActivities({   settings, usersList = [] , showN
         const doc = new jsPDF('l', 'mm', 'a4');
         autoTable(doc, {
           head: [['Entity', 'Task Name', 'Freq', 'Owner', 'Start Date']],
-          body: data.map(t => [t.entityName, t.taskNamePattern, t.frequency, t.defaultOwner, t.startDate ? new Date(t.startDate).toLocaleDateString('en-GB') : "--"]),
+          body: data.map(t => [
+            t.entityName, 
+            t.taskNamePattern, 
+            t.frequency, 
+            t.defaultOwner || "--", 
+            t.startDate ? new Date(t.startDate).toLocaleDateString('en-GB') : "--"
+          ]),
           startY: 20
         });
         const buffer = doc.output('arraybuffer');
@@ -1053,19 +1059,26 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                           <X size={14} style={{ cursor: "pointer" }} onClick={() => removeEmail('recipients', idx)} />
                         </div>
                       ))}
-                      <input 
-                        type="text" 
-                        placeholder={shareData.recipients.length === 0 ? "Type email and press Enter..." : ""}
-                        value={shareData.recipientInput}
-                        onChange={e => setShareData({...shareData, recipientInput: e.target.value})}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter' || e.key === ',') {
-                                e.preventDefault();
-                                handleAddEmail('recipients', shareData.recipientInput);
-                            }
-                        }}
-                        style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
-                      />
+                        <input 
+                          type="text" 
+                          placeholder={shareData.recipients.length === 0 ? "Type email..." : ""}
+                          value={shareData.recipientInput}
+                          onChange={e => setShareData({...shareData, recipientInput: e.target.value})}
+                          onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ',') {
+                                  e.preventDefault();
+                                  handleAddEmail('recipients', shareData.recipientInput);
+                              }
+                          }}
+                          style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
+                        />
+                      </div>
+                      <button 
+                        onClick={() => handleAddEmail('recipients', shareData.recipientInput)}
+                        style={{ marginTop: "4px", padding: "4px 12px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#475569", cursor: "pointer" }}
+                      >
+                        Add Recipient
+                      </button>
                     </div>
                   </div>
 
