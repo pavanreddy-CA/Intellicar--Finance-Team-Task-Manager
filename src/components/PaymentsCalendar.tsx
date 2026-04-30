@@ -156,7 +156,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   const [showRequestDeleteMasterModal, setShowRequestDeleteMasterModal] = useState(false);
   const [showRequestEditMasterModal, setShowRequestEditMasterModal] = useState(false);
   const [requestDeleteData, setRequestDeleteData] = useState({ reason: "" });
-  const [requestEditData, setRequestEditData] = useState({ reason: "" });
+  const [requestEditMasterData, setRequestEditMasterData] = useState({ reason: "" });
   const [activeMaster, setActiveMaster] = useState<PaymentTemplate | null>(null);
 
   useEffect(() => {
@@ -458,17 +458,17 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   };
 
   const handleRequestEditMaster = async () => {
-    if (!activeMaster || !requestEditData.reason.trim()) return;
+    if (!activeMaster || !requestEditMasterData.reason.trim()) return;
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/payments/master/${activeMaster.id}/request-edit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: requestEditData.reason })
+        body: JSON.stringify({ reason: requestEditMasterData.reason })
       });
       if (res.ok) {
         setShowRequestEditMasterModal(false);
-        setRequestEditData({ reason: "" });
+        setRequestEditMasterData({ reason: "" });
         fetchInitialData();
         showNotification("Master edit request sent to admin.");
       } else {
@@ -1708,8 +1708,8 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               <p style={{ fontSize: "0.875rem", color: t.textMuted, marginBottom: "16px" }}>This will send a request to the admin to unlock this master template for editing.</p>
               <label style={labelStyle}>Reason for Editing</label>
               <textarea 
-                value={requestEditData.reason}
-                onChange={e => setRequestEditData({ reason: e.target.value })}
+                value={requestEditMasterData.reason}
+                onChange={e => setRequestEditMasterData({ reason: e.target.value })}
                 style={{ ...inputStyle, minHeight: "100px", resize: "none" }}
                 placeholder="e.g. Need to update vendor email or frequency..."
               />
