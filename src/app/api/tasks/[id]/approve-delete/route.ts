@@ -4,9 +4,10 @@ import { getSession } from "@/lib/session";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     const isAdmin = session?.user.email === "pavanreddy@intellicar.in" || session?.user.role === "ADMIN";
 
