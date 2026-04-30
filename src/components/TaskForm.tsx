@@ -143,7 +143,7 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
         entityName: assignments[0].entityName,
         ownerName: assignments[0].ownerName,
         reviewerName: assignments[0].reviewerName
-      } : { ...formData, assignments };
+      } : { ...formData, assignments, requestStatus: "Pending" };
 
       const res = await fetch(url, {
         method: method,

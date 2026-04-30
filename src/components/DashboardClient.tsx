@@ -250,6 +250,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [taskEntityFilter, setTaskEntityFilter] = useState("ALL");
   const [taskOwnerFilter, setTaskOwnerFilter] = useState("ALL");
   const [taskStatusFilter, setTaskStatusFilter] = useState("ALL");
+  const [taskReviewerFilter, setTaskReviewerFilter] = useState("ALL");
   const [taskSortConfig, setTaskSortConfig] = useState<{ key: keyof Task; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
 
   const [loSearchQuery, setLoSearchQuery] = useState("");
@@ -1308,8 +1309,24 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const pendingActionCount = tasks.filter(t => t.taskStatus !== "Completed").length;
-  const pendingReviewCount = tasks.filter(t => t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner").length;
-  const completedCount = tasks.filter(t => t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required")).length;
+  
+  const pendingReviewCount = tasks.filter(t => 
+    t.taskStatus === "Completed" && 
+    (t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner") && 
+    t.reviewerName !== "Not Applicable"
+  ).length;
+
+  const pendingStatusUpdateCount = tasks.filter(t => 
+    t.taskStatus === "Completed" && 
+    (t.reviewStatus === "Completed" || t.reviewerName === "Not Applicable" || t.reviewStatus === "Review Not Required") && 
+    t.requestStatus !== "Processed"
+  ).length;
+
+  const completedCount = tasks.filter(t => 
+    t.taskStatus === "Completed" && 
+    (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required" || t.reviewerName === "Not Applicable") && 
+    t.requestStatus === "Processed"
+  ).length;
 
   // Format date as DD-MM-YYYY
   const formatDate = (date: string | Date | null) => {
@@ -1351,9 +1368,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const filteredTasksToDisplay = tasks.filter(t => {
     // 1. Status Filter (Metric Cards)
     let statusMatch = true;
-    if (activeFilter === 'PENDING_ACTION') statusMatch = t.taskStatus !== "Completed";
-    if (activeFilter === 'PENDING_REVIEW') statusMatch = t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner";
-    if (activeFilter === 'COMPLETED') statusMatch = t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required");
+    if (activeFilter === 'PENDING_ACTION') {
+      statusMatch = t.taskStatus !== "Completed";
+    }
+    if (activeFilter === 'PENDING_REVIEW') {
+      statusMatch = t.taskStatus === "Completed" && (t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner") && t.reviewerName !== "Not Applicable";
+    }
+    if (activeFilter === 'PENDING_STATUS_UPDATE') {
+      statusMatch = t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewerName === "Not Applicable" || t.reviewStatus === "Review Not Required") && t.requestStatus !== "Processed";
+    }
+    if (activeFilter === 'COMPLETED') {
+      statusMatch = t.taskStatus === "Completed" && (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required" || t.reviewerName === "Not Applicable") && t.requestStatus === 'Processed';
+    }
     
     // 2. Date Filter (by createdAt)
     let dateMatch = true;
@@ -1390,6 +1416,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     if (taskEntityFilter !== "ALL" && t.entityName !== taskEntityFilter) dropdownMatch = false;
     if (taskOwnerFilter !== "ALL" && t.ownerName !== taskOwnerFilter) dropdownMatch = false;
     if (taskStatusFilter !== "ALL" && t.taskStatus !== taskStatusFilter) dropdownMatch = false;
+    if (taskReviewerFilter !== "ALL" && t.reviewerName !== taskReviewerFilter) dropdownMatch = false;
     
     // 5. Task Type Filter
     const isActuallyExternal = !!t.linkedRequestId && t.departmentName !== "Finance";
@@ -1419,6 +1446,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const uniqueTaskEntities = Array.from(new Set(tasks.map(t => t.entityName))).sort();
   const uniqueTaskOwners = Array.from(new Set(tasks.map(t => t.ownerName))).sort();
   const uniqueTaskStatuses = Array.from(new Set(tasks.map(t => t.taskStatus))).sort();
+  const uniqueTaskReviewers = Array.from(new Set(tasks.map(t => t.reviewerName).filter(r => r && r !== "Not Applicable"))).sort();
 
   // Learning Opportunity Filtering and Sorting
   const filteredLOsToDisplay = los.filter(lo => {
@@ -2576,11 +2604,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           </div>
         ) : activeView === 'TASKS' ? (
           activeSubView === 'MAIN' ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px", marginBottom: "32px" }}>
-              <MetricCard t={t} title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={24} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
-              <MetricCard t={t} title="Pending Action" value={pendingActionCount} icon={<Clock size={24} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
-              <MetricCard t={t} title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={24} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
-              <MetricCard t={t} title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={24} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "32px" }}>
+              <MetricCard t={t} title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={20} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
+              <MetricCard t={t} title="Pending Tasks" value={pendingActionCount} icon={<Clock size={20} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
+              <MetricCard t={t} title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={20} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
+              <MetricCard t={t} title="Pending Status Update" value={pendingStatusUpdateCount} icon={<Share2 size={20} color="#ffffff" />} bg="linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)" isActive={activeFilter === 'PENDING_STATUS_UPDATE'} onClick={() => setActiveFilter('PENDING_STATUS_UPDATE')} />
+              <MetricCard t={t} title="Fully Completed" value={completedCount} icon={<CheckCircle2 size={20} color="#ffffff" />} bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" isActive={activeFilter === 'COMPLETED'} onClick={() => setActiveFilter('COMPLETED')} />
             </div>
           ) : null
         ) : activeView === 'LOS' ? (
@@ -2621,9 +2650,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         {activeView === 'TASKS' && activeSubView === 'MAIN' && (
           <div className="main-tasks-view">
         {/* Action Toolbar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
-          
-          {/* Date Filter */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", background: t.card, padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", flexWrap: "wrap" }}>
             <span style={{ fontSize: "0.875rem", fontWeight: 500, color: t.textMuted }}>Filter by Date:</span>
             <select
@@ -2665,6 +2692,74 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 )}
               </>
             )}
+          </div>
+          
+          <div className="download-container" style={{ position: "relative" }}>
+              <button 
+                onClick={() => setShowTaskDownloadDropdown(!showTaskDownloadDropdown)}
+                style={{ 
+                  display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
+                  padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
+                  cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" 
+                }} 
+                onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
+              >
+                <Download size={18} color="#2563eb" /> Download Report
+              </button>
+              
+              {showTaskDownloadDropdown && (
+                <div style={{ 
+                  position: "absolute", top: "100%", right: 0, marginTop: "8px", 
+                  background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
+                  minWidth: "160px", overflow: "hidden" 
+                }}>
+                  <button 
+                    onClick={() => { exportToExcel(); setShowTaskDownloadDropdown(false); }}
+                    style={{ 
+                      width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                      padding: "12px 16px", border: "none", background: t.card, 
+                      color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
+                      textAlign: "left", transition: "background 0.2s" 
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
+                    onMouseOut={e => e.currentTarget.style.background = "white"}
+                  >
+                    <FileSpreadsheet size={16} color="#166534" /> Excel Format
+                  </button>
+                  <button 
+                    onClick={() => { exportToPDF(); setShowTaskDownloadDropdown(false); }}
+                    style={{ 
+                      width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                      padding: "12px 16px", border: "none", background: t.card, 
+                      color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
+                      textAlign: "left", transition: "background 0.2s" 
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
+                    onMouseOut={e => e.currentTarget.style.background = "white"}
+                  >
+                    <FileText size={16} color="#991b1b" /> PDF Document
+                  </button>
+                  <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
+                  <button 
+                    onClick={() => { 
+                      setShareData({...shareData, type: 'task', format: 'excel', subject: `Task Report - ${new Date().toISOString().split('T')[0]}`});
+                      setShowShareModal(true); 
+                      setShowTaskDownloadDropdown(false); 
+                    }}
+                    style={{ 
+                      width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                      padding: "12px 16px", border: "none", background: t.card, 
+                      color: "#2563eb", cursor: "pointer", fontSize: "0.875rem", 
+                      textAlign: "left", transition: "background 0.2s", fontWeight: 600
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
+                    onMouseOut={e => e.currentTarget.style.background = "white"}
+                  >
+                    <Share2 size={16} color="#2563eb" /> Share via Email
+                  </button>
+                </div>
+              )}
           </div>
         </div>
           
@@ -2715,6 +2810,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </select>
 
               <select 
+                value={taskReviewerFilter} 
+                onChange={e => setTaskReviewerFilter(e.target.value)}
+                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
+              >
+                <option value="ALL">All Reviewers</option>
+                {uniqueTaskReviewers.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+
+              <select 
                 value={taskTypeFilter} 
                 onChange={e => setTaskTypeFilter(e.target.value as any)}
                 style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted, fontWeight: 600 }}
@@ -2738,73 +2842,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
             </div>
               
-            <div className="download-container" style={{ display: "flex", gap: "8px", marginLeft: "auto", position: "relative" }}>
-                <button 
-                  onClick={() => setShowTaskDownloadDropdown(!showTaskDownloadDropdown)}
-                  style={{ 
-                    display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
-                    padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
-                    cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" 
-                  }} 
-                  onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
-                >
-                  <Download size={18} color="#2563eb" /> Download Report
-                </button>
-                
-                {showTaskDownloadDropdown && (
-                  <div style={{ 
-                    position: "absolute", top: "100%", right: 0, marginTop: "8px", 
-                    background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
-                    minWidth: "160px", overflow: "hidden" 
-                  }}>
-                    <button 
-                      onClick={() => { exportToExcel(); setShowTaskDownloadDropdown(false); }}
-                      style={{ 
-                        width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                        padding: "12px 16px", border: "none", background: t.card, 
-                        color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
-                        textAlign: "left", transition: "background 0.2s" 
-                      }}
-                      onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
-                      onMouseOut={e => e.currentTarget.style.background = "white"}
-                    >
-                      <FileSpreadsheet size={16} color="#166534" /> Excel Format
-                    </button>
-                    <button 
-                      onClick={() => { exportToPDF(); setShowTaskDownloadDropdown(false); }}
-                      style={{ 
-                        width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                        padding: "12px 16px", border: "none", background: t.card, 
-                        color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
-                        textAlign: "left", transition: "background 0.2s" 
-                      }}
-                      onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
-                      onMouseOut={e => e.currentTarget.style.background = "white"}
-                    >
-                      <FileText size={16} color="#991b1b" /> PDF Document
-                    </button>
-                    <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
-                    <button 
-                      onClick={() => { 
-                        setShareData({...shareData, type: 'task', format: 'excel', subject: `Task Report - ${new Date().toISOString().split('T')[0]}`});
-                        setShowShareModal(true); 
-                        setShowTaskDownloadDropdown(false); 
-                      }}
-                      style={{ 
-                        width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                        padding: "12px 16px", border: "none", background: t.card, 
-                        color: "#2563eb", cursor: "pointer", fontSize: "0.875rem", 
-                        textAlign: "left", transition: "background 0.2s", fontWeight: 600
-                      }}
-                      onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
-                      onMouseOut={e => e.currentTarget.style.background = "white"}
-                    >
-                      <Mail size={16} color="#2563eb" /> Share via Email
-                    </button>
-                  </div>
-                )}
-            </div>
           </div>
 
         {/* Data Table */}
@@ -2926,23 +2963,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                           <span style={{ padding: "4px 8px", background: t.bg, borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>
                             {task.taskType}
                           </span>
-                          {(isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && task.linkedRequestId && (
-                            task.transferStatus === 'T' ? (
-                              <span 
-                                title={`Transferred Request (Original: ${task.originalRequestType || 'Unknown'})`}
-                                style={{ cursor: "help", fontSize: "1rem" }}
-                              >
-                                🔴
-                              </span>
-                            ) : (
-                              <span 
-                                title="Original Request"
-                                style={{ cursor: "help", fontSize: "1rem" }}
-                              >
-                                🟢
-                              </span>
-                            )
-                          )}
                         </div>
                       </td>
                       <td style={getTdStyle(t)}>
@@ -3131,9 +3151,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             }}>
                               {task.requestStatus || "Pending"}
                             </span>
-                            {task.requestStatus !== 'Processed' && 
-                             (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required') && 
-                             isCurrentUserOwner && (
+                            {task.taskStatus === 'Completed' && task.requestStatus !== 'Processed' && 
+                             (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required' || task.reviewerName === 'Not Applicable') && 
+                             (isCurrentUserOwner || isAdmin) && (
                               <button 
                                 onClick={async () => {
                                   // Update Task
@@ -3178,21 +3198,46 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               </button>
                            )}
 
-                             <button 
-                               onClick={() => handleRequestDelete(task.id)}
-                               disabled={task.deleteRequested}
-                               style={{ 
-                                 background: task.deleteRequested ? "#e2e8f0" : "#fef2f2", 
-                                 color: task.deleteRequested ? "#94a3b8" : "#ef4444", 
-                                 border: task.deleteRequested ? "1px solid #cbd5e1" : "1px solid #fca5a5", 
-                                 cursor: task.deleteRequested ? "not-allowed" : "pointer", 
-                                 padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
-                               }}
-                               title={task.deleteRequested ? "Delete Pending" : "Request Delete"}
-                             >
-                               {task.deleteRequested ? "Requested" : "Del Req"}
-                             </button>
-                             {(!isAdmin && !task.editApproved) && (
+                             {isAdmin ? (
+                               <button 
+                                 onClick={() => {
+                                   showConfirm(`Are you sure you want to delete "${task.taskName}"?`, async () => {
+                                      const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
+                                      if (res.ok) {
+                                        setTasks(tasks.filter(t => t.id !== task.id));
+                                        showNotification("Task deleted successfully.");
+                                      } else {
+                                        showNotification("Failed to delete task.", "error");
+                                      }
+                                   });
+                                 }}
+                                 style={{ 
+                                   background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", 
+                                   cursor: "pointer", padding: "4px 8px", borderRadius: "6px", 
+                                   fontSize: "0.75rem", fontWeight: 500 
+                                 }}
+                                 title="Delete Task Directly"
+                               >
+                                 Delete
+                               </button>
+                             ) : (isCurrentUserOwner || isCurrentUserReviewer) ? (
+                               <button 
+                                 onClick={() => handleRequestDelete(task.id)}
+                                 disabled={task.deleteRequested}
+                                 style={{ 
+                                   background: task.deleteRequested ? "#e2e8f0" : "#fef2f2", 
+                                   color: task.deleteRequested ? "#94a3b8" : "#ef4444", 
+                                   border: task.deleteRequested ? "1px solid #cbd5e1" : "1px solid #fca5a5", 
+                                   cursor: task.deleteRequested ? "not-allowed" : "pointer", 
+                                   padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
+                                 }}
+                                 title={task.deleteRequested ? "Delete Pending" : "Request Delete"}
+                               >
+                                 {task.deleteRequested ? "Requested" : "Del Req"}
+                               </button>
+                             ) : null}
+
+                             {(!isAdmin && !task.editApproved && (isCurrentUserOwner || isCurrentUserReviewer)) && (
                               <button 
                                 onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
                                 disabled={task.editRequested}
@@ -3208,6 +3253,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                 {task.editRequested ? "Requested" : "Edit Req"}
                               </button>
                              )}
+                            </div>
                            </div>
                       </td>
                     </tr>
