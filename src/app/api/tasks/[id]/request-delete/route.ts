@@ -19,7 +19,7 @@ export async function POST(
       return NextResponse.json({ error: "Reason is required" }, { status: 400 });
     }
 
-    const taskId = parseInt(params.id);
+    const taskId = parseInt(id);
     const sql = getDb();
 
     // Update task with delete request info

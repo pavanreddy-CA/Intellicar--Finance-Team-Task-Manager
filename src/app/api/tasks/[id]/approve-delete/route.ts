@@ -15,7 +15,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const taskId = parseInt(params.id);
+    const taskId = parseInt(id);
     const sql = getDb();
 
     // Permanently delete the task
