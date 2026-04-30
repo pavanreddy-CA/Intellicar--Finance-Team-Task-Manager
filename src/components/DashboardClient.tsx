@@ -4276,6 +4276,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <li>All Recurring Task templates will be cleared.</li>
                         <li>All ID sequences will be reset to 01.</li>
                         <li style={{ fontWeight: 700 }}>Master Data (Entities, Depts) and Users will NOT be deleted.</li>
+                        <li style={{ fontWeight: 700, color: "#166534" }}>Matrix Module and User-wise Controls will NOT be impacted.</li>
                       </ul>
                     </div>
 
