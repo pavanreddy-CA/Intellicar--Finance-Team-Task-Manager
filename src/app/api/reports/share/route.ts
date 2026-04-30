@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "../../../lib/session";
-import { sendEmail } from "../../../lib/email";
+import { getServerSession } from "@/lib/session";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {

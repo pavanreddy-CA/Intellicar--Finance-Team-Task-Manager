@@ -55,7 +55,7 @@ interface PaymentOccurrence {
   deleteRequestReason?: string;
 }
 
-import { resolveTaskName, getPeriodKey, getOccurrencesBetween, calculateNextDate, formatDate } from "../lib/recurringUtils";
+import { resolveTaskName, getPeriodKey, getOccurrencesBetween, calculateNextDate, formatDate } from "@/lib/recurringUtils";
 
 export default function PaymentsCalendar({   user, isAdmin, t, theme, settings , showNotification , showConfirm }: { user: any; isAdmin: boolean; t: any; theme: string; settings: any ; showNotification: any;  showConfirm: any; }) {
   const [activeTab, setActiveTab] = useState<'TRACKER' | 'MASTER' | 'ANALYTICS'>('TRACKER');
