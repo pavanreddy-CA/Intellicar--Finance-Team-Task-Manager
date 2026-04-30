@@ -605,18 +605,17 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
     }
     setIsSharing(true);
     try {
-      let buffer: ArrayBuffer | Uint8Array;
-      let contentType = "";
-      let attachmentName = "";
-      const dateStr = new Date().toISOString().split('T')[0];
+      const attachments = [];
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
 
-      if (shareData.format === 'excel') {
+      if (shareData.format === 'excel' || shareData.format === 'both') {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Payments");
+        const worksheet = workbook.addWorksheet("Payments Report");
         worksheet.columns = [
           { header: "Entity", key: "entity", width: 20 },
-          { header: "Vendor", key: "vendor", width: 25 },
-          { header: "Description", key: "desc", width: 35 },
+          { header: "Vendor", key: "vendor", width: 30 },
+          { header: "Description", key: "desc", width: 40 },
           { header: "Type", key: "type", width: 15 },
           { header: "Frequency", key: "freq", width: 15 },
           { header: "Due Date", key: "due", width: 15 },
@@ -639,10 +638,16 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
         });
         worksheet.getRow(1).font = { bold: true };
         worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
-        buffer = await workbook.xlsx.writeBuffer();
-        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        attachmentName = `Payments_Report_${dateStr}.xlsx`;
-      } else {
+        const buffer = await workbook.xlsx.writeBuffer();
+        const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+        attachments.push({
+          filename: `Payments_Report_${dateStr}.xlsx`,
+          content: base64,
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+      }
+
+      if (shareData.format === 'pdf' || shareData.format === 'both') {
         const doc = new jsPDF('l', 'mm', 'a4');
         doc.text("Finance Payments Tracker Report", 14, 15);
         const tableData = filteredOccurrences.map(occ => [
@@ -659,15 +664,14 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           theme: 'grid',
           headStyles: { fillColor: [37, 99, 235] }
         });
-        buffer = doc.output('arraybuffer');
-        contentType = 'application/pdf';
-        attachmentName = `Payments_Report_${dateStr}.pdf`;
+        const buffer = doc.output('arraybuffer');
+        const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+        attachments.push({
+          filename: `Payments_Report_${dateStr}.pdf`,
+          content: base64,
+          contentType: 'application/pdf'
+        });
       }
-
-      // Convert buffer to base64
-      const base64Buffer = btoa(
-        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
 
       const res = await fetch("/api/reports/share", {
         method: "POST",
@@ -676,9 +680,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           recipientEmail: recipientTags.join(','),
           ccEmail: ccTags.join(','),
           subject: shareData.subject,
-          attachmentName,
-          attachmentBuffer: base64Buffer,
-          contentType
+          attachments
         })
       });
 
@@ -1398,6 +1400,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   >
                     <option value="excel">Excel Spreadsheet (.xlsx)</option>
                     <option value="pdf">PDF Document (.pdf)</option>
+                    <option value="both">Both (Excel & PDF)</option>
                   </select>
                 </div>
               </div>

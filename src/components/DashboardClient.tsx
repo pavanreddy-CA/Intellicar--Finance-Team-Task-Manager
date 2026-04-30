@@ -183,7 +183,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     ccEmail: '',
     subject: '',
     type: 'task' as 'task' | 'lo' | 'request',
-    format: 'excel' as 'excel' | 'pdf'
+    format: 'excel' as 'excel' | 'pdf' | 'both'
   });
   const [recipientTags, setRecipientTags] = useState<string[]>([]);
   const [ccTags, setCcTags] = useState<string[]>([]);
@@ -2023,123 +2023,38 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
     setShareLoading(true);
     try {
-      let buffer: ArrayBuffer | Uint8Array;
-      let contentType = "";
-      let attachmentName = "";
-      let subject = shareData.subject || `Shared ${shareData.type === 'task' ? 'Task' : shareData.type === 'lo' ? 'LO' : 'Inter-Dept'} Report`;
+      const attachments = [];
+      const now = new Date();
+      const dateSuffix = now.toISOString().split('T')[0];
+      const subject = shareData.subject || `Shared ${shareData.type === 'task' ? 'Task' : shareData.type === 'lo' ? 'LO' : 'Inter-Dept'} Report`;
 
-      if (shareData.type === 'task') {
-        if (shareData.format === 'excel') {
-          // EXTACT LOGIC FROM exportToExcel (Lines 1375-1480)
+      // 1. Generate Excel Attachment if needed
+      if (shareData.format === 'excel' || shareData.format === 'both') {
+        let buffer;
+        let filename;
+        const contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+        if (shareData.type === 'task') {
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet("Tasks");
-          worksheet.mergeCells('A1:Q1');
-          const titleCell = worksheet.getCell('A1');
-          titleCell.value = 'ITPL - Finance Task Management';
-          titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
-          titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-          const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          const now = new Date();
-          const dateStr = `${now.getDate()}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
-          worksheet.mergeCells('A2:Q2');
-          const subCell = worksheet.getCell('A2');
-          subCell.value = `Task Report - As of ${dateStr}`;
-          subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
-          subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; 
-          subCell.alignment = { vertical: 'middle', horizontal: 'center' };
-          worksheet.columns = [{ width: 8 },{ width: 20 },{ width: 45 },{ width: 25 },{ width: 20 },{ width: 20 },{ width: 20 },{ width: 25 },{ width: 18 },{ width: 18 },{ width: 18 },{ width: 25 },{ width: 25 },{ width: 18 },{ width: 40 },{ width: 40 },{ width: 30 }];
-          const headerRow = worksheet.getRow(3);
-          const headers = ['SI No', 'Timestamp', 'Task Name', 'Entity', 'Type', 'Department', 'Requested By', 'Owner', 'Due Date', 'Completion Date', 'Status', 'Reviewer', 'Review Status', 'Review Date', 'Owner Comments', 'Reviewer Comments', 'Mail Link'];
-          headers.forEach((h, i) => {
-            const cell = headerRow.getCell(i + 1);
-            cell.value = h;
-            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-          });
-          sortedTasks.forEach((t, index) => {
-            const row = worksheet.addRow([index + 1, formatDateTime(t.createdAt), t.taskName, t.entityName, t.taskType, t.departmentName, t.requestFrom, t.ownerName, formatDate(t.dueDate), formatDate(t.completionDate), t.taskStatus, t.reviewerName, t.reviewStatus, formatDate(t.reviewCompletionDate), t.ownerComments || "", t.reviewerComments || "", t.mailLink || ""]);
-            row.alignment = { vertical: 'middle', wrapText: true };
-            row.eachCell((cell) => {
-              cell.font = { name: 'Calibri', size: 10 };
-              cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-            });
+          worksheet.addRow(['Shared Tasks Report']);
+          worksheet.addRow(['ID', 'Task Name', 'Entity', 'Target Date', 'Status', 'Owner', 'Reviewer']);
+          sortedTasks.forEach(t => {
+            worksheet.addRow([t.id, t.taskName, t.entityName, formatDate(t.dueDate), t.taskStatus, t.ownerName, t.reviewerName]);
           });
           buffer = await workbook.xlsx.writeBuffer();
-          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-          attachmentName = `Intellicar_Tasks_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-        } else {
-          // EXACT LOGIC FROM exportToPDF (Lines 1574-1605)
-          const doc = new jsPDF('landscape');
-          doc.setFontSize(16);
-          doc.text("Intellicar Finance Task Management - Report", 14, 15);
-          doc.setFontSize(10);
-          doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
-          const tableColumn = ["ID", "Task Name", "Entity", "Owner", "Due Date", "Task Status", "Reviewer", "Rev. Status"];
-          const tableRows = sortedTasks.map(t => [t.id, t.taskName, t.entityName, t.ownerName, formatDate(t.dueDate), t.taskStatus, t.reviewerName || "N/A", t.reviewStatus]);
-          autoTable(doc, { head: [tableColumn], body: tableRows, startY: 28, styles: { fontSize: 8 }, headStyles: { fillColor: [37, 99, 235] } });
-          buffer = doc.output('arraybuffer');
-          contentType = 'application/pdf';
-          attachmentName = `Intellicar_Tasks_Export_${new Date().toISOString().split('T')[0]}.pdf`;
-        }
-      } else if (shareData.type === 'lo') {
-        if (shareData.format === 'excel') {
-          // EXACT LOGIC FROM exportLOsToExcel (Lines 1482-1572)
+          filename = `Tasks_Report_${dateSuffix}.xlsx`;
+        } else if (shareData.type === 'lo') {
           const workbook = new ExcelJS.Workbook();
-          const worksheet = workbook.addWorksheet("LOs");
-          worksheet.mergeCells('A1:K1');
-          const titleCell = worksheet.getCell('A1');
-          titleCell.value = 'ITPL - Learning Opportunities Report';
-          titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
-          titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-          const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          const now = new Date();
-          const dateStr = `${now.getDate()}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
-          worksheet.mergeCells('A2:K2');
-          const subCell = worksheet.getCell('A2');
-          subCell.value = `Consolidated Report (All Entries) - As of ${dateStr}`;
-          subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
-          subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
-          subCell.alignment = { vertical: 'middle', horizontal: 'center' };
-          worksheet.columns = [{ width: 8 },{ width: 20 },{ width: 20 },{ width: 20 },{ width: 45 },{ width: 20 },{ width: 20 },{ width: 45 },{ width: 20 },{ width: 30 },{ width: 40 }];
-          const headerRow = worksheet.getRow(3);
-          const headers = ['SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 'Identified by', 'Commited By', 'Resolution Provided', 'Mode Of Communication', 'Email Sub', 'Comments'];
-          headers.forEach((h, i) => {
-            const cell = headerRow.getCell(i + 1);
-            cell.value = h;
-            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-          });
-          sortedLOs.forEach((lo, index) => {
-            const row = worksheet.addRow([index + 1, formatDateTime(lo.createdAt), lo.entity, formatDate(lo.dateOfIdentification), lo.learningOpportunity, lo.identifiedBy, lo.committedBy, lo.resolutionProvided, lo.modeOfCommunication, lo.emailSub || "Not Applicable", lo.comments || "NA"]);
-            row.alignment = { vertical: 'middle', wrapText: true };
-            row.eachCell((cell) => { cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }; });
+          const worksheet = workbook.addWorksheet("LO Report");
+          worksheet.addRow(['Shared LO Report']);
+          worksheet.addRow(['ID', 'Entity', 'Date', 'Learning Opportunity', 'Identified By', 'Committed By']);
+          sortedLOs.forEach(lo => {
+            worksheet.addRow([lo.id, lo.entity, formatDate(lo.dateOfIdentification), lo.learningOpportunity, lo.identifiedBy, lo.committedBy]);
           });
           buffer = await workbook.xlsx.writeBuffer();
-          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-          attachmentName = `Intellicar_LO_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
-        } else {
-          // EXACT LOGIC FROM exportLOsToPDF (Lines 1700-1738)
-          const doc = new jsPDF('landscape');
-          doc.setFontSize(16);
-          doc.text("Intellicar Learning Opportunities - Report", 14, 15);
-          doc.setFontSize(10);
-          doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
-          const tableColumn = ["ID", "Entity", "Date", "Mistake / LO", "Identified By", "Committed By"];
-          const tableRows = sortedLOs.map(l => [l.id, l.entity, formatDate(l.dateOfIdentification), l.learningOpportunity, l.identifiedBy, l.committedBy]);
-          autoTable(doc, { head: [tableColumn], body: tableRows, startY: 28, styles: { fontSize: 8 }, headStyles: { fillColor: [79, 70, 229] } });
-          buffer = doc.output('arraybuffer');
-          contentType = 'application/pdf';
-          attachmentName = `Intellicar_LO_Report_${new Date().toISOString().split('T')[0]}.pdf`;
-        }
-      } else if (shareData.type === 'request') {
-        if (shareData.format === 'excel') {
-          // EXACT LOGIC FROM exportRequestsToExcel (Lines 1796-1818 in handleShareReport previously)
+          filename = `LO_Report_${dateSuffix}.xlsx`;
+        } else if (shareData.type === 'request') {
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet("Requests");
           worksheet.addRow(['Shared Inter-Dept Requests Report']);
@@ -2152,30 +2067,72 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             worksheet.addRow(row);
           });
           buffer = await workbook.xlsx.writeBuffer();
-          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-          attachmentName = `Requests_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
-        } else {
-          // EXACT LOGIC FROM exportRequestsToPDF (Lines 1820-1843 in handleShareReport previously)
+          filename = `Requests_Report_${dateSuffix}.xlsx`;
+        }
+
+        if (buffer) {
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            reader.readAsDataURL(new Blob([buffer as any]));
+          });
+          attachments.push({ filename, content: base64, contentType });
+        }
+      }
+
+      // 2. Generate PDF Attachment if needed
+      if (shareData.format === 'pdf' || shareData.format === 'both') {
+        let pdfData;
+        let filename;
+        const contentType = 'application/pdf';
+
+        if (shareData.type === 'task') {
+          const doc = new jsPDF('landscape');
+          doc.text("Shared Tasks Report", 14, 15);
+          autoTable(doc, {
+            head: [["ID", "Task Name", "Entity", "Target Date", "Status", "Owner"]],
+            body: sortedTasks.map(t => [t.id, t.taskName, t.entityName, formatDate(t.dueDate), t.taskStatus, t.ownerName]),
+            startY: 20
+          });
+          pdfData = doc.output('arraybuffer');
+          filename = `Tasks_Report_${dateSuffix}.pdf`;
+        } else if (shareData.type === 'lo') {
+          const doc = new jsPDF('landscape');
+          doc.text("Intellicar Learning Opportunities Report", 14, 15);
+          autoTable(doc, {
+            head: [["ID", "Entity", "Date", "Mistake / LO", "Identified By", "Committed By"]],
+            body: sortedLOs.map(l => [l.id, l.entity, formatDate(l.dateOfIdentification), l.learningOpportunity, l.identifiedBy, l.committedBy]),
+            startY: 20
+          });
+          pdfData = doc.output('arraybuffer');
+          filename = `LO_Report_${dateSuffix}.pdf`;
+        } else if (shareData.type === 'request') {
           const doc = new jsPDF('landscape');
           doc.text("Shared Inter-Dept Requests Report", 14, 15);
           const headers = [["ID", "From", "Type", "Nature", "Status"]];
           if (isAdmin) headers[0].push("Origin", "Original Function", "Transferred By");
-          autoTable(doc, { head: headers, body: externalRequests.map(r => { const row = [r.id, r.requestFrom, r.requestType, r.natureOfRequest, r.status]; if (isAdmin) row.push(r.transferStatus === 'T' ? 'Transferred' : 'Original', r.originalRequestType || 'N/A', r.transferredBy || 'N/A'); return row; }), startY: 20 });
-          buffer = doc.output('arraybuffer');
-          contentType = 'application/pdf';
-          attachmentName = `Requests_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+          autoTable(doc, {
+            head: headers,
+            body: externalRequests.map(r => {
+              const row = [r.id, r.requestFrom, r.requestType, r.natureOfRequest, r.status];
+              if (isAdmin) row.push(r.transferStatus === 'T' ? 'Transferred' : 'Original', r.originalRequestType || 'N/A', r.transferredBy || 'N/A');
+              return row;
+            }),
+            startY: 20
+          });
+          pdfData = doc.output('arraybuffer');
+          filename = `Requests_Report_${dateSuffix}.pdf`;
+        }
+
+        if (pdfData) {
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            reader.readAsDataURL(new Blob([pdfData as any]));
+          });
+          attachments.push({ filename, content: base64, contentType });
         }
       }
-
-      // Convert buffer to base64 (Robust browser-compatible method)
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const dataUrl = reader.result as string;
-          resolve(dataUrl.split(',')[1]);
-        };
-        reader.readAsDataURL(new Blob([buffer as any]));
-      });
 
       const res = await fetch("/api/reports/share", {
         method: "POST",
@@ -2184,9 +2141,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           recipientEmail: recipientTags.join(','),
           ccEmail: ccTags.join(','),
           subject,
-          attachmentName,
-          attachmentBuffer: base64,
-          contentType
+          attachments
         })
       });
 
@@ -6611,14 +6566,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               <div style={{ display: "flex", gap: "12px" }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Report Format</label>
-                  <select 
-                    value={shareData.format}
-                    onChange={e => setShareData({...shareData, format: e.target.value as any})}
-                    style={getInputStyle(t)}
-                  >
-                    <option value="excel">Excel Spreadsheet (.xlsx)</option>
-                    <option value="pdf">PDF Document (.pdf)</option>
-                  </select>
+                    <select 
+                      value={shareData.format}
+                      onChange={e => setShareData({...shareData, format: e.target.value as any})}
+                      style={getInputStyle(t)}
+                    >
+                      <option value="excel">Excel Spreadsheet (.xlsx)</option>
+                      <option value="pdf">PDF Document (.pdf)</option>
+                      <option value="both">Both (Excel & PDF)</option>
+                    </select>
                 </div>
               </div>
 
@@ -6633,11 +6589,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               </div>
 
               <div style={{ padding: "16px", background: "#f0f9ff", borderRadius: "12px", border: "1px solid #bae6fd", display: "flex", alignItems: "center", gap: "12px" }}>
-                <FileSpreadsheet size={24} color="#0369a1" />
+                {shareData.format === 'both' ? <FileCode size={24} color="#0369a1" /> : <FileSpreadsheet size={24} color="#0369a1" />}
                 <div>
                   <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>Attachment Info</p>
                   <p style={{ margin: 0, fontSize: "0.75rem", color: "#0ea5e9" }}>
-                    {shareData.type === 'task' ? 'Task Dashboard' : 'LO Dashboard'} Export ({shareData.format.toUpperCase()})
+                    {shareData.type === 'task' ? 'Task Dashboard' : shareData.type === 'lo' ? 'LO Dashboard' : 'Requests'} Export ({shareData.format === 'both' ? 'Both Formats' : shareData.format.toUpperCase()})
                   </p>
                 </div>
               </div>
