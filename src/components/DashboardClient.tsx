@@ -1097,10 +1097,38 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   const handleUpdate = async (taskId: number, field: string, value: string) => {
     try {
+      const task = tasks.find(t => t.id === taskId);
+      const updates: any = { [field]: value };
+      
+      // Intelligent Review Lifecycle Logic
+      if (field === 'reviewerName') {
+        if (value === 'Not Applicable' || value === 'N/A') {
+          updates.reviewStatus = 'Review Not Required';
+        } else if (value) {
+          // If a real reviewer is assigned, determine if task is already done
+          const isFinished = task && (task.taskStatus === 'Completed' || COMPLETION_STATUSES.includes(task.taskStatus) || !!task.completionDate);
+          updates.reviewStatus = isFinished ? 'Pending' : 'Task Pending From Owner';
+        }
+      }
+      
+      if (field === 'taskStatus' || field === 'completionDate') {
+        const newStatus = field === 'taskStatus' ? value : task?.taskStatus;
+        const newDate = field === 'completionDate' ? value : task?.completionDate;
+        const isFinished = newStatus === 'Completed' || COMPLETION_STATUSES.includes(newStatus || '') || !!newDate;
+        
+        if (isFinished && task && task.reviewerName !== 'Not Applicable' && task.reviewerName !== 'N/A' && task.reviewStatus === 'Task Pending From Owner') {
+          updates.reviewStatus = 'Pending';
+        }
+      }
+
+      if (field === 'reviewCompletionDate' && value) {
+        updates.reviewStatus = 'Completed';
+      }
+
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify(updates),
       });
       if (res.ok) {
         fetchTasks();
@@ -3022,7 +3050,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       >
                         {task.taskStatus}
                       </td>
-                      <td style={getTdStyle(t)}>{task.reviewerName === "Not Applicable" ? <span style={{ color: t.textMuted }}>N/A</span> : task.reviewerName}</td>
+                      <td style={getTdStyle(t)}>{(task.reviewerName === "Not Applicable" || !task.reviewerName) ? <span style={{ color: t.textMuted }}>N/A</span> : task.reviewerName}</td>
                       
                       <td 
                         style={{ ...getTdStyle(t), cursor: task.reviewerName === "Not Applicable" || isReviewerLocked || !canEditReviewFields ? "not-allowed" : "pointer", minWidth: "140px" }}
@@ -3054,7 +3082,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                       <td style={getTdStyle(t)}>
                         <StatusPill t={t} 
-                          status={task.reviewerName === "Not Applicable" ? "Review Not Required" : task.reviewStatus} 
+                          status={(task.reviewerName === "Not Applicable" || task.reviewerName === "N/A" || !task.reviewerName) ? "Review Not Required" : task.reviewStatus} 
                           type="review" 
                           taskId={task.id} 
                           onUpdate={handleUpdate} 
