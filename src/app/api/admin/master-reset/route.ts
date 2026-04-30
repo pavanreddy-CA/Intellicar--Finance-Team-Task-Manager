@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       const extReqs = await sql`SELECT * FROM "ExternalRequest"`;
       const sequences = await sql`SELECT * FROM "TaskSequence"`;
       
-      let recurringTasks = [];
+      let recurringTasks: any[] = [];
       try {
         recurringTasks = await sql`SELECT * FROM "RecurringTask"`;
       } catch (e) {}
