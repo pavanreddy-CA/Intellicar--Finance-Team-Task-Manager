@@ -730,37 +730,60 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
 
       if (shareData.format === 'excel' || shareData.format === 'both') {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Payments Report");
-        worksheet.columns = [
-          { header: "Entity", key: "entity", width: 20 },
-          { header: "Vendor", key: "vendor", width: 30 },
-          { header: "Description", key: "desc", width: 40 },
-          { header: "Type", key: "type", width: 15 },
-          { header: "Frequency", key: "freq", width: 15 },
-          { header: "Due Date", key: "due", width: 15 },
-          { header: "Actual Date", key: "actual", width: 15 },
-          { header: "Amount", key: "amount", width: 15 },
-          { header: "Status", key: "status", width: 20 }
-        ];
-        filteredOccurrences.forEach(occ => {
-          worksheet.addRow({
-            entity: occ.entityName,
-            vendor: occ.vendorName,
-            desc: occ.paymentDescription,
-            type: occ.paymentType,
-            freq: occ.frequency,
-            due: new Date(occ.dueDate).toLocaleDateString('en-GB'),
-            actual: occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
-            amount: occ.amountPaid || 0,
-            status: getStatus(occ)
+        const worksheet = workbook.addWorksheet(activeTab === 'MASTER' ? "Master Templates" : "Payments Report");
+        
+        if (activeTab === 'MASTER') {
+          worksheet.columns = [
+            { header: "Entity", key: "entity", width: 20 },
+            { header: "Description", key: "desc", width: 40 },
+            { header: "Vendor", key: "vendor", width: 30 },
+            { header: "Type", key: "type", width: 15 },
+            { header: "Frequency", key: "freq", width: 15 },
+            { header: "Status", key: "status", width: 15 }
+          ];
+          templates.forEach(t => {
+            worksheet.addRow({
+              entity: t.entityName,
+              desc: t.paymentDescription,
+              vendor: t.vendorName,
+              type: t.paymentType,
+              freq: t.frequency,
+              status: t.isStopped ? "STOPPED" : "ACTIVE"
+            });
           });
-        });
+        } else {
+          worksheet.columns = [
+            { header: "Entity", key: "entity", width: 20 },
+            { header: "Vendor", key: "vendor", width: 30 },
+            { header: "Description", key: "desc", width: 40 },
+            { header: "Type", key: "type", width: 15 },
+            { header: "Frequency", key: "freq", width: 15 },
+            { header: "Due Date", key: "due", width: 15 },
+            { header: "Actual Date", key: "actual", width: 15 },
+            { header: "Amount", key: "amount", width: 15 },
+            { header: "Status", key: "status", width: 20 }
+          ];
+          filteredOccurrences.forEach(occ => {
+            worksheet.addRow({
+              entity: occ.entityName,
+              vendor: occ.vendorName,
+              desc: occ.paymentDescription,
+              type: occ.paymentType,
+              freq: occ.frequency,
+              due: new Date(occ.dueDate).toLocaleDateString('en-GB'),
+              actual: occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
+              amount: occ.amountPaid || 0,
+              status: getStatus(occ)
+            });
+          });
+        }
+
         worksheet.getRow(1).font = { bold: true };
         worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
         const buffer = await workbook.xlsx.writeBuffer();
         const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
         attachments.push({
-          filename: `Payments_Report_${dateStr}.xlsx`,
+          filename: `${activeTab === 'MASTER' ? 'Payment_Templates' : 'Payments_Report'}_${dateStr}.xlsx`,
           content: base64,
           contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         });
@@ -768,17 +791,29 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
 
       if (shareData.format === 'pdf' || shareData.format === 'both') {
         const doc = new jsPDF('l', 'mm', 'a4');
-        doc.text("Finance Payments Tracker Report", 14, 15);
-        const tableData = filteredOccurrences.map(occ => [
-          occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency,
-          new Date(occ.dueDate).toLocaleDateString('en-GB'),
-          occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
-          occ.amountPaid ? formatCurrency(occ.amountPaid) : "--",
-          getStatus(occ)
-        ]);
+        doc.text(activeTab === 'MASTER' ? "Payment Master Sheet Report" : "Finance Payments Tracker Report", 14, 15);
+        
+        let head, body;
+        if (activeTab === 'MASTER') {
+          head = [['Entity', 'Description', 'Vendor', 'Type', 'Freq', 'Status']];
+          body = templates.map(t => [
+            t.entityName, t.paymentDescription, t.vendorName, t.paymentType, t.frequency,
+            t.isStopped ? "STOPPED" : "ACTIVE"
+          ]);
+        } else {
+          head = [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status']];
+          body = filteredOccurrences.map(occ => [
+            occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency,
+            new Date(occ.dueDate).toLocaleDateString('en-GB'),
+            occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
+            occ.amountPaid ? formatCurrency(occ.amountPaid) : "--",
+            getStatus(occ)
+          ]);
+        }
+
         autoTable(doc, {
-          head: [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status']],
-          body: tableData,
+          head: head,
+          body: body,
           startY: 20,
           theme: 'grid',
           headStyles: { fillColor: [37, 99, 235] }
@@ -786,7 +821,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
         const buffer = doc.output('arraybuffer');
         const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
         attachments.push({
-          filename: `Payments_Report_${dateStr}.pdf`,
+          filename: `${activeTab === 'MASTER' ? 'Payment_Templates' : 'Payments_Report'}_${dateStr}.pdf`,
           content: base64,
           contentType: 'application/pdf'
         });
@@ -798,7 +833,8 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
         body: JSON.stringify({
           recipientEmail: recipientTags.join(','),
           ccEmail: ccTags.join(','),
-          subject: shareData.subject,
+          subject: shareData.subject || (activeTab === 'MASTER' ? "Finance Payment Master Sheet" : "Finance Payment Tracker Report"),
+          message: `Please find attached the ${activeTab === 'MASTER' ? 'Payment Master Templates' : 'Payments Tracker Report'} for your reference.`,
           attachments
         })
       });
@@ -1134,6 +1170,9 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   </button>
                   <button onClick={handleDownloadMasterPDF} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", borderTop: `1px solid ${t.border}`, background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
                     <FileText size={16} color="#ef4444" /> Download Master PDF
+                  </button>
+                  <button onClick={() => { setShowShareModal(true); setShowMasterDownloadMenu(false); }} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", borderTop: `1px solid ${t.border}`, background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
+                    <Mail size={16} color="#2563eb" /> Share via Email
                   </button>
                 </div>
               )}
