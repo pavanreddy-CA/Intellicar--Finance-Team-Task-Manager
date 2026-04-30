@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Edit2, CheckCircle2, AlertTriangle, Calendar, Users, Briefcase, Filter, Search, ChevronRight, ListChecks, StopCircle, Download, Share2, FileText, Table as TableIcon, Eye, EyeOff, ArrowUp, ArrowDown, ChevronDown, Mail, X, FileSpreadsheet, Send } from "lucide-react";
-import { resolveTaskName, getPeriodKey, isWithinLeadTime, FREQUENCIES, Frequency, getOccurrencesBetween } from "@/lib/recurringUtils";
+import { resolveTaskName, getPeriodKey, isWithinLeadTime, FREQUENCIES, Frequency, getOccurrencesBetween } from "../lib/recurringUtils";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -94,6 +94,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     ccInput: ""
   });
   const [showMasterDownloadDropdown, setShowMasterDownloadDropdown] = useState(false);
+  const [shareMode, setShareMode] = useState<'STAGING' | 'MASTER'>('STAGING');
 
   // Daily Tasks State
   const [dailyDateFilter, setDailyDateFilter] = useState({ 
@@ -450,13 +451,14 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     }
     setShareLoading(true);
     try {
-      const attachments = [];
-      const dateSuffix = dateFilter.from;
+      let buffer: ArrayBuffer | Uint8Array;
+      let contentType = "";
+      let attachmentName = "";
 
-      if (shareData.format === 'excel' || shareData.format === 'both') {
+      if (shareData.format === 'excel') {
         const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet("Recurring Report");
-        sheet.columns = [
+        const worksheet = workbook.addWorksheet('Recurring Report');
+        worksheet.columns = [
           { header: 'Entity', key: 'entityName', width: 25 },
           { header: 'Task Name', key: 'taskName', width: 40 },
           { header: 'Function', key: 'financeFunction', width: 20 },
@@ -467,17 +469,12 @@ export default function RecurringActivities({   settings, usersList = [] , showN
           { header: 'Status', key: 'status', width: 15 }
         ];
         stagingTasks.forEach(task => {
-          sheet.addRow({ ...task, status: task.isConverted ? 'CONVERTED' : 'PENDING' });
+          worksheet.addRow({ ...task, status: task.isConverted ? 'CONVERTED' : 'PENDING' });
         });
-        const buffer = await workbook.xlsx.writeBuffer();
-        attachments.push({
-          filename: `Recurring_Report_${dateSuffix}.xlsx`,
-          content: Buffer.from(buffer).toString('base64'),
-          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        });
-      }
-
-      if (shareData.format === 'pdf' || shareData.format === 'both') {
+        buffer = await workbook.xlsx.writeBuffer();
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        attachmentName = `Recurring_Report_${dateFilter.from}.xlsx`;
+      } else {
         const doc = new jsPDF('l', 'mm', 'a4');
         const tableData = stagingTasks.map(t => [t.entityName, t.taskName, t.financeFunction || '--', t.frequency, t.periodKey, t.dueDate, t.ownerName, t.isConverted ? 'CONVERTED' : 'PENDING']);
         autoTable(doc, {
@@ -485,35 +482,162 @@ export default function RecurringActivities({   settings, usersList = [] , showN
           body: tableData,
           startY: 20
         });
+        buffer = doc.output('arraybuffer');
+        contentType = 'application/pdf';
+        attachmentName = `Recurring_Report_${dateFilter.from}.pdf`;
+      }
+
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(new Blob([buffer as any]));
+      });
+
+      const res = await fetch("/api/reports/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail: shareData.recipients.join(','),
+          ccEmail: shareData.cc.join(','),
+          subject: shareData.subject,
+          attachmentName,
+          attachmentBuffer: base64,
+          contentType
+        })
+      });
+
+      if (res.ok) {
+        showNotification("Report shared successfully via email!");
+        setShowShareModal(false);
+      } else {
+        showNotification("Failed to share report.");
+      }
+    } catch (error) {
+      console.error("Share error", error);
+      showNotification("An error occurred while sharing the report.");
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const exportMasterToExcel = async (data: RecurringTemplate[]) => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Master Registry");
+    worksheet.columns = [
+      { header: "Entity", key: "entityName", width: 25 },
+      { header: "Task Name", key: "taskName", width: 40 },
+      { header: "Frequency", key: "frequency", width: 15 },
+      { header: "Default Owner", key: "defaultOwner", width: 20 },
+      { header: "Start Date", key: "startDate", width: 15 },
+      { header: "Stop Date", key: "stopDate", width: 15 }
+    ];
+    data.forEach(t => {
+      worksheet.addRow({
+        entityName: t.entityName,
+        taskName: t.taskNamePattern,
+        frequency: t.frequency,
+        defaultOwner: t.defaultOwner,
+        startDate: t.startDate ? new Date(t.startDate).toLocaleDateString('en-GB') : "--",
+        stopDate: t.stopDate ? new Date(t.stopDate).toLocaleDateString('en-GB') : "--"
+      });
+    });
+    worksheet.getRow(1).font = { bold: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Recurring_Master_Registry_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportMasterToPDF = (data: RecurringTemplate[]) => {
+    const doc = new jsPDF('l', 'mm', 'a4');
+    doc.text("Recurring Activities - Master Registry", 14, 15);
+    autoTable(doc, {
+      head: [['Entity', 'Task Name', 'Frequency', 'Owner', 'Reviewer', 'Validity']],
+      body: data.map(t => [
+        t.entityName, 
+        t.taskNamePattern, 
+        t.frequency, 
+        t.defaultOwner || "--", 
+        t.defaultReviewer || "--",
+        `${t.startDate ? new Date(t.startDate).toLocaleDateString() : "--"} - ${t.endDate ? new Date(t.endDate).toLocaleDateString() : "Ongoing"}`
+      ]),
+      startY: 20,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: '#1e293b' }
+    });
+    doc.save(`Recurring_Master_Registry_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const handleMasterShareViaEmail = async (data: RecurringTemplate[]) => {
+    if (shareData.recipients.length === 0) {
+      showNotification("Please add at least one recipient email.");
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const attachments = [];
+      const dateSuffix = new Date().toISOString().split('T')[0];
+
+      if (shareData.format === 'excel' || shareData.format === 'both') {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Master Registry");
+        worksheet.columns = [
+          { header: "Entity", key: "entityName", width: 25 },
+          { header: "Task Name", key: "taskName", width: 40 },
+          { header: "Frequency", key: "frequency", width: 15 },
+          { header: "Default Owner", key: "defaultOwner", width: 20 },
+          { header: "Start Date", key: "startDate", width: 15 }
+        ];
+        data.forEach(t => {
+          worksheet.addRow({
+            entityName: t.entityName,
+            taskName: t.taskNamePattern,
+            frequency: t.frequency,
+            defaultOwner: t.defaultOwner,
+            startDate: t.startDate ? new Date(t.startDate).toLocaleDateString('en-GB') : "--"
+          });
+        });
+        const buffer = await workbook.xlsx.writeBuffer();
+        attachments.push({
+          filename: `Master_Registry_${dateSuffix}.xlsx`,
+          content: Buffer.from(buffer).toString('base64'),
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+      }
+
+      if (shareData.format === 'pdf' || shareData.format === 'both') {
+        const doc = new jsPDF('l', 'mm', 'a4');
+        autoTable(doc, {
+          head: [['Entity', 'Task Name', 'Freq', 'Owner', 'Start Date']],
+          body: data.map(t => [t.entityName, t.taskNamePattern, t.frequency, t.defaultOwner, t.startDate ? new Date(t.startDate).toLocaleDateString('en-GB') : "--"]),
+          startY: 20
+        });
         const buffer = doc.output('arraybuffer');
         attachments.push({
-          filename: `Recurring_Report_${dateSuffix}.pdf`,
+          filename: `Master_Registry_${dateSuffix}.pdf`,
           content: Buffer.from(buffer).toString('base64'),
           contentType: 'application/pdf'
         });
       }
 
-      const res = await fetch("/api/send-email", {
+      const res = await fetch("/api/reports/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          to: shareData.recipients,
-          cc: shareData.cc,
-          subject: shareData.subject || "Recurring Task Report",
-          text: `Please find attached the recurring task conversion report.`,
+          recipientEmail: shareData.recipients.join(','),
+          ccEmail: shareData.cc.join(','),
+          subject: shareData.subject || "Master Registry Report",
           attachments
         })
       });
 
       if (res.ok) {
-        showNotification("Email sent successfully!");
+        showNotification("Master Registry shared successfully!");
         setShowShareModal(false);
       } else {
-        showNotification("Failed to send email.");
+        showNotification("Failed to share master registry.");
       }
     } catch (err) {
-      console.error("Share error:", err);
-      showNotification("Error sending email.");
+      console.error("Master share error", err);
+      showNotification("Error sharing master registry.");
     } finally {
       setShareLoading(false);
     }
@@ -655,57 +779,45 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     }
     setShareLoading(true);
     try {
-    const attachments = [];
-    const dateSuffix = dailyDateFilter.from;
-    const data = getDailyOccurrences();
+      let buffer: ArrayBuffer | Uint8Array;
+      let contentType = "";
+      let attachmentName = "";
+      const data = getDailyOccurrences();
 
-    if (shareData.format === 'excel' || shareData.format === 'both') {
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Daily Tasks Report');
-      worksheet.columns = [
-        { header: 'Sl No', key: 'sl', width: 8 },
-        { header: 'Task Details', key: 'taskName', width: 35 },
-        { header: 'Entity', key: 'entityName', width: 25 },
-        { header: 'Task Type', key: 'taskType', width: 15 },
-        { header: 'Owner', key: 'ownerName', width: 20 },
-        { header: 'Reviewer', key: 'reviewerName', width: 20 },
-        { header: 'Target Date', key: 'targetDate', width: 15 },
-        { header: 'Status', key: 'status', width: 15 }
-      ];
-      data.forEach((row, i) => worksheet.addRow({ ...row, sl: i + 1 }));
-      const buffer = await workbook.xlsx.writeBuffer();
+      if (shareData.format === 'excel') {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Daily Tasks Report');
+        worksheet.columns = [
+          { header: 'Sl No', key: 'sl', width: 8 },
+          { header: 'Task Details', key: 'taskName', width: 35 },
+          { header: 'Entity', key: 'entityName', width: 25 },
+          { header: 'Task Type', key: 'taskType', width: 15 },
+          { header: 'Owner', key: 'ownerName', width: 20 },
+          { header: 'Reviewer', key: 'reviewerName', width: 20 },
+          { header: 'Target Date', key: 'targetDate', width: 15 },
+          { header: 'Status', key: 'status', width: 15 }
+        ];
+        data.forEach((row, i) => worksheet.addRow({ ...row, sl: i + 1 }));
+        buffer = await workbook.xlsx.writeBuffer();
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        attachmentName = `Daily_Tasks_Report_${dailyDateFilter.from}.xlsx`;
+      } else {
+        const doc = new jsPDF('l', 'mm', 'a4');
+        autoTable(doc, {
+          head: [['Sl No', 'Task Details', 'Entity', 'Type', 'Owner', 'Reviewer', 'Target Date', 'Status']],
+          body: data.map((r, i) => [i+1, r.taskName, r.entityName, r.taskType, r.ownerName, r.reviewerName, r.targetDate, r.status]),
+        });
+        buffer = doc.output('arraybuffer');
+        contentType = 'application/pdf';
+        attachmentName = `Daily_Tasks_Report_${dailyDateFilter.from}.pdf`;
+      }
+
       const base64 = await new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve((reader.result as string).split(',')[1]);
         reader.readAsDataURL(new Blob([buffer as any]));
       });
-      attachments.push({
-        filename: `Daily_Tasks_Report_${dateSuffix}.xlsx`,
-        content: base64,
-        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      });
-    }
 
-    if (shareData.format === 'pdf' || shareData.format === 'both') {
-      const doc = new jsPDF('l', 'mm', 'a4');
-      autoTable(doc, {
-        head: [['Sl No', 'Task Details', 'Entity', 'Type', 'Owner', 'Reviewer', 'Target Date', 'Status']],
-        body: data.map((r, i) => [i+1, r.taskName, r.entityName, r.taskType, r.ownerName, r.reviewerName, r.targetDate, r.status]),
-      });
-      const buffer = doc.output('arraybuffer');
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(new Blob([buffer as any]));
-      });
-      attachments.push({
-        filename: `Daily_Tasks_Report_${dateSuffix}.pdf`,
-        content: base64,
-        contentType: 'application/pdf'
-      });
-    }
-
-    try {
       const res = await fetch("/api/reports/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -713,7 +825,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
           recipientEmail: shareData.recipients.join(','),
           ccEmail: shareData.cc.join(','),
           subject: shareData.subject || `Daily Tasks Report (${dailyDateFilter.from} to ${dailyDateFilter.to})`,
-          attachments
+          attachmentName,
+          attachmentBuffer: base64,
+          contentType
         })
       });
 
@@ -886,7 +1000,12 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                       </button>
                       <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }} />
                       <button 
-                        onClick={() => { handleShare(); setShowDownloadMenu(false); }}
+                        onClick={() => { 
+                          setShareData({...shareData, subject: "Recurring Task Conversion Report", format: "excel"}); 
+                          setShareMode('STAGING');
+                          setShowShareModal(true); 
+                          setShowDownloadMenu(false); 
+                        }}
                         style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#075985", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}
                         className="hover:bg-slate-50"
                       >
@@ -986,17 +1105,16 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                         >
                             <option value="excel">Excel Spreadsheet</option>
                             <option value="pdf">PDF Document</option>
-                            <option value="both">Both (Excel & PDF)</option>
                         </select>
                     </div>
                   </div>
 
                   <div style={{ padding: "16px", background: "#f0f9ff", borderRadius: "12px", border: "1px solid #bae6fd", display: "flex", alignItems: "center", gap: "12px" }}>
-                    {shareData.format === 'both' ? <FileCode size={24} color="#0369a1" /> : <FileSpreadsheet size={24} color="#0369a1" />}
+                    <FileSpreadsheet size={24} color="#0369a1" />
                     <div>
                       <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>Attachment Ready</p>
                       <p style={{ margin: 0, fontSize: "0.75rem", color: "#0ea5e9" }}>
-                        {shareData.format === 'both' ? "Excel and PDF reports" : (shareData.format === 'excel' ? "Excel Spreadsheet" : "PDF Document")}
+                        Conversion report from {dateFilter.from} to {dateFilter.to}
                       </p>
                     </div>
                   </div>
@@ -1009,7 +1127,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                       Cancel
                     </button>
                     <button 
-                      onClick={handleShareViaEmail}
+                      onClick={shareMode === 'MASTER' ? () => handleMasterShareViaEmail(templates) : handleShareViaEmail}
                       disabled={shareLoading}
                       style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#2563eb", color: "white", fontWeight: 600, cursor: shareLoading ? "not-allowed" : "pointer", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                     >
@@ -1225,48 +1343,53 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                 </button>
                 {showMasterDownloadDropdown && (
                   <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: "200px", background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)", zIndex: 100, padding: "8px" }}>
-                    <button onClick={() => { exportMasterToExcel(); setShowMasterDownloadDropdown(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#166534", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                    <button onClick={() => { exportMasterToExcel(templates); setShowMasterDownloadDropdown(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#166534", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
                       <TableIcon size={18} /> Export to Excel
                     </button>
-                    <button onClick={() => { exportMasterToPDF(); setShowMasterDownloadDropdown(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#991b1b", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                    <button onClick={() => { exportMasterToPDF(templates); setShowMasterDownloadDropdown(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#991b1b", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
                       <FileText size={18} /> Export to PDF
                     </button>
                     <button onClick={() => { 
-                      setShareData({...shareData, subject: "Recurring Master Registry", format: "excel"});
+                      setShareData({
+                        ...shareData, 
+                        subject: "Recurring Master Registry Report", 
+                        format: "excel"
+                      });
+                      setShareMode('MASTER');
                       setShowShareModal(true); 
                       setShowMasterDownloadDropdown(false); 
-                    }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#2563eb", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                    }} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", background: "none", color: "#075985", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
                       <Mail size={18} /> Share via Email
                     </button>
                   </div>
                 )}
               </div>
-              <button 
-                onClick={() => { 
-                  setEditingTemplate(null); 
-                  setTemplateForm({
-                    taskNamePattern: "",
-                    entityName: "",
-                    taskType: "External",
-                    departmentName: "Finance",
-                    financeFunction: "",
-                    frequency: "M",
-                    dayOffset: 15,
-                    monthOffset: 0,
-                    defaultOwner: "",
-                    defaultReviewer: "",
-                    isActive: true,
-                    startDate: new Date().toISOString().split('T')[0],
-                    endDate: ""
-                  });
-                  setShowTemplateForm(true); 
-                }}
-                style={{ padding: "10px 20px", background: "#2563eb", color: "white", borderRadius: "10px", border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
-              >
-                <Plus size={18} /> Add Recurring Task
-              </button>
-            </div>
+            <button 
+              onClick={() => { 
+                setEditingTemplate(null); 
+                setTemplateForm({
+                  taskNamePattern: "",
+                  entityName: "",
+                  taskType: "External",
+                  departmentName: "Finance",
+                  financeFunction: "",
+                  frequency: "M",
+                  dayOffset: 15,
+                  monthOffset: 0,
+                  defaultOwner: "",
+                  defaultReviewer: "",
+                  isActive: true,
+                  startDate: new Date().toISOString().split('T')[0],
+                  endDate: ""
+                });
+                setShowTemplateForm(true); 
+              }}
+              style={{ padding: "10px 20px", background: "#2563eb", color: "white", borderRadius: "10px", border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
+            >
+              <Plus size={18} /> Add Recurring Task
+            </button>
           </div>
+        </div>
 
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflowX: "auto", overflowY: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
             <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
@@ -1718,18 +1841,6 @@ export default function RecurringActivities({   settings, usersList = [] , showN
               <div>
                 <label style={labelStyle}>Subject</label>
                 <input type="text" value={shareData.subject} onChange={e => setShareData({...shareData, subject: e.target.value})} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Format</label>
-                <select 
-                  value={shareData.format}
-                  onChange={e => setShareData({...shareData, format: e.target.value as any})}
-                  style={inputStyle}
-                >
-                  <option value="excel">Excel Spreadsheet</option>
-                  <option value="pdf">PDF Document</option>
-                  <option value="both">Both (Excel & PDF)</option>
-                </select>
               </div>
               <div style={{ display: "flex", gap: "12px" }}>
                 <button onClick={() => setDailyShareModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
