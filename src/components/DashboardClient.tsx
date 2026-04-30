@@ -410,7 +410,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         const allOccurrences = await res.json();
         // Filter for editRequested and map fields for UI consistency
         const requests = allOccurrences
-          .filter((occ: any) => occ.editRequested && !occ.editApproved)
+          .filter((occ: any) => (occ.editRequested && !occ.editApproved) || occ.deleteRequested)
           .map((occ: any) => ({
             ...occ,
             templateVendor: occ.vendorName,
