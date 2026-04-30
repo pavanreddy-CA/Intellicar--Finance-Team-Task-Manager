@@ -1446,7 +1446,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const uniqueTaskEntities = Array.from(new Set(tasks.map(t => t.entityName))).sort();
   const uniqueTaskOwners = Array.from(new Set(tasks.map(t => t.ownerName))).sort();
   const uniqueTaskStatuses = Array.from(new Set(tasks.map(t => t.taskStatus))).sort();
-  const uniqueTaskReviewers = Array.from(new Set(tasks.map(t => t.reviewerName).filter(r => r && r !== "Not Applicable"))).sort();
+  const uniqueTaskReviewers = Array.from(new Set(tasks.map(t => t.reviewerName).filter((r): r is string => !!r && r !== "Not Applicable"))).sort();
 
   // Learning Opportunity Filtering and Sorting
   const filteredLOsToDisplay = los.filter(lo => {
