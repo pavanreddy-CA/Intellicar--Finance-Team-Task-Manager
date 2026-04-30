@@ -89,7 +89,10 @@ export async function POST(req: NextRequest) {
         const keys = Object.keys(data);
         const values = Object.values(data);
         if (keys.length) {
-          await sql.unsafe(`INSERT INTO "RecurringTask" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`, values);
+          const query = `INSERT INTO "RecurringTask" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`;
+          const strings = [query] as any;
+          strings.raw = [query];
+          await (sql as any)(strings, ...values);
         }
       }
 
@@ -98,21 +101,30 @@ export async function POST(req: NextRequest) {
         const { id, ...data } = t;
         const keys = Object.keys(data);
         const values = Object.values(data);
-        await sql.unsafe(`INSERT INTO "Task" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`, values);
+        const query = `INSERT INTO "Task" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`;
+        const strings = [query] as any;
+        strings.raw = [query];
+        await (sql as any)(strings, ...values);
       }
 
       for (const lo of snapshot.los || []) {
         const { id, ...data } = lo;
         const keys = Object.keys(data);
         const values = Object.values(data);
-        await sql.unsafe(`INSERT INTO "LearningOpportunity" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`, values);
+        const query = `INSERT INTO "LearningOpportunity" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`;
+        const strings = [query] as any;
+        strings.raw = [query];
+        await (sql as any)(strings, ...values);
       }
 
       for (const er of snapshot.extReqs || []) {
         const { id, ...data } = er;
         const keys = Object.keys(data);
         const values = Object.values(data);
-        await sql.unsafe(`INSERT INTO "ExternalRequest" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`, values);
+        const query = `INSERT INTO "ExternalRequest" (${keys.map(k => `"${k}"`).join(',')}) VALUES (${values.map((_, i) => `$${i+1}`).join(',')})`;
+        const strings = [query] as any;
+        strings.raw = [query];
+        await (sql as any)(strings, ...values);
       }
 
       // 6. Fix ID Sequences (Very important for future autoincrements)
