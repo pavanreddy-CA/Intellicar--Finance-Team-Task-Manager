@@ -5,7 +5,7 @@ import { getSession } from "@/lib/session";
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.email !== "pavanreddy@intellicar.in") {
+    if (!session || session.user.email !== "pavanreddy@intellicar.in") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
