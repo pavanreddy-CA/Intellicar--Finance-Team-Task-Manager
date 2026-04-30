@@ -151,28 +151,43 @@ export default function PaymentsAnalytics({
   };
 
   const combinedData = useMemo(() => {
-    const trackerPaid = trackerOccurrences
-      .filter(o => o.isPaid)
-      .map(o => ({
+    const trackerData = trackerOccurrences.map(o => {
+      let status = "";
+      if (o.isCancelled) status = "Cancelled";
+      else if (o.isHold) status = "On Hold";
+      else if (o.isPaid) {
+        const due = new Date(o.dueDate); 
+        const actual = new Date(o.actualDate);
+        due.setHours(0,0,0,0); 
+        actual.setHours(0,0,0,0);
+        if (actual.getTime() <= due.getTime()) status = "Paid On Time";
+        else status = "Paid After due date";
+      } else {
+        const due = new Date(o.dueDate); 
+        const today = new Date();
+        due.setHours(0,0,0,0); 
+        today.setHours(0,0,0,0);
+        if (today.getTime() > due.getTime()) status = "Overdue";
+        else status = "Not Yet Due";
+      }
+
+      return {
         id: `tracker-${o.id}`, 
         entity_name: o.entityName, 
         department_name: o.departmentName || 'N/A',
         payment_type: o.paymentType, 
         frequency: o.frequency, 
-        amount: Number(o.amountPaid) || 0,
-        status: (() => {
-          const due = new Date(o.dueDate); const actual = new Date(o.actualDate);
-          due.setHours(0,0,0,0); actual.setHours(0,0,0,0);
-          if (actual.getTime() === due.getTime()) return "Paid on due date";
-          if (actual.getTime() < due.getTime()) return "Paid Before due date";
-          return "Paid After due date";
-        })(),
+        amount: Number(o.isPaid ? o.amountPaid : (o.amount || 0)),
+        status,
         transaction_count: 1, 
-        payment_date: o.actualDate ? new Date(o.actualDate).toISOString().split('T')[0] : o.dueDate, 
-        isTracker: true
-      }));
-    const manual = manualEntries.map(e => ({ ...e, id: `manual-${e.id}`, amount: Number(e.amount), isTracker: false }));
-    return [...trackerPaid, ...manual];
+        payment_date: o.actualDate ? new Date(o.actualDate).toISOString().split('T')[0] : new Date(o.dueDate).toISOString().split('T')[0], 
+        isTracker: true,
+        isPaid: !!o.isPaid
+      };
+    });
+
+    const manual = manualEntries.map(e => ({ ...e, id: `manual-${e.id}`, amount: Number(e.amount), isTracker: false, isPaid: true }));
+    return [...trackerData, ...manual];
   }, [trackerOccurrences, manualEntries]);
 
   const filteredTableData = useMemo(() => {
@@ -226,29 +241,35 @@ export default function PaymentsAnalytics({
   }, [combinedData, chartFilters]);
 
   const stats = useMemo(() => {
-    const totalAmount = filteredChartData.reduce((sum, d) => sum + Number(d.amount), 0);
-    const totalCount = filteredChartData.reduce((sum, d) => sum + d.transaction_count, 0);
-    const onTimeCount = filteredChartData.filter(d => d.status !== "Paid After due date").reduce((sum, d) => sum + d.transaction_count, 0);
-    const healthScore = totalCount > 0 ? Math.round((onTimeCount / totalCount) * 100) : 0;
+    // Only consider PAID records for these specific charts
+    const paidRecords = filteredChartData.filter(d => d.isPaid);
     
+    const totalAmount = paidRecords.reduce((sum, d) => sum + Number(d.amount), 0);
+    const totalCount = paidRecords.reduce((sum, d) => sum + d.transaction_count, 0);
+    
+    // Health Index: (Paid On Time Volume / Total Paid Volume)
+    const onTimeAmount = paidRecords.filter(d => d.status === "Paid On Time" || d.status === "Paid Before due date" || d.status === "Paid on due date").reduce((sum, d) => sum + Number(d.amount), 0);
+    const healthScore = totalAmount > 0 ? Math.round((onTimeAmount / totalAmount) * 100) : 0;
+    
+    // Pie Data based on AMOUNT for financial accuracy
     const statusMap: Record<string, number> = {};
-    filteredChartData.forEach(d => { statusMap[d.status] = (statusMap[d.status] || 0) + d.transaction_count; });
+    paidRecords.forEach(d => { statusMap[d.status] = (statusMap[d.status] || 0) + Number(d.amount); });
     const pieData = Object.entries(statusMap).map(([name, value]) => ({ name, value }));
 
     const typeMap: Record<string, number> = {};
-    filteredChartData.forEach(d => { typeMap[d.payment_type] = (typeMap[d.payment_type] || 0) + d.amount; });
+    paidRecords.forEach(d => { typeMap[d.payment_type] = (typeMap[d.payment_type] || 0) + Number(d.amount); });
     const typePieData = Object.entries(typeMap).map(([name, value]) => ({ name, value }));
 
     const deptMap: Record<string, number> = {};
-    filteredChartData.forEach(d => { deptMap[d.department_name || 'N/A'] = (deptMap[d.department_name || 'N/A'] || 0) + d.amount; });
+    paidRecords.forEach(d => { deptMap[d.department_name || 'N/A'] = (deptMap[d.department_name || 'N/A'] || 0) + Number(d.amount); });
     const deptPieData = Object.entries(deptMap).map(([name, value]) => ({ name, value }));
 
     const entityMap: Record<string, number> = {};
-    filteredChartData.forEach(d => { entityMap[d.entity_name] = (entityMap[d.entity_name] || 0) + d.amount; });
+    paidRecords.forEach(d => { entityMap[d.entity_name] = (entityMap[d.entity_name] || 0) + Number(d.amount); });
     const barData = Object.entries(entityMap).map(([name, amount]) => ({ name, amount })).sort((a,b) => b.amount - a.amount).slice(0, 8);
 
     const trendMap: Record<string, number> = {};
-    filteredChartData.forEach(d => { const key = d.payment_date.substring(0, 7); trendMap[key] = (trendMap[key] || 0) + d.amount; });
+    paidRecords.forEach(d => { const key = d.payment_date.substring(0, 7); trendMap[key] = (trendMap[key] || 0) + Number(d.amount); });
     const trendData = Object.entries(trendMap).map(([date, amount]) => ({ 
       date: new Date(date + '-01').toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }), amount 
     })).sort((a,b) => a.date.localeCompare(b.date));
