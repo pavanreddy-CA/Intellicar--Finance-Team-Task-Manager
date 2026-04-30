@@ -3254,7 +3254,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               </button>
                              )}
                             </div>
-                           </div>
                       </td>
                     </tr>
                     )
