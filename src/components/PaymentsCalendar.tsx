@@ -99,6 +99,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   const [trackerToDate, setTrackerToDate] = useState(lastDay);
   
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'dueDate', direction: 'asc' });
+  const [masterSortConfig, setMasterSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -584,6 +585,34 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
     setSortConfig({ key, direction });
   };
 
+  const requestMasterSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (masterSortConfig && masterSortConfig.key === key && masterSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setMasterSortConfig({ key, direction });
+  };
+
+  const filteredAndSortedTemplates = useMemo(() => {
+    let items = [...templates];
+    if (masterSortConfig) {
+      items.sort((a: any, b: any) => {
+        let valA = a[masterSortConfig.key];
+        let valB = b[masterSortConfig.key];
+        
+        if (masterSortConfig.key === 'isStopped') {
+            valA = valA ? 1 : 0;
+            valB = valB ? 1 : 0;
+        }
+
+        if (valA < valB) return masterSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return masterSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return items;
+  }, [templates, masterSortConfig]);
+
   const handleDownloadExcel = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Payments");
@@ -859,6 +888,11 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
     return sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
   };
 
+  const MasterSortIcon = ({ column }: { column: string }) => {
+    if (!masterSortConfig || masterSortConfig.key !== column) return <ArrowUp size={12} style={{ opacity: 0.2 }} />;
+    return masterSortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
+  };
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px", alignItems: "center", gap: "12px" }}>
@@ -1019,9 +1053,15 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('actualDate')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Actual Date <SortIcon column="actualDate" /></div>
                   </th>
-                  <th style={thStyle}>Amount</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Hold</th>
+                                    <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('amountPaid')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Amount <SortIcon column="amountPaid" /></div>
+                  </th>
+                                    <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('isPaid')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Status <SortIcon column="isPaid" /></div>
+                  </th>
+                                    <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestSort('isHold')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Hold <SortIcon column="isHold" /></div>
+                  </th>
                   <th style={thStyle}>Action</th>
                 </tr>
               </thead>
@@ -1191,20 +1231,32 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             <table style={{ width: "100%", minWidth: "1500px", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#1e293b" }}>
-                  <th style={thStyle}>Entity</th>
-                  <th style={thStyle}>Description</th>
-                  <th style={thStyle}>Vendor</th>
-                  <th style={thStyle}>Type</th>
-                  <th style={thStyle}>Frequency</th>
-                  <th style={thStyle}>Status</th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestMasterSort('entityName')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Entity <MasterSortIcon column="entityName" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestMasterSort('paymentDescription')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Description <MasterSortIcon column="paymentDescription" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestMasterSort('vendorName')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Vendor <MasterSortIcon column="vendorName" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestMasterSort('paymentType')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Type <MasterSortIcon column="paymentType" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestMasterSort('frequency')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Frequency <MasterSortIcon column="frequency" /></div>
+                  </th>
+                  <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => requestMasterSort('isStopped')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>Status <MasterSortIcon column="isStopped" /></div>
+                  </th>
                   <th style={thStyle}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {templates.length === 0 ? (
+                {filteredAndSortedTemplates.length === 0 ? (
                   <tr><td colSpan={7} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No payment templates found.</td></tr>
                 ) : (
-                  templates.map((temp: PaymentTemplate) => (
+                  filteredAndSortedTemplates.map((temp: PaymentTemplate) => (
                     <tr key={temp.id} style={{ borderBottom: `1px solid ${t.border}` }}>
                       <td style={tdStyle}>{temp.entityName}</td>
                       <td style={tdStyle}>{temp.paymentDescription}</td>

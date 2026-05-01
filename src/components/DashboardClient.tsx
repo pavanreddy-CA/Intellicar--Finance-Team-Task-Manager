@@ -272,6 +272,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [showLODownloadDropdown, setShowLODownloadDropdown] = useState(false);
   const [showExtReqDownloadDropdown, setShowExtReqDownloadDropdown] = useState(false);
   const [extReqSortConfig, setExtReqSortConfig] = useState<{ key: keyof ExternalRequest; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
+  const [userSortConfig, setUserSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showLOCaptureModal, setShowLOCaptureModal] = useState(false);
   const [loCaptureForm, setLOCaptureForm] = useState({
     taskId: 0,
@@ -1599,6 +1600,33 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       return { key, direction: 'asc' };
     });
   };
+
+  const handleUserSort = (key: string) => {
+    setUserSortConfig(prev => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const filteredAndSortedUsers = useMemo(() => {
+    let items = [...usersList];
+    if (userSortConfig) {
+      items.sort((a: any, b: any) => {
+        let valA = a[userSortConfig.key] || "";
+        let valB = b[userSortConfig.key] || "";
+        
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return userSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return userSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return items;
+  }, [usersList, userSortConfig]);
 
   // Base visibility filter for External Requests
   const visibleExternalRequests = externalRequests.filter(r => {
@@ -2953,9 +2981,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={getThStyle(t)}>Capture LO?</th>
-                  <th style={getThStyle(t)}>Owner Comments</th>
-                  <th style={getThStyle(t)}>Reviewer Comments</th>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('captureLO')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Capture LO? {taskSortConfig?.key === 'captureLO' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerComments')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Owner Comments {taskSortConfig?.key === 'ownerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerComments')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Reviewer Comments {taskSortConfig?.key === 'reviewerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -3515,7 +3555,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         </div>
                       </th>
                       {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
-                      <th style={getThStyle(t)}>Remarks</th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('remarks')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Remarks {extReqSortConfig?.key === 'remarks' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5022,16 +5066,36 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
                           <thead>
                             <tr style={{ borderBottom: `1px solid ${t.border}`, textAlign: "left" }}>
-                               <th style={{ padding: "12px 8px" }}>Name</th>
-                               <th style={{ padding: "12px 8px" }}>Email</th>
-                               <th style={{ padding: "12px 8px" }}>Department</th>
-                               <th style={{ padding: "12px 8px" }}>Role</th>
-                               <th style={{ padding: "12px 8px" }}>Account Status</th>
-                               <th style={{ padding: "12px 8px", textAlign: "right" }}>Actions</th>
+                                <th style={{ padding: "12px 8px", cursor: "pointer" }} onClick={() => handleUserSort('name')}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    Name {userSortConfig?.key === 'name' && (userSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                  </div>
+                                </th>
+                                <th style={{ padding: "12px 8px", cursor: "pointer" }} onClick={() => handleUserSort('email')}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    Email {userSortConfig?.key === 'email' && (userSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                  </div>
+                                </th>
+                                <th style={{ padding: "12px 8px", cursor: "pointer" }} onClick={() => handleUserSort('department')}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    Department {userSortConfig?.key === 'department' && (userSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                  </div>
+                                </th>
+                                <th style={{ padding: "12px 8px", cursor: "pointer" }} onClick={() => handleUserSort('role')}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    Role {userSortConfig?.key === 'role' && (userSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                  </div>
+                                </th>
+                                <th style={{ padding: "12px 8px", cursor: "pointer" }} onClick={() => handleUserSort('isSuspended')}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    Account Status {userSortConfig?.key === 'isSuspended' && (userSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                  </div>
+                                </th>
+                                <th style={{ padding: "12px 8px", textAlign: "right" }}>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {usersList.filter(u => (u as any).isApproved !== false).map(u => (
+                                                         {filteredAndSortedUsers.filter(u => (u as any).isApproved !== false).map(u => (
                               <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                                 <td style={{ padding: "12px 8px" }}>{u.name || "--"}</td>
                                 <td style={{ padding: "12px 8px" }}>{u.email}</td>

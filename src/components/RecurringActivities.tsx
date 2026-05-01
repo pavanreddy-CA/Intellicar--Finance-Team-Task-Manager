@@ -108,6 +108,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   const [dailyDownloadMenu, setDailyDownloadMenu] = useState(false);
   const [dailyShareModal, setDailyShareModal] = useState(false);
   const [dailySortConfig, setDailySortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'targetDate', direction: 'desc' });
+  const [masterSortConfig, setMasterSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   const handleDailySort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -116,6 +117,27 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     }
     setDailySortConfig({ key, direction });
   };
+
+  const handleMasterSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (masterSortConfig && masterSortConfig.key === key && masterSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setMasterSortConfig({ key, direction });
+  };
+
+  const filteredAndSortedMaster = (templates || []).filter(t => 
+    t.taskNamePattern.toLowerCase().includes(searchMaster.toLowerCase()) || 
+    t.entityName.toLowerCase().includes(searchMaster.toLowerCase())
+  ).sort((a, b) => {
+    if (!masterSortConfig) return 0;
+    const { key, direction } = masterSortConfig;
+    const valA = (a as any)[key] || "";
+    const valB = (b as any)[key] || "";
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const [templateForm, setTemplateForm] = useState<Partial<RecurringTemplate>>({
     taskNamePattern: "",
@@ -1099,7 +1121,11 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                       Target Date {stagingSortConfig?.key === 'dueDate' && (stagingSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={thStyle}>Status</th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleStagingSort('isConverted')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Status {stagingSortConfig?.key === 'isConverted' && (stagingSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={{...thStyle, textAlign: "right"}}>Action</th>
                 </tr>
               </thead>
@@ -1431,19 +1457,41 @@ export default function RecurringActivities({   settings, usersList = [] , showN
             <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
               <thead style={{ background: "#f8fafc" }}>
                 <tr style={{ background: "#1e293b" }}>
-                  <th style={thStyle}>Rule Name / Pattern</th>
-                  <th style={thStyle}>Entity & Function</th>
-                  <th style={thStyle}>Frequency</th>
-                  <th style={thStyle}>Validity</th>
-                  <th style={thStyle}>Default Assignments</th>
-                  <th style={thStyle}>Status</th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleMasterSort('taskNamePattern')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Rule Name / Pattern {masterSortConfig?.key === 'taskNamePattern' && (masterSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleMasterSort('entityName')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Entity & Function {masterSortConfig?.key === 'entityName' && (masterSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleMasterSort('frequency')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Frequency {masterSortConfig?.key === 'frequency' && (masterSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleMasterSort('startDate')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Validity {masterSortConfig?.key === 'startDate' && (masterSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleMasterSort('defaultOwner')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Default Assignments {masterSortConfig?.key === 'defaultOwner' && (masterSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleMasterSort('isActive')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Status {masterSortConfig?.key === 'isActive' && (masterSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={{...thStyle, textAlign: "right"}}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {templates
-                  .filter(t => t.taskNamePattern.toLowerCase().includes(searchMaster.toLowerCase()) || t.entityName.toLowerCase().includes(searchMaster.toLowerCase()))
-                  .map(t => (
+                {filteredAndSortedMaster.map(t => (
                   <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9" }} className="table-row">
                     <td style={{...tdStyle, fontWeight: 600, color: "#0f172a"}}>{t.taskNamePattern}</td>
                     <td style={tdStyle}>
@@ -1770,7 +1818,11 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                       Target Date {dailySortConfig.key === 'targetDate' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                     </div>
                   </th>
-                  <th style={thStyle}>Status</th>
+                  <th style={{...thStyle, cursor: "pointer"}} onClick={() => handleDailySort('status')}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      Status {dailySortConfig.key === 'status' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                    </div>
+                  </th>
                   <th style={thStyle}>Action</th>
                 </tr>
               </thead>
