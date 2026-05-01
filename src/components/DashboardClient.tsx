@@ -4060,348 +4060,82 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         )}
 
         {/* LO View */}
-        {activeView === 'LOS' && (
-          <div className="lo-view" style={{ animation: "fadeIn 0.5s ease-out" }}>
-          <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-            .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
-          ` }} />
-          
-          <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
-             {loActiveFilter !== 'RESOURCES' && (
-               <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: theme === 'DARK' ? "#1e293b" : "#fafafa" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {activeView =          <div className="lo-view" style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden", animation: "fadeIn 0.5s ease-out" }}>
+             {loActiveFilter === 'RESOURCES' ? (
+                <div style={{ minHeight: "600px" }}>
+                   <div style={{ height: "180px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", padding: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                         <h2 style={{ color: "white", margin: 0, fontSize: "2rem" }}>Knowledge Library</h2>
+                         <p style={{ color: "rgba(255,255,255,0.7)", margin: "4px 0 0 0" }}>Centralized reference materials and publications.</p>
+                      </div>
+                      <button onClick={() => setShowResourceModal(true)} style={{ background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 700 }}>Add Resource</button>
+                   </div>
+                   <div style={{ padding: "32px" }}>
+                     {resourcesLoading ? (
+                       <div style={{ textAlign: "center", padding: "40px", color: t.textMuted }}>Loading...</div>
+                     ) : (
+                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                         {resources.map(res => (
+                           <div key={res.id} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                             <h5 style={{ margin: 0, fontWeight: 700, color: t.text }}>{res.name}</h5>
+                             <div style={{ marginTop: "auto", display: "flex", gap: "8px" }}>
+                               <button 
+                                 onClick={() => {
+                                   if (res.type === 'LINK') window.open(res.url, '_blank');
+                                   else {
+                                     const win = window.open();
+                                     if (win) win.document.write(`<iframe src="${res.data}" style="width:100%;height:100%;border:0;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe>`);
+                                   }
+                                 }} 
+                                 style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: "#4f46e5", color: "white", cursor: "pointer" }}
+                               >View</button>
+                               {isAdmin && <button onClick={() => handleDeleteResource(res.id)} style={{ padding: "8px", borderRadius: "6px", border: "none", background: "#fee2e2", color: "#ef4444", cursor: "pointer" }}><Trash2 size={14} /></button>}
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                </div>
+             ) : (
+                <>
+                  <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: theme === 'DARK' ? "#1e293b" : "#fafafa" }}>
                     <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
-                  </div>
-                  <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                    {[
-                      { id: 'ALL', label: 'All Findings', color: '#2563eb' },
-                      { id: 'REPORTS', label: 'My Findings', color: '#3b82f6' },
-                      { id: 'LEARNINGS', label: 'My Learnings', color: '#ef4444' }
-                    ].map(tab => (
-                      <button 
-                        key={tab.id}
-                        onClick={() => setLoActiveFilter(tab.id as any)}
-                        style={{ 
-                          padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
-                          border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                          background: loActiveFilter === tab.id ? tab.color : t.card,
-                          borderColor: loActiveFilter === tab.id ? tab.color : t.border,
-                          color: loActiveFilter === tab.id ? "white" : t.textMuted,
-                          boxShadow: loActiveFilter === tab.id ? `0 4px 6px -1px ${tab.color}33` : "none"
-                        }}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.bg, padding: "6px 12px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                      <Calendar size={14} color={t.accent} />
-                      <input 
-                        type="date" 
-                        value={loDateFrom} 
-                        onChange={e => setLoDateFrom(e.target.value)}
-                        style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
-                      />
-                      <span style={{ color: t.textMuted, fontSize: "0.75rem" }}>to</span>
-                      <input 
-                        type="date" 
-                        value={loDateTo} 
-                        onChange={e => setLoDateTo(e.target.value)}
-                        style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
-                      />
-                    </div>
-
                     <div style={{ position: "relative", minWidth: "200px" }}>
                       <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
-                      <input 
-                        type="text" 
-                        placeholder="Search..." 
-                        value={loSearchQuery}
-                        onChange={e => setLoSearchQuery(e.target.value)}
-                        style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
-                      />
-                    </div>
-
-                    <div className="download-container" style={{ position: "relative" }}>
-                      <button 
-                        onClick={() => setShowLODownloadDropdown(!showLODownloadDropdown)}
-                        style={{ 
-                          display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
-                          padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
-                          cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, transition: "all 0.2s" 
-                        }} 
-                      >
-                        <Download size={16} color="#2563eb" />
-                      </button>
-                      
-                      {showLODownloadDropdown && (
-                        <div style={{ 
-                          position: "absolute", top: "100%", right: 0, marginTop: "8px", 
-                          background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
-                          minWidth: "160px", overflow: "hidden" 
-                        }}>
-                          <button 
-                            onClick={() => { exportLOsToExcel(); setShowLODownloadDropdown(false); }}
-                            style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", border: "none", background: t.card, color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", textAlign: "left" }}
-                          >
-                            <FileSpreadsheet size={14} color="#059669" /> Excel
-                          </button>
-                        </div>
-                      )}
+                      <input type="text" placeholder="Search..." value={loSearchQuery} onChange={e => setLoSearchQuery(e.target.value)} style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} />
                     </div>
                   </div>
-               </div>
-              )}
-
-             <div style={{ overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
-                {loActiveFilter === 'RESOURCES' ? (
-                   <div style={{ background: theme === 'DARK' ? "#1e293b" : "white", minHeight: "600px" }}>
-                    <div style={{ 
-                      height: "280px", 
-                      width: "100%", 
-                      backgroundImage: "url('/images/library-bg.png')", 
-                      backgroundSize: "cover", 
-                      backgroundPosition: "center",
-                      position: "relative",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-end",
-                      padding: "48px",
-                      marginBottom: "0"
-                    }}>
-                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8))" }}></div>
-                       <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
-                          <div>
-                             <h2 style={{ margin: 0, fontSize: "3rem", fontWeight: 800, color: "white", letterSpacing: "-0.04em" }}>Knowledge Library</h2>
-                             <p style={{ margin: "8px 0 0 0", color: "rgba(255,255,255,0.8)", fontSize: "1.125rem", maxWidth: "600px", fontWeight: 500 }}>Centralized repository for books, publications, and reference materials.</p>
-                          </div>
-                          <button 
-                            onClick={() => setShowResourceModal(true)}
-                            style={{ display: "flex", alignItems: "center", gap: "10px", background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "14px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.9375rem", boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)", transition: "all 0.2s" }}
-                            onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                            onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
-                          >
-                            <Plus size={20} /> Add Resource
-                          </button>
-                       </div>
-                    </div>
-
-                    <div style={{ padding: "40px 32px" }}>
-                      {resourcesLoading ? (
-                        <div style={{ display: "flex", justifyContent: "center", padding: "60px", color: t.textMuted }}>Loading resources...</div>
-                      ) : resources.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "80px 40px", background: t.bg, borderRadius: "20px", border: `2px dashed ${t.border}` }}>
-                          <BookOpen size={48} color={t.textMuted} style={{ marginBottom: "16px", opacity: 0.3 }} />
-                          <h5 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 600, color: t.text }}>No resources yet</h5>
-                          <p style={{ margin: "4px 0 0 0", color: t.textMuted }}>Start by adding a book link or uploading a PDF.</p>
-                        </div>
-                      ) : (
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
-                          {resources.map(res => (
-                            <div key={res.id} style={{ 
-                              background: t.card, border: `1px solid ${t.border}`, borderRadius: "20px", padding: "20px", 
-                              display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.3s ease",
-                              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-                            }} className="hover-card">
-                              <div style={{ 
-                                width: "100%", height: "140px", background: res.type === 'LINK' ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)" : "linear-gradient(135deg, #10b981 0%, #047857 100%)",
-                                borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden"
-                              }}>
-                                {res.type === 'LINK' ? <Link size={40} color="rgba(255,255,255,0.4)" /> : <FileText size={40} color="rgba(255,255,255,0.4)" />}
-                                <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", padding: "4px 10px", borderRadius: "20px", fontSize: "0.65rem", fontWeight: 700, color: "white", textTransform: "uppercase" }}>
-                                  {res.type}
-                                </div>
-                              </div>
-                              <div>
-                                <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: t.text, marginBottom: "4px" }}>{res.name}</h5>
-                                <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted }}>Uploaded by {res.uploadedBy}</p>
-                              </div>
-                              <div style={{ marginTop: "auto", display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                                <button 
-                                  onClick={() => {
-                                    if (res.type === 'LINK') {
-                                      window.open(res.url, '_blank');
-                                    } else {
-                                      const win = window.open();
-                                      if (win) {
-                                        win.document.write(`<iframe src="${res.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-                                      }
-                                    }
-                                  }}
-                                  style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: "#4f46e5", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-                                >
-                                  <Eye size={14} /> View
-                                </button>
-                                
-                                {res.type === 'FILE' && (
-                                  <button 
-                                    onClick={() => {
-                                      const link = document.createElement('a');
-                                      link.href = res.data;
-                                      link.download = res.name;
-                                      link.click();
-                                    }}
-                                    style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, cursor: "pointer" }}
-                                    title="Download File"
-                                  >
-                                    <Download size={14} />
-                                  </button>
-                                )}
-
-                                {isAdmin && (
-                                  <button 
-                                    onClick={() => handleDeleteResource(res.id)}
-                                    style={{ padding: "10px", borderRadius: "10px", border: "none", background: "#fee2e2", color: "#ef4444", cursor: "pointer" }}
-                                    title="Delete Resource (Admin Only)"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                ) : (
-                  <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "1600px", fontSize: "0.875rem", textAlign: "left" }}>
-                    <thead>
-                      <tr>
-                        <th style={getThStyle(t)}>SI No</th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('dateOfIdentification')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Date {loSortConfig?.key === 'dateOfIdentification' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('entity')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Entity {loSortConfig?.key === 'entity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Learning Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('identifiedBy')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Identified By {loSortConfig?.key === 'identifiedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('committedBy')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Committed By {loSortConfig?.key === 'committedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('isAcknowledged')}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            Acknowledgment {loSortConfig?.key === 'isAcknowledged' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                          </div>
-                        </th>
-                        <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loLoading ? (
-                        <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading Learning Opportunities...</td></tr>
-                      ) : sortedLOs.length === 0 ? (
-                        <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No entries found for the selected criteria.</td></tr>
-                      ) : (
-                        sortedLOs.map((lo, idx) => {
-                          const myName = user?.name || user?.email;
-                          const isMyLearning = lo.committedBy === myName;
-                          
-                          return (
-                          <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background-color 0.2s", opacity: lo.isAcknowledged ? 0.8 : 1 }} className="table-row">
-                            <td style={getTdStyle(t)}><span style={{ color: t.textMuted, fontWeight: 500 }}>{idx + 1}</span></td>
-                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr>
+                          <th style={getThStyle(t)}>SI No</th>
+                          <th style={getThStyle(t)}>Date</th>
+                          <th style={getThStyle(t)}>Entity</th>
+                          <th style={getThStyle(t)}>Learning Opportunity</th>
+                          <th style={getThStyle(t)}>Committed By</th>
+                          <th style={getThStyle(t)}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loLoading ? <tr><td colSpan={6} style={{ textAlign: "center", padding: "40px" }}>Loading...</td></tr> : sortedLOs.map((lo, idx) => (
+                          <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}` }}>
+                            <td style={getTdStyle(t)}>{idx + 1}</td>
+                            <td style={getTdStyle(t)}>{formatDate(lo.dateOfIdentification)}</td>
                             <td style={getTdStyle(t)}>{lo.entity}</td>
-                            <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
-                            <td style={getTdStyle(t)}>{lo.identifiedBy}</td>
-                            <td style={getTdStyle(t)}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                {lo.committedBy}
-                                {isMyLearning && (
-                                  <span style={{ background: "#fef2f2", color: "#ef4444", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Learning</span>
-                                )}
-                              </div>
-                            </td>
-                            <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
-                            <td style={getTdStyle(t)}>
-                              {lo.isAcknowledged ? (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                  <span style={{ color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
-                                    <CheckCircle2 size={14} /> Acknowledged
-                                  </span>
-                                  {lo.learnerComments && (
-                                    <div style={{ fontSize: "0.75rem", color: t.textMuted, fontStyle: "italic", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                      "{lo.learnerComments}"
-                                    </div>
-                                  )}
-                                </div>
-                              ) : isMyLearning ? (
-                                <button 
-                                  onClick={() => { setAcknowledgingLO(lo); setShowAckModal(true); }}
-                                  style={{ background: "#ef4444", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}
-                                >
-                                  Acknowledge
-                                </button>
-                              ) : (
-                                <span style={{ color: t.textMuted, fontSize: "0.75rem" }}>Pending</span>
-                              )}
-                            </td>
-                            <td style={{ ...getTdStyle(t), textAlign: "center" }}>
-                                  <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
-                                    {(isAdmin || (lo.editApproved && !lo.isAcknowledged)) && (
-                                      <button 
-                                        onClick={() => { setEditingLO(lo); setShowLOForm(true); }}
-                                        style={{ background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, cursor: "pointer", padding: "6px", borderRadius: "8px" }}
-                                      >
-                                        <Edit2 size={14} />
-                                      </button>
-                                    )}
-                                    {!lo.isAcknowledged && (
-                                      <>
-                                        <button 
-                                          onClick={() => handleRequestDeleteLO(lo.id)}
-                                          disabled={lo.deleteRequested}
-                                          style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid", background: lo.deleteRequested ? "#f1f5f9" : "#fef2f2", color: lo.deleteRequested ? "#94a3b8" : "#ef4444", borderColor: lo.deleteRequested ? "#cbd5e1" : "#fca5a5", fontSize: "0.75rem", fontWeight: 600, cursor: lo.deleteRequested ? "not-allowed" : "pointer" }}
-                                        >
-                                          {lo.deleteRequested ? "Requested" : "Del"}
-                                        </button>
-                                        {!isAdmin && !lo.editApproved && (
-                                          <button 
-                                            onClick={() => handleRequestEditLO(lo.id)}
-                                            disabled={lo.editRequested}
-                                            style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid", background: lo.editRequested ? "#f1f5f9" : "#eff6ff", color: "#3b82f6", borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe", fontSize: "0.75rem", fontWeight: 600, cursor: lo.editRequested ? "not-allowed" : "pointer" }}
-                                          >
-                                            {lo.editRequested ? "Requested" : "Edit"}
-                                          </button>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                            </td>
+                            <td style={getTdStyle(t)}>{lo.learningOpportunity}</td>
+                            <td style={getTdStyle(t)}>{lo.committedBy}</td>
+                            <td style={getTdStyle(t)}>{lo.isAcknowledged ? "Acknowledged" : "Pending"}</td>
                           </tr>
-                        );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                )}
-           </div>
-        </div>
-       </div>
-      )}
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+             )}
+          </div>
+        )}
 
       {activeView === 'PAYMENTS' && (
         <PaymentsCalendar user={user} isAdmin={isAdmin} t={t} theme={theme} settings={settings} showNotification={showNotification} showConfirm={showConfirm} />
