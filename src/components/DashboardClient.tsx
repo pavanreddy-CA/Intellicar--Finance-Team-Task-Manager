@@ -4103,16 +4103,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       <p style={{ color: "rgba(255,255,255,0.8)", margin: "8px 0 24px 0", fontSize: "1.1rem" }}>"We don't track mistakes, we track learning and improvement"</p>
                       <div style={{ display: "flex", gap: "12px" }}>
                         <button 
-                          onClick={() => setLoTypeFilter('ALL')}
-                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loTypeFilter === 'ALL' ? "white" : "rgba(255,255,255,0.15)", color: loTypeFilter === 'ALL' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
+                          onClick={() => setLoActiveFilter('ALL')}
+                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loActiveFilter === 'ALL' ? "white" : "rgba(255,255,255,0.15)", color: loActiveFilter === 'ALL' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
                         >All Findings</button>
                         <button 
-                          onClick={() => setLoTypeFilter('FINDINGS')}
-                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loTypeFilter === 'FINDINGS' ? "white" : "rgba(255,255,255,0.15)", color: loTypeFilter === 'FINDINGS' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
+                          onClick={() => setLoActiveFilter('REPORTS')}
+                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loActiveFilter === 'REPORTS' ? "white" : "rgba(255,255,255,0.15)", color: loActiveFilter === 'REPORTS' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
                         >My Findings</button>
                         <button 
-                          onClick={() => setLoTypeFilter('LEARNINGS')}
-                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loTypeFilter === 'LEARNINGS' ? "white" : "rgba(255,255,255,0.15)", color: loTypeFilter === 'LEARNINGS' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
+                          onClick={() => setLoActiveFilter('LEARNINGS')}
+                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loActiveFilter === 'LEARNINGS' ? "white" : "rgba(255,255,255,0.15)", color: loActiveFilter === 'LEARNINGS' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
                         >My Learnings</button>
                       </div>
                     </div>
