@@ -1407,6 +1407,24 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     });
   };
 
+  const handleApproveDeleteLO = async (loId: number, action: 'APPROVE' | 'REJECT') => {
+    showConfirm(`Are you sure you want to ${action.toLowerCase()} this deletion request?`, async () => {
+      try {
+        const res = await fetch(`/api/lo/${loId}/approve-delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action })
+        });
+        if (res.ok) {
+          showNotification(`Deletion request ${action.toLowerCase()}d successfully.`);
+          fetchLOs();
+        }
+      } catch (error) {
+        console.error("Failed to process deletion for LO", error);
+      }
+    });
+  };
+
   const handleSubmitLOCapture = async () => {
     if (!loCaptureForm.learningOpportunity || !loCaptureForm.resolutionProvided) {
       showNotification("Please fill in the Learning Opportunity and Resolution fields.");
@@ -2042,7 +2060,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     const headerRow = worksheet.getRow(3);
     const headers = [
       'SI No', 'Timestamp', 'Entity', 'Date of Identification', 'Learning Opportunity', 
-      'Identified by', 'Commited By', 'Resolution Provided', 'Mode Of Communication', 
+      'Identified by', 'Commited By', 'Resolution Provided', 'Status', 'Ack Remarks', 'Mode Of Communication', 
       'Email Sub', 'Comments'
     ];
     
@@ -2071,6 +2089,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         lo.identifiedBy,
         lo.committedBy,
         lo.resolutionProvided,
+        lo.isAcknowledged ? "Acknowledged" : "Pending",
+        lo.learnerComments || "--",
         lo.modeOfCommunication,
         lo.emailSub || "Not Applicable",
         lo.comments || "NA"
@@ -4111,19 +4131,65 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
               ) : (
                 <div style={{ minHeight: "600px" }}>
                   <div style={{ padding: "32px 32px 0 32px" }}>
-                    <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
-                      <button 
-                        onClick={() => setLoActiveFilter('ALL')}
-                        style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'ALL' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'ALL' ? "#4f46e5" : "transparent", color: loActiveFilter === 'ALL' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
-                      >All Findings</button>
-                      <button 
-                        onClick={() => setLoActiveFilter('REPORTS')}
-                        style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'REPORTS' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'REPORTS' ? "#4f46e5" : "transparent", color: loActiveFilter === 'REPORTS' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
-                      >My Findings</button>
-                      <button 
-                        onClick={() => setLoActiveFilter('LEARNINGS')}
-                        style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'LEARNINGS' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'LEARNINGS' ? "#4f46e5" : "transparent", color: loActiveFilter === 'LEARNINGS' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
-                      >My Learnings</button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                      <div style={{ display: "flex", gap: "12px" }}>
+                        <button 
+                          onClick={() => setLoActiveFilter('ALL')}
+                          style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'ALL' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'ALL' ? "#4f46e5" : "transparent", color: loActiveFilter === 'ALL' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
+                        >All Findings</button>
+                        <button 
+                          onClick={() => setLoActiveFilter('REPORTS')}
+                          style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'REPORTS' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'REPORTS' ? "#4f46e5" : "transparent", color: loActiveFilter === 'REPORTS' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
+                        >My Findings</button>
+                        <button 
+                          onClick={() => setLoActiveFilter('LEARNINGS')}
+                          style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'LEARNINGS' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'LEARNINGS' ? "#4f46e5" : "transparent", color: loActiveFilter === 'LEARNINGS' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
+                        >My Learnings</button>
+                      </div>
+                      
+                      <div style={{ position: "relative" }}>
+                        <button 
+                          onClick={() => setShowLODownloadDropdown(!showLODownloadDropdown)}
+                          style={{ background: "#f0fdf4", color: "#166534", padding: "10px", borderRadius: "12px", border: "1px solid #dcfce7", cursor: "pointer", display: "flex", alignItems: "center", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}
+                          onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                          onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
+                        >
+                          <Download size={20} />
+                        </button>
+                        {showLODownloadDropdown && (
+                          <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: "white", borderRadius: "14px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)", border: "1px solid #f1f5f9", zIndex: 100, minWidth: "220px", overflow: "hidden", animation: "slideDown 0.2s ease-out" }}>
+                            <button 
+                              onClick={() => { exportLOsToExcel(); setShowLODownloadDropdown(false); }}
+                              style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "white", color: "#166534", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 600, transition: "background 0.2s" }}
+                              onMouseOver={e => e.currentTarget.style.background = "#f0fdf4"}
+                              onMouseOut={e => e.currentTarget.style.background = "white"}
+                            >
+                              <FileSpreadsheet size={16} /> Download Excel
+                            </button>
+                            <button 
+                              onClick={() => { exportLOsToPDF(); setShowLODownloadDropdown(false); }}
+                              style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "white", color: "#991b1b", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 600, transition: "background 0.2s" }}
+                              onMouseOver={e => e.currentTarget.style.background = "#fef2f2"}
+                              onMouseOut={e => e.currentTarget.style.background = "white"}
+                            >
+                              <FileText size={16} /> Download PDF
+                            </button>
+                            <div style={{ borderTop: "1px solid #f1f5f9" }}></div>
+                            <button 
+                              onClick={() => {
+                                setShareData({ ...shareData, type: 'lo', subject: `Learning Opportunities Report - ${new Date().toLocaleDateString()}` });
+                                setShowShareModal(true);
+                                setShowLODownloadDropdown(false);
+                              }}
+                              style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "white", color: "#2563eb", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 600, transition: "background 0.2s" }}
+                              onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
+                              onMouseOut={e => e.currentTarget.style.background = "white"}
+                            >
+                              <Mail size={16} /> Share via Email
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -4179,8 +4245,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       </select>
                     </div>
 
-                    <div style={{ overflowX: "auto", background: t.card, borderRadius: "16px", border: `1px solid ${t.border}` }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
+                    <div style={{ overflowX: "auto", overflowY: "hidden", background: t.card, borderRadius: "16px", border: `1px solid ${t.border}` }} className="custom-scrollbar">
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1500px" }}>
                         <thead>
                           <tr style={{ borderBottom: `1px solid ${t.border}`, background: theme === 'DARK' ? "#1e293b" : "#f8fafc" }}>
                             <th style={{ ...getThStyle(t), padding: "20px", cursor: "pointer" }} onClick={() => handleLOSort('id')}>
@@ -4223,14 +4289,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                 Status {loSortConfig?.key === 'isAcknowledged' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                               </div>
                             </th>
+                            <th style={getThStyle(t)}>Ack Remarks</th>
                             <th style={getThStyle(t)}>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {loLoading ? (
-                            <tr><td colSpan={9} style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>Loading opportunities...</td></tr>
+                            <tr><td colSpan={10} style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>Loading opportunities...</td></tr>
                           ) : sortedLOs.length === 0 ? (
-                            <tr><td colSpan={9} style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>No records found.</td></tr>
+                            <tr><td colSpan={10} style={{ textAlign: "center", padding: "80px", color: t.textMuted }}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                                <AlertCircle size={40} style={{ opacity: 0.3 }} />
+                                <span style={{ fontSize: "1rem", fontWeight: 500 }}>No learning opportunities recorded.</span>
+                              </div>
+                            </td></tr>
                           ) : sortedLOs.map((lo, idx) => (
                             <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} className="table-row">
                               <td style={{ ...getTdStyle(t), padding: "16px 20px" }}>{idx + 1}</td>
@@ -4245,13 +4317,40 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                   {lo.isAcknowledged ? "Acknowledged" : "Pending"}
                                 </span>
                               </td>
+                              <td style={{ ...getTdStyle(t), maxWidth: "250px", whiteSpace: "normal", fontSize: "0.8125rem", color: t.text }}>{lo.learnerComments || "--"}</td>
                               <td style={getTdStyle(t)}>
-                                {!lo.isAcknowledged && (lo.committedBy === user.name || isAdmin) && (
-                                  <button 
-                                    onClick={() => { setAcknowledgingLO(lo); setShowAckModal(true); }}
-                                    style={{ padding: "6px 12px", background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.75rem" }}
-                                  >Acknowledge</button>
-                                )}
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  {!lo.isAcknowledged && (lo.committedBy === user.name || isAdmin) && (
+                                    <button 
+                                      onClick={() => { setAcknowledgingLO(lo); setShowAckModal(true); }}
+                                      style={{ padding: "6px 12px", borderRadius: "8px", border: "none", background: "#4f46e5", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.75rem" }}
+                                    >Acknowledge</button>
+                                  )}
+                                  
+                                  {isAdmin ? (
+                                    <>
+                                      <button onClick={() => { setEditingLO(lo); setShowOptionsModal(false); }} style={{ padding: "4px", color: "#3b82f6", background: "none", border: "none", cursor: "pointer" }}><Edit2 size={16} /></button>
+                                      <button onClick={() => handleDeleteLO(lo.id)} style={{ padding: "4px", color: "#ef4444", background: "none", border: "none", cursor: "pointer" }}><Trash2 size={16} /></button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button 
+                                        disabled={lo.editRequested}
+                                        onClick={() => handleRequestEditLO(lo.id)} 
+                                        style={{ padding: "4px 8px", borderRadius: "6px", border: `1px solid ${t.border}`, background: "white", color: lo.editRequested ? t.textMuted : "#3b82f6", fontSize: "0.7rem", fontWeight: 600, cursor: lo.editRequested ? "not-allowed" : "pointer" }}
+                                      >
+                                        {lo.editRequested ? "Edit Requested" : "Req Edit"}
+                                      </button>
+                                      <button 
+                                        disabled={lo.deleteRequested}
+                                        onClick={() => handleRequestDeleteLO(lo.id)} 
+                                        style={{ padding: "4px 8px", borderRadius: "6px", border: `1px solid ${t.border}`, background: "white", color: lo.deleteRequested ? t.textMuted : "#ef4444", fontSize: "0.7rem", fontWeight: 600, cursor: lo.deleteRequested ? "not-allowed" : "pointer" }}
+                                      >
+                                        {lo.deleteRequested ? "Delete Requested" : "Req Delete"}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -5697,11 +5796,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                   {los.filter(l => l.editRequested).map(lo => (
-                                    <div key={`lo-${lo.id}`} style={{ padding: "16px", background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                                    <div key={`lo-edit-${lo.id}`} style={{ padding: "16px", background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                                         <div>
                                           <h5 style={{ margin: "0 0 4px 0", fontSize: "0.9375rem", color: t.text }}>LO #{lo.id}: {lo.entity}</h5>
-                                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Submitted by: <strong>{lo.identifiedBy}</strong></p>
+                                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Edit requested by: <strong>{lo.identifiedBy}</strong></p>
                                         </div>
                                         <div style={{ display: "flex", gap: "8px" }}>
                                           <button onClick={() => handleApproveEditLO(lo.id, 'APPROVE')} style={{ background: "#22c55e", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Approve</button>
@@ -5710,6 +5809,36 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       </div>
                                       <div style={{ padding: "10px", background: t.bg, borderRadius: "6px", fontSize: "0.8125rem", borderLeft: "3px solid #cbd5e1" }}>
                                         <strong>Reason:</strong> {lo.editRequestReason}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* LO Deletion Requests Section */}
+                            <div>
+                              <h4 style={{ fontSize: "0.9375rem", color: t.textMuted, marginBottom: "12px", fontWeight: 600 }}>Pending LO Deletion Requests</h4>
+                              {los.filter(l => l.deleteRequested).length === 0 ? (
+                                <div style={{ padding: "24px", textAlign: "center", background: t.bg, borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                                  <p style={{ color: t.textMuted, margin: 0, fontSize: "0.875rem" }}>No pending LO deletion requests.</p>
+                                </div>
+                              ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                  {los.filter(l => l.deleteRequested).map(lo => (
+                                    <div key={`lo-del-${lo.id}`} style={{ padding: "16px", background: "#fef2f2", borderRadius: "12px", border: "1px solid #fee2e2", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)" }}>
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                                        <div>
+                                          <h5 style={{ margin: "0 0 4px 0", fontSize: "0.9375rem", color: "#991b1b" }}>LO #{lo.id}: {lo.entity}</h5>
+                                          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#b91c1c" }}>Deletion requested by: <strong>{lo.committedBy}</strong></p>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                          <button onClick={() => handleApproveDeleteLO(lo.id, 'APPROVE')} style={{ background: "#ef4444", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Approve Delete</button>
+                                          <button onClick={() => handleApproveDeleteLO(lo.id, 'REJECT')} style={{ background: "#64748b", color: "white", padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}>Reject</button>
+                                        </div>
+                                      </div>
+                                      <div style={{ padding: "10px", background: "white", borderRadius: "6px", fontSize: "0.8125rem", borderLeft: "3px solid #ef4444" }}>
+                                        <strong>Reason:</strong> {lo.deleteRequestReason}
                                       </div>
                                     </div>
                                   ))}
