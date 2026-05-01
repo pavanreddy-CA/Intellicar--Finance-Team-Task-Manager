@@ -4068,192 +4068,205 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           ` }} />
           
           <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
-             <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: theme === 'DARK' ? "#1e293b" : "#fafafa" }}>
-                {loActiveFilter === 'RESOURCES' ? null : (
-                  <>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
-                      </div>
-                      <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                        {[
-                          { id: 'ALL', label: 'All Findings', color: '#2563eb' },
-                          { id: 'REPORTS', label: 'My Findings', color: '#3b82f6' },
-                          { id: 'LEARNINGS', label: 'My Learnings', color: '#ef4444' }
-                        ].map(tab => (
+             {loActiveFilter !== 'RESOURCES' && (
+               <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: theme === 'DARK' ? "#1e293b" : "#fafafa" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                    {[
+                      { id: 'ALL', label: 'All Findings', color: '#2563eb' },
+                      { id: 'REPORTS', label: 'My Findings', color: '#3b82f6' },
+                      { id: 'LEARNINGS', label: 'My Learnings', color: '#ef4444' }
+                    ].map(tab => (
+                      <button 
+                        key={tab.id}
+                        onClick={() => setLoActiveFilter(tab.id as any)}
+                        style={{ 
+                          padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
+                          border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                          background: loActiveFilter === tab.id ? tab.color : t.card,
+                          borderColor: loActiveFilter === tab.id ? tab.color : t.border,
+                          color: loActiveFilter === tab.id ? "white" : t.textMuted,
+                          boxShadow: loActiveFilter === tab.id ? `0 4px 6px -1px ${tab.color}33` : "none"
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.bg, padding: "6px 12px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
+                      <Calendar size={14} color={t.accent} />
+                      <input 
+                        type="date" 
+                        value={loDateFrom} 
+                        onChange={e => setLoDateFrom(e.target.value)}
+                        style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
+                      />
+                      <span style={{ color: t.textMuted, fontSize: "0.75rem" }}>to</span>
+                      <input 
+                        type="date" 
+                        value={loDateTo} 
+                        onChange={e => setLoDateTo(e.target.value)}
+                        style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
+                      />
+                    </div>
+
+                    <div style={{ position: "relative", minWidth: "200px" }}>
+                      <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
+                      <input 
+                        type="text" 
+                        placeholder="Search..." 
+                        value={loSearchQuery}
+                        onChange={e => setLoSearchQuery(e.target.value)}
+                        style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
+                      />
+                    </div>
+
+                    <div className="download-container" style={{ position: "relative" }}>
+                      <button 
+                        onClick={() => setShowLODownloadDropdown(!showLODownloadDropdown)}
+                        style={{ 
+                          display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
+                          padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
+                          cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, transition: "all 0.2s" 
+                        }} 
+                      >
+                        <Download size={16} color="#2563eb" />
+                      </button>
+                      
+                      {showLODownloadDropdown && (
+                        <div style={{ 
+                          position: "absolute", top: "100%", right: 0, marginTop: "8px", 
+                          background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
+                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
+                          minWidth: "160px", overflow: "hidden" 
+                        }}>
                           <button 
-                            key={tab.id}
-                            onClick={() => setLoActiveFilter(tab.id as any)}
-                            style={{ 
-                              padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
-                              border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                              background: loActiveFilter === tab.id ? tab.color : t.card,
-                              borderColor: loActiveFilter === tab.id ? tab.color : t.border,
-                              color: loActiveFilter === tab.id ? "white" : t.textMuted,
-                              boxShadow: loActiveFilter === tab.id ? `0 4px 6px -1px ${tab.color}33` : "none"
-                            }}
+                            onClick={() => { exportLOsToExcel(); setShowLODownloadDropdown(false); }}
+                            style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", border: "none", background: t.card, color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", textAlign: "left" }}
                           >
-                            {tab.label}
+                            <FileSpreadsheet size={14} color="#059669" /> Excel
                           </button>
-                        ))}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                    
-                    <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
-                      {/* Universal Date Filter */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.bg, padding: "6px 12px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                        <Calendar size={14} color={t.accent} />
-                        <input 
-                          type="date" 
-                          value={loDateFrom} 
-                          onChange={e => setLoDateFrom(e.target.value)}
-                          style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
-                        />
-                        <span style={{ color: t.textMuted, fontSize: "0.75rem" }}>to</span>
-                        <input 
-                          type="date" 
-                          value={loDateTo} 
-                          onChange={e => setLoDateTo(e.target.value)}
-                          style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
-                        />
-                      </div>
+                  </div>
+               </div>
+              )}
 
-                      <div style={{ position: "relative", minWidth: "200px" }}>
-                        <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
-                        <input 
-                          type="text" 
-                          placeholder="Search..." 
-                          value={loSearchQuery}
-                          onChange={e => setLoSearchQuery(e.target.value)}
-                          style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
-                        />
-                      </div>
-
-                      <div className="download-container" style={{ position: "relative" }}>
-                        <button 
-                          onClick={() => setShowLODownloadDropdown(!showLODownloadDropdown)}
-                          style={{ 
-                            display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
-                            padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
-                            cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, transition: "all 0.2s" 
-                          }} 
-                        >
-                          <Download size={16} color="#2563eb" />
-                        </button>
-                        
-                        {showLODownloadDropdown && (
-                          <div style={{ 
-                            position: "absolute", top: "100%", right: 0, marginTop: "8px", 
-                            background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
-                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
-                            minWidth: "160px", overflow: "hidden" 
-                          }}>
-                            <button 
-                              onClick={() => { exportLOsToExcel(); setShowLODownloadDropdown(false); }}
-                              style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", border: "none", background: t.card, color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", textAlign: "left" }}
-                            >
-                              <FileSpreadsheet size={14} color="#059669" /> Excel
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-             </div>
-             </div>
              <div style={{ overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
                 {loActiveFilter === 'RESOURCES' ? (
-                  <div style={{ padding: "32px", background: theme === 'DARK' ? "#1e293b" : "white", minHeight: "500px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-                      <div>
-                        <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Library</h4>
-                        <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: t.textMuted }}>Centralized repository for books, publications, and reference materials.</p>
-                      </div>
-                      <button 
-                        onClick={() => setShowResourceModal(true)}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(16, 185, 129, 0.3)" }}
-                      >
-                        <Plus size={18} /> Add Resource
-                      </button>
+                   <div style={{ background: theme === 'DARK' ? "#1e293b" : "white", minHeight: "600px" }}>
+                    <div style={{ 
+                      height: "280px", 
+                      width: "100%", 
+                      backgroundImage: "url('/images/library-bg.png')", 
+                      backgroundSize: "cover", 
+                      backgroundPosition: "center",
+                      position: "relative",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-end",
+                      padding: "48px",
+                      marginBottom: "0"
+                    }}>
+                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8))" }}></div>
+                       <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
+                          <div>
+                             <h2 style={{ margin: 0, fontSize: "3rem", fontWeight: 800, color: "white", letterSpacing: "-0.04em" }}>Knowledge Library</h2>
+                             <p style={{ margin: "8px 0 0 0", color: "rgba(255,255,255,0.8)", fontSize: "1.125rem", maxWidth: "600px", fontWeight: 500 }}>Centralized repository for books, publications, and reference materials.</p>
+                          </div>
+                          <button 
+                            onClick={() => setShowResourceModal(true)}
+                            style={{ display: "flex", alignItems: "center", gap: "10px", background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "14px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.9375rem", boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)", transition: "all 0.2s" }}
+                            onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                            onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
+                          >
+                            <Plus size={20} /> Add Resource
+                          </button>
+                       </div>
                     </div>
 
-                    {resourcesLoading ? (
-                      <div style={{ display: "flex", justifyContent: "center", padding: "60px", color: t.textMuted }}>Loading resources...</div>
-                    ) : resources.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: "80px 40px", background: t.bg, borderRadius: "20px", border: `2px dashed ${t.border}` }}>
-                        <BookOpen size={48} color={t.textMuted} style={{ marginBottom: "16px", opacity: 0.3 }} />
-                        <h5 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 600, color: t.text }}>No resources yet</h5>
-                        <p style={{ margin: "4px 0 0 0", color: t.textMuted }}>Start by adding a book link or uploading a PDF.</p>
-                      </div>
-                    ) : (
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
-                        {resources.map(res => (
-                          <div key={res.id} style={{ 
-                            background: t.card, border: `1px solid ${t.border}`, borderRadius: "20px", padding: "20px", 
-                            display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.3s ease",
-                            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
-                          }} className="hover-card">
-                            <div style={{ 
-                              width: "100%", height: "140px", background: res.type === 'LINK' ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)" : "linear-gradient(135deg, #10b981 0%, #047857 100%)",
-                              borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden"
-                            }}>
-                              {res.type === 'LINK' ? <Link size={40} color="rgba(255,255,255,0.4)" /> : <FileText size={40} color="rgba(255,255,255,0.4)" />}
-                              <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", padding: "4px 10px", borderRadius: "20px", fontSize: "0.65rem", fontWeight: 700, color: "white", textTransform: "uppercase" }}>
-                                {res.type}
+                    <div style={{ padding: "40px 32px" }}>
+                      {resourcesLoading ? (
+                        <div style={{ display: "flex", justifyContent: "center", padding: "60px", color: t.textMuted }}>Loading resources...</div>
+                      ) : resources.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "80px 40px", background: t.bg, borderRadius: "20px", border: `2px dashed ${t.border}` }}>
+                          <BookOpen size={48} color={t.textMuted} style={{ marginBottom: "16px", opacity: 0.3 }} />
+                          <h5 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 600, color: t.text }}>No resources yet</h5>
+                          <p style={{ margin: "4px 0 0 0", color: t.textMuted }}>Start by adding a book link or uploading a PDF.</p>
+                        </div>
+                      ) : (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                          {resources.map(res => (
+                            <div key={res.id} style={{ 
+                              background: t.card, border: `1px solid ${t.border}`, borderRadius: "20px", padding: "20px", 
+                              display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.3s ease",
+                              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
+                            }} className="hover-card">
+                              <div style={{ 
+                                width: "100%", height: "140px", background: res.type === 'LINK' ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)" : "linear-gradient(135deg, #10b981 0%, #047857 100%)",
+                                borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden"
+                              }}>
+                                {res.type === 'LINK' ? <Link size={40} color="rgba(255,255,255,0.4)" /> : <FileText size={40} color="rgba(255,255,255,0.4)" />}
+                                <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", padding: "4px 10px", borderRadius: "20px", fontSize: "0.65rem", fontWeight: 700, color: "white", textTransform: "uppercase" }}>
+                                  {res.type}
+                                </div>
                               </div>
-                            </div>
-                            <div>
-                              <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: t.text, marginBottom: "4px" }}>{res.name}</h5>
-                              <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted }}>Uploaded by {res.uploadedBy}</p>
-                            </div>
-                            <div style={{ marginTop: "auto", display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                              <button 
-                                onClick={() => {
-                                  if (res.type === 'LINK') {
-                                    window.open(res.url, '_blank');
-                                  } else {
-                                    const win = window.open();
-                                    if (win) {
-                                      win.document.write(`<iframe src="${res.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-                                    }
-                                  }
-                                }}
-                                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: "#4f46e5", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-                              >
-                                <Eye size={14} /> View
-                              </button>
-                              
-                              {res.type === 'FILE' && (
+                              <div>
+                                <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: t.text, marginBottom: "4px" }}>{res.name}</h5>
+                                <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted }}>Uploaded by {res.uploadedBy}</p>
+                              </div>
+                              <div style={{ marginTop: "auto", display: "flex", flexWrap: "wrap", gap: "10px" }}>
                                 <button 
                                   onClick={() => {
-                                    const link = document.createElement('a');
-                                    link.href = res.data;
-                                    link.download = res.name;
-                                    link.click();
+                                    if (res.type === 'LINK') {
+                                      window.open(res.url, '_blank');
+                                    } else {
+                                      const win = window.open();
+                                      if (win) {
+                                        win.document.write(`<iframe src="${res.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                                      }
+                                    }
                                   }}
-                                  style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, cursor: "pointer" }}
-                                  title="Download File"
+                                  style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: "#4f46e5", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                                 >
-                                  <Download size={14} />
+                                  <Eye size={14} /> View
                                 </button>
-                              )}
+                                
+                                {res.type === 'FILE' && (
+                                  <button 
+                                    onClick={() => {
+                                      const link = document.createElement('a');
+                                      link.href = res.data;
+                                      link.download = res.name;
+                                      link.click();
+                                    }}
+                                    style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.card, color: t.text, cursor: "pointer" }}
+                                    title="Download File"
+                                  >
+                                    <Download size={14} />
+                                  </button>
+                                )}
 
-                              {isAdmin && (
-                                <button 
-                                  onClick={() => handleDeleteResource(res.id)}
-                                  style={{ padding: "10px", borderRadius: "10px", border: "none", background: "#fee2e2", color: "#ef4444", cursor: "pointer" }}
-                                  title="Delete Resource (Admin Only)"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
+                                {isAdmin && (
+                                  <button 
+                                    onClick={() => handleDeleteResource(res.id)}
+                                    style={{ padding: "10px", borderRadius: "10px", border: "none", background: "#fee2e2", color: "#ef4444", cursor: "pointer" }}
+                                    title="Delete Resource (Admin Only)"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                 ) : (
                   <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "1600px", fontSize: "0.875rem", textAlign: "left" }}>
                     <thead>
