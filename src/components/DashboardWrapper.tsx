@@ -93,7 +93,7 @@ export default function DashboardWrapper({ user }: { user: any }) {
                  <span style={{ padding: "8px", background: "#dbeafe", borderRadius: "12px" }}>👥</span> Success Stories
                </h3>
                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                 {content.stories.length > 0 ? content.stories.map((s: any, i: number) => (
+                 {Array.isArray(content.stories) && content.stories.length > 0 ? content.stories.map((s: any, i: number) => (
                    <div key={i} style={{ padding: "24px", background: "white", borderRadius: "20px", borderLeft: `6px solid ${storyColors[i % 4]}`, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                      <h4 style={{ fontWeight: 800, marginBottom: "8px" }}>{s.title}</h4>
                      <p style={{ fontSize: "0.9rem", color: "#64748b" }}>{s.text}</p>
@@ -109,7 +109,7 @@ export default function DashboardWrapper({ user }: { user: any }) {
                  <span style={{ padding: "8px", background: "#dcfce7", borderRadius: "12px" }}>💎</span> Achievements
                </h3>
                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                 {content.achievements.length > 0 ? content.achievements.map((a: any, i: number) => (
+                 {Array.isArray(content.achievements) && content.achievements.length > 0 ? content.achievements.map((a: any, i: number) => (
                    <div key={i} style={{ padding: "20px", background: "white", borderRadius: "16px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
                      <div style={{ fontSize: "1.5rem", width: "48px", height: "48px", background: `${achievementColors[i % 4]}15`, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "12px" }}>{a.icon || "🏆"}</div>
                      <div>
