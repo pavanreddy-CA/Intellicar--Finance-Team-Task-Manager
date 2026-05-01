@@ -2897,7 +2897,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                     onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#60a5fa"; }}
                                     onMouseOut={e => { e.currentTarget.style.background = activeView === 'TASKS' && activeSubView === 'MAIN' ? "rgba(59, 130, 246, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'TASKS' && activeSubView === 'MAIN' ? "#60a5fa" : "#e2e8f0"; }}
                                   >
-                                    <LayoutDashboard size={16} /> Task Dashboard
+                                    <LayoutDashboard size={16} /> Task Dash Board
                                   </button>
                                   {isModuleAllowed('Recurring Activities') && (
                                     <button 
@@ -3102,7 +3102,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     </span>
                   </div>
                   <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: t.text, letterSpacing: "-0.03em", transition: "all 0.3s ease" }}>
-                    {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : 
+                    {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dash Board" : "Inter Department Request") : 
                      activeView === 'PAYMENTS' ? "Payments Calendar" : "Learning Opportunities"}
                   </h2>
                   <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.95rem", fontWeight: 500 }}>
@@ -7763,7 +7763,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 <div>
                   <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600, color: "#0369a1" }}>Attachment Info</p>
                   <p style={{ margin: 0, fontSize: "0.75rem", color: "#0ea5e9" }}>
-                    {shareData.type === 'task' ? 'Task Dashboard' : shareData.type === 'lo' ? 'LO Dashboard' : 'Requests'} Export ({shareData.format === 'both' ? 'Both Formats' : shareData.format.toUpperCase()})
+                    {shareData.type === 'task' ? 'Task Dash Board' : shareData.type === 'lo' ? 'LO Dashboard' : 'Requests'} Export ({shareData.format === 'both' ? 'Both Formats' : shareData.format.toUpperCase()})
                   </p>
                 </div>
               </div>
