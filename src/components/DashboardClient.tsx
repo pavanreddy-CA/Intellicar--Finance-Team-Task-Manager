@@ -1998,7 +1998,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         '<div style="margin-top:32px;text-align:center"><a href="https://v0-finpulse.vercel.app" style="background:#6366f1;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">View Live Dashboard →</a></div>' +
         '</div>';
 
-      const res = await fetch('/api/admin/send-mail', {
+      const res = await fetch('/api/lo-analytics/share-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
