@@ -252,10 +252,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [loActiveFilter, setLoActiveFilter] = useState<'ALL' | 'REPORTS' | 'LEARNINGS' | 'RESOURCES'>('ALL');
   const [loDateFrom, setLoDateFrom] = useState(() => {
     const d = new Date();
-    d.setMonth(d.getMonth() - 3); // Default to last 3 months
-    return d.toISOString().split('T')[0];
+    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0]; // 1st of current month
   });
-  const [loDateTo, setLoDateTo] = useState(new Date().toISOString().split('T')[0]);
+  const [loDateTo, setLoDateTo] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0]; // Last day of current month
+  });
   const [resources, setResources] = useState<any[]>([]);
   const [resourcesLoading, setResourcesLoading] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
@@ -2709,7 +2711,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                     onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#10b981"; }}
                                     onMouseOut={e => { e.currentTarget.style.background = activeView === 'LOS' && loActiveFilter === 'RESOURCES' && !isAnalyticsOpen ? "rgba(16, 185, 129, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'LOS' && loActiveFilter === 'RESOURCES' && !isAnalyticsOpen ? "#10b981" : "#e2e8f0"; }}
                                   >
-                                    <BookOpen size={16} /> Knowledge Base
+                                    <BookOpen size={16} /> Library
                                   </button>
                                   {isAdmin && (
                                     <button 
@@ -2723,7 +2725,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                       onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#6366f1"; }}
                                       onMouseOut={e => { e.currentTarget.style.background = isAnalyticsOpen ? "rgba(99, 102, 241, 0.15)" : "transparent"; e.currentTarget.style.color = isAnalyticsOpen ? "#6366f1" : "#e2e8f0"; }}
                                     >
-                                      <Rocket size={16} /> Growth Hub
+                                      <Rocket size={16} /> LO Analytics
                                     </button>
                                   )}
                                 </div>
@@ -4066,25 +4068,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
-                    {isAdmin && (
-                      <button 
-                        onClick={() => setIsAnalyticsOpen(true)}
-                        style={{ 
-                          display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", 
-                          color: "white", padding: "6px 14px", borderRadius: "10px", border: "none", cursor: "pointer", 
-                          fontWeight: 600, fontSize: "0.75rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)" 
-                        }}
-                      >
-                        📊 View Analytics
-                      </button>
-                    )}
                   </div>
                   <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
                     {[
                       { id: 'ALL', label: 'All Findings', color: '#2563eb' },
                       { id: 'REPORTS', label: 'My Findings', color: '#3b82f6' },
-                      { id: 'LEARNINGS', label: 'My Learnings', color: '#ef4444' },
-                      { id: 'RESOURCES', label: 'Resources', color: '#10b981' }
+                      { id: 'LEARNINGS', label: 'My Learnings', color: '#ef4444' }
                     ].map(tab => (
                       <button 
                         key={tab.id}
@@ -4175,7 +4164,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   <div style={{ padding: "32px", background: theme === 'DARK' ? "#1e293b" : "white", minHeight: "500px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Knowledge Base & Resources</h4>
+                        <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Library</h4>
                         <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: t.textMuted }}>Centralized repository for books, publications, and reference materials.</p>
                       </div>
                       <button 
