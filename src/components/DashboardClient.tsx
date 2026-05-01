@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -2590,100 +2590,191 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         {/* Metric Cards / Motivational Quote / Home Content */}
         {activeView === 'HOME' ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "32px", marginBottom: "40px" }}>
-            {/* Hero Mission Card */}
+            {/* --- NEW INSPIRATION WALL --- */}
             {(() => {
               const content = JSON.parse(settings.homeContent || '{}');
-              const mission = content.mission || "Empowering the Finance Team through transparency, real-time collaboration, and operational excellence.";
+              const mission = content.mission || settings.missionStatement || "Empowering the Finance Team through transparency, real-time collaboration, and operational excellence.";
+              const vision = content.vision || "To be the global benchmark for financial integrity and agile business partnership.";
+              const quote = content.quote || { 
+                text: "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+                author: "Steve Jobs"
+              };
+              
               return (
-                <div style={{ 
-                  padding: "48px", borderRadius: "24px", 
-                  background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", 
-                  color: "white", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
-                  position: "relative", overflow: "hidden"
-                }}>
-                  <div style={{ position: "absolute", top: -50, right: -50, opacity: 0.1 }}>
-                    <Building2 size={240} />
-                  </div>
-                  <div style={{ position: "relative", zIndex: 1, maxWidth: "800px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-                      <div style={{ width: "32px", height: "4px", background: "#3b82f6", borderRadius: "2px" }}></div>
-                      <span style={{ fontSize: "0.875rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#60a5fa" }}>Our Mission</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+                  
+                  {/* 1. Mission & Vision Pillars */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                    {/* Mission Card */}
+                    <div style={{ 
+                      padding: "32px", 
+                      borderRadius: "24px", 
+                      background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", 
+                      color: "white",
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)"
+                    }}>
+                      <div style={{ position: "absolute", right: "-20px", top: "-20px", opacity: 0.1 }}>
+                        <Compass size={140} />
+                      </div>
+                      <div style={{ position: "relative", zIndex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                          <div style={{ background: "rgba(59, 130, 246, 0.2)", padding: "8px", borderRadius: "10px" }}>
+                            <Building2 size={20} color="#60a5fa" />
+                          </div>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#93c5fd" }}>Our Mission</span>
+                        </div>
+                        <h2 style={{ fontSize: "1.75rem", fontWeight: 800, margin: "0 0 16px 0", lineHeight: 1.2 }}>{mission}</h2>
+                        <p style={{ margin: 0, fontSize: "0.9375rem", opacity: 0.8, lineHeight: 1.6 }}>Driving daily excellence through disciplined execution and data-driven insights.</p>
+                      </div>
                     </div>
-                    <h2 style={{ fontSize: "2.5rem", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.02em" }}>{mission}</h2>
-                    <p style={{ marginTop: "24px", fontSize: "1.125rem", color: t.textMuted, lineHeight: 1.6 }}>This platform is implemented to drive efficiency and ensure every team member has the data they need to succeed.</p>
+
+                    {/* Vision Card */}
+                    <div style={{ 
+                      padding: "32px", 
+                      borderRadius: "24px", 
+                      background: "white", 
+                      border: `1px solid ${t.border}`,
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)"
+                    }}>
+                      <div style={{ position: "absolute", right: "-20px", top: "-20px", color: "#f1f5f9" }}>
+                        <Rocket size={140} />
+                      </div>
+                      <div style={{ position: "relative", zIndex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                          <div style={{ background: "#eff6ff", padding: "8px", borderRadius: "10px" }}>
+                            <Compass size={20} color="#3b82f6" />
+                          </div>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748b" }}>Our Vision</span>
+                        </div>
+                        <h2 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#1e293b", margin: "0 0 16px 0", lineHeight: 1.2 }}>{vision}</h2>
+                        <p style={{ margin: 0, fontSize: "0.9375rem", color: t.textMuted, lineHeight: 1.6 }}>Building a future where finance is the engine of innovation and sustainable growth.</p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* 2. Motivation Section */}
+                  <div style={{ 
+                    padding: "60px 40px", 
+                    textAlign: "center", 
+                    background: "#f8fafc", 
+                    borderRadius: "32px",
+                    border: "1px dashed #cbd5e1"
+                  }}>
+                    <Quote size={40} color="#94a3b8" style={{ marginBottom: "24px", opacity: 0.5 }} />
+                    <h3 style={{ 
+                      fontSize: "2rem", 
+                      fontFamily: "serif", 
+                      fontStyle: "italic", 
+                      maxWidth: "900px", 
+                      margin: "0 auto 16px auto", 
+                      color: "#334155",
+                      lineHeight: 1.4
+                    }}>
+                      "{quote.text}"
+                    </h3>
+                    <div style={{ fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>— {quote.author}</div>
+                  </div>
+
+                  {/* 3. Wall of Fame */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: "#0f172a" }}>Wall of Fame</h3>
+                      <p style={{ margin: "4px 0 0 0", color: "#64748b", fontWeight: 500 }}>CELEBRATING TEAM SUCCESS STORIES</p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "24px" }}>
+                      {(() => {
+                        const stories = content.stories || [
+                          { id: 1, title: "Efficiency Boost", text: "The new matrix system has cut down our task allocation time by 40%!", author: "Finance Admin" },
+                          { id: 2, title: "Better Collaboration", text: "Sharing requests between departments is now seamless and tracked.", author: "Operations Lead" }
+                        ];
+                        return stories.map((s: any) => (
+                          <div key={s.id} style={{ 
+                            padding: "32px", 
+                            borderRadius: "24px", 
+                            background: "white", 
+                            border: `1px solid ${t.border}`,
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                            cursor: "default",
+                            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
+                          }} className="hover-card">
+                            <div style={{ position: "relative", zIndex: 1 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+                                <div style={{ background: "#f0fdf4", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <Trophy size={24} color="#10b981" />
+                                </div>
+                                <div style={{ fontSize: "0.625rem", fontWeight: 700, background: "#f1f5f9", padding: "4px 10px", borderRadius: "20px", color: "#64748b", textTransform: "uppercase" }}>Success Story</div>
+                              </div>
+                              
+                              {/* New Photo Support */}
+                              {s.image && (
+                                <div style={{ width: "calc(100% + 64px)", margin: "-32px -32px 20px -32px", height: "180px", overflow: "hidden", borderRadius: "24px 24px 0 0" }}>
+                                  <img src={s.image} alt="Success Story" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                </div>
+                              )}
+
+                              <h4 style={{ margin: "0 0 12px 0", fontSize: "1.125rem", fontWeight: 800, color: "#1e293b" }}>{s.title}</h4>
+                              <p style={{ margin: "0 0 24px 0", fontSize: "0.9375rem", color: "#64748b", lineHeight: 1.6, fontStyle: "italic" }}>"{s.text}"</p>
+                              <div style={{ display: "flex", alignItems: "center", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
+                                <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "#3b82f6", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", fontWeight: 800 }}>
+                                  {s.author[0]}
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#1e293b" }}>{s.author}</span>
+                                  <span style={{ fontSize: "0.6875rem", color: "#94a3b8" }}>Team Member</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* 4. Achievements List */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "24px", marginTop: "20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <Award size={24} color="#3b82f6" />
+                      <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Major Achievements</h3>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+                      {(() => {
+                        const achievements = content.achievements || [
+                          { id: 1, title: "Platform Launch", date: "Apr 2026" },
+                          { id: 2, title: "100+ Tasks Completed", date: "May 2026" }
+                        ];
+                        return achievements.map((a: any) => (
+                          <div key={a.id} style={{ 
+                            padding: "20px", 
+                            borderRadius: "16px", 
+                            background: "rgba(255, 255, 255, 0.5)", 
+                            border: `1px solid ${t.border}`, 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "16px",
+                            backdropFilter: "blur(8px)"
+                          }}>
+                            <div style={{ background: "#fdf2f8", padding: "10px", borderRadius: "12px" }}>
+                              <ShieldCheck size={20} color="#db2777" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#1e293b" }}>{a.title}</div>
+                              <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{a.date}</div>
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
                 </div>
               );
             })()}
 
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "32px" }}>
-              {/* Success Stories */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px" }}>
-                    <Quote size={20} color="#3b82f6" /> Team Success Stories
-                  </h3>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-                  {(() => {
-                    const content = JSON.parse(settings.homeContent || '{}');
-                    const stories = content.stories || [
-                      { id: 1, title: "Efficiency Boost", text: "The new matrix system has cut down our task allocation time by 40%!", author: "Finance Admin" },
-                      { id: 2, title: "Better Collaboration", text: "Sharing requests between departments is now seamless and tracked.", author: "Operations Lead" }
-                    ];
-                    return stories.map((s: any) => (
-                      <div key={s.id} style={{ 
-                        padding: "24px", borderRadius: "20px", background: t.card, 
-                        border: `1px solid ${t.border}`, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
-                        transition: "transform 0.2s", cursor: "default"
-                      }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}>
-                        <div style={{ background: "#eff6ff", width: "40px", height: "40px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
-                          <CheckCircle2 size={20} color="#3b82f6" />
-                        </div>
-                        <h4 style={{ margin: "0 0 8px 0", fontSize: "1rem", fontWeight: 700 }}>{s.title}</h4>
-                        <p style={{ margin: "0 0 16px 0", fontSize: "0.875rem", color: t.textMuted, lineHeight: 1.5 }}>"{s.text}"</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#3b82f6", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700 }}>
-                            {s.author[0]}
-                          </div>
-                          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.text }}>{s.author}</span>
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-
-              {/* Major Achievements */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Tag size={20} color="#3b82f6" /> Major Achievements
-                </h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {(() => {
-                    const content = JSON.parse(settings.homeContent || '{}');
-                    const achievements = content.achievements || [
-                      { id: 1, title: "Platform Launch", date: "Apr 2026" },
-                      { id: 2, title: "100+ Tasks Completed", date: "May 2026" }
-                    ];
-                    return achievements.map((a: any) => (
-                      <div key={a.id} style={{ 
-                        padding: "16px", borderRadius: "16px", background: t.card, 
-                        border: `1px solid ${t.border}`, display: "flex", alignItems: "center", gap: "16px" 
-                      }}>
-                        <div style={{ background: "#f0fdf4", padding: "8px", borderRadius: "10px" }}>
-                          <ShieldCheck size={20} color="#10b981" />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "0.875rem", fontWeight: 700, color: t.text }}>{a.title}</div>
-                          <div style={{ fontSize: "0.75rem", color: t.textMuted }}>{a.date}</div>
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-            </div>
           </div>
         ) : activeView === 'TASKS' ? (
           activeSubView === 'MAIN' ? (
@@ -6261,132 +6352,217 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 {activeOptionsTab === 'HOME_HUB' && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <h3 style={{ margin: 0 }}>Home Hub Management Hub</h3>
+                      <div>
+                        <h3 style={{ margin: 0, color: t.text, fontSize: "1.5rem", fontWeight: 700 }}>Home Hub Management</h3>
+                        <p style={{ color: t.textMuted, marginTop: "4px", fontSize: "0.875rem" }}>Customize your team's inspiration wall, mission, and vision.</p>
+                      </div>
                       <button 
                         onClick={handleSaveSettings}
                         disabled={isSavingSettings}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "white", padding: "10px 20px", borderRadius: "10px", border: "none", cursor: isSavingSettings ? "not-allowed" : "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "12px", border: "none", cursor: isSavingSettings ? "not-allowed" : "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.2)" }}
                       >
-                        <ShieldCheck size={18} /> {isSavingSettings ? "Saving..." : "Save Home Content"}
+                        <ShieldCheck size={18} /> {isSavingSettings ? "Saving..." : "Save All Changes"}
                       </button>
                     </div>
 
-                    {/* Mission Editor */}
-                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
-                      <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px" }}><Building2 size={20} color="#2563eb" /> Edit Mission Statement</h4>
-                      <textarea 
-                        value={JSON.parse(settings.homeContent || '{}').mission || ""}
-                        onChange={(e) => {
-                          const content = JSON.parse(settings.homeContent || '{}');
-                          setSettings({ ...settings, homeContent: JSON.stringify({ ...content, mission: e.target.value }) });
-                        }}
-                        placeholder="Enter the implementation mission..."
-                        style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical" }}
-                      />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                      {/* 1. Mission & Vision Editor */}
+                      <div style={{ background: t.card, padding: "28px", borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)" }}>
+                        <h4 style={{ margin: "0 0 24px 0", fontSize: "1.125rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px" }}>
+                          <Building2 size={20} color="#2563eb" /> Mission & Vision Statement
+                        </h4>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.025em" }}>Our Mission</label>
+                            <textarea 
+                              value={(() => {
+                                try {
+                                  const content = JSON.parse(settings.homeContent || '{}');
+                                  return content.mission || settings.missionStatement || "";
+                                } catch { return settings.missionStatement || ""; }
+                              })()}
+                              onChange={(e) => {
+                                const content = JSON.parse(settings.homeContent || '{}');
+                                content.mission = e.target.value;
+                                setSettings({ ...settings, missionStatement: e.target.value, homeContent: JSON.stringify(content) });
+                              }}
+                              placeholder="Describe your daily mission..."
+                              style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical", fontSize: "0.9375rem" }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.025em" }}>Our Vision</label>
+                            <textarea 
+                              value={(() => {
+                                try {
+                                  const content = JSON.parse(settings.homeContent || '{}');
+                                  return content.vision || "";
+                                } catch { return ""; }
+                              })()}
+                              onChange={(e) => {
+                                const content = JSON.parse(settings.homeContent || '{}');
+                                content.vision = e.target.value;
+                                setSettings({ ...settings, homeContent: JSON.stringify(content) });
+                              }}
+                              placeholder="Where is the team headed?"
+                              style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical", fontSize: "0.9375rem" }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 2. Motivational Quote */}
+                      <div style={{ background: t.card, padding: "28px", borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)" }}>
+                        <h4 style={{ margin: "0 0 24px 0", fontSize: "1.125rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px" }}>
+                          <Quote size={20} color="#3b82f6" /> Spotlight Quote
+                        </h4>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase" }}>Quote Text</label>
+                            <textarea 
+                              value={(() => {
+                                try {
+                                  const content = JSON.parse(settings.homeContent || '{}');
+                                  return content.quote?.text || "";
+                                } catch { return ""; }
+                              })()}
+                              onChange={(e) => {
+                                const content = JSON.parse(settings.homeContent || '{}');
+                                content.quote = { ...(content.quote || {}), text: e.target.value };
+                                setSettings({ ...settings, homeContent: JSON.stringify(content) });
+                              }}
+                              placeholder="Enter an inspiring quote..."
+                              style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical", fontSize: "0.9375rem" }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase" }}>Author</label>
+                            <input 
+                              type="text"
+                              value={(() => {
+                                try {
+                                  const content = JSON.parse(settings.homeContent || '{}');
+                                  return content.quote?.author || "";
+                                } catch { return ""; }
+                              })()}
+                              onChange={(e) => {
+                                const content = JSON.parse(settings.homeContent || '{}');
+                                content.quote = { ...(content.quote || {}), author: e.target.value };
+                                setSettings({ ...settings, homeContent: JSON.stringify(content) });
+                              }}
+                              placeholder="e.g. Steve Jobs"
+                              style={{ ...getInputStyle(t), fontSize: "0.9375rem" }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Stories Editor */}
-                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
-                      <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px" }}><Quote size={20} color="#2563eb" /> Manage Success Stories</h4>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
-                        {(JSON.parse(settings.homeContent || '{}').stories || []).map((s: any, idx: number) => (
-                          <div key={idx} style={{ padding: "16px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}`, position: "relative" }}>
-                            <button 
-                              onClick={() => {
-                                const content = JSON.parse(settings.homeContent || '{}');
-                                const updated = content.stories.filter((_: any, i: number) => i !== idx);
-                                setSettings({ ...settings, homeContent: JSON.stringify({ ...content, stories: updated }) });
-                              }}
-                              style={{ position: "absolute", top: "12px", right: "12px", background: "none", border: "none", color: "#ef4444", cursor: "pointer" }}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                            <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{s.title}</div>
-                            <div style={{ fontSize: "0.8125rem", color: t.textMuted }}>{s.text}</div>
-                            <div style={{ fontSize: "0.75rem", fontWeight: 600, marginTop: "4px" }}>- {s.author}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr auto", gap: "8px", alignItems: "end" }}>
-                        <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Title</label>
-                          <input id="story-title" type="text" style={getInputStyle(t)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Story Text</label>
-                          <input id="story-text" type="text" style={getInputStyle(t)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Author</label>
-                          <input id="story-author" type="text" style={getInputStyle(t)} />
-                        </div>
+                    {/* 3. Wall of Fame / Success Stories Editor */}
+                    <div style={{ background: t.card, padding: "32px", borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                        <h4 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px" }}>
+                          <Trophy size={20} color="#10b981" /> Wall of Fame: Success Stories
+                        </h4>
                         <button 
                           onClick={() => {
-                            const title = (document.getElementById('story-title') as HTMLInputElement).value;
-                            const text = (document.getElementById('story-text') as HTMLInputElement).value;
-                            const author = (document.getElementById('story-author') as HTMLInputElement).value;
-                            if (!title || !text || !author) return;
                             const content = JSON.parse(settings.homeContent || '{}');
-                            const updated = [...(content.stories || []), { id: Date.now(), title, text, author }];
+                            const stories = content.stories || [];
+                            const updated = [...stories, { id: Date.now(), title: "New Success!", text: "Describe what happened...", author: "Team Member", image: null }];
                             setSettings({ ...settings, homeContent: JSON.stringify({ ...content, stories: updated }) });
-                            (document.getElementById('story-title') as HTMLInputElement).value = "";
-                            (document.getElementById('story-text') as HTMLInputElement).value = "";
-                            (document.getElementById('story-author') as HTMLInputElement).value = "";
                           }}
-                          style={{ background: "#2563eb", color: "white", padding: "10px 16px", borderRadius: "10px", border: "none", cursor: "pointer" }}
+                          style={{ background: "#f0fdf4", border: "1px solid #10b981", color: "#10b981", padding: "8px 16px", borderRadius: "10px", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer" }}
                         >
-                          Add
+                          + Add New Story
                         </button>
                       </div>
-                    </div>
 
-                    {/* Achievements Editor */}
-                    <div style={{ background: t.card, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
-                      <h4 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px" }}><Tag size={20} color="#2563eb" /> Manage Achievements</h4>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-                        {(JSON.parse(settings.homeContent || '{}').achievements || []).map((a: any, idx: number) => (
-                          <div key={idx} style={{ padding: "12px 16px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                              <span style={{ fontWeight: 700, fontSize: "0.875rem" }}>{a.title}</span>
-                              <span style={{ marginLeft: "8px", fontSize: "0.75rem", color: t.textMuted }}>({a.date})</span>
-                            </div>
-                            <button 
-                              onClick={() => {
-                                const content = JSON.parse(settings.homeContent || '{}');
-                                const updated = content.achievements.filter((_: any, i: number) => i !== idx);
-                                setSettings({ ...settings, homeContent: JSON.stringify({ ...content, achievements: updated }) });
-                              }}
-                              style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer" }}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: "8px", alignItems: "end" }}>
-                        <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Achievement</label>
-                          <input id="ach-title" type="text" placeholder="e.g. 500 Tasks Milestone" style={getInputStyle(t)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted }}>Date</label>
-                          <input id="ach-date" type="text" placeholder="e.g. May 2026" style={getInputStyle(t)} />
-                        </div>
-                        <button 
-                          onClick={() => {
-                            const title = (document.getElementById('ach-title') as HTMLInputElement).value;
-                            const date = (document.getElementById('ach-date') as HTMLInputElement).value;
-                            if (!title || !date) return;
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "20px" }}>
+                        {(() => {
+                          try {
                             const content = JSON.parse(settings.homeContent || '{}');
-                            const updated = [...(content.achievements || []), { id: Date.now(), title, date }];
-                            setSettings({ ...settings, homeContent: JSON.stringify({ ...content, achievements: updated }) });
-                            (document.getElementById('ach-title') as HTMLInputElement).value = "";
-                            (document.getElementById('ach-date') as HTMLInputElement).value = "";
-                          }}
-                          style={{ background: "#2563eb", color: "white", padding: "10px 16px", borderRadius: "10px", border: "none", cursor: "pointer" }}
-                        >
-                          Add
-                        </button>
+                            return (content.stories || []).map((s: any, idx: number) => (
+                              <div key={idx} style={{ padding: "20px", background: "#f8fafc", borderRadius: "20px", border: "1px solid #e2e8f0", position: "relative" }}>
+                                <button 
+                                  onClick={() => {
+                                    const updated = content.stories.filter((_: any, i: number) => i !== idx);
+                                    setSettings({ ...settings, homeContent: JSON.stringify({ ...content, stories: updated }) });
+                                  }}
+                                  style={{ position: "absolute", top: "12px", right: "12px", background: "white", border: "1px solid #fee2e2", color: "#ef4444", borderRadius: "8px", padding: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+
+                                <div style={{ marginBottom: "16px" }}>
+                                  <label style={{ fontSize: "0.625rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Story Photo</label>
+                                  <label style={{ display: "flex", alignItems: "center", gap: "10px", background: "white", padding: "10px", borderRadius: "12px", border: "1px solid #cbd5e1", cursor: "pointer", transition: "all 0.2s" }}>
+                                    <div style={{ background: "#f1f5f9", width: "40px", height: "40px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                      {s.image ? <img src={s.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Share2 size={16} color="#64748b" />}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#334155" }}>{s.image ? "Change Photo" : "Upload Photo"}</div>
+                                      <div style={{ fontSize: "0.625rem", color: "#94a3b8" }}>Max 1MB, optimized</div>
+                                    </div>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      hidden 
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          if (file.size > 1024 * 1024) {
+                                            showNotification("Image too large. Please use under 1MB.", "error");
+                                            return;
+                                          }
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            const newStories = [...content.stories];
+                                            newStories[idx].image = reader.result;
+                                            setSettings({...settings, homeContent: JSON.stringify({...content, stories: newStories})});
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+
+                                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                  <input 
+                                    value={s.title} 
+                                    onChange={(e) => {
+                                      const newStories = [...content.stories];
+                                      newStories[idx].title = e.target.value;
+                                      setSettings({...settings, homeContent: JSON.stringify({...content, stories: newStories})});
+                                    }}
+                                    placeholder="Story Title"
+                                    style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.875rem", fontWeight: 700 }}
+                                  />
+                                  <textarea 
+                                    value={s.text} 
+                                    onChange={(e) => {
+                                      const newStories = [...content.stories];
+                                      newStories[idx].text = e.target.value;
+                                      setSettings({...settings, homeContent: JSON.stringify({...content, stories: newStories})});
+                                    }}
+                                    placeholder="What happened?"
+                                    style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.8125rem", minHeight: "60px" }}
+                                  />
+                                  <input 
+                                    value={s.author} 
+                                    onChange={(e) => {
+                                      const newStories = [...content.stories];
+                                      newStories[idx].author = e.target.value;
+                                      setSettings({...settings, homeContent: JSON.stringify({...content, stories: newStories})});
+                                    }}
+                                    placeholder="Author / Team"
+                                    style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.8125rem", fontWeight: 600 }}
+                                  />
+                                </div>
+                              </div>
+                            ));
+                          } catch { return <p>Error loading stories.</p>; }
+                        })()}
                       </div>
                     </div>
                   </div>
