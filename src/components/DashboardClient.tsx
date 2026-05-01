@@ -45,6 +45,7 @@ type Task = {
   originalRequestType: string | null;
   frequency: string | null;
   displayId: string | null;
+  captureLO?: string;
 };
 
 type ExternalRequest = {
@@ -62,6 +63,7 @@ type ExternalRequest = {
   transferStatus: string | null;
   transferredBy: string | null;
   createdAt: string;
+  remarks?: string;
 };
 
 type LearningOpportunity = {
@@ -1679,8 +1681,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const sortedExternalRequests = [...filteredExternalRequests].sort((a, b) => {
     if (!extReqSortConfig) return 0;
     const { key, direction } = extReqSortConfig;
-    let valA = a[key];
-    let valB = b[key];
+    let valA = (key === 'remarks' ? (a as any).rejectReason : a[key]);
+    let valB = (key === 'remarks' ? (b as any).rejectReason : b[key]);
 
     if (valA === null || valA === undefined) valA = "";
     if (valB === null || valB === undefined) valB = "";
