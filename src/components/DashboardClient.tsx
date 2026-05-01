@@ -2786,16 +2786,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             {(activeView === 'HOME' || (activeView === 'LOS' && loActiveFilter === 'RESOURCES')) ? null : (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
                 <div>
-                  {activeView !== 'HOME' && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                      <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
-                      <span style={{ color: "#cbd5e1" }}>/</span>
-                      <span style={{ fontSize: "0.75rem", fontWeight: 500, color: t.textMuted }}>
-                        {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : 
-                         activeView === 'PAYMENTS' ? "Treasury" : "Development"}
-                      </span>
-                    </div>
-                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Finance Hub</span>
+                    <span style={{ color: "#cbd5e1" }}>/</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 500, color: t.textMuted }}>
+                      {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Workplace" : "Collaboration") : 
+                       activeView === 'PAYMENTS' ? "Treasury" : "Development"}
+                    </span>
+                  </div>
                   <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: t.text, letterSpacing: "-0.03em", transition: "all 0.3s ease" }}>
                     {activeView === 'TASKS' ? (activeSubView === 'MAIN' ? "Task Dashboard" : "Inter Department Request") : 
                      activeView === 'PAYMENTS' ? "Payments Calendar" : "Learning Opportunities"}
