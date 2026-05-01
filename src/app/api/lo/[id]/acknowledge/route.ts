@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getServerSession } from "@/lib/session";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession();
   if (!session || !session.user?.email) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const sql = getDb();
