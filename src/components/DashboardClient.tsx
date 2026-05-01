@@ -456,20 +456,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             type: 'TRACKER',
             templateVendor: occ.vendorName,
             templateDesc: occ.paymentDescription
-          }));
+          })) : [];
       }
       
       if (masterRes.ok) {
         const allTemplates = await masterRes.json();
-        masterRequests = allTemplates
+        masterRequests = Array.isArray(allTemplates) ? allTemplates
           .filter((t: any) => t.deleteRequested || t.editRequested)
           .map((t: any) => ({
             ...t,
             type: 'MASTER',
             templateVendor: t.vendorName,
             templateDesc: t.paymentDescription,
-            dueDate: t.startDate // Use startDate as a reference date
-          }));
+            dueDate: t.nextDueDate || null
+          })) : [];
       }
       
       setPaymentRequests([...trackerRequests, ...masterRequests]);
