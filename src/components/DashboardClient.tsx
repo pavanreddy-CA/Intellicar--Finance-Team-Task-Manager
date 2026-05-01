@@ -2593,8 +2593,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             {/* --- NEW INSPIRATION WALL --- */}
             {(() => {
               const content = JSON.parse(settings.homeContent || '{}');
-              const mission = content.mission || "Empowering the Finance Team through transparency, real-time collaboration, and operational excellence.";
-              const vision = content.vision || "To be the global benchmark for financial integrity and agile business partnership.";
+              const mission = content.mission || "To empower the organization through financial precision, seamless compliance, and data-driven MIS, transforming complex challenges into structured growth opportunities.";
+              const vision = content.vision || "To be the ultimate strategic backbone of the company, recognized for global-standard financial integrity and innovative operational agility.";
               const quote = content.quote || { 
                 text: "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
                 author: "Steve Jobs"
