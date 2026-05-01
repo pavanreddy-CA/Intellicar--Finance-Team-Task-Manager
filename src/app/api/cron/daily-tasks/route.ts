@@ -151,6 +151,6 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Cron daily tasks error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, message: error.message || "Internal server error" }, { status: 500 });
   }
 }

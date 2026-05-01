@@ -409,6 +409,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       }
     } catch (error) {
       console.error("Failed to fetch tasks", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -6024,9 +6026,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
                         <button 
                           onClick={async () => {
-                            if (!confirm("Are you sure you want to trigger daily task generation manually? This will create today's tasks immediately.")) return;
+                            if (isSavingSettings) return;
+                            setIsSavingSettings(true);
                             try {
-                              setIsSavingSettings(true);
                               const res = await fetch("/api/cron/daily-tasks", { 
                                 method: "POST",
                                 headers: { "x-manual-trigger": "true" }
@@ -6036,11 +6038,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                 showNotification(`Success! Automated engine generated ${data.count} tasks.`);
                                 fetchSettings();
                                 fetchTasks();
+                                setLoading(false);
                               } else {
-                                showNotification(`Error: ${data.message || "Unknown error"}`);
+                                showNotification(`Error: ${data.message || data.error || "Unknown error"}`);
                               }
-                            } catch (e) { showNotification("Trigger failed."); }
-                            finally { setIsSavingSettings(false); }
+                            } catch (e) { 
+                              showNotification("Trigger failed."); 
+                            } finally { 
+                              setIsSavingSettings(false); 
+                            }
                           }}
                           disabled={isSavingSettings}
                           style={{ 
