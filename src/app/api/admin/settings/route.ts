@@ -30,6 +30,7 @@ export async function PATCH(request: Request) {
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "dailyTaskGenerationTime" TEXT DEFAULT '06:00'`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "holidayList" TEXT DEFAULT '[]'`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "lastDailyGenerationAt" TIMESTAMP`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterResourceCategories" TEXT DEFAULT 'Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous'`;
     } catch (e) {
       console.log("Migration for settings fields failed/skipped");
     }
@@ -61,7 +62,8 @@ export async function PATCH(request: Request) {
           "masterPaymentTypes",
           "userModuleExceptions",
           "dailyTaskGenerationTime",
-          "holidayList"
+          "holidayList",
+          "masterResourceCategories"
         ) VALUES (
           'singleton',
           ${body.masterDepartments || ''},
@@ -86,7 +88,8 @@ export async function PATCH(request: Request) {
           ${body.masterPaymentTypes || 'AMC,Rent,Electricity,Subscriptions,Salaries,Vendor Payment'},
           ${body.userModuleExceptions || '{}'},
           ${body.dailyTaskGenerationTime || '06:00'},
-          ${body.holidayList || '[]'}
+          ${body.holidayList || '[]'},
+          ${body.masterResourceCategories || 'Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous'}
         )
         RETURNING *
       `;
@@ -122,7 +125,8 @@ export async function PATCH(request: Request) {
         "masterPaymentTypes" = ${body.masterPaymentTypes ?? existingSettings[0].masterPaymentTypes},
         "userModuleExceptions" = ${body.userModuleExceptions ?? existingSettings[0].userModuleExceptions},
         "dailyTaskGenerationTime" = ${body.dailyTaskGenerationTime ?? existingSettings[0].dailyTaskGenerationTime},
-        "holidayList" = ${body.holidayList ?? existingSettings[0].holidayList}
+        "holidayList" = ${body.holidayList ?? existingSettings[0].holidayList},
+        "masterResourceCategories" = ${body.masterResourceCategories ?? existingSettings[0].masterResourceCategories}
       WHERE id = ${settingsId}
       RETURNING *
     `;

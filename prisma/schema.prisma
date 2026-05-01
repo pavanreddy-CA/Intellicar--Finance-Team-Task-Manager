@@ -103,6 +103,7 @@ model LearningResource {
   type        String   // "PDF", "LINK", "IMAGE"
   url         String?  // For external links
   data        String?  // For Base64 content
+  category    String   @default("General")
   uploadedBy  String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -180,6 +181,7 @@ model SystemSettings {
   masterCommunicationModes String  @default("Email,Verbal Discussion,Hangouts,Whatsapp-IC Group")
   masterRequestTypes    String   @default("Accounts Receivable,Accounts Payable,General & Administration,Payroll")
   masterRequestStatuses String   @default("Under Process,Pending for Review,Processed")
+  masterResourceCategories String @default("Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous")
 
   // Matrices (JSON strings)
   moduleAccessMatrix    String   @default("{}")

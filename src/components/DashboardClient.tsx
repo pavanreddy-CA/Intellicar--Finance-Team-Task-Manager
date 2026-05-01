@@ -183,6 +183,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     homeContent: '{}',
     masterFrequencies: 'Ad,M,Y,2Y,H,Q,W,BW,D',
     masterPaymentTypes: 'AMC,Rent,Electricity,Subscriptions,Salaries,Vendor Payment',
+    masterResourceCategories: 'Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous',
     userModuleExceptions: '{}'
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
@@ -278,6 +279,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [resourceType, setResourceType] = useState<'LINK' | 'FILE'>('LINK');
   const [resourceLink, setResourceLink] = useState("");
   const [resourceFile, setResourceFile] = useState<File | null>(null);
+  const [resourceCategory, setResourceCategory] = useState("Miscellaneous");
   
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
@@ -1807,7 +1809,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           name: resourceName,
           type: resourceType,
           url: resourceLink,
-          data: dataStr
+          data: dataStr,
+          category: resourceCategory
         })
       });
 
@@ -4112,36 +4115,92 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           <div className="lo-view" style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden", animation: "fadeIn 0.5s ease-out" }}>
               {loActiveFilter === 'RESOURCES' ? (
                 <div style={{ minHeight: "600px" }}>
-                   <div style={{ height: "180px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", padding: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                   <div style={{ height: "180px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", padding: "40px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
                       <div>
-                         <h2 style={{ color: "white", margin: 0, fontSize: "2rem" }}>Knowledge Library</h2>
-                         <p style={{ color: "rgba(255,255,255,0.7)", margin: "4px 0 0 0" }}>Centralized reference materials and publications.</p>
+                         <h2 style={{ color: "white", margin: 0, fontSize: "2.25rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Knowledge Library</h2>
+                         <p style={{ color: "rgba(255,255,255,0.7)", margin: "8px 0 0 0", fontSize: "1rem" }}>Centralized reference materials, acts, and professional publications.</p>
                       </div>
-                      <button onClick={() => setShowResourceModal(true)} style={{ background: "#10b981", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 700 }}>Add Resource</button>
+                      <button 
+                        onClick={() => {
+                          const cats = settings.masterResourceCategories?.split(',').map(c => c.trim()).filter(Boolean) || [];
+                          if (cats.length > 0) setResourceCategory(cats[0]);
+                          setShowResourceModal(true);
+                        }} 
+                        style={{ background: "#10b981", color: "white", padding: "14px 28px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.3)", display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <Plus size={18} /> Add Resource
+                      </button>
                    </div>
-                   <div style={{ padding: "32px" }}>
+                   <div style={{ padding: "40px" }}>
                      {resourcesLoading ? (
-                       <div style={{ textAlign: "center", padding: "40px", color: t.textMuted }}>Loading...</div>
+                       <div style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>
+                         <RefreshCw size={40} className="animate-spin" style={{ margin: "0 auto 16px", opacity: 0.5 }} />
+                         <p>Fetching your library resources...</p>
+                       </div>
+                     ) : resources.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "100px 40px", background: t.card, borderRadius: "24px", border: `1px dashed ${t.border}` }}>
+                           <BookOpen size={48} style={{ color: t.textMuted, opacity: 0.3, marginBottom: "16px" }} />
+                           <h3 style={{ color: t.text, margin: "0 0 8px 0" }}>Library is Empty</h3>
+                           <p style={{ color: t.textMuted, margin: 0 }}>Start building your knowledge base by adding your first resource.</p>
+                        </div>
                      ) : (
-                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
-                         {resources.map(res => (
-                           <div key={res.id} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                             <h5 style={{ margin: 0, fontWeight: 700, color: t.text }}>{res.name}</h5>
-                             <div style={{ marginTop: "auto", display: "flex", gap: "8px" }}>
-                               <button 
-                                 onClick={() => {
-                                   if (res.type === 'LINK') window.open(res.url, '_blank');
-                                   else {
-                                     const win = window.open();
-                                     if (win) win.document.write(`<iframe src="${res.data}" style="width:100%;height:100%;border:0;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe>`);
-                                   }
-                                 }} 
-                                 style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: "#4f46e5", color: "white", cursor: "pointer" }}
-                               >View</button>
-                               {isAdmin && <button onClick={() => handleDeleteResource(res.id)} style={{ padding: "8px", borderRadius: "6px", border: "none", background: "#fee2e2", color: "#ef4444", cursor: "pointer" }}><Trash2 size={14} /></button>}
+                       <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
+                         {(settings.masterResourceCategories?.split(',').map(c => c.trim()).filter(Boolean) || ['Miscellaneous']).map(category => {
+                           const categoryResources = resources.filter(r => (r.category || 'Miscellaneous') === category);
+                           if (categoryResources.length === 0) return null;
+
+                           return (
+                             <div key={category} style={{ animation: "fadeIn 0.5s ease-out" }}>
+                               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                                 <div style={{ width: "4px", height: "24px", background: "#4f46e5", borderRadius: "2px" }}></div>
+                                 <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: t.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{category}</h3>
+                                 <span style={{ padding: "2px 10px", background: "#eef2ff", color: "#4f46e5", borderRadius: "12px", fontSize: "0.75rem", fontWeight: 700 }}>{categoryResources.length} Items</span>
+                               </div>
+                               
+                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
+                                 {categoryResources.map(res => (
+                                   <div key={res.id} className="resource-card" style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: "20px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.3s ease", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                       <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: res.type === 'LINK' ? "#eff6ff" : "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                         {res.type === 'LINK' ? <Link size={20} color="#3b82f6" /> : <FileText size={20} color="#ef4444" />}
+                                       </div>
+                                       {isAdmin && (
+                                         <button 
+                                           onClick={() => handleDeleteResource(res.id)} 
+                                           style={{ padding: "8px", borderRadius: "8px", border: "none", background: "transparent", color: "#ef4444", cursor: "pointer", opacity: 0.6 }}
+                                         >
+                                           <Trash2 size={16} />
+                                         </button>
+                                       )}
+                                     </div>
+                                     
+                                     <div>
+                                       <h5 style={{ margin: "0 0 6px 0", fontSize: "1.0625rem", fontWeight: 700, color: t.text, lineHeight: 1.4 }}>{res.name}</h5>
+                                       <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted, display: "flex", alignItems: "center", gap: "4px" }}>
+                                         <Clock size={12} /> {new Date(res.createdAt).toLocaleDateString()} • {res.uploadedBy}
+                                       </p>
+                                     </div>
+
+                                     <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+                                       <button 
+                                         onClick={() => {
+                                           if (res.type === 'LINK') window.open(res.url, '_blank');
+                                           else {
+                                             const win = window.open();
+                                             if (win) win.document.write(`<iframe src="${res.data}" style="width:100%;height:100%;border:0;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe>`);
+                                           }
+                                         }} 
+                                         style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", background: "#4f46e5", color: "white", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)" }}
+                                       >
+                                         <Eye size={18} /> View Resource
+                                       </button>
+                                     </div>
+                                   </div>
+                                 ))}
+                               </div>
                              </div>
-                           </div>
-                         ))}
+                           );
+                         })}
                        </div>
                      )}
                    </div>
@@ -6209,6 +6268,53 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                         </div>
                       </div>
 
+                      {/* Resource Categories */}
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
+                          <BookOpen size={18} color="#10b981" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Library Categories</h4>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {(settings.masterResourceCategories || "").split(',').filter(t => t.trim()).map((cat, idx) => (
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {cat.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterResourceCategories.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterResourceCategories: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add category (e.g. GST)..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    const currentItems = (settings.masterResourceCategories || "").split(',').map(i => i.trim().toLowerCase());
+                                    if (currentItems.includes(val.toLowerCase())) {
+                                      showNotification(`"${val}" already exists in Categories.`);
+                                      return;
+                                    }
+                                    setSettings({...settings, masterResourceCategories: (settings.masterResourceCategories || "") + (settings.masterResourceCategories?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Request Types */}
                       <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
@@ -7723,6 +7829,19 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                   style={getInputStyle(t)} 
                   placeholder="e.g. Finance Reporting Best Practices"
                 />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>CATEGORY / SUBJECT</label>
+                <select 
+                  value={resourceCategory}
+                  onChange={e => setResourceCategory(e.target.value)}
+                  style={getInputStyle(t)}
+                >
+                  {settings.masterResourceCategories?.split(',').map(c => c.trim()).filter(Boolean).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

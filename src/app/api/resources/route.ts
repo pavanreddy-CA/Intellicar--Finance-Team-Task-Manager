@@ -22,12 +22,12 @@ export async function POST(req: NextRequest) {
 
   const sql = getDb();
   try {
-    const { name, type, url, data } = await req.json();
+    const { name, type, url, data, category } = await req.json();
     const uploadedBy = session.user.name || session.user.email;
     
     const resource = await sql`
-      INSERT INTO "LearningResource" ("name", "type", "url", "data", "uploadedBy", "createdAt")
-      VALUES (${name}, ${type}, ${url}, ${data}, ${uploadedBy}, NOW())
+      INSERT INTO "LearningResource" ("name", "type", "url", "data", "category", "uploadedBy", "createdAt")
+      VALUES (${name}, ${type}, ${url}, ${data}, ${category || 'Miscellaneous'}, ${uploadedBy}, NOW())
       RETURNING *
     `;
     return NextResponse.json(resource[0]);
