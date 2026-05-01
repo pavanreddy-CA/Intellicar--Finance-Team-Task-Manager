@@ -4151,6 +4151,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                             <FileSpreadsheet size={14} color="#059669" /> Excel
                           </button>
                         </div>
+                      )}
                     </div>
                   </div>
                </div>
