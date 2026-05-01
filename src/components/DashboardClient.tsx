@@ -296,6 +296,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [taskSortConfig, setTaskSortConfig] = useState<{ key: keyof Task; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
 
   const [loSearchQuery, setLoSearchQuery] = useState("");
+  const [anaEntityFilter, setAnaEntityFilter] = useState("ALL");
+  const [anaUserFilter, setAnaUserFilter] = useState("ALL");
 
   // External Requests State
   const [externalRequests, setExternalRequests] = useState<ExternalRequest[]>([]);
