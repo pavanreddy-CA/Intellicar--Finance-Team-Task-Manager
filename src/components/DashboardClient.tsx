@@ -39,6 +39,7 @@ type Task = {
   editRequestReason?: string | null;
   deleteRequested?: boolean;
   deleteRequestReason?: string | null;
+  deleteRequestedBy?: string | null;
   linkedRequestId?: number | null;
   requestStatus?: string | null;
   transferStatus: string | null;

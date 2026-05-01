@@ -144,15 +144,23 @@ export async function authenticate(
         )
       `;
 
-      // --- Task Deletion Workflow Columns ---
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "deleteRequested" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "deleteRequestReason" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "deleteRequestedBy" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editRequestBy" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editRequestReason" TEXT`;
 
       // --- Learning Hub Migration ---
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "isAcknowledged" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "acknowledgedAt" TIMESTAMP WITH TIME ZONE`;
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "learnerComments" TEXT`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "deleteRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "deleteRequestReason" TEXT`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "editRequestReason" TEXT`;
 
       await sql`
         CREATE TABLE IF NOT EXISTS "LearningResource" (
@@ -166,10 +174,57 @@ export async function authenticate(
         )
       `;
 
-      // --- Payment Deletion Workflow Columns ---
+      // --- Payment Workflow Migration ---
+      await sql`
+        CREATE TABLE IF NOT EXISTS "PaymentTemplate" (
+          id SERIAL PRIMARY KEY,
+          "entityName" TEXT NOT NULL,
+          "paymentDescription" TEXT NOT NULL,
+          "vendorName" TEXT NOT NULL,
+          "paymentType" TEXT,
+          "departmentName" TEXT,
+          "financeFunction" TEXT,
+          "frequency" TEXT NOT NULL,
+          "vendorEmail" TEXT,
+          "prodEmail" TEXT,
+          "defaultOwner" TEXT,
+          "defaultReviewer" TEXT,
+          "dueDay" INTEGER,
+          "weeklyDay" TEXT,
+          "startDate" DATE,
+          "endDate" DATE,
+          "stopDate" DATE,
+          "isStopped" BOOLEAN DEFAULT FALSE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS "PaymentOccurrence" (
+          id SERIAL PRIMARY KEY,
+          "templateId" INTEGER REFERENCES "PaymentTemplate"(id) ON DELETE CASCADE,
+          "dueDate" DATE NOT NULL,
+          "actualDate" DATE,
+          "amountPaid" NUMERIC,
+          "isPaid" BOOLEAN DEFAULT FALSE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+      `;
+
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "deleteRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "deleteRequestReason" TEXT`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentTemplate" ADD COLUMN IF NOT EXISTS "editRequestReason" TEXT`;
+      
       await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "deleteRequested" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "deleteRequestReason" TEXT`;
       await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "deleteRequestedBy" TEXT`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "editRequestReason" TEXT`;
     } catch (e) {
       console.log("Migration check done/failed gracefully");
     }
