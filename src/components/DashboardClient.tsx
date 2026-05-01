@@ -4162,7 +4162,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <td style={getTdStyle(t)}>{lo.entity}</td>
                               <td style={getTdStyle(t)}>{lo.identifiedBy}</td>
                               <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.learningOpportunity}</td>
-                              <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.resolution || "--"}</td>
+                              <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.resolutionProvided || "--"}</td>
                               <td style={getTdStyle(t)}>{lo.committedBy}</td>
                               <td style={getTdStyle(t)}>
                                 <span style={{ padding: "4px 10px", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 700, background: lo.isAcknowledged ? "#dcfce7" : "#fef3c7", color: lo.isAcknowledged ? "#15803d" : "#b45309" }}>
@@ -4172,7 +4172,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                               <td style={getTdStyle(t)}>
                                 {!lo.isAcknowledged && (lo.committedBy === user.name || isAdmin) && (
                                   <button 
-                                    onClick={() => handleAcknowledgeLO(lo.id)}
+                                    onClick={() => { setAcknowledgingLO(lo); setShowAckModal(true); }}
                                     style={{ padding: "6px 12px", background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.75rem" }}
                                   >Acknowledge</button>
                                 )}
