@@ -4382,7 +4382,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                                           <button 
                                             onClick={() => handleRequestEditLO(lo.id)}
                                             disabled={lo.editRequested}
-                                            style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid", background: lo.editRequested ? "#f1f5f9" : "#eff6ff", color: "#3b82f6", borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe", fontSize: "0.75rem", fontWeight: 600, cursor: lo.editRequested ? "not-allowed" : "pointer" }}
+                                            style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid", background: lo.editRequested ? "#f1f5f9" : "#eff6ff", color: "#3b82f6", borderColor: lo.editRequested ? "#bfdbfe", fontSize: "0.75rem", fontWeight: 600, cursor: lo.editRequested ? "not-allowed" : "pointer" }}
                                           >
                                             {lo.editRequested ? "Requested" : "Edit"}
                                           </button>
@@ -4400,6 +4400,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 )}
            </div>
         </div>
+       </div>
       )}
 
       {activeView === 'PAYMENTS' && (
