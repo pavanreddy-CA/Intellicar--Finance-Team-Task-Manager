@@ -2783,7 +2783,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
             alignItems: "flex-end",
             transition: "all 0.3s ease"
           }}>
-            {(activeView === 'HOME' || (activeView === 'LOS' && loActiveFilter === 'RESOURCES')) ? null : (
+            {(activeView === 'HOME' || activeView === 'LOS') ? null : (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -4062,7 +4062,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         {/* LO View */}
         {activeView === 'LOS' && (
           <div className="lo-view" style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden", animation: "fadeIn 0.5s ease-out" }}>
-             {loActiveFilter === 'RESOURCES' ? (
+              {loActiveFilter === 'RESOURCES' ? (
                 <div style={{ minHeight: "600px" }}>
                    <div style={{ height: "180px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", padding: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
@@ -4098,43 +4098,97 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                      )}
                    </div>
                 </div>
-             ) : (
-                <>
-                  <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: theme === 'DARK' ? "#1e293b" : "#fafafa" }}>
-                    <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
-                    <div style={{ position: "relative", minWidth: "200px" }}>
-                      <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
-                      <input type="text" placeholder="Search..." value={loSearchQuery} onChange={e => setLoSearchQuery(e.target.value)} style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} />
+              ) : (
+                <div style={{ minHeight: "600px" }}>
+                  {/* Internal Filter Header */}
+                  <div style={{ height: "200px", background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", padding: "40px", position: "relative", overflow: "hidden" }}>
+                    <div style={{ position: "relative", zIndex: 1 }}>
+                      <h2 style={{ color: "white", margin: 0, fontSize: "2.5rem", fontWeight: 800 }}>Learning Opportunities</h2>
+                      <p style={{ color: "rgba(255,255,255,0.8)", margin: "8px 0 24px 0", fontSize: "1.1rem" }}>"We don't track mistakes, we track learning and improvement"</p>
+                      <div style={{ display: "flex", gap: "12px" }}>
+                        <button 
+                          onClick={() => setLoTypeFilter('ALL')}
+                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loTypeFilter === 'ALL' ? "white" : "rgba(255,255,255,0.15)", color: loTypeFilter === 'ALL' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
+                        >All Findings</button>
+                        <button 
+                          onClick={() => setLoTypeFilter('FINDINGS')}
+                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loTypeFilter === 'FINDINGS' ? "white" : "rgba(255,255,255,0.15)", color: loTypeFilter === 'FINDINGS' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
+                        >My Findings</button>
+                        <button 
+                          onClick={() => setLoTypeFilter('LEARNINGS')}
+                          style={{ padding: "10px 24px", borderRadius: "12px", border: "none", background: loTypeFilter === 'LEARNINGS' ? "white" : "rgba(255,255,255,0.15)", color: loTypeFilter === 'LEARNINGS' ? "#4f46e5" : "white", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
+                        >My Learnings</button>
+                      </div>
+                    </div>
+                    <Quote size={120} style={{ position: "absolute", right: "40px", bottom: "-20px", color: "rgba(255,255,255,0.1)" }} />
+                    <button onClick={() => setShowLOForm(true)} style={{ position: "absolute", top: "40px", right: "40px", background: "white", color: "#4f46e5", padding: "12px 24px", borderRadius: "12px", border: "none", fontWeight: 800, cursor: "pointer", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}>Update LO</button>
+                  </div>
+
+                  <div style={{ padding: "32px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                      <h3 style={{ margin: 0, fontWeight: 700, color: t.text }}>Internal Audit Log</h3>
+                      <div style={{ position: "relative", width: "300px" }}>
+                        <Search style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="Search opportunities..." 
+                          value={loSearchQuery} 
+                          onChange={e => setLoSearchQuery(e.target.value)} 
+                          style={{ width: "100%", padding: "12px 12px 12px 40px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, outline: "none" }} 
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ overflowX: "auto", background: t.card, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
+                        <thead>
+                          <tr style={{ borderBottom: `1px solid ${t.border}`, background: theme === 'DARK' ? "#1e293b" : "#f8fafc" }}>
+                            <th style={{ ...getThStyle(t), padding: "20px" }}>SI No</th>
+                            <th style={getThStyle(t)}>Date</th>
+                            <th style={getThStyle(t)}>Entity</th>
+                            <th style={getThStyle(t)}>Identified By</th>
+                            <th style={getThStyle(t)}>Opportunity</th>
+                            <th style={getThStyle(t)}>Resolution</th>
+                            <th style={getThStyle(t)}>Committed By</th>
+                            <th style={getThStyle(t)}>Status</th>
+                            <th style={getThStyle(t)}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {loLoading ? (
+                            <tr><td colSpan={9} style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>Loading opportunities...</td></tr>
+                          ) : sortedLOs.length === 0 ? (
+                            <tr><td colSpan={9} style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>No records found.</td></tr>
+                          ) : sortedLOs.map((lo, idx) => (
+                            <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} className="table-row">
+                              <td style={{ ...getTdStyle(t), padding: "16px 20px" }}>{idx + 1}</td>
+                              <td style={getTdStyle(t)}>{formatDate(lo.dateOfIdentification)}</td>
+                              <td style={getTdStyle(t)}>{lo.entity}</td>
+                              <td style={getTdStyle(t)}>{lo.identifiedBy}</td>
+                              <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.learningOpportunity}</td>
+                              <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.resolution || "--"}</td>
+                              <td style={getTdStyle(t)}>{lo.committedBy}</td>
+                              <td style={getTdStyle(t)}>
+                                <span style={{ padding: "4px 10px", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 700, background: lo.isAcknowledged ? "#dcfce7" : "#fef3c7", color: lo.isAcknowledged ? "#15803d" : "#b45309" }}>
+                                  {lo.isAcknowledged ? "Acknowledged" : "Pending"}
+                                </span>
+                              </td>
+                              <td style={getTdStyle(t)}>
+                                {!lo.isAcknowledged && (lo.committedBy === user.name || isAdmin) && (
+                                  <button 
+                                    onClick={() => handleAcknowledgeLO(lo.id)}
+                                    style={{ padding: "6px 12px", background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.75rem" }}
+                                  >Acknowledge</button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr>
-                          <th style={getThStyle(t)}>SI No</th>
-                          <th style={getThStyle(t)}>Date</th>
-                          <th style={getThStyle(t)}>Entity</th>
-                          <th style={getThStyle(t)}>Learning Opportunity</th>
-                          <th style={getThStyle(t)}>Committed By</th>
-                          <th style={getThStyle(t)}>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {loLoading ? <tr><td colSpan={6} style={{ textAlign: "center", padding: "40px" }}>Loading...</td></tr> : sortedLOs.map((lo, idx) => (
-                          <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}` }}>
-                            <td style={getTdStyle(t)}>{idx + 1}</td>
-                            <td style={getTdStyle(t)}>{formatDate(lo.dateOfIdentification)}</td>
-                            <td style={getTdStyle(t)}>{lo.entity}</td>
-                            <td style={getTdStyle(t)}>{lo.learningOpportunity}</td>
-                            <td style={getTdStyle(t)}>{lo.committedBy}</td>
-                            <td style={getTdStyle(t)}>{lo.isAcknowledged ? "Acknowledged" : "Pending"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-             )}
+                </div>
+              )}
           </div>
         )}
 
