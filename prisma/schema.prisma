@@ -90,6 +90,22 @@ model LearningOpportunity {
   deleteRequested     Boolean   @default(false)
   deleteRequestReason String?
   createdByEmail      String?
+  
+  // New Acknowledgment Fields
+  isAcknowledged      Boolean   @default(false)
+  acknowledgedAt      DateTime?
+  learnerComments     String?
+}
+
+model LearningResource {
+  id          Int      @id @default(autoincrement())
+  name        String
+  type        String   // "PDF", "LINK", "IMAGE"
+  url         String?  // For external links
+  data        String?  // For Base64 content
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model RecurringTemplate {

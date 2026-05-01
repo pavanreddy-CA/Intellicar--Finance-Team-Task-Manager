@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -243,9 +243,28 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [dateFilterPreset, setDateFilterPreset] = useState("ALL_TIME");
-  const [loActiveFilter, setLoActiveFilter] = useState<'ALL' | 'REPORTS' | 'LEARNINGS'>('ALL');
-  const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
+  const [loActiveFilter, setLoActiveFilter] = useState<'ALL' | 'REPORTS' | 'LEARNINGS' | 'RESOURCES'>('ALL');
+  const [loDateFrom, setLoDateFrom] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 3); // Default to last 3 months
+    return d.toISOString().split('T')[0];
+  });
+  const [loDateTo, setLoDateTo] = useState(new Date().toISOString().split('T')[0]);
+  const [resources, setResources] = useState<any[]>([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  
+  // Growth Hub Modals & State
+  const [showAckModal, setShowAckModal] = useState(false);
+  const [acknowledgingLO, setAcknowledgingLO] = useState<LearningOpportunity | null>(null);
+  const [ackComments, setAckComments] = useState("");
+  
+  const [showResourceModal, setShowResourceModal] = useState(false);
+  const [resourceName, setResourceName] = useState("");
+  const [resourceType, setResourceType] = useState<'LINK' | 'FILE'>('LINK');
+  const [resourceLink, setResourceLink] = useState("");
+  const [resourceFile, setResourceFile] = useState<File | null>(null);
+  
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [newManagerEmailInput, setNewManagerEmailInput] = useState("");
   const [newLOEmailInput, setNewLOEmailInput] = useState("");
@@ -534,6 +553,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  const fetchResources = async () => {
+    setResourcesLoading(true);
+    try {
+      const res = await fetch("/api/resources");
+      if (res.ok) {
+        const data = await res.json();
+        setResources(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch resources", error);
+    } finally {
+      setResourcesLoading(false);
+    }
+  };
+
   const fetchExternalRequests = async () => {
     setExtReqLoading(true);
     try {
@@ -573,7 +607,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     fetchExternalRequests();
     fetchPaymentRequests();
     fetchSettings();
-    fetchUsersList(); // Ensure users load on mount for LO form
+    fetchUsersList(); 
+    fetchResources();
   }, [isAdmin]);
 
   const isModuleAllowed = (moduleName: string) => {
@@ -1544,10 +1579,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   });
 
   // Unique values for task filters
+  // Unique values for task filters
   const uniqueTaskEntities = Array.from(new Set(tasks.map(t => t.entityName))).sort();
   const uniqueTaskOwners = Array.from(new Set(tasks.map(t => t.ownerName))).sort();
   const uniqueTaskStatuses = Array.from(new Set(tasks.map(t => t.taskStatus))).sort();
   const uniqueTaskReviewers = Array.from(new Set(tasks.map(t => t.reviewerName).filter((r): r is string => !!r && r !== "Not Applicable"))).sort();
+
+  // Unique values for LO filters and analytics
+  const uniqueLOEntities = Array.from(new Set(los.map(l => l.entity))).sort();
+  const uniqueLOIdentifiedBy = Array.from(new Set(los.map(l => l.identifiedBy))).sort();
 
   // Learning Opportunity Filtering and Sorting
   const filteredLOsToDisplay = los.filter(lo => {
@@ -1577,7 +1617,25 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     let entityMatch = true;
     if (loEntityFilter !== "ALL" && lo.entity !== loEntityFilter) entityMatch = false;
 
-    return typeMatch && searchMatch && entityMatch;
+    // 4. Date Filter (Universal)
+    let dateMatch = true;
+    if (loDateFrom || loDateTo) {
+      const loDate = new Date(lo.dateOfIdentification);
+      loDate.setHours(0, 0, 0, 0);
+      
+      if (loDateFrom) {
+        const from = new Date(loDateFrom);
+        from.setHours(0, 0, 0, 0);
+        if (loDate < from) dateMatch = false;
+      }
+      if (loDateTo) {
+        const to = new Date(loDateTo);
+        to.setHours(0, 0, 0, 0);
+        if (loDate > to) dateMatch = false;
+      }
+    }
+
+    return typeMatch && searchMatch && entityMatch && dateMatch;
   });
 
   const sortedLOs = [...filteredLOsToDisplay].sort((a, b) => {
@@ -1595,6 +1653,27 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   });
 
   const uniqueLOEntities = Array.from(new Set(los.map(l => l.entity))).sort();
+
+  const fetchResources = async () => {
+    setResourcesLoading(true);
+    try {
+      const res = await fetch("/api/resources");
+      if (res.ok) {
+        const data = await res.json();
+        setResources(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch resources", error);
+    } finally {
+      setResourcesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeView === 'LOS') {
+      fetchResources();
+    }
+  }, [activeView]);
 
   const handleTaskSort = (key: keyof Task) => {
     setTaskSortConfig(prev => {
@@ -1621,6 +1700,86 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       }
       return { key, direction: 'asc' };
     });
+  };
+
+  const handleDeleteResource = async (id: number) => {
+    showConfirm("Are you sure you want to delete this resource?", async () => {
+      try {
+        const res = await fetch(`/api/resources?id=${id}`, { method: "DELETE" });
+        if (res.ok) {
+          showNotification("Resource deleted successfully");
+          fetchResources();
+        }
+      } catch (error) {
+        console.error("Failed to delete resource", error);
+      }
+    });
+  };
+
+  const handleAcknowledgeLO = async () => {
+    if (!acknowledgingLO) return;
+    try {
+      const res = await fetch("/api/lo", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: acknowledgingLO.id,
+          isAcknowledged: true,
+          learnerComments: ackComments
+        })
+      });
+      if (res.ok) {
+        showNotification("Learning acknowledged successfully!");
+        setShowAckModal(false);
+        setAckComments("");
+        setAcknowledgingLO(null);
+        fetchLOs();
+      } else {
+        const data = await res.json();
+        showNotification(data.message || "Failed to acknowledge", "error");
+      }
+    } catch (error) {
+      console.error("Failed to acknowledge LO", error);
+    }
+  };
+
+  const handleResourceUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResourcesLoading(true);
+    try {
+      let dataStr = "";
+      if (resourceType === 'FILE' && resourceFile) {
+        const reader = new FileReader();
+        dataStr = await new Promise((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(resourceFile);
+        });
+      }
+
+      const res = await fetch("/api/resources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: resourceName,
+          type: resourceType,
+          url: resourceLink,
+          data: dataStr
+        })
+      });
+
+      if (res.ok) {
+        showNotification("Resource added successfully!");
+        setShowResourceModal(false);
+        setResourceName("");
+        setResourceLink("");
+        setResourceFile(null);
+        fetchResources();
+      }
+    } catch (error) {
+      console.error("Failed to upload resource", error);
+    } finally {
+      setResourcesLoading(false);
+    }
   };
 
   const handleUserSort = (key: string) => {
@@ -3828,85 +3987,95 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
         {/* LO View */}
         {activeView === 'LOS' && (
-          <div className="lo-view">
-          {/* LO View */}
+          <div className="lo-view" style={{ animation: "fadeIn 0.5s ease-out" }}>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+          ` }} />
+          
           <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
-             <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
+             <div style={{ padding: "28px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: theme === 'DARK' ? "#1e293b" : "#fafafa" }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Learning Opportunities</h3>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => setIsAnalyticsOpen(true)}
+                        style={{ 
+                          display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", 
+                          color: "white", padding: "6px 14px", borderRadius: "10px", border: "none", cursor: "pointer", 
+                          fontWeight: 600, fontSize: "0.75rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)" 
+                        }}
+                      >
+                        📊 View Analytics
+                      </button>
+                    )}
+                  </div>
                   <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                    <button 
-                      onClick={() => setLoActiveFilter('ALL')}
-                      style={{ 
-                        padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
-                        border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                        background: loActiveFilter === 'ALL' ? "#2563eb" : "white",
-                        borderColor: loActiveFilter === 'ALL' ? "#2563eb" : "#e2e8f0",
-                        color: loActiveFilter === 'ALL' ? "white" : "#64748b",
-                        boxShadow: loActiveFilter === 'ALL' ? "0 4px 6px -1px rgba(37, 99, 235, 0.2)" : "none"
-                      }}
-                    >
-                      All
-                    </button>
-                    <button 
-                      onClick={() => setLoActiveFilter('REPORTS')}
-                      style={{ 
-                        padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
-                        border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                        background: loActiveFilter === 'REPORTS' ? "#3b82f6" : "white",
-                        borderColor: loActiveFilter === 'REPORTS' ? "#3b82f6" : "#e2e8f0",
-                        color: loActiveFilter === 'REPORTS' ? "white" : "#64748b",
-                        boxShadow: loActiveFilter === 'REPORTS' ? "0 4px 6px -1px rgba(59, 130, 246, 0.2)" : "none"
-                      }}
-                    >
-                      My Reports
-                    </button>
-                    <button 
-                      onClick={() => setLoActiveFilter('LEARNINGS')}
-                      style={{ 
-                        padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
-                        border: "1px solid", cursor: "pointer", transition: "all 0.2s",
-                        background: loActiveFilter === 'LEARNINGS' ? "#ef4444" : "white",
-                        borderColor: loActiveFilter === 'LEARNINGS' ? "#ef4444" : "#e2e8f0",
-                        color: loActiveFilter === 'LEARNINGS' ? "white" : "#64748b",
-                        boxShadow: loActiveFilter === 'LEARNINGS' ? "0 4px 6px -1px rgba(239, 68, 68, 0.2)" : "none"
-                      }}
-                    >
-                      My Learnings
-                    </button>
+                    {[
+                      { id: 'ALL', label: 'All Findings', color: '#2563eb' },
+                      { id: 'REPORTS', label: 'My Findings', color: '#3b82f6' },
+                      { id: 'LEARNINGS', label: 'My Learnings', color: '#ef4444' },
+                      { id: 'RESOURCES', label: 'Resources', color: '#10b981' }
+                    ].map(tab => (
+                      <button 
+                        key={tab.id}
+                        onClick={() => setLoActiveFilter(tab.id as any)}
+                        style={{ 
+                          padding: "6px 14px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600, 
+                          border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                          background: loActiveFilter === tab.id ? tab.color : t.card,
+                          borderColor: loActiveFilter === tab.id ? tab.color : t.border,
+                          color: loActiveFilter === tab.id ? "white" : t.textMuted,
+                          boxShadow: loActiveFilter === tab.id ? `0 4px 6px -1px ${tab.color}33` : "none"
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-                  <div style={{ position: "relative", minWidth: "250px" }}>
+                
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+                  {/* Universal Date Filter */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.bg, padding: "6px 12px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
+                    <Calendar size={14} color={t.accent} />
+                    <input 
+                      type="date" 
+                      value={loDateFrom} 
+                      onChange={e => setLoDateFrom(e.target.value)}
+                      style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
+                    />
+                    <span style={{ color: t.textMuted, fontSize: "0.75rem" }}>to</span>
+                    <input 
+                      type="date" 
+                      value={loDateTo} 
+                      onChange={e => setLoDateTo(e.target.value)}
+                      style={{ border: "none", background: "transparent", fontSize: "0.75rem", outline: "none", color: t.text }}
+                    />
+                  </div>
+
+                  <div style={{ position: "relative", minWidth: "200px" }}>
                     <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
                     <input 
                       type="text" 
-                      placeholder="Search LOs, entities, names..." 
+                      placeholder="Search..." 
                       value={loSearchQuery}
                       onChange={e => setLoSearchQuery(e.target.value)}
                       style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
                     />
                   </div>
-                  <select 
-                    value={loEntityFilter} 
-                    onChange={e => setLoEntityFilter(e.target.value)}
-                    style={{ padding: "8px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", background: t.card, color: t.textMuted }}
-                  >
-                    <option value="ALL">All Entities</option>
-                    {uniqueLOEntities.map(e => <option key={e} value={e}>{e}</option>)}
-                  </select>
+
                   <div className="download-container" style={{ position: "relative" }}>
                     <button 
                       onClick={() => setShowLODownloadDropdown(!showLODownloadDropdown)}
                       style={{ 
                         display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
                         padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
-                        cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, 
-                        boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", transition: "all 0.2s" 
+                        cursor: "pointer", fontSize: "0.8125rem", fontWeight: 600, transition: "all 0.2s" 
                       }} 
-                      onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
                     >
-                      <Download size={16} color="#2563eb" /> Download
+                      <Download size={16} color="#2563eb" />
                     </button>
                     
                     {showLODownloadDropdown && (
@@ -3918,47 +4087,15 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                       }}>
                         <button 
                           onClick={() => { exportLOsToExcel(); setShowLODownloadDropdown(false); }}
-                          style={{ 
-                            width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                            padding: "10px 16px", border: "none", background: t.card, 
-                            color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", 
-                            textAlign: "left", transition: "background 0.2s" 
-                          }}
-                          onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
-                          onMouseOut={e => e.currentTarget.style.background = "white"}
+                          style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", border: "none", background: t.card, color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", textAlign: "left" }}
                         >
-                          <FileSpreadsheet size={14} color="#059669" /> Excel Format
+                          <FileSpreadsheet size={14} color="#059669" /> Excel
                         </button>
                         <button 
                           onClick={() => { exportLOsToPDF(); setShowLODownloadDropdown(false); }}
-                          style={{ 
-                            width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                            padding: "10px 16px", border: "none", background: t.card, 
-                            color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", 
-                            textAlign: "left", transition: "background 0.2s" 
-                          }}
-                          onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
-                          onMouseOut={e => e.currentTarget.style.background = "white"}
+                          style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 16px", border: "none", background: t.card, color: t.textMuted, cursor: "pointer", fontSize: "0.8125rem", textAlign: "left" }}
                         >
-                          <FileText size={14} color="#991b1b" /> PDF Document
-                        </button>
-                        <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
-                        <button 
-                          onClick={() => { 
-                            setShareData({...shareData, type: 'lo', format: 'excel', subject: `LO Report - ${new Date().toISOString().split('T')[0]}`});
-                            setShowShareModal(true); 
-                            setShowLODownloadDropdown(false); 
-                          }}
-                          style={{ 
-                            width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                            padding: "10px 16px", border: "none", background: t.card, 
-                            color: "#4f46e5", cursor: "pointer", fontSize: "0.8125rem", 
-                            textAlign: "left", transition: "background 0.2s", fontWeight: 600
-                          }}
-                          onMouseOver={e => e.currentTarget.style.background = "#f5f3ff"}
-                          onMouseOut={e => e.currentTarget.style.background = "white"}
-                        >
-                          <Mail size={14} color="#4f46e5" /> Share via Email
+                          <FileText size={14} color="#991b1b" /> PDF
                         </button>
                       </div>
                     )}
@@ -3966,139 +4103,212 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
                 </div>
              </div>
              <div style={{ overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
-                <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "1600px", fontSize: "0.875rem", textAlign: "left" }}>
-                  <thead>
-                    <tr>
-                      <th style={getThStyle(t)}>SI No</th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('dateOfIdentification')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Date {loSortConfig?.key === 'dateOfIdentification' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('entity')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Entity {loSortConfig?.key === 'entity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Learning Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('identifiedBy')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Identified By {loSortConfig?.key === 'identifiedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('committedBy')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Committed By {loSortConfig?.key === 'committedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('modeOfCommunication')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Communication Mode {loSortConfig?.key === 'modeOfCommunication' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loLoading ? (
-                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading Learning Opportunities...</td></tr>
-                    ) : los.length === 0 ? (
-                      <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No Learning Opportunities recorded.</td></tr>
+                {loActiveFilter === 'RESOURCES' ? (
+                  <div style={{ padding: "32px", background: theme === 'DARK' ? "#1e293b" : "white", minHeight: "500px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Knowledge Base & Resources</h4>
+                        <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: t.textMuted }}>Centralized repository for books, publications, and reference materials.</p>
+                      </div>
+                      <button 
+                        onClick={() => setShowResourceModal(true)}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(16, 185, 129, 0.3)" }}
+                      >
+                        <Plus size={18} /> Add Resource
+                      </button>
+                    </div>
+
+                    {resourcesLoading ? (
+                      <div style={{ display: "flex", justifyContent: "center", padding: "60px", color: t.textMuted }}>Loading resources...</div>
+                    ) : resources.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "80px 40px", background: t.bg, borderRadius: "20px", border: `2px dashed ${t.border}` }}>
+                        <BookOpen size={48} color={t.textMuted} style={{ marginBottom: "16px", opacity: 0.3 }} />
+                        <h5 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 600, color: t.text }}>No resources yet</h5>
+                        <p style={{ margin: "4px 0 0 0", color: t.textMuted }}>Start by adding a book link or uploading a PDF.</p>
+                      </div>
                     ) : (
-                      sortedLOs.map((lo, idx) => (
-                        <tr key={lo.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background-color 0.2s" }} className="table-row">
-                          <td style={getTdStyle(t)}><span style={{ color: t.textMuted, fontWeight: 500 }}>{idx + 1}</span></td>
-                          <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
-                          <td style={getTdStyle(t)}>{lo.entity}</td>
-                          <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
-                          <td style={getTdStyle(t)}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              {lo.identifiedBy}
-                              {lo.identifiedBy === (user?.name || user?.email) && (
-                                <span style={{ background: "#eff6ff", color: "#3b82f6", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Reported</span>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                        {resources.map(res => (
+                          <div key={res.id} style={{ 
+                            background: t.card, border: `1px solid ${t.border}`, borderRadius: "20px", padding: "20px", 
+                            display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.3s ease",
+                            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)"
+                          }} className="hover-card">
+                            <div style={{ 
+                              width: "100%", height: "140px", background: res.type === 'LINK' ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)" : "linear-gradient(135deg, #10b981 0%, #047857 100%)",
+                              borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden"
+                            }}>
+                              {res.type === 'LINK' ? <Link size={40} color="rgba(255,255,255,0.4)" /> : <FileText size={40} color="rgba(255,255,255,0.4)" />}
+                              <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", padding: "4px 10px", borderRadius: "20px", fontSize: "0.65rem", fontWeight: 700, color: "white", textTransform: "uppercase" }}>
+                                {res.type}
+                              </div>
+                            </div>
+                            <div>
+                              <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: t.text, marginBottom: "4px" }}>{res.name}</h5>
+                              <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted }}>Uploaded by {res.uploadedBy}</p>
+                            </div>
+                            <div style={{ marginTop: "auto", display: "flex", gap: "10px" }}>
+                              <button 
+                                onClick={() => {
+                                  if (res.type === 'LINK') {
+                                    window.open(res.url, '_blank');
+                                  } else {
+                                    const link = document.createElement('a');
+                                    link.href = res.data;
+                                    link.download = res.name;
+                                    link.click();
+                                  }
+                                }}
+                                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: t.bg, color: t.text, fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                              >
+                                {res.type === 'LINK' ? <ExternalLink size={14} /> : <Download size={14} />}
+                                {res.type === 'LINK' ? 'Open Link' : 'Download'}
+                              </button>
+                              {isAdmin && (
+                                <button 
+                                  onClick={() => handleDeleteResource(res.id)}
+                                  style={{ padding: "10px", borderRadius: "10px", border: "none", background: "#fee2e2", color: "#ef4444", cursor: "pointer" }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
                               )}
                             </div>
-                          </td>
-                          <td style={getTdStyle(t)}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              {lo.committedBy}
-                              {lo.committedBy === (user?.name || user?.email) && (
-                                <span style={{ background: "#fef2f2", color: "#ef4444", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Learning</span>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
-                          <td style={getTdStyle(t)}>{lo.modeOfCommunication}</td>
-                          <td style={{ ...getTdStyle(t), textAlign: "center" }}>
-                                <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
-                                  {(isAdmin || lo.editApproved) && (
-                                    <button 
-                                      onClick={() => { setEditingLO(lo); setShowLOForm(true); }}
-                                      style={{ 
-                                        background: t.bg, 
-                                        color: t.textMuted, 
-                                        border: `1px solid ${t.border}`, 
-                                        cursor: "pointer", 
-                                        padding: "6px", borderRadius: "8px", 
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                        transition: "all 0.2s"
-                                      }}
-                                      title="Edit LO"
-                                      onMouseOver={e => { e.currentTarget.style.color = "#2563eb"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#eff6ff"; }}
-                                      onMouseOut={e => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#f8fafc"; }}
-                                    >
-                                      <Edit2 size={14} />
-                                    </button>
-                                  )}
-                                  <button 
-                                    onClick={() => handleRequestDeleteLO(lo.id)}
-                                    disabled={lo.deleteRequested}
-                                    style={{ 
-                                      padding: "6px 12px", borderRadius: "6px", border: "1px solid",
-                                      background: lo.deleteRequested ? "#f1f5f9" : "#fef2f2",
-                                      color: lo.deleteRequested ? "#94a3b8" : "#ef4444",
-                                      borderColor: lo.deleteRequested ? "#cbd5e1" : "#fca5a5",
-                                      fontSize: "0.75rem", fontWeight: 600,
-                                      cursor: lo.deleteRequested ? "not-allowed" : "pointer",
-                                      transition: "all 0.2s"
-                                    }}
-                                  >
-                                    {lo.deleteRequested ? "Requested" : "Del Req"}
-                                  </button>
-                                  
-                                  {(!isAdmin && !lo.editApproved) && (
-                                    <button 
-                                      onClick={() => handleRequestEditLO(lo.id)}
-                                      disabled={lo.editRequested}
-                                      style={{ 
-                                        padding: "6px 12px", borderRadius: "6px", border: "1px solid",
-                                        background: lo.editRequested ? "#f1f5f9" : "#eff6ff",
-                                        color: lo.editRequested ? "#3b82f6" : "#3b82f6",
-                                        borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe",
-                                        fontSize: "0.75rem", fontWeight: 600,
-                                        cursor: lo.editRequested ? "not-allowed" : "pointer",
-                                        transition: "all 0.2s"
-                                      }}
-                                    >
-                                      {lo.editRequested ? "Requested" : "Edit Req"}
-                                    </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "1600px", fontSize: "0.875rem", textAlign: "left" }}>
+                    <thead>
+                      <tr>
+                        <th style={getThStyle(t)}>SI No</th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('dateOfIdentification')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Date {loSortConfig?.key === 'dateOfIdentification' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('entity')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Entity {loSortConfig?.key === 'entity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Learning Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('identifiedBy')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Identified By {loSortConfig?.key === 'identifiedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('committedBy')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Committed By {loSortConfig?.key === 'committedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('isAcknowledged')}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            Acknowledgment {loSortConfig?.key === 'isAcknowledged' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          </div>
+                        </th>
+                        <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loLoading ? (
+                        <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading Learning Opportunities...</td></tr>
+                      ) : sortedLOs.length === 0 ? (
+                        <tr><td colSpan={9} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No entries found for the selected criteria.</td></tr>
+                      ) : (
+                        sortedLOs.map((lo, idx) => {
+                          const myName = user?.name || user?.email;
+                          const isMyLearning = lo.committedBy === myName;
+                          
+                          return (
+                          <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background-color 0.2s", opacity: lo.isAcknowledged ? 0.8 : 1 }} className="table-row">
+                            <td style={getTdStyle(t)}><span style={{ color: t.textMuted, fontWeight: 500 }}>{idx + 1}</span></td>
+                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>{formatDate(lo.dateOfIdentification)}</td>
+                            <td style={getTdStyle(t)}>{lo.entity}</td>
+                            <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.learningOpportunity}</td>
+                            <td style={getTdStyle(t)}>{lo.identifiedBy}</td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                {lo.committedBy}
+                                {isMyLearning && (
+                                  <span style={{ background: "#fef2f2", color: "#ef4444", padding: "2px 6px", borderRadius: "6px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Learning</span>
+                                )}
+                              </div>
+                            </td>
+                            <td style={{ ...getTdStyle(t), minWidth: "300px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{lo.resolutionProvided}</td>
+                            <td style={getTdStyle(t)}>
+                              {lo.isAcknowledged ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                  <span style={{ color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                                    <CheckCircle2 size={14} /> Acknowledged
+                                  </span>
+                                  {lo.learnerComments && (
+                                    <div style={{ fontSize: "0.75rem", color: t.textMuted, fontStyle: "italic", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                      "{lo.learnerComments}"
+                                    </div>
                                   )}
                                 </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                              ) : isMyLearning ? (
+                                <button 
+                                  onClick={() => { setAcknowledgingLO(lo); setShowAckModal(true); }}
+                                  style={{ background: "#ef4444", color: "white", border: "none", padding: "6px 12px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.75rem" }}
+                                >
+                                  Acknowledge
+                                </button>
+                              ) : (
+                                <span style={{ color: t.textMuted, fontSize: "0.75rem" }}>Pending</span>
+                              )}
+                            </td>
+                            <td style={{ ...getTdStyle(t), textAlign: "center" }}>
+                                  <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
+                                    {(isAdmin || (lo.editApproved && !lo.isAcknowledged)) && (
+                                      <button 
+                                        onClick={() => { setEditingLO(lo); setShowLOForm(true); }}
+                                        style={{ background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, cursor: "pointer", padding: "6px", borderRadius: "8px" }}
+                                      >
+                                        <Edit2 size={14} />
+                                      </button>
+                                    )}
+                                    {!lo.isAcknowledged && (
+                                      <>
+                                        <button 
+                                          onClick={() => handleRequestDeleteLO(lo.id)}
+                                          disabled={lo.deleteRequested}
+                                          style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid", background: lo.deleteRequested ? "#f1f5f9" : "#fef2f2", color: lo.deleteRequested ? "#94a3b8" : "#ef4444", borderColor: lo.deleteRequested ? "#cbd5e1" : "#fca5a5", fontSize: "0.75rem", fontWeight: 600, cursor: lo.deleteRequested ? "not-allowed" : "pointer" }}
+                                        >
+                                          {lo.deleteRequested ? "Requested" : "Del"}
+                                        </button>
+                                        {!isAdmin && !lo.editApproved && (
+                                          <button 
+                                            onClick={() => handleRequestEditLO(lo.id)}
+                                            disabled={lo.editRequested}
+                                            style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid", background: lo.editRequested ? "#f1f5f9" : "#eff6ff", color: "#3b82f6", borderColor: lo.editRequested ? "#cbd5e1" : "#bfdbfe", fontSize: "0.75rem", fontWeight: 600, cursor: lo.editRequested ? "not-allowed" : "pointer" }}
+                                          >
+                                            {lo.editRequested ? "Requested" : "Edit"}
+                                          </button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                            </td>
+                          </tr>
+                        );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                )}
              </div>
           </div>
         </div>
@@ -7271,60 +7481,202 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         </div>
       )}
 
-      {promptState.isOpen && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 12000
-        }}>
-          <div style={{
-            background: theme === 'DARK' ? "rgba(30, 41, 59, 0.98)" : "white",
-            padding: "32px", borderRadius: "24px", width: "450px", maxWidth: "90%",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
-            border: `1px solid ${t.border}`,
-            animation: "modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
-          }}>
-             <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
-               <div style={{ background: "#eff6ff", padding: "10px", borderRadius: "12px" }}>
-                 <MessageSquare size={24} color="#3b82f6" />
-               </div>
-               <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: t.text, margin: 0 }}>Input Required</h3>
-             </div>
-             <p style={{ color: t.textMuted, fontSize: "0.95rem", lineHeight: 1.5, marginBottom: "20px", textAlign: "left" }}>{promptState.message}</p>
-             
-             <textarea 
-               autoFocus
-               value={promptValue}
-               onChange={(e) => setPromptValue(e.target.value)}
-               placeholder="Enter details here..."
-               style={{ 
-                 width: "100%", minHeight: "100px", padding: "16px", borderRadius: "16px", 
-                 border: `1px solid ${t.border}`, background: t.bg, color: t.text,
-                 fontSize: "0.95rem", outline: "none", marginBottom: "24px", resize: "none",
-                 boxShadow: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)"
-               }}
-             />
+        </div>
+      )}
 
-             <div style={{ display: "flex", gap: "12px" }}>
-               <button 
-                 onClick={() => setPromptState({ ...promptState, isOpen: false })}
-                 style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `1px solid ${t.border}`, background: "transparent", color: t.text, fontWeight: 600, cursor: "pointer" }}
-               >
-                 Cancel
-               </button>
-               <button 
-                 onClick={() => { promptState.onConfirm(promptValue); setPromptState({ ...promptState, isOpen: false }); }}
-                 disabled={!promptValue.trim()}
-                 style={{ 
-                   flex: 1, padding: "12px", borderRadius: "12px", border: "none", 
-                   background: !promptValue.trim() ? t.border : "#3b82f6", color: "white", 
-                   fontWeight: 600, cursor: !promptValue.trim() ? "not-allowed" : "pointer",
-                   boxShadow: !promptValue.trim() ? "none" : "0 4px 12px rgba(59, 130, 246, 0.3)"
-                 }}
-               >
-                 Confirm
-               </button>
-             </div>
+      {/* --- GROWTH HUB: ANALYTICS HUB OVERLAY --- */}
+      {isAnalyticsOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(20px)", zIndex: 3000, display: "flex", flexDirection: "column", padding: "40px", animation: "fadeIn 0.4s ease-out" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", width: "100%", height: "100%", display: "flex", flexDirection: "column", gap: "32px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "2.5rem", fontWeight: 800, color: "white", letterSpacing: "-0.04em" }}>Growth Analytics Hub</h2>
+                <p style={{ margin: "4px 0 0 0", color: "rgba(255,255,255,0.6)", fontSize: "1.1rem" }}>Visualizing organizational improvement and knowledge acquisition.</p>
+              </div>
+              <button 
+                onClick={() => setIsAnalyticsOpen(false)}
+                style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "white", cursor: "pointer", width: "48px", height: "48px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Metrics Row */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "24px" }}>
+              {[
+                { label: "Total Findings", value: los.length, icon: <AlertCircle />, color: "#6366f1" },
+                { label: "Acknowledged", value: los.filter(l => l.isAcknowledged).length, icon: <CheckCircle2 />, color: "#10b981" },
+                { label: "Resources Shared", value: resources.length, icon: <BookOpen />, color: "#f59e0b" },
+                { label: "Pending Acknowledgment", value: los.filter(l => !l.isAcknowledged).length, icon: <Clock />, color: "#ef4444" }
+              ].map((m, i) => (
+                <div key={i} className="glass-panel" style={{ padding: "24px", borderRadius: "24px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div style={{ color: "white", opacity: 0.5, marginBottom: "12px" }}>{m.icon}</div>
+                  <div style={{ fontSize: "2rem", fontWeight: 800, color: "white", marginBottom: "4px" }}>{m.value}</div>
+                  <div style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 600, textTransform: "uppercase" }}>{m.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Visual Grid */}
+            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", overflow: "hidden" }}>
+              {/* Findings Chart Skeleton */}
+              <div className="glass-panel" style={{ padding: "32px", borderRadius: "32px", background: "rgba(255,255,255,0.03)", display: "flex", flexDirection: "column" }}>
+                <h3 style={{ margin: "0 0 24px 0", color: "white", fontSize: "1.25rem", fontWeight: 700 }}>Finding Trends (By Entity)</h3>
+                <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: "12px", paddingBottom: "20px" }}>
+                  {uniqueLOEntities.slice(0, 10).map((ent, idx) => {
+                    const count = los.filter(l => l.entity === ent).length;
+                    const height = Math.max((count / los.length) * 100, 10);
+                    return (
+                      <div key={ent} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                        <div style={{ width: "100%", height: `${height}%`, background: "linear-gradient(to top, #6366f1, #a855f7)", borderRadius: "8px 8px 0 0", minHeight: "40px", position: "relative" }}>
+                           <div style={{ position: "absolute", top: "-25px", width: "100%", textAlign: "center", color: "white", fontSize: "0.75rem", fontWeight: 700 }}>{count}</div>
+                        </div>
+                        <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", transform: "rotate(-45deg)", whiteSpace: "nowrap", width: "20px", height: "40px" }}>{ent}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* User Contribution List */}
+              <div className="glass-panel" style={{ padding: "32px", borderRadius: "32px", background: "rgba(255,255,255,0.03)", overflowY: "auto" }}>
+                <h3 style={{ margin: "0 0 24px 0", color: "white", fontSize: "1.25rem", fontWeight: 700 }}>Top Contributors</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {(() => {
+                    const contributors = los.reduce((acc: any, lo) => {
+                      acc[lo.identifiedBy] = (acc[lo.identifiedBy] || 0) + 1;
+                      return acc;
+                    }, {});
+                    return Object.entries(contributors).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5).map(([name, count]: any, i) => (
+                      <div key={name} style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.05)" }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#6366f1", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{i+1}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: "white", fontWeight: 600, fontSize: "0.9375rem" }}>{name}</div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{count} Findings Reported</div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Acknowledgment Modal */}
+      {showAckModal && acknowledgingLO && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
+          <div style={{ background: t.card, borderRadius: "24px", width: "100%", maxWidth: "550px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "32px", background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", color: "white" }}>
+              <h3 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>Acknowledge Learning</h3>
+              <p style={{ margin: "8px 0 0 0", opacity: 0.9, fontSize: "0.9375rem" }}>Confirm your understanding of the finding and the resolution provided.</p>
+            </div>
+            
+            <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: t.textMuted, textTransform: "uppercase", marginBottom: "8px" }}>Finding</div>
+                <div style={{ fontSize: "0.9375rem", color: t.text, fontWeight: 500 }}>{acknowledgingLO.learningOpportunity}</div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.8125rem", fontWeight: 700, color: t.text, textTransform: "uppercase" }}>Your Understanding & Resolution Plan</label>
+                <textarea 
+                  rows={4}
+                  placeholder="Explain how you have resolved this or what you learned to avoid this in future..."
+                  value={ackComments}
+                  onChange={e => setAckComments(e.target.value)}
+                  style={{ ...getInputStyle(t), resize: "none", fontSize: "0.9375rem", padding: "16px" }}
+                />
+                <p style={{ margin: "8px 0 0 0", fontSize: "0.75rem", color: "#ef4444", fontWeight: 600 }}>* Note: Once submitted, this acknowledgment cannot be edited.</p>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button 
+                  onClick={() => setShowAckModal(false)}
+                  style={{ flex: 1, padding: "14px", borderRadius: "12px", border: `1px solid ${t.border}`, background: "transparent", color: t.text, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Go Back
+                </button>
+                <button 
+                  onClick={handleAcknowledgeLO}
+                  disabled={!ackComments.trim()}
+                  style={{ flex: 2, padding: "14px", borderRadius: "12px", border: "none", background: "#ef4444", color: "white", fontWeight: 700, cursor: !ackComments.trim() ? "not-allowed" : "pointer", boxShadow: "0 10px 15px -3px rgba(239, 68, 68, 0.3)" }}
+                >
+                  Submit Acknowledgment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resource Upload Modal */}
+      {showResourceModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: "24px" }}>
+          <div style={{ background: t.card, borderRadius: "24px", width: "100%", maxWidth: "500px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "white" }}>
+              <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Add New Resource</h3>
+            </div>
+            
+            <form onSubmit={handleResourceUpload} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>RESOURCE NAME / BOOK TITLE</label>
+                <input 
+                  type="text" required
+                  value={resourceName}
+                  onChange={e => setResourceName(e.target.value)}
+                  style={getInputStyle(t)} 
+                  placeholder="e.g. Finance Reporting Best Practices"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>TYPE</label>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  {['LINK', 'FILE'].map(type => (
+                    <button 
+                      key={type} type="button"
+                      onClick={() => setResourceType(type as any)}
+                      style={{ flex: 1, padding: "10px", borderRadius: "10px", border: `1px solid ${resourceType === type ? '#10b981' : t.border}`, background: resourceType === type ? '#ecfdf5' : t.bg, color: resourceType === type ? '#059669' : t.textMuted, fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer" }}
+                    >
+                      {type === 'LINK' ? 'External Link' : 'PDF/Image File'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {resourceType === 'LINK' ? (
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>URL / LINK</label>
+                  <input 
+                    type="url" required
+                    value={resourceLink}
+                    onChange={e => setResourceLink(e.target.value)}
+                    style={getInputStyle(t)} 
+                    placeholder="https://example.com/book-name"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>SELECT FILE</label>
+                  <input 
+                    type="file" required
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={e => setResourceFile(e.target.files?.[0] || null)}
+                    style={{ ...getInputStyle(t), padding: "8px" }} 
+                  />
+                  <p style={{ margin: "4px 0 0 0", fontSize: "0.65rem", color: t.textMuted }}>Supported: PDF, JPG, PNG (Max 5MB)</p>
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                <button type="button" onClick={() => setShowResourceModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "transparent", color: t.text, fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={resourcesLoading} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#10b981", color: "white", fontWeight: 600, cursor: resourcesLoading ? "not-allowed" : "pointer" }}>
+                  {resourcesLoading ? "Uploading..." : "Save Resource"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
