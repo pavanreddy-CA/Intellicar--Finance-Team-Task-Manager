@@ -4060,7 +4060,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         )}
 
         {/* LO View */}
-        {activeView =          <div className="lo-view" style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden", animation: "fadeIn 0.5s ease-out" }}>
+        {activeView === 'LOS' && (
+          <div className="lo-view" style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden", animation: "fadeIn 0.5s ease-out" }}>
              {loActiveFilter === 'RESOURCES' ? (
                 <div style={{ minHeight: "600px" }}>
                    <div style={{ height: "180px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", padding: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
