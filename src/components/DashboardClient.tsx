@@ -299,6 +299,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [anaEntityFilter, setAnaEntityFilter] = useState("ALL");
   const [anaUserFilter, setAnaUserFilter] = useState("ALL");
   const [showAnaShareModal, setShowAnaShareModal] = useState(false);
+  const [showAnaDownloadDropdown, setShowAnaDownloadDropdown] = useState(false);
   const [anaShareConfig, setAnaShareConfig] = useState({
     recipients: [] as string[],
     ccEmails: [] as string[],
@@ -7917,8 +7918,17 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               {/* Buttons */}
               <div style={{ display: "flex", gap: "12px", paddingTop: "4px" }}>
                 <button onClick={() => setShowAnaShareModal(false)} style={{ flex: 1, height: "46px", background: "white", border: "1px solid #d1d5db", borderRadius: "10px", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: "0.9375rem" }}>Cancel</button>
-                <button disabled={anaShareLoading || anaShareConfig.recipients.length === 0} onClick={handleAnaShareEmail}
-                  style={{ flex: 2, height: "46px", background: (anaShareLoading || anaShareConfig.recipients.length === 0) ? "#86efac" : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)", border: "none", borderRadius: "10px", color: "white", fontWeight: 700, cursor: (anaShareLoading || anaShareConfig.recipients.length === 0) ? "not-allowed" : "pointer", fontSize: "0.9375rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                <button
+                  disabled={anaShareLoading || (anaShareConfig.recipients.length === 0 && !anaShareConfig.recipientInput.includes('@'))}
+                  onClick={() => {
+                    // Auto-add any typed email before sending
+                    if (anaShareConfig.recipientInput.includes('@')) {
+                      const updated = {...anaShareConfig, recipients: [...anaShareConfig.recipients, anaShareConfig.recipientInput.trim()], recipientInput: ''};
+                      setAnaShareConfig(updated);
+                    }
+                    handleAnaShareEmail();
+                  }}
+                  style={{ flex: 2, height: "46px", background: (anaShareLoading || (anaShareConfig.recipients.length === 0 && !anaShareConfig.recipientInput.includes('@'))) ? "#86efac" : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)", border: "none", borderRadius: "10px", color: "white", fontWeight: 700, cursor: (anaShareLoading || (anaShareConfig.recipients.length === 0 && !anaShareConfig.recipientInput.includes('@'))) ? "not-allowed" : "pointer", fontSize: "0.9375rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                   {anaShareLoading ? <RefreshCw size={18} /> : <Send size={18} />}
                   {anaShareLoading ? "Sending..." : "Share Report"}
                 </button>
@@ -8067,36 +8077,50 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </select>
                 </div>
 
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", position: "relative" }}>
+                  
+                  {/* Download Dropdown Button */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      onClick={() => setShowAnaDownloadDropdown(!showAnaDownloadDropdown)}
+                      style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", border: "none", color: "white", cursor: "pointer", padding: "0 18px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", fontWeight: 700, boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
+                    >
+                      <Download size={16} /> Download <ChevronDown size={14} style={{ transform: showAnaDownloadDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+                    </button>
+
+                    {showAnaDownloadDropdown && (
+                      <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", overflow: "hidden", minWidth: "210px", boxShadow: "0 16px 40px rgba(0,0,0,0.4)", zIndex: 100 }}>
+                        <button
+                          onClick={() => { handleAnaExportExcel(); setShowAnaDownloadDropdown(false); }}
+                          style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#10b981", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.08)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "none"}
+                        >
+                          <FileSpreadsheet size={18} /> Download Excel (.xlsx)
+                        </button>
+                        <button
+                          onClick={() => { handleAnaExportPDF(); setShowAnaDownloadDropdown(false); }}
+                          style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.08)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "none"}
+                        >
+                          <FileText size={18} /> Download PDF (.pdf)
+                        </button>
+                        <button
+                          onClick={() => { setShowAnaShareModal(true); setShowAnaDownloadDropdown(false); }}
+                          style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#6366f1", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(99,102,241,0.08)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "none"}
+                        >
+                          <Mail size={18} /> Share via Email
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Close Button */}
                   <button 
-                    onClick={handleAnaExportExcel}
-                    title="Download Excel"
-                    style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#10b981", cursor: "pointer", padding: "0 14px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem", fontWeight: 700, transition: "all 0.2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.2)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.1)"; }}
-                  >
-                    <FileSpreadsheet size={16} /> Excel
-                  </button>
-                  <button 
-                    onClick={handleAnaExportPDF}
-                    title="Download PDF"
-                    style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444", cursor: "pointer", padding: "0 14px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem", fontWeight: 700, transition: "all 0.2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"; }}
-                  >
-                    <FileText size={16} /> PDF
-                  </button>
-                  <button 
-                    onClick={() => setShowAnaShareModal(true)}
-                    title="Share via Email"
-                    style={{ background: "rgba(99, 102, 241, 0.1)", border: "1px solid rgba(99, 102, 241, 0.3)", color: "#6366f1", cursor: "pointer", padding: "0 14px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem", fontWeight: 700, transition: "all 0.2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)"; }}
-                  >
-                    <Share2 size={16} /> Share
-                  </button>
-                  <button 
-                    onClick={() => setIsAnalyticsOpen(false)}
+                    onClick={() => { setIsAnalyticsOpen(false); setShowAnaDownloadDropdown(false); }}
                     style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", width: "40px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
