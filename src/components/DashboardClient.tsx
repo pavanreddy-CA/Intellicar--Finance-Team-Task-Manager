@@ -1425,6 +1425,24 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     });
   };
 
+  const handleDeleteLO = async (loId: number) => {
+    showConfirm(`Are you sure you want to permanently delete this Learning Opportunity?`, async () => {
+      try {
+        const res = await fetch(`/api/lo/${loId}/approve-delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: 'APPROVE' })
+        });
+        if (res.ok) {
+          showNotification(`Learning Opportunity deleted successfully.`);
+          fetchLOs();
+        }
+      } catch (error) {
+        console.error("Failed to delete LO", error);
+      }
+    });
+  };
+
   const handleSubmitLOCapture = async () => {
     if (!loCaptureForm.learningOpportunity || !loCaptureForm.resolutionProvided) {
       showNotification("Please fill in the Learning Opportunity and Resolution fields.");
