@@ -1652,22 +1652,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     return 0;
   });
 
-  const uniqueLOEntities = Array.from(new Set(los.map(l => l.entity))).sort();
 
-  const fetchResources = async () => {
-    setResourcesLoading(true);
-    try {
-      const res = await fetch("/api/resources");
-      if (res.ok) {
-        const data = await res.json();
-        setResources(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch resources", error);
-    } finally {
-      setResourcesLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (activeView === 'LOS') {
