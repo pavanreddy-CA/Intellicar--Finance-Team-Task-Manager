@@ -18,13 +18,17 @@ export default function DashboardWrapper({ user }: { user: any }) {
         const res = await fetch("/api/public-settings");
         if (res.ok) {
           const data = await res.json();
-          if (data.homeContent) {
-            const parsed = JSON.parse(data.homeContent);
-            setContent({
-              mission: parsed.mission || content.mission,
-              stories: parsed.stories || [],
-              achievements: parsed.achievements || []
-            });
+          if (data && data.homeContent) {
+            try {
+              const parsed = JSON.parse(data.homeContent);
+              setContent({
+                mission: parsed.mission || content.mission,
+                stories: parsed.stories || [],
+                achievements: parsed.achievements || []
+              });
+            } catch (e) {
+              console.error("Failed to parse home content", e);
+            }
           }
         }
       } catch (error) {

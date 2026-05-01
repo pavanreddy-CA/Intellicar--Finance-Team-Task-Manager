@@ -655,7 +655,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       const res = await fetch("/api/admin/settings");
       if (res.ok) {
         const data = await res.json();
-        setSettings(data);
+        if (data) setSettings(data);
       }
     } catch (error) {
       console.error("Failed to fetch settings", error);
