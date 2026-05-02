@@ -6113,38 +6113,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </div>
                 )}
 
-                {activeOptionsTab === 'DATA' && (
-                  <div>
-                    <h3 style={{ margin: "0 0 24px 0" }}>Data Management</h3>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                      <div style={{ background: t.bg, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-                          <Database size={24} color="#2563eb" />
-                          <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Database Maintenance</h4>
-                        </div>
-                        <p style={{ fontSize: "0.875rem", color: t.textMuted, marginBottom: "20px" }}>
-                          Use this to sync the database schema and ensure all new features (like Payment Reporting) are fully initialized in the system.
-                        </p>
-                        <button 
-                          onClick={async () => {
-                            showConfirm("Are you sure you want to run the database migration/sync?", async () => {
-                              try {
-                                const res = await fetch('/api/admin/migrate');
-                                const data = await res.json();
-                                showNotification(data.message || "Sync completed successfully!");
-                              } catch (err) {
-                                showNotification("Sync failed. Please check the logs.", 'error');
-                              }
-                            });
-                          }}
-                          style={{ background: "#2563eb", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}
-                        >
-                          <RefreshCw size={18} /> Sync Database Schema
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {activeOptionsTab === 'MAILS' && (
                   <div>
@@ -7431,7 +7399,37 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                 {activeOptionsTab === 'DATA' && (
                   <div>
-                    <h3 style={{ margin: "0 0 24px 0" }}>Bulk Data Import</h3>
+                    <h3 style={{ margin: "0 0 24px 0" }}>Data Management</h3>
+                    
+                    {isAdmin && (
+                      <div style={{ background: t.bg, padding: "24px", borderRadius: "16px", border: `1px solid ${t.border}`, marginBottom: "24px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                          <Database size={24} color="#2563eb" />
+                          <h4 style={{ margin: 0, fontSize: "1.125rem" }}>Database Maintenance</h4>
+                        </div>
+                        <p style={{ fontSize: "0.875rem", color: t.textMuted, marginBottom: "20px" }}>
+                          Use this to sync the database schema and ensure all new features are fully initialized.
+                        </p>
+                        <button 
+                          onClick={async () => {
+                            showConfirm("Are you sure you want to run the database migration/sync?", async () => {
+                              try {
+                                const res = await fetch('/api/admin/migrate');
+                                const data = await res.json();
+                                showNotification(data.message || "Sync completed successfully!");
+                              } catch (err) {
+                                showNotification("Sync failed. Please check the logs.", 'error');
+                              }
+                            });
+                          }}
+                          style={{ background: "#2563eb", color: "white", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}
+                        >
+                          <RefreshCw size={18} /> Sync Database Schema
+                        </button>
+                      </div>
+                    )}
+
+                    <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: t.text }}>Bulk Data Import</h4>
                     <p style={{ color: t.textMuted, marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. All imports follow a strictly defined schema.</p>
                     
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
