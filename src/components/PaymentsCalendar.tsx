@@ -96,6 +96,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   const [paidTypeFilter, setPaidTypeFilter] = useState("ALL");
   const [paidFreqFilter, setPaidFreqFilter] = useState("ALL");
   const [paidBankFilter, setPaidBankFilter] = useState("ALL");
+  const [paidAdviceFilter, setPaidAdviceFilter] = useState("ALL");
   const [paidFromDate, setPaidFromDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -149,7 +150,21 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
 
   const [showPayModal, setShowPayModal] = useState(false);
   const [activeOccurrence, setActiveOccurrence] = useState<PaymentOccurrence | null>(null);
-  const [payData, setPayData] = useState({ actualDate: new Date().toISOString().split('T')[0], amountPaid: "", paidFromAccount: "" });
+  const [payData, setPayData] = useState({ 
+    actualDate: new Date().toISOString().split('T')[0], 
+    amountPaid: "", 
+    paidFromAccount: "",
+    utrNumber: "",
+    sendAdvice: false,
+    adviceRecipient: "",
+    adviceCC: "",
+    attachment: null as string | null
+  });
+  const [adviceToInput, setAdviceToInput] = useState("");
+  const [adviceToTags, setAdviceToTags] = useState<string[]>([]);
+  const [adviceCcInput, setAdviceCcInput] = useState("");
+  const [adviceCcTags, setAdviceCcTags] = useState<string[]>([]);
+  const [showAdviceModal, setShowAdviceModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showStopModal, setShowStopModal] = useState(false);
@@ -311,7 +326,11 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
       const res = await fetch(`/api/payments/tracker/${activeOccurrence.id}/pay`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payData)
+        body: JSON.stringify({
+          ...payData,
+          adviceRecipient: adviceToTags.join(','),
+          adviceCC: adviceCcTags.join(',')
+        })
       });
       if (res.ok) {
         setShowPayModal(false);
@@ -320,6 +339,34 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
       }
     } catch (err) {
       console.error("Pay error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleShareAdvice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeOccurrence) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/payments/tracker/${activeOccurrence.id}/share-advice`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          utrNumber: payData.utrNumber,
+          adviceRecipient: adviceToTags.join(','),
+          adviceCC: adviceCcTags.join(','),
+          attachment: payData.attachment
+        })
+      });
+      if (res.ok) {
+        setShowAdviceModal(false);
+        setActiveOccurrence(null);
+        fetchData();
+        alert("Payment Advice shared successfully!");
+      }
+    } catch (err) {
+      console.error("Share advice error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -604,12 +651,13 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           const matchesType = paidTypeFilter === "ALL" || o.paymentType === paidTypeFilter;
           const matchesFreq = paidFreqFilter === "ALL" || o.frequency === paidFreqFilter;
           const matchesBank = paidBankFilter === "ALL" || o.paidFromAccount === paidBankFilter;
+          const matchesAdvice = paidAdviceFilter === "ALL" || (paidAdviceFilter === "SHARED" ? (o as any).adviceShared : !(o as any).adviceShared);
           const occDate = new Date(o.actualDate || o.dueDate);
           const from = new Date(paidFromDate);
           const to = new Date(paidToDate);
           from.setHours(0,0,0,0); to.setHours(23,59,59,999);
           const matchesDate = occDate >= from && occDate <= to;
-          return matchesSearch && matchesStatus && matchesEntity && matchesType && matchesFreq && matchesBank && matchesDate && o.isPaid;
+          return matchesSearch && matchesStatus && matchesEntity && matchesType && matchesFreq && matchesBank && matchesAdvice && matchesDate && o.isPaid;
         }
         return false;
       })
@@ -626,7 +674,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
         if (valA > valB) return direction === 'asc' ? 1 : -1;
         return 0;
       });
-  }, [occurrences, activeTab, trackerSearch, trackerStatusFilter, trackerEntityFilter, trackerTypeFilter, trackerFreqFilter, trackerFromDate, trackerToDate, listSearch, listEntityFilter, listTypeFilter, listFreqFilter, paidSearch, paidStatusFilter, paidEntityFilter, paidTypeFilter, paidFreqFilter, paidFromDate, paidToDate, sortConfig]);
+  }, [occurrences, activeTab, trackerSearch, trackerStatusFilter, trackerEntityFilter, trackerTypeFilter, trackerFreqFilter, trackerFromDate, trackerToDate, listSearch, listEntityFilter, listTypeFilter, listFreqFilter, paidSearch, paidStatusFilter, paidEntityFilter, paidTypeFilter, paidFreqFilter, paidBankFilter, paidAdviceFilter, paidFromDate, paidToDate, sortConfig]);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -1522,6 +1570,11 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               <option value="ALL">All Banks</option>
               {Array.from(new Set(occurrences.filter(o => o.isPaid && o.paidFromAccount).map(o => o.paidFromAccount))).map(bank => <option key={bank} value={bank}>{bank}</option>)}
             </select>
+            <select value={paidAdviceFilter} onChange={e => setPaidAdviceFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">Advice: All</option>
+              <option value="SHARED">Shared</option>
+              <option value="PENDING">Pending</option>
+            </select>
           </div>
 
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
@@ -1537,12 +1590,13 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   <th style={thStyle} onClick={() => requestSort('amountPaid')}>Amount Paid <SortIcon column="amountPaid" /></th>
                   <th style={thStyle} onClick={() => requestSort('paidFromAccount')}>Bank <SortIcon column="paidFromAccount" /></th>
                   <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Payment Advice</th>
                   <th style={thStyle}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOccurrences.length === 0 ? (
-                  <tr><td colSpan={10} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
+                  <tr><td colSpan={11} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <CheckCircle2 size={48} style={{ opacity: 0.2 }} />
                       <p>No historical payments found matching your filters.</p>
@@ -1563,6 +1617,31 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                         <td style={tdStyle}>{formatCurrency(occ.amountPaid || 0)}</td>
                         <td style={tdStyle}><div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>{occ.paidFromAccount || "--"}</div></td>
                         <td style={tdStyle}><span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700, background: style.bg, color: style.text, border: `1px solid ${style.border}` }}>{status}</span></td>
+                        <td style={tdStyle}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: (occ as any).adviceShared ? "#16a34a" : "#64748b" }}>
+                              {(occ as any).adviceShared ? "✓ Shared" : "Pending"}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setActiveOccurrence(occ);
+                                setPayData({
+                                  ...payData,
+                                  utrNumber: (occ as any).utrNumber || "",
+                                  adviceRecipient: (occ as any).adviceRecipient || "",
+                                  adviceCC: (occ as any).adviceCC || "",
+                                  attachment: (occ as any).adviceAttachment || null
+                                });
+                                setAdviceToTags(((occ as any).adviceRecipient || "").split(',').filter(Boolean));
+                                setAdviceCcTags(((occ as any).adviceCC || "").split(',').filter(Boolean));
+                                setShowAdviceModal(true);
+                              }}
+                              style={{ border: "none", background: "none", color: "#2563eb", fontSize: "0.7rem", padding: 0, cursor: "pointer", textAlign: "left", fontWeight: 600 }}
+                            >
+                              {(occ as any).adviceShared ? "Reshare Advice" : "Share Advice"}
+                            </button>
+                          </div>
+                        </td>
                         <td style={tdStyle}>
                           <button onClick={() => { setActiveOccurrence(occ); setEditOccData({ actualDate: occ.actualDate || "", amountPaid: occ.amountPaid?.toString() || "" }); setShowEditOccModal(true); }} style={{ padding: "6px", borderRadius: "8px", border: `1px solid ${t.border}`, background: "white", color: "#2563eb", cursor: "pointer" }} title="Edit Record"><Edit2 size={16} /></button>
                         </td>
@@ -1955,10 +2034,226 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   ))}
                 </select>
               </div>
+
+              <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", color: "#1e293b" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={payData.sendAdvice} 
+                    onChange={e => setPayData({...payData, sendAdvice: e.target.checked})}
+                    style={{ width: "18px", height: "18px" }}
+                  />
+                  Send Payment Advice to Vendor?
+                </label>
+              </div>
+
+              {payData.sendAdvice && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px", background: "#f0fdf4", borderRadius: "12px", border: "1px solid #bbf7d0" }}>
+                  <div>
+                    <label style={labelStyle}>UTR Number / Ref *</label>
+                    <input 
+                      required={payData.sendAdvice}
+                      type="text" 
+                      placeholder="Enter UTR number"
+                      value={payData.utrNumber}
+                      onChange={e => setPayData({...payData, utrNumber: e.target.value})}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Recipient Emails *</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "40px", background: "white" }}>
+                      {adviceToTags.map((email, idx) => (
+                        <div key={idx} style={{ background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                          {email}
+                          <X size={12} style={{ cursor: "pointer" }} onClick={() => setAdviceToTags(prev => prev.filter((_, i) => i !== idx))} />
+                        </div>
+                      ))}
+                      <input 
+                        type="text" 
+                        placeholder="Add email..."
+                        value={adviceToInput}
+                        onChange={e => setAdviceToInput(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                const email = adviceToInput.trim().toLowerCase();
+                                if (email && email.includes('@') && !adviceToTags.includes(email)) {
+                                  setAdviceToTags([...adviceToTags, email]);
+                                  setAdviceToInput("");
+                                }
+                            }
+                        }}
+                        style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", flex: 1 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>CC Emails</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "40px", background: "white" }}>
+                      {adviceCcTags.map((email, idx) => (
+                        <div key={idx} style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                          {email}
+                          <X size={12} style={{ cursor: "pointer" }} onClick={() => setAdviceCcTags(prev => prev.filter((_, i) => i !== idx))} />
+                        </div>
+                      ))}
+                      <input 
+                        type="text" 
+                        placeholder="Add CC..."
+                        value={adviceCcInput}
+                        onChange={e => setAdviceCcInput(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                const email = adviceCcInput.trim().toLowerCase();
+                                if (email && email.includes('@') && !adviceCcTags.includes(email)) {
+                                  setAdviceCcTags([...adviceCcTags, email]);
+                                  setAdviceCcInput("");
+                                }
+                            }
+                        }}
+                        style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", flex: 1 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Attach Screenshot/Receipt (Optional)</label>
+                    <input 
+                      type="file" 
+                      accept="image/*,application/pdf"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setPayData({...payData, attachment: reader.result as string});
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      style={{ fontSize: "0.75rem", width: "100%" }}
+                    />
+                  </div>
+                </div>
+              )}
               <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
                 <button type="button" onClick={() => setShowPayModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "white", fontWeight: 600 }}>Cancel</button>
                 <button type="submit" disabled={isSubmitting} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#22c55e", color: "white", fontWeight: 600 }}>
                   {isSubmitting ? "Processing..." : "Confirm Payment"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Advice Modal (Manual/Reshare) */}
+      {showAdviceModal && activeOccurrence && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: "450px" }}>
+            <div style={{ padding: "20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)", color: "white", borderRadius: "16px 16px 0 0" }}>
+              <div>
+                <h3 style={{ margin: 0, fontWeight: 700 }}>Share Payment Advice</h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", opacity: 0.8 }}>Vendor: {activeOccurrence.vendorName}</p>
+              </div>
+              <button onClick={() => setShowAdviceModal(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "white", cursor: "pointer", borderRadius: "6px", width: "28px", height: "28px" }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleShareAdvice} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>UTR Number / Ref *</label>
+                <input 
+                  required
+                  type="text" 
+                  placeholder="Enter UTR number"
+                  value={payData.utrNumber}
+                  onChange={e => setPayData({...payData, utrNumber: e.target.value})}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Recipient Emails *</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "45px", background: "#f8fafc" }}>
+                  {adviceToTags.map((email, idx) => (
+                    <div key={idx} style={{ background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                      {email}
+                      <X size={14} style={{ cursor: "pointer" }} onClick={() => setAdviceToTags(prev => prev.filter((_, i) => i !== idx))} />
+                    </div>
+                  ))}
+                  <input 
+                    type="text" 
+                    placeholder={adviceToTags.length === 0 ? "Type email and press Enter..." : ""}
+                    value={adviceToInput}
+                    onChange={e => setAdviceToInput(e.target.value)}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            const email = adviceToInput.trim().toLowerCase();
+                            if (email && email.includes('@') && !adviceToTags.includes(email)) {
+                              setAdviceToTags([...adviceToTags, email]);
+                              setAdviceToInput("");
+                            }
+                        }
+                    }}
+                    style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>CC Emails (Optional)</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "10px", minHeight: "45px", background: "#f8fafc" }}>
+                  {adviceCcTags.map((email, idx) => (
+                    <div key={idx} style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                      {email}
+                      <X size={14} style={{ cursor: "pointer" }} onClick={() => setAdviceCcTags(prev => prev.filter((_, i) => i !== idx))} />
+                    </div>
+                  ))}
+                  <input 
+                    type="text" 
+                    placeholder={adviceCcTags.length === 0 ? "Type email and press Enter..." : ""}
+                    value={adviceCcInput}
+                    onChange={e => setAdviceCcInput(e.target.value)}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            const email = adviceCcInput.trim().toLowerCase();
+                            if (email && email.includes('@') && !adviceCcTags.includes(email)) {
+                              setAdviceCcTags([...adviceCcTags, email]);
+                              setAdviceCcInput("");
+                            }
+                        }
+                    }}
+                    style={{ border: "none", background: "none", outline: "none", fontSize: "0.875rem", flex: 1, minWidth: "120px" }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Attach Screenshot/Receipt (Optional)</label>
+                {payData.attachment && (
+                  <div style={{ marginBottom: "8px", padding: "8px", background: "#f0fdf4", borderRadius: "8px", border: "1px solid #bbf7d0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ color: "#166534", fontWeight: 600 }}>✓ Attachment Loaded</span>
+                    <button type="button" onClick={() => setPayData({...payData, attachment: null})} style={{ color: "#ef4444", border: "none", background: "none", cursor: "pointer", fontWeight: 700 }}>Remove</button>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*,application/pdf"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setPayData({...payData, attachment: reader.result as string});
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  style={{ fontSize: "0.75rem", width: "100%" }}
+                />
+              </div>
+              <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
+                <button type="button" onClick={() => setShowAdviceModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "white", fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={isSubmitting} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#2563eb", color: "white", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  {isSubmitting ? "Sending..." : <><Mail size={18} /> Send Advice</>}
                 </button>
               </div>
             </form>

@@ -104,6 +104,13 @@ export default function PaymentsAnalytics({
     entity_name: "", department_name: "", payment_type: "", frequency: "M", amount: "", status: "Paid on due date", transaction_count: "1", payment_date: new Date().toISOString().split('T')[0]
   });
 
+  const [forecastFilters, setForecastFilters] = useState({
+    fromDate: new Date().toISOString().split('T')[0],
+    toDate: new Date(new Date().getFullYear(), new Date().getMonth() + 3, 0).toISOString().split('T')[0],
+    department: 'ALL',
+    type: 'ALL'
+  });
+
   useEffect(() => { fetchManualEntries(); }, []);
 
   const fetchManualEntries = async () => {
@@ -284,6 +291,72 @@ export default function PaymentsAnalytics({
 
     return { totalAmount, totalCount, healthScore, pieData, typePieData, deptPieData, barData, trendData, bankData };
   }, [filteredChartData]);
+
+  const budgetVsActualData = useMemo(() => {
+    // Group by month
+    const months: Record<string, { month: string; budget: number; actual: number }> = {};
+    
+    // Only include records that match filters
+    filteredChartData.forEach(d => {
+      const monthKey = d.payment_date.substring(0, 7);
+      if (!months[monthKey]) {
+        months[monthKey] = { 
+          month: new Date(monthKey + '-01').toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }), 
+          budget: 0, 
+          actual: 0 
+        };
+      }
+      
+      // If it's a tracker item, we might have amountToRelease
+      if (d.isTracker) {
+        const original = trackerOccurrences.find(o => `tracker-${o.id}` === d.id);
+        if (original) {
+          months[monthKey].budget += Number(original.amountToRelease);
+        }
+      } else {
+        // Manual entries: consider budget = actual for now if no separate budget field
+        months[monthKey].budget += Number(d.amount);
+      }
+      months[monthKey].actual += Number(d.amount);
+    });
+
+    return Object.values(months).sort((a, b) => {
+      const dateA = new Date(a.month + '-01');
+      const dateB = new Date(b.month + '-01');
+      return dateA.getTime() - dateB.getTime();
+    });
+  }, [filteredChartData, trackerOccurrences]);
+
+  const forecastData = useMemo(() => {
+    const futureOccs = trackerOccurrences.filter(o => !o.isPaid);
+    
+    const filtered = futureOccs.filter(o => {
+      const occDate = o.dueDate.split('T')[0];
+      const dateInRange = occDate >= forecastFilters.fromDate && occDate <= forecastFilters.toDate;
+      const deptMatch = forecastFilters.department === 'ALL' || o.departmentName === forecastFilters.department;
+      const typeMatch = forecastFilters.type === 'ALL' || o.paymentType === forecastFilters.type;
+      return dateInRange && deptMatch && typeMatch;
+    });
+
+    const totalAmount = filtered.reduce((sum, o) => sum + Number(o.amountToRelease), 0);
+    const totalCount = filtered.length;
+
+    const deptMap: Record<string, number> = {};
+    filtered.forEach(o => { 
+      const d = o.departmentName || 'N/A';
+      deptMap[d] = (deptMap[d] || 0) + Number(o.amountToRelease); 
+    });
+    const deptCharts = Object.entries(deptMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+
+    const typeMap: Record<string, number> = {};
+    filtered.forEach(o => { 
+      const t = o.paymentType || 'Other';
+      typeMap[t] = (typeMap[t] || 0) + Number(o.amountToRelease); 
+    });
+    const typeCharts = Object.entries(typeMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+
+    return { totalAmount, totalCount, deptCharts, typeCharts };
+  }, [trackerOccurrences, forecastFilters]);
 
   const insights = useMemo(() => {
     if (filteredChartData.length === 0) return "Select a wider date range to see intelligence insights.";
@@ -591,6 +664,24 @@ export default function PaymentsAnalytics({
               <h4 style={{ margin: "0 0 24px 0", fontSize: "1.1rem", fontWeight: 800 }}>Bank-wise Outflow</h4>
               <div style={{ height: "300px" }}><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={stats.bankData} innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value" stroke="none" cornerRadius={10}>{stats.bankData.map((e, i) => <Cell key={`c-${i}`} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} /><Legend verticalAlign="bottom" height={36} /></PieChart></ResponsiveContainer></div>
             </div>
+
+            {/* BUDGET VS ACTUAL */}
+            <div style={{ ...chartContainerStyle(theme), gridColumn: "span 2" }}>
+              <h4 style={{ margin: "0 0 24px 0", fontSize: "1.1rem", fontWeight: 800 }}>Budget vs Actual Outflow</h4>
+              <div style={{ height: 350 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={budgetVsActualData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme === 'DARK' ? "rgba(255,255,255,0.05)" : "#f1f5f9"} vertical={false} />
+                    <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} />
+                    <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(val) => `₹${(val / 100000).toFixed(1)}L`} />
+                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }} />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                    <Bar dataKey="budget" name="Budgeted" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="actual" name="Actual Paid" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -619,6 +710,76 @@ export default function PaymentsAnalytics({
               <button type="submit" style={{ gridColumn: "span 2", padding: "14px", borderRadius: "14px", border: "none", background: "#3b82f6", color: "white", fontWeight: 700 }}>Save Analytics Entry</button>
         </form></div></div>
       )}
+          </div>
+        </div>
+      )}
+
+      {/* STRATEGIC PREDICTIVE FORECAST */}
+      <div style={{ marginTop: "40px", padding: "40px", background: theme === 'DARK' ? "rgba(30, 41, 59, 0.4)" : "#f8fafc", borderRadius: "32px", border: `1px solid ${theme === 'DARK' ? "rgba(255,255,255,0.05)" : "#e2e8f0"}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+              <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#8b5cf6" }}></div>
+              <h2 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 900, color: theme === 'DARK' ? "white" : "#1e293b" }}>Strategic Forecast</h2>
+            </div>
+            <p style={{ margin: 0, color: "#64748b", fontWeight: 600 }}>Predictive expected cash flows based on scheduled payment occurrences.</p>
+          </div>
+          
+          <div style={{ display: "flex", gap: "16px", background: theme === 'DARK' ? "#1e293b" : "white", padding: "16px", borderRadius: "20px", border: `1px solid ${theme === 'DARK' ? "rgba(255,255,255,0.1)" : "#e2e8f0"}` }}>
+            <div>
+              <label style={filterLabelStyle}>Forecast From</label>
+              <input type="date" value={forecastFilters.fromDate} onChange={e => setForecastFilters({...forecastFilters, fromDate: e.target.value})} style={{ ...filterInputStyle(theme), padding: "8px 12px" }} />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>Forecast To</label>
+              <input type="date" value={forecastFilters.toDate} onChange={e => setForecastFilters({...forecastFilters, toDate: e.target.value})} style={{ ...filterInputStyle(theme), padding: "8px 12px" }} />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>By Dept</label>
+              <select value={forecastFilters.department} onChange={e => setForecastFilters({...forecastFilters, department: e.target.value})} style={{ ...filterInputStyle(theme), padding: "8px 12px", minWidth: "140px" }}>
+                <option value="ALL">All Depts</option>
+                {settings.masterDepartments?.split(',').map((d: string) => <option key={d} value={d.trim()}>{d.trim()}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.5fr", gap: "24px" }}>
+          <div style={{ ...statCardStyle(theme), background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)", color: "white" }}>
+            <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.875rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "12px" }}>Forecasted Liability</div>
+            <div style={{ fontSize: "2.5rem", fontWeight: 900 }}>₹{forecastData.totalAmount.toLocaleString('en-IN')}</div>
+            <div style={{ marginTop: "8px", fontSize: "0.875rem", opacity: 0.9 }}>Across {forecastData.totalCount} upcoming transactions</div>
+          </div>
+
+          <div style={statCardStyle(theme)}>
+            <div style={cardHead}>By Department <Activity size={18} /></div>
+            <div style={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={forecastData.deptCharts} margin={{ left: 20 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={10} width={80} />
+                  <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} formatter={(v) => `₹${Number(v).toLocaleString()}`} />
+                  <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div style={statCardStyle(theme)}>
+            <div style={cardHead}>By Payment Type <PieChart size={18} /></div>
+            <div style={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={forecastData.typeCharts}>
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} />
+                  <YAxis stroke="#94a3b8" fontSize={10} tickFormatter={(v) => `₹${(v/100000).toFixed(1)}L`} />
+                  <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} formatter={(v) => `₹${Number(v).toLocaleString()}`} />
+                  <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
