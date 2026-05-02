@@ -330,6 +330,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [extReqSortConfig, setExtReqSortConfig] = useState<{ key: keyof ExternalRequest; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
   const [extReqDateFrom, setExtReqDateFrom] = useState("");
   const [extReqDateTo, setExtReqDateTo] = useState("");
+  const [extReqFinanceFunctionFilter, setExtReqFinanceFunctionFilter] = useState("ALL");
   const [userSortConfig, setUserSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showLOCaptureModal, setShowLOCaptureModal] = useState(false);
   const [loCaptureForm, setLOCaptureForm] = useState({
@@ -2158,6 +2159,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     // New Request Type Filter (Original vs Transferred)
     if (requestTypeFilter === 'ORIGINAL' && r.transferStatus === 'T') return false;
     if (requestTypeFilter === 'TRANSFERRED' && r.transferStatus !== 'T') return false;
+
+    if (extReqFinanceFunctionFilter !== 'ALL' && r.requestType !== extReqFinanceFunctionFilter) return false;
 
     if (extReqDateFrom && new Date(r.createdAt) < new Date(extReqDateFrom)) return false;
     if (extReqDateTo) {
@@ -4032,12 +4035,38 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden" }}>
               <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
                 <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Inter Dept Request</h3>
-                <button 
-                  onClick={() => setShowExtReqForm(true)}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", background: "#4f46e5", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)" }}
-                >
-                  <Plus size={18} /> Submit New Request
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ position: "relative" }}>
+                    <button 
+                      onClick={() => setShowExtReqDownloadDropdown(!showExtReqDownloadDropdown)}
+                      style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: "#2563eb", border: `1px solid #2563eb`, padding: "10px 16px", borderRadius: "12px", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
+                    >
+                      <Download size={18} /> Report <ChevronDown size={16} />
+                    </button>
+                    {showExtReqDownloadDropdown && (
+                      <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: t.card, borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", border: `1px solid ${t.border}`, zIndex: 100, minWidth: "200px", overflow: "hidden" }}>
+                        <button 
+                          onClick={() => { exportExtRequestsToExcel(); setShowExtReqDownloadDropdown(false); }}
+                          style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#166534", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500 }}
+                        >
+                          <FileSpreadsheet size={16} /> Excel Format
+                        </button>
+                        <button 
+                          onClick={() => { exportExtRequestsToPDF(); setShowExtReqDownloadDropdown(false); }}
+                          style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#991b1b", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500 }}
+                        >
+                          <FileText size={16} /> PDF Document
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setShowExtReqForm(true)}
+                    style={{ display: "flex", alignItems: "center", gap: "8px", background: "#4f46e5", color: "white", padding: "10px 20px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)" }}
+                  >
+                    <Plus size={18} /> Submit New Request
+                  </button>
+                </div>
               </div>
               
               {/* Metric Cards for Inter-Dept */}
@@ -4128,7 +4157,22 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </div>
                 </div>
                 
-                {/* Pending to Convert Dynamic Button */}
+                {/* Finance Function Filter */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}` }}>
+                  <Filter size={14} color={t.textMuted} />
+                  <select 
+                    value={extReqFinanceFunctionFilter} 
+                    onChange={e => setExtReqFinanceFunctionFilter(e.target.value)}
+                    style={{ border: "none", background: "none", fontSize: "0.8125rem", color: t.text, outline: "none", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    <option value="ALL">All Functions</option>
+                    {settings.masterRequestTypes.split(',').map(type => (
+                      <option key={type} value={type.trim()}>{type.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Pending Conversion Button (Renamed) */}
                 <button 
                   onClick={() => setExtReqFilter(extReqFilter === 'CONVERT_PENDING' ? 'ALL' : 'CONVERT_PENDING')}
                   style={{ 
@@ -4147,7 +4191,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   }}
                 >
                   <ListFilter size={18} />
-                  Pending to Convert
+                  Pending Conversion
                   <span style={{ 
                     background: extReqFilter === 'CONVERT_PENDING' ? "#4f46e5" : "#f1f5f9", 
                     color: extReqFilter === 'CONVERT_PENDING' ? "white" : "#64748b", 
@@ -4165,58 +4209,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     onChange={e => setRequestTypeFilter(e.target.value as any)}
                     style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.card, color: t.textMuted, fontWeight: 600 }}
                   >
-                    <option value="ALL">All Request Origins</option>
+                    <option value="ALL">All Origins</option>
                     <option value="ORIGINAL">Original Only</option>
                     <option value="TRANSFERRED">Transferred Only</option>
                   </select>
                 )}
-
-                <div style={{ marginLeft: "auto", position: "relative" }}>
-                  <button 
-                    onClick={() => setShowExtReqDownloadDropdown(!showExtReqDownloadDropdown)}
-                    style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: "#2563eb", border: "1px solid #2563eb", padding: "10px 20px", borderRadius: "10px", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
-                  >
-                    <Download size={18} /> Download Report <ChevronDown size={16} />
-                  </button>
-
-                  {showExtReqDownloadDropdown && (
-                    <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: t.card, borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)", border: `1px solid ${t.border}`, zIndex: 100, minWidth: "200px", overflow: "hidden" }}>
-                      <button 
-                        onClick={() => { exportExtRequestsToExcel(); setShowExtReqDownloadDropdown(false); }}
-                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#166534", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
-                        onMouseOver={(e) => e.currentTarget.style.background = "#f0fdf4"}
-                        onMouseOut={(e) => e.currentTarget.style.background = "white"}
-                      >
-                        <FileSpreadsheet size={16} /> Excel Format
-                      </button>
-                      <button 
-                        onClick={() => { exportExtRequestsToPDF(); setShowExtReqDownloadDropdown(false); }}
-                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#991b1b", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
-                        onMouseOver={(e) => e.currentTarget.style.background = "#fef2f2"}
-                        onMouseOut={(e) => e.currentTarget.style.background = "white"}
-                      >
-                        <FileText size={16} /> PDF Document
-                      </button>
-                      <div style={{ borderTop: "1px solid #f1f5f9" }}></div>
-                      <button 
-                        onClick={() => {
-                          setShareData({
-                            ...shareData,
-                            type: 'request',
-                            subject: `Inter-Departmental Requests Report - ${new Date().toLocaleDateString()}`
-                          });
-                          setShowShareModal(true);
-                          setShowExtReqDownloadDropdown(false);
-                        }}
-                        style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#1e40af", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500, transition: "background 0.2s" }}
-                        onMouseOver={(e) => e.currentTarget.style.background = "#eff6ff"}
-                        onMouseOut={(e) => e.currentTarget.style.background = "white"}
-                      >
-                        <Mail size={16} /> Share via Email
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
 
               <div style={{ padding: "32px", overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
