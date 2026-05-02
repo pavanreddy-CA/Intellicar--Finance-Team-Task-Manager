@@ -10,9 +10,10 @@ type TaskFormProps = {
   usersList?: any[];
   initialData?: any;
   user: any;
- showNotification: any; showConfirm: any;};
+  isDarkMode?: boolean;
+  showNotification: any; showConfirm: any;};
 
-export default function TaskForm({   onClose, onSuccess, settings, usersList = [], initialData, user , showNotification , showConfirm }: TaskFormProps) {
+export default function TaskForm({   onClose, onSuccess, settings, usersList = [], initialData, user , isDarkMode = false, showNotification , showConfirm }: TaskFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [changeRequestType, setChangeRequestType] = useState(false);
@@ -164,6 +165,33 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
     }
   };
 
+  const t = isDarkMode ? {
+    bg: "#0f172a",
+    card: "#1e293b",
+    text: "#f8fafc",
+    textMuted: "#94a3b8",
+    border: "#334155",
+    input: "#1e293b",
+    accent: "#3b82f6",
+    hover: "#334155"
+  } : {
+    bg: "#f8fafc",
+    card: "#ffffff",
+    text: "#111827",
+    textMuted: "#64748b",
+    border: "#e2e8f0",
+    input: "#ffffff",
+    accent: "#2563eb",
+    hover: "#f1f5f9"
+  };
+
+  const dynamicInputStyle = {
+    ...inputStyle,
+    background: t.input,
+    color: t.text,
+    borderColor: t.border
+  };
+
   return (
     <div style={{
       position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
@@ -172,13 +200,13 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
       padding: "20px"
     }}>
       <div style={{
-        background: "white", borderRadius: "12px", width: "100%", maxWidth: "600px",
-        maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-        position: "relative"
+        background: t.card, borderRadius: "12px", width: "100%", maxWidth: "600px",
+        maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+        position: "relative", border: `1px solid ${t.border}`
       }}>
-        <div style={{ padding: "24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "white", zIndex: 10 }}>
-          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#111827" }}>{isEditing ? "Edit Task" : "Create New Task"}</h2>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b7280" }}>
+        <div style={{ padding: "24px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: t.card, zIndex: 10 }}>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", color: t.text }}>{isEditing ? "Edit Task" : "Create New Task"}</h2>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.textMuted }}>
             <X size={24} />
           </button>
         </div>
@@ -211,7 +239,7 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                     onChange={() => { setChangeRequestType(false); setNewRequestType(""); }}
                     style={{ accentColor: "#2563eb" }}
                   />
-                  <span style={{ fontSize: "0.875rem", color: "#374151" }}>No</span>
+                  <span style={{ fontSize: "0.875rem", color: t.text }}>No</span>
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
                   <input 
@@ -221,20 +249,20 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                     onChange={() => setChangeRequestType(true)}
                     style={{ accentColor: "#2563eb" }}
                   />
-                  <span style={{ fontSize: "0.875rem", color: "#374151" }}>Yes</span>
+                  <span style={{ fontSize: "0.875rem", color: t.text }}>Yes</span>
                 </label>
               </div>
 
               {changeRequestType && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div>
-                    <label style={{ display: "block", marginBottom: "6px", fontSize: "0.8125rem", fontWeight: 500, color: "#374151" }}>
+                    <label style={{ display: "block", marginBottom: "6px", fontSize: "0.8125rem", fontWeight: 500, color: t.textMuted }}>
                       Select New Finance Function
                     </label>
                     <select 
                       value={newRequestType} 
                       onChange={(e) => setNewRequestType(e.target.value)}
-                      style={{ ...inputStyle, background: "white" }}
+                      style={dynamicInputStyle}
                     >
                       <option value="">Choose finance function...</option>
                       {settings?.masterRequestTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
@@ -273,18 +301,18 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
           {!changeRequestType ? (
             <>
               <div>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Name *</label>
-                <input name="taskName" required value={formData.taskName} onChange={handleChange} style={inputStyle} placeholder="Enter task name" />
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Task Name *</label>
+                <input name="taskName" required value={formData.taskName} onChange={handleChange} style={dynamicInputStyle} placeholder="Enter task name" />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Select Entities *</label>
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Select Entities *</label>
                     <button 
                       type="button" 
                       onClick={handleSelectAll}
-                      style={{ fontSize: "0.7rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
+                      style={{ fontSize: "0.7rem", color: t.accent, background: "none", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
                     >
                       {selectedEntities.length === allowedEntities.length ? "Deselect All" : "Consolidate (Select All)"}
                     </button>
@@ -296,19 +324,19 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                     maxHeight: "120px", 
                     overflowY: "auto",
                     padding: "12px",
-                    background: "#f8fafc",
+                    background: t.bg,
                     borderRadius: "8px",
-                    border: "1px solid #e2e8f0",
+                    border: `1px solid ${t.border}`,
                     pointerEvents: isEditing ? "none" : "auto",
                     opacity: isEditing ? 0.7 : 1
                   }}>
                     {allowedEntities.map(entity => (
-                      <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: isEditing ? "default" : "pointer", padding: "4px", borderRadius: "4px" }}>
+                      <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: isEditing ? "default" : "pointer", padding: "4px", borderRadius: "4px", color: t.text }}>
                         <input 
                           type="checkbox" 
                           checked={selectedEntities.includes(entity)} 
                           onChange={() => !isEditing && handleEntityToggle(entity)}
-                          style={{ width: "16px", height: "16px", accentColor: "#2563eb" }}
+                          style={{ width: "16px", height: "16px", accentColor: t.accent }}
                         />
                         {entity}
                       </label>
@@ -316,8 +344,8 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Task Type *</label>
-                  <select name="taskType" required value={formData.taskType} onChange={handleChange} style={inputStyle}>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Task Type *</label>
+                  <select name="taskType" required value={formData.taskType} onChange={handleChange} style={dynamicInputStyle}>
                     <option value="">Choose</option>
                     {settings?.masterTaskTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
                       <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
@@ -328,8 +356,8 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "16px" }}>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Frequency (Freq) *</label>
-                  <select name="frequency" required value={formData.frequency} onChange={handleChange} style={inputStyle}>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Frequency (Freq) *</label>
+                  <select name="frequency" required value={formData.frequency} onChange={handleChange} style={dynamicInputStyle}>
                     <option value="">Choose Frequency</option>
                     {settings?.masterFrequencies?.split(',').filter((t: string) => t.trim()).map((freq: string) => (
                       <option key={freq.trim()} value={freq.trim()}>{freq.trim()}</option>
@@ -337,8 +365,8 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Department *</label>
-                  <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={inputStyle}>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Department *</label>
+                  <select name="departmentName" required value={formData.departmentName} onChange={handleChange} style={dynamicInputStyle}>
                     <option value="">Choose</option>
                     {settings?.masterDepartments?.split(',').filter((d: string) => d.trim()).map((dept: string) => (
                       <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
@@ -350,26 +378,26 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
               {/* Assignment Grid */}
               {selectedEntities.length > 0 && (
                 <div style={{ marginTop: "4px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Manual Assignment Grid (Owner & Reviewer per Entity)</label>
-                  <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", overflow: "hidden" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Manual Assignment Grid (Owner & Reviewer per Entity)</label>
+                  <div style={{ border: `1px solid ${t.border}`, borderRadius: "8px", overflow: "hidden" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem" }}>
-                      <thead style={{ background: "#f8fafc" }}>
+                      <thead style={{ background: t.bg }}>
                         <tr>
-                          <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>Entity</th>
-                          <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>Owner *</th>
-                          <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>Reviewer</th>
+                          <th style={{ padding: "8px", textAlign: "left", borderBottom: `1px solid ${t.border}`, color: t.textMuted }}>Entity</th>
+                          <th style={{ padding: "8px", textAlign: "left", borderBottom: `1px solid ${t.border}`, color: t.textMuted }}>Owner *</th>
+                          <th style={{ padding: "8px", textAlign: "left", borderBottom: `1px solid ${t.border}`, color: t.textMuted }}>Reviewer</th>
                         </tr>
                       </thead>
                       <tbody>
                         {assignments.map(a => (
                           <tr key={a.entityName}>
-                            <td style={{ padding: "8px", fontWeight: 600, color: "#475569", background: "#f8fafc", width: "100px" }}>{a.entityName}</td>
+                            <td style={{ padding: "8px", fontWeight: 600, color: t.textMuted, background: t.bg, width: "100px" }}>{a.entityName}</td>
                             <td style={{ padding: "4px" }}>
                               <select 
                                 required 
                                 value={a.ownerName} 
                                 onChange={(e) => handleAssignmentChange(a.entityName, 'ownerName', e.target.value)}
-                                style={{ ...inputStyle, padding: "6px 8px" }}
+                                style={{ ...dynamicInputStyle, padding: "6px 8px" }}
                               >
                                 <option value="">Owner</option>
                                 {usersList.filter(u => u.department === 'Finance' && u.isApproved !== false).map(u => (
@@ -381,7 +409,7 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                               <select 
                                 value={a.reviewerName} 
                                 onChange={(e) => handleAssignmentChange(a.entityName, 'reviewerName', e.target.value)}
-                                style={{ ...inputStyle, padding: "6px 8px" }}
+                                style={{ ...dynamicInputStyle, padding: "6px 8px" }}
                               >
                                 <option value="">N/A</option>
                                 {usersList.filter(u => u.department === 'Finance' && u.isApproved !== false).map(u => (
@@ -398,33 +426,33 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
               )}
 
               <div style={{ marginTop: "16px" }}>
-                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Request From *</label>
-                <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={inputStyle} placeholder="Your answer" />
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Request From *</label>
+                <input name="requestFrom" required value={formData.requestFrom} onChange={handleChange} style={dynamicInputStyle} placeholder="Your answer" />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Due Date</label>
-                  <input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} style={inputStyle} />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Due Date</label>
+                  <input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} style={dynamicInputStyle} />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Mail Link</label>
-                  <input name="mailLink" value={formData.mailLink} onChange={handleChange} style={inputStyle} placeholder="Optional email link" />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Mail Link</label>
+                  <input name="mailLink" value={formData.mailLink} onChange={handleChange} style={dynamicInputStyle} placeholder="Optional email link" />
                 </div>
               </div>
 
               <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-                <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", color: "#374151", fontWeight: 500, cursor: "pointer" }}>
+                <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 500, cursor: "pointer" }}>
                   Cancel
                 </button>
-                <button type="submit" disabled={loading} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "white", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer" }}>
+                <button type="submit" disabled={loading} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: t.accent, color: "white", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer" }}>
                   {loading ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Task")}
                 </button>
               </div>
             </>
           ) : (
             <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-              <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", color: "#374151", fontWeight: 500, cursor: "pointer" }}>
+              <button type="button" onClick={onClose} style={{ padding: "10px 16px", borderRadius: "6px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 500, cursor: "pointer" }}>
                 Cancel
               </button>
             </div>

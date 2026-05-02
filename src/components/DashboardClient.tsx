@@ -5149,6 +5149,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           usersList={usersList}
           initialData={preFilledTask}
           user={user}
+          isDarkMode={isDarkMode}
           showNotification={showNotification}
           showConfirm={showConfirm}
           onClose={() => {
