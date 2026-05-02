@@ -3699,11 +3699,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 const resolvedEnt = filteredData.filter(l => l.entity === ent && l.isAcknowledged).length;
                                 const perc = totalEnt > 0 ? Math.round((resolvedEnt / totalEnt) * 100) : 0;
                                 return (
-                                  <div key={ent} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "16px", borderRadius: "12px", borderBottom: "1px solid rgba(255,255,255,0.02)", alignItems: "center" }}>
-                                    <div style={{ color: "white", fontWeight: 600, fontSize: "0.8125rem" }}>{ent}</div>
-                                    <div style={{ textAlign: "center", color: "white", fontWeight: 700 }}>{totalEnt}</div>
+                                  <div key={ent} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "16px", borderRadius: "12px", borderBottom: `1px solid ${t.border}`, alignItems: "center" }}>
+                                    <div style={{ color: t.text, fontWeight: 600, fontSize: "0.8125rem" }}>{ent}</div>
+                                    <div style={{ textAlign: "center", color: t.text, fontWeight: 700 }}>{totalEnt}</div>
                                     <div style={{ textAlign: "center" }}>
-                                      <span style={{ padding: "4px 8px", borderRadius: "6px", background: perc === 100 ? "rgba(16, 185, 129, 0.1)" : "rgba(255,255,255,0.05)", color: perc === 100 ? "#10b981" : "white", fontSize: "0.75rem", fontWeight: 700 }}>{perc}%</span>
+                                      <span style={{ padding: "4px 8px", borderRadius: "6px", background: perc === 100 ? "rgba(16, 185, 129, 0.1)" : t.bg, color: perc === 100 ? "#10b981" : t.textMuted, fontSize: "0.75rem", fontWeight: 700 }}>{perc}%</span>
                                     </div>
                                   </div>
                                 );
