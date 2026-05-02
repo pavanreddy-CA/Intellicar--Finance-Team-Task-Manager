@@ -328,6 +328,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [showLODownloadDropdown, setShowLODownloadDropdown] = useState(false);
   const [showExtReqDownloadDropdown, setShowExtReqDownloadDropdown] = useState(false);
   const [extReqSortConfig, setExtReqSortConfig] = useState<{ key: keyof ExternalRequest; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
+  const [extReqDateFrom, setExtReqDateFrom] = useState("");
+  const [extReqDateTo, setExtReqDateTo] = useState("");
   const [userSortConfig, setUserSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showLOCaptureModal, setShowLOCaptureModal] = useState(false);
   const [loCaptureForm, setLOCaptureForm] = useState({
@@ -2157,6 +2159,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     if (requestTypeFilter === 'ORIGINAL' && r.transferStatus === 'T') return false;
     if (requestTypeFilter === 'TRANSFERRED' && r.transferStatus !== 'T') return false;
 
+    if (extReqDateFrom && new Date(r.createdAt) < new Date(extReqDateFrom)) return false;
+    if (extReqDateTo) {
+      const toDate = new Date(extReqDateTo);
+      toDate.setHours(23, 59, 59, 999);
+      if (new Date(r.createdAt) > toDate) return false;
+    }
+
     return true;
   });
 
@@ -2455,7 +2464,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       return true;
     });
 
-    filteredReqs.forEach((r, idx) => {
+    sortedExternalRequests.forEach((r, idx) => {
       worksheet.addRow({
         sl: idx + 1,
         requestFrom: r.requestFrom,
@@ -2498,7 +2507,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const tableColumn = ["Sl No.", "From", "Date", "Type", "Nature", "Status"];
     if (isAdmin) tableColumn.push("Origin", "Original Function", "Transferred By");
 
-    const tableRows = filteredReqs.map((r, idx) => {
+    const tableRows = sortedExternalRequests.map((r, idx) => {
       const row = [
         idx + 1,
         r.requestFrom,
@@ -4076,8 +4085,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               </div>
 
               {/* Enhanced Filter Bar */}
-              <div style={{ padding: "16px 32px", background: t.bg, borderBottom: `1px solid ${t.border}`, display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ position: "relative", flex: 1, minWidth: "250px" }}>
+              <div style={{ padding: "16px 32px", background: t.bg, borderBottom: `1px solid ${t.border}`, display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ position: "relative", flex: 1, minWidth: "200px" }}>
                   <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
                   <input 
                     type="text" 
@@ -4086,6 +4095,37 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     onChange={e => setExtReqSearch(e.target.value)}
                     style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
                   />
+                </div>
+
+                {/* Date Filters */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", background: t.card, padding: "6px 14px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Calendar size={14} color={t.textMuted} />
+                    <span style={{ fontSize: "0.7rem", fontWeight: 800, color: t.textMuted }}>FROM:</span>
+                    <input 
+                      type="date" 
+                      value={extReqDateFrom} 
+                      onChange={e => setExtReqDateFrom(e.target.value)} 
+                      style={{ border: "none", background: "transparent", fontSize: "0.8125rem", color: t.text, outline: "none", width: "115px", fontWeight: 500 }} 
+                    />
+                  </div>
+                  <div style={{ width: "1px", height: "16px", background: t.border, margin: "0 4px" }}></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 800, color: t.textMuted }}>TO:</span>
+                    <input 
+                      type="date" 
+                      value={extReqDateTo} 
+                      onChange={e => setExtReqDateTo(e.target.value)} 
+                      style={{ border: "none", background: "transparent", fontSize: "0.8125rem", color: t.text, outline: "none", width: "115px", fontWeight: 500 }} 
+                    />
+                    {(extReqDateFrom || extReqDateTo) && (
+                      <X 
+                        size={14} 
+                        style={{ cursor: "pointer", color: "#ef4444", marginLeft: "4px" }} 
+                        onClick={() => { setExtReqDateFrom(""); setExtReqDateTo(""); }} 
+                      />
+                    )}
+                  </div>
                 </div>
                 
                 {/* Pending to Convert Dynamic Button */}
