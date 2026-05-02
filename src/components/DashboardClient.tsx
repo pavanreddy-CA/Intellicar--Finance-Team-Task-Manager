@@ -5427,8 +5427,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       <Zap size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Task Automation
                     </button>
                         <button 
-                          onClick={() => setActiveOptionsTab('MATRIX')} 
-                          style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MATRIX' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MATRIX' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                          onClick={() => setActiveOptionsTab('MATRICES')} 
+                          style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MATRICES' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MATRICES' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
                         >
                           <Shield size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Matrix Module
                         </button>
