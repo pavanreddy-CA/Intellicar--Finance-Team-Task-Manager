@@ -1509,8 +1509,8 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             </select>
           </div>
 
-          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
+            <table style={{ width: "100%", minWidth: "1400px", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#1e293b" }}>
                   <th style={thStyle} onClick={() => requestSort('entityName')}>Entity <SortIcon column="entityName" /></th>
@@ -1646,8 +1646,8 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             </select>
           </div>
 
-          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
+            <table style={{ width: "100%", minWidth: "1600px", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#1e293b" }}>
                   <th style={thStyle} onClick={() => requestSort('entityName')}>Entity <SortIcon column="entityName" /></th>

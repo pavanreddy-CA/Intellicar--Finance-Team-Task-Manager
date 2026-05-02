@@ -60,31 +60,30 @@ a {
 }
 
 /* GLOBAL SCROLLBAR SYSTEM (THE SLIDER) */
-/* This makes the nice slider appear BY DEFAULT for all upcoming tables and overflowing elements */
 ::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+  height: 10px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8fafc;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* Subtle gray slider */
+  background: #cbd5e1;
   border-radius: 10px;
-  border: 2px solid #f1f5f9;
+  border: 2px solid #f8fafc;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* Darker on hover */
+  background: #3b82f6; /* Premium Blue on hover */
 }
 
 /* For Firefox */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-width: auto;
+  scrollbar-color: #cbd5e1 #f8fafc;
 }
 
 /* Default Responsive Table Rule */
