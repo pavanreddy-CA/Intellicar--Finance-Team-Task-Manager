@@ -1410,6 +1410,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   <th style={thStyle} onClick={() => requestSort('entityName')}>Entity <SortIcon column="entityName" /></th>
                   <th style={thStyle} onClick={() => requestSort('vendorName')}>Vendor <SortIcon column="vendorName" /></th>
                   <th style={thStyle} onClick={() => requestSort('paymentDescription')}>Description <SortIcon column="paymentDescription" /></th>
+                  <th style={thStyle} onClick={() => requestSort('paymentType')}>Type <SortIcon column="paymentType" /></th>
                   <th style={thStyle} onClick={() => requestSort('dueDate')}>Due Date <SortIcon column="dueDate" /></th>
                   <th style={thStyle} onClick={() => requestSort('amountToRelease')}>Amount to Release <SortIcon column="amountToRelease" /></th>
                   <th style={thStyle}>Status</th>
@@ -1418,7 +1419,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               </thead>
               <tbody>
                 {filteredOccurrences.length === 0 ? (
-                  <tr><td colSpan={7} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
+                  <tr><td colSpan={8} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <ListChecks size={48} style={{ opacity: 0.2 }} />
                       <p>No matching items found in the pending list.</p>
@@ -1433,6 +1434,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                         <td style={tdStyle}>{occ.entityName}</td>
                         <td style={tdStyle}><div style={{ fontWeight: 600 }}>{occ.vendorName}</div></td>
                         <td style={tdStyle}>{occ.paymentDescription}</td>
+                        <td style={tdStyle}><span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", background: "#f1f5f9", color: "#475569", fontWeight: 600 }}>{occ.paymentType}</span></td>
                         <td style={tdStyle}>{new Date(occ.dueDate).toLocaleDateString('en-GB')}</td>
                         <td style={tdStyle}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1510,6 +1512,10 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               <option value="ALL">All Entities</option>
               {Array.from(new Set(occurrences.filter(o => o.isPaid).map(o => o.entityName))).map(ent => <option key={ent} value={ent}>{ent}</option>)}
             </select>
+            <select value={paidTypeFilter} onChange={e => setPaidTypeFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">All Types</option>
+              {(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => <option key={type.trim()} value={type.trim()}>{type.trim()}</option>)}
+            </select>
           </div>
 
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
@@ -1519,6 +1525,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   <th style={thStyle} onClick={() => requestSort('entityName')}>Entity <SortIcon column="entityName" /></th>
                   <th style={thStyle} onClick={() => requestSort('vendorName')}>Vendor <SortIcon column="vendorName" /></th>
                   <th style={thStyle} onClick={() => requestSort('paymentDescription')}>Description <SortIcon column="paymentDescription" /></th>
+                  <th style={thStyle} onClick={() => requestSort('paymentType')}>Type <SortIcon column="paymentType" /></th>
                   <th style={thStyle} onClick={() => requestSort('dueDate')}>Due Date <SortIcon column="dueDate" /></th>
                   <th style={thStyle} onClick={() => requestSort('actualDate')}>Paid Date <SortIcon column="actualDate" /></th>
                   <th style={thStyle} onClick={() => requestSort('amountPaid')}>Amount Paid <SortIcon column="amountPaid" /></th>
@@ -1529,7 +1536,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               </thead>
               <tbody>
                 {filteredOccurrences.length === 0 ? (
-                  <tr><td colSpan={9} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
+                  <tr><td colSpan={10} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <CheckCircle2 size={48} style={{ opacity: 0.2 }} />
                       <p>No historical payments found matching your filters.</p>
@@ -1544,6 +1551,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                         <td style={tdStyle}>{occ.entityName}</td>
                         <td style={tdStyle}><div style={{ fontWeight: 600 }}>{occ.vendorName}</div></td>
                         <td style={tdStyle}>{occ.paymentDescription}</td>
+                        <td style={tdStyle}><span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", background: "#f1f5f9", color: "#475569", fontWeight: 600 }}>{occ.paymentType}</span></td>
                         <td style={tdStyle}>{new Date(occ.dueDate).toLocaleDateString('en-GB')}</td>
                         <td style={tdStyle}><div style={{ color: "#16a34a", fontWeight: 600 }}>{occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--"}</div></td>
                         <td style={tdStyle}>{formatCurrency(occ.amountPaid || 0)}</td>
