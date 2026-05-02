@@ -300,6 +300,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [anaUserFilter, setAnaUserFilter] = useState("ALL");
   const [showAnaShareModal, setShowAnaShareModal] = useState(false);
   const [showAnaDownloadDropdown, setShowAnaDownloadDropdown] = useState(false);
+  
+  // Bulk Import Preview States
+  const [importPreview, setImportPreview] = useState<{ type: string, rows: any[], errors: { row: number, msg: string }[] } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
   const [anaShareConfig, setAnaShareConfig] = useState({
     recipients: [] as string[],
     ccEmails: [] as string[],
@@ -901,21 +906,35 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     const worksheet = workbook.getWorksheet(1);
     
     const rows: any[] = [];
+    const errors: { row: number, msg: string }[] = [];
+
     worksheet?.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return; // Skip headers
       const values = row.values as any[];
+      
+      // Basic Validation helper
+      const checkRequired = (idx: number, name: string) => {
+        if (!values[idx] || String(values[idx]).trim() === "") {
+          errors.push({ row: rowNumber, msg: `${name} is required` });
+        }
+      };
+
       if (type === 'tasks') {
+        checkRequired(1, "Task Name");
+        checkRequired(2, "Entity");
         rows.push({
           taskName: values[1],
           entityName: values[2],
-          taskType: values[3],
-          departmentName: values[4],
+          taskType: values[3] || "General",
+          departmentName: values[4] || "Finance",
           requestFrom: values[5],
           ownerName: values[6],
           reviewerName: values[7],
           dueDate: parseExcelDate(values[8]),
         });
       } else if (type === 'lo') {
+        checkRequired(1, "Entity");
+        checkRequired(3, "Learning Opportunity");
         rows.push({
           entity: values[1],
           dateOfIdentification: parseExcelDate(values[2]),
@@ -925,7 +944,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           resolutionProvided: values[6],
         });
       } else if (type === 'recurring') {
-        // Recurring Template
+        checkRequired(1, "Task Pattern");
+        checkRequired(6, "Frequency");
         rows.push({
           taskNamePattern: values[1],
           entityName: values[2],
@@ -933,8 +953,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           departmentName: values[4],
           financeFunction: values[5],
           frequency: values[6],
-          dayOffset: Number(values[7]),
-          monthOffset: Number(values[8]),
+          dayOffset: Number(values[7] || 0),
+          monthOffset: Number(values[8] || 0),
           defaultOwner: values[9],
           defaultReviewer: values[10],
           startDate: parseExcelDate(values[11]),
@@ -943,6 +963,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           freqLabel: values[14]
         });
       } else if (type === 'payments') {
+        checkRequired(1, "Entity");
+        checkRequired(2, "Description");
         rows.push({
           entityName: values[1],
           paymentDescription: values[2],
@@ -963,7 +985,20 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       }
     });
 
-    if (confirm(`Detected ${rows.length} records. Proceed with import?`)) {
+    setImportPreview({ type, rows, errors });
+    e.target.value = ""; // Clear input
+  };
+
+  const handleConfirmBulkImport = async () => {
+    if (!importPreview) return;
+    const { type, rows, errors } = importPreview;
+
+    if (errors.length > 0) {
+      if (!confirm(`There are ${errors.length} validation errors. These rows will likely fail. Proceed anyway?`)) return;
+    }
+
+    setIsImporting(true);
+    try {
       const endpoint = 
         type === 'tasks' ? '/api/tasks/bulk' : 
         type === 'lo' ? '/api/lo/bulk' : 
@@ -975,21 +1010,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(type === 'payments' ? { items: rows } : rows)
       });
+
       if (res.ok) {
         showNotification("Import successful!");
+        setImportPreview(null);
         if (type === 'tasks') fetchTasks(); 
         else if (type === 'lo') fetchLOs();
-        else {
-          // If we are on Recurring tab, we might want to trigger a refresh there.
-          // Since RecurringActivities is a child, we might need a way to notify it.
-          // For now, if user is in Control Center, they can just refresh or switch tabs.
-          // But actually, fetchTasks() is good because it updates global state if needed.
-        }
+        else fetchTasks(); // Refresh for recurring/payments
       } else {
-        showNotification("Import failed. Please check template format.");
+        const errorData = await res.json();
+        showNotification(errorData.message || "Import failed. Please check data format.");
       }
+    } catch (err) {
+      showNotification("An error occurred during import.");
+    } finally {
+      setIsImporting(false);
     }
-    e.target.value = ""; // Clear input
   };
 
   const fetchUsersList = async () => {
@@ -8388,6 +8424,103 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       )}
 
         </main>
+      {importPreview && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000, padding: "24px" }}>
+          <div style={{ background: t.card, borderRadius: "24px", width: "100%", maxWidth: "1000px", maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" }}>
+            
+            {/* Header */}
+            <div style={{ padding: "24px 32px", borderBottom: `1px solid ${t.border}`, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800 }}>Import Preview: {importPreview.type.toUpperCase()}</h3>
+                <p style={{ margin: "4px 0 0 0", opacity: 0.8, fontSize: "0.875rem" }}>Review your data below before committing to the database.</p>
+              </div>
+              <button onClick={() => setImportPreview(null)} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "white", cursor: "pointer", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={20} /></button>
+            </div>
+
+            {/* Summary Banner */}
+            <div style={{ background: t.bg, padding: "16px 32px", borderBottom: `1px solid ${t.border}`, display: "flex", gap: "32px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.25rem", fontWeight: 800, color: t.text }}>{importPreview.rows.length}</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: t.textMuted, textTransform: "uppercase" }}>Total Records</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#10b981" }}>{importPreview.rows.length - importPreview.errors.length}</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: t.textMuted, textTransform: "uppercase" }}>Ready to Import</span>
+              </div>
+              {importPreview.errors.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#ef4444" }}>{importPreview.errors.length}</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: t.textMuted, textTransform: "uppercase" }}>Rows with Errors</span>
+                </div>
+              )}
+            </div>
+
+            {/* Data Table */}
+            <div style={{ flex: 1, overflow: "auto", padding: "0 32px" }}>
+              <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 8px" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "12px", fontSize: "0.75rem", color: t.textMuted }}>ROW</th>
+                    <th style={{ textAlign: "left", padding: "12px", fontSize: "0.75rem", color: t.textMuted }}>PRIMARY DETAILS</th>
+                    <th style={{ textAlign: "left", padding: "12px", fontSize: "0.75rem", color: t.textMuted }}>ENTITY</th>
+                    <th style={{ textAlign: "left", padding: "12px", fontSize: "0.75rem", color: t.textMuted }}>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importPreview.rows.map((row, idx) => {
+                    const rowNumber = idx + 2;
+                    const rowErrors = importPreview.errors.filter(e => e.row === rowNumber);
+                    const hasError = rowErrors.length > 0;
+
+                    return (
+                      <tr key={idx}>
+                        <td style={{ padding: "12px", background: hasError ? "rgba(239,68,68,0.05)" : t.bg, borderRadius: "10px 0 0 10px", color: t.textMuted, fontSize: "0.875rem", fontWeight: 700 }}>#{rowNumber}</td>
+                        <td style={{ padding: "12px", background: hasError ? "rgba(239,68,68,0.05)" : t.bg }}>
+                          <div style={{ fontWeight: 700, color: t.text, fontSize: "0.875rem" }}>
+                            {importPreview.type === 'tasks' ? row.taskName : 
+                             importPreview.type === 'lo' ? row.learningOpportunity :
+                             importPreview.type === 'payments' ? row.paymentDescription : row.taskNamePattern}
+                          </div>
+                          {hasError && <div style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: "4px", fontWeight: 500 }}>{rowErrors.map(e => e.msg).join(", ")}</div>}
+                        </td>
+                        <td style={{ padding: "12px", background: hasError ? "rgba(239,68,68,0.05)" : t.bg, color: t.text, fontSize: "0.875rem" }}>
+                          {row.entityName || row.entity || "N/A"}
+                        </td>
+                        <td style={{ padding: "12px", background: hasError ? "rgba(239,68,68,0.05)" : t.bg, borderRadius: "0 10px 10px 0" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: hasError ? "#ef4444" : "#10b981", fontSize: "0.75rem", fontWeight: 700 }}>
+                            {hasError ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
+                            {hasError ? "INVALID" : "READY"}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Actions */}
+            <div style={{ padding: "24px 32px", borderTop: `1px solid ${t.border}`, background: t.bg, display: "flex", justifyContent: "flex-end", gap: "16px" }}>
+              <button 
+                onClick={() => setImportPreview(null)}
+                style={{ padding: "12px 24px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer" }}
+              >
+                Discard & Close
+              </button>
+              <button 
+                onClick={handleConfirmBulkImport}
+                disabled={isImporting}
+                style={{ padding: "12px 32px", borderRadius: "12px", border: "none", background: "#10b981", color: "white", fontWeight: 700, cursor: isImporting ? "not-allowed" : "pointer", boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                {isImporting ? <RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> : <Download size={18} />}
+                {isImporting ? "Processing..." : "Confirm & Import All"}
+              </button>
+            </div>
+            <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }` }} />
+          </div>
+        </div>
+      )}
+
       {notification.type && (
         <div style={{
           position: "fixed",
