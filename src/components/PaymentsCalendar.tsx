@@ -68,7 +68,7 @@ import { resolveTaskName, getPeriodKey, getOccurrencesBetween } from "@/lib/recu
 
 export default function PaymentsCalendar({   user, isAdmin, t, theme, settings , showNotification , showConfirm }: { user: any; isAdmin: boolean; t: any; theme: string; settings: any ; showNotification: any;  showConfirm: any; }) {
   const isViewer = user?.role === 'VIEWER';
-  const [activeTab, setActiveTab] = useState<'TRACKER' | 'LIST' | 'MASTER' | 'ANALYTICS'>('TRACKER');
+  const [activeTab, setActiveTab] = useState<'TRACKER' | 'LIST' | 'MASTER' | 'ANALYTICS' | 'PAID'>('TRACKER');
   const [templates, setTemplates] = useState<PaymentTemplate[]>([]);
   const [occurrences, setOccurrences] = useState<PaymentOccurrence[]>([]);
   const [selectedOccs, setSelectedOccs] = useState<number[]>([]);
@@ -82,6 +82,25 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   const [trackerEntityFilter, setTrackerEntityFilter] = useState("ALL");
   const [trackerTypeFilter, setTrackerTypeFilter] = useState("ALL");
   const [trackerFreqFilter, setTrackerFreqFilter] = useState("ALL");
+  
+  // List Filtering
+  const [listSearch, setListSearch] = useState("");
+  const [listEntityFilter, setListEntityFilter] = useState("ALL");
+  const [listTypeFilter, setListTypeFilter] = useState("ALL");
+  const [listFreqFilter, setListFreqFilter] = useState("ALL");
+  
+  // Paid Filtering
+  const [paidSearch, setPaidSearch] = useState("");
+  const [paidStatusFilter, setPaidStatusFilter] = useState("ALL");
+  const [paidEntityFilter, setPaidEntityFilter] = useState("ALL");
+  const [paidTypeFilter, setPaidTypeFilter] = useState("ALL");
+  const [paidFreqFilter, setPaidFreqFilter] = useState("ALL");
+  const [paidFromDate, setPaidFromDate] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().split('T')[0];
+  });
+  const [paidToDate, setPaidToDate] = useState(new Date().toISOString().split('T')[0]);
   
   // Date range defaults: 1st of current month to last of current month
   const getInitialDates = () => {
@@ -549,40 +568,63 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
   };
 
-  const filteredOccurrences = occurrences
-    .filter(o => {
-      const search = trackerSearch.toLowerCase();
-      const status = getStatus(o);
-      const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
-      const matchesStatus = trackerStatusFilter === "ALL" || status === trackerStatusFilter;
-      const matchesEntity = trackerEntityFilter === "ALL" || o.entityName === trackerEntityFilter;
-      const matchesType = trackerTypeFilter === "ALL" || o.paymentType === trackerTypeFilter;
-      const matchesFreq = trackerFreqFilter === "ALL" || o.frequency === trackerFreqFilter;
-      
-      const occDate = new Date(o.dueDate);
-      const from = new Date(trackerFromDate);
-      const to = new Date(trackerToDate);
-      from.setHours(0,0,0,0);
-      to.setHours(23,59,59,999);
-      const matchesDate = occDate >= from && occDate <= to;
-      
-      return matchesSearch && matchesStatus && matchesEntity && matchesType && matchesFreq && matchesDate && !o.isListed && !o.isPaid;
-    })
-    .sort((a: any, b: any) => {
-      if (!sortConfig) return 0;
-      const { key, direction } = sortConfig;
-      let valA = a[key];
-      let valB = b[key];
-      
-      if (key === 'dueDate' || key === 'actualDate') {
-        valA = valA ? new Date(valA).getTime() : 0;
-        valB = valB ? new Date(valB).getTime() : 0;
-      }
-      
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+  const filteredOccurrences = useMemo(() => {
+    return occurrences
+      .filter(o => {
+        if (activeTab === 'TRACKER') {
+          const search = trackerSearch.toLowerCase();
+          const status = getStatus(o);
+          const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
+          const matchesStatus = trackerStatusFilter === "ALL" || status === trackerStatusFilter;
+          const matchesEntity = trackerEntityFilter === "ALL" || o.entityName === trackerEntityFilter;
+          const matchesType = trackerTypeFilter === "ALL" || o.paymentType === trackerTypeFilter;
+          const matchesFreq = trackerFreqFilter === "ALL" || o.frequency === trackerFreqFilter;
+          const occDate = new Date(o.dueDate);
+          const from = new Date(trackerFromDate);
+          const to = new Date(trackerToDate);
+          from.setHours(0,0,0,0); to.setHours(23,59,59,999);
+          const matchesDate = occDate >= from && occDate <= to;
+          return matchesSearch && matchesStatus && matchesEntity && matchesType && matchesFreq && matchesDate && !o.isListed && !o.isPaid;
+        }
+        if (activeTab === 'LIST') {
+          const search = listSearch.toLowerCase();
+          const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
+          const matchesEntity = listEntityFilter === "ALL" || o.entityName === listEntityFilter;
+          const matchesType = listTypeFilter === "ALL" || o.paymentType === listTypeFilter;
+          const matchesFreq = listFreqFilter === "ALL" || o.frequency === listFreqFilter;
+          return matchesSearch && matchesEntity && matchesType && matchesFreq && o.isListed && !o.isPaid;
+        }
+        if (activeTab === 'PAID') {
+          const search = paidSearch.toLowerCase();
+          const status = getStatus(o);
+          const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
+          const matchesStatus = paidStatusFilter === "ALL" || status === paidStatusFilter;
+          const matchesEntity = paidEntityFilter === "ALL" || o.entityName === paidEntityFilter;
+          const matchesType = paidTypeFilter === "ALL" || o.paymentType === paidTypeFilter;
+          const matchesFreq = paidFreqFilter === "ALL" || o.frequency === paidFreqFilter;
+          const occDate = new Date(o.actualDate || o.dueDate);
+          const from = new Date(paidFromDate);
+          const to = new Date(paidToDate);
+          from.setHours(0,0,0,0); to.setHours(23,59,59,999);
+          const matchesDate = occDate >= from && occDate <= to;
+          return matchesSearch && matchesStatus && matchesEntity && matchesType && matchesFreq && matchesDate && o.isPaid;
+        }
+        return false;
+      })
+      .sort((a: any, b: any) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+        let valA = a[key];
+        let valB = b[key];
+        if (key === 'dueDate' || key === 'actualDate') {
+          valA = valA ? new Date(valA).getTime() : 0;
+          valB = valB ? new Date(valB).getTime() : 0;
+        }
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [occurrences, activeTab, trackerSearch, trackerStatusFilter, trackerEntityFilter, trackerTypeFilter, trackerFreqFilter, trackerFromDate, trackerToDate, listSearch, listEntityFilter, listTypeFilter, listFreqFilter, paidSearch, paidStatusFilter, paidEntityFilter, paidTypeFilter, paidFreqFilter, paidFromDate, paidToDate, sortConfig]);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -606,12 +648,10 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
       items.sort((a: any, b: any) => {
         let valA = a[masterSortConfig.key];
         let valB = b[masterSortConfig.key];
-        
         if (masterSortConfig.key === 'isStopped') {
             valA = valA ? 1 : 0;
             valB = valB ? 1 : 0;
         }
-
         if (valA < valB) return masterSortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return masterSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -620,32 +660,36 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
     return items;
   }, [templates, masterSortConfig]);
 
-  const filteredListOccurrences = useMemo(() => {
-    return occurrences
-      .filter(o => o.isListed && !o.isPaid)
-      .sort((a, b) => {
-        const dateA = new Date(a.dueDate).getTime();
-        const dateB = new Date(b.dueDate).getTime();
-        return dateA - dateB;
-      });
-  }, [occurrences]);
-
-  const handleDownloadExcel = async () => {
+  const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Payments");
+    const worksheet = workbook.addWorksheet(activeTab === 'LIST' ? "Pending Payments" : activeTab === 'PAID' ? "Payments Made" : "Payments Tracker");
 
-    worksheet.columns = [
+    const columns = [
       { header: "Entity", key: "entity", width: 20 },
       { header: "Vendor", key: "vendor", width: 25 },
       { header: "Description", key: "desc", width: 35 },
       { header: "Type", key: "type", width: 15 },
       { header: "Frequency", key: "freq", width: 15 },
-      { header: "Due Date", key: "due", width: 15 },
-      { header: "Actual Date", key: "actual", width: 15 },
-      { header: "Amount", key: "amount", width: 15 },
-      { header: "Status", key: "status", width: 20 },
-      { header: "Remarks", key: "remarks", width: 30 }
+      { header: "Due Date", key: "due", width: 15 }
     ];
+
+    if (activeTab === 'PAID' || activeTab === 'TRACKER') {
+      columns.push({ header: "Actual Date", key: "actual", width: 15 });
+      columns.push({ header: "Amount Paid", key: "amount", width: 15 });
+    }
+    
+    if (activeTab === 'LIST' || activeTab === 'TRACKER') {
+      columns.push({ header: "Amount to Release", key: "release", width: 15 });
+    }
+
+    if (activeTab === 'PAID') {
+      columns.push({ header: "Bank", key: "bank", width: 20 });
+    }
+
+    columns.push({ header: "Status", key: "status", width: 20 });
+    columns.push({ header: "Remarks", key: "remarks", width: 30 });
+
+    worksheet.columns = columns;
 
     filteredOccurrences.forEach(occ => {
       worksheet.addRow({
@@ -657,52 +701,57 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
         due: new Date(occ.dueDate).toLocaleDateString('en-GB'),
         actual: occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
         amount: occ.amountPaid || 0,
+        release: occ.amountToRelease || 0,
+        bank: occ.paidFromAccount || "--",
         status: getStatus(occ),
-        remarks: occ.isCancelled ? `CANCELLED: ${occ.cancelledReason}` : (occ.isHold ? `HOLD: ${occ.holdReason}` : (occ.editRequested ? `EDIT REQ: ${occ.editRequestReason}` : ""))
+        remarks: occ.isCancelled ? `CANCELLED: ${occ.cancelledReason}` : (occ.isHold ? `HOLD: ${occ.holdReason}` : "")
       });
     });
 
-    // Formatting
     worksheet.getRow(1).font = { bold: true };
     worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
 
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Payments_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    saveAs(new Blob([buffer]), `${activeTab}_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
     setShowDownloadMenu(false);
   };
 
-  const handleDownloadPDF = () => {
+  const exportToPDF = () => {
     const doc = new jsPDF('l', 'mm', 'a4');
-    doc.text("Finance Payments Tracker Report", 14, 15);
+    const title = activeTab === 'LIST' ? "Pending Payments Report" : activeTab === 'PAID' ? "Payments Made Report" : "Finance Payments Tracker Report";
+    doc.text(title, 14, 15);
     
-    const tableData = filteredOccurrences.map(occ => [
-      occ.entityName,
-      occ.vendorName,
-      occ.paymentDescription,
-      occ.paymentType,
-      occ.frequency,
-      new Date(occ.dueDate).toLocaleDateString('en-GB'),
-      occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
-      occ.amountPaid ? formatCurrency(occ.amountPaid) : "--",
-      getStatus(occ)
-    ]);
+    const head = [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date']];
+    if (activeTab === 'PAID' || activeTab === 'TRACKER') head[0].push('Actual Date', 'Amount');
+    if (activeTab === 'LIST' || activeTab === 'TRACKER') head[0].push('Release Amt');
+    if (activeTab === 'PAID') head[0].push('Bank');
+    head[0].push('Status');
+
+    const body = filteredOccurrences.map(occ => {
+      const row = [occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency, new Date(occ.dueDate).toLocaleDateString('en-GB')];
+      if (activeTab === 'PAID' || activeTab === 'TRACKER') {
+        row.push(occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--");
+        row.push(occ.amountPaid ? formatCurrency(occ.amountPaid) : "--");
+      }
+      if (activeTab === 'LIST' || activeTab === 'TRACKER') {
+        row.push(occ.amountToRelease ? formatCurrency(occ.amountToRelease) : "--");
+      }
+      if (activeTab === 'PAID') {
+        row.push(occ.paidFromAccount || "--");
+      }
+      row.push(getStatus(occ));
+      return row;
+    });
 
     autoTable(doc, {
-      head: [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status', 'Remarks']],
-      body: filteredOccurrences.map(occ => [
-        occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency,
-        new Date(occ.dueDate).toLocaleDateString('en-GB'),
-        occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
-        occ.amountPaid ? formatCurrency(occ.amountPaid) : "--",
-        getStatus(occ),
-        occ.isCancelled ? `CANCELLED: ${occ.cancelledReason}` : (occ.isHold ? `HOLD: ${occ.holdReason}` : "")
-      ]),
+      head: head,
+      body: body,
       startY: 20,
       theme: 'grid',
       headStyles: { fillColor: [37, 99, 235] }
     });
 
-    doc.save(`Payments_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`${activeTab}_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     setShowDownloadMenu(false);
   };
 
@@ -789,33 +838,32 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           ];
           templates.forEach(t => {
             worksheet.addRow({
-              entity: t.entityName,
-              desc: t.paymentDescription,
-              vendor: t.vendorName,
-              type: t.paymentType,
-              freq: t.frequency,
+              entity: t.entityName, desc: t.paymentDescription, vendor: t.vendorName, type: t.paymentType, freq: t.frequency,
               status: t.isStopped ? "STOPPED" : "ACTIVE"
             });
           });
         } else {
-          worksheet.columns = [
+          const columns = [
             { header: "Entity", key: "entity", width: 20 },
-            { header: "Vendor", key: "vendor", width: 30 },
-            { header: "Description", key: "desc", width: 40 },
+            { header: "Vendor", key: "vendor", width: 25 },
+            { header: "Description", key: "desc", width: 35 },
             { header: "Type", key: "type", width: 15 },
             { header: "Frequency", key: "freq", width: 15 },
-            { header: "Due Date", key: "due", width: 15 },
-            { header: "Actual Date", key: "actual", width: 15 },
-            { header: "Amount", key: "amount", width: 15 },
-            { header: "Status", key: "status", width: 20 }
+            { header: "Due Date", key: "due", width: 15 }
           ];
+          if (activeTab === 'PAID' || activeTab === 'TRACKER') {
+            columns.push({ header: "Actual Date", key: "actual", width: 15 }, { header: "Amount Paid", key: "amount", width: 15 });
+          }
+          if (activeTab === 'LIST' || activeTab === 'TRACKER') {
+            columns.push({ header: "Amount to Release", key: "release", width: 15 });
+          }
+          if (activeTab === 'PAID') columns.push({ header: "Bank", key: "bank", width: 20 });
+          columns.push({ header: "Status", key: "status", width: 20 });
+          
+          worksheet.columns = columns;
           filteredOccurrences.forEach(occ => {
             worksheet.addRow({
-              entity: occ.entityName,
-              vendor: occ.vendorName,
-              desc: occ.paymentDescription,
-              type: occ.paymentType,
-              freq: occ.frequency,
+              entity: occ.entityName, vendor: occ.vendorName, desc: occ.paymentDescription, type: occ.paymentType, freq: occ.frequency,
               due: new Date(occ.dueDate).toLocaleDateString('en-GB'),
               actual: occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
               amount: occ.amountPaid || 0,
@@ -847,14 +895,26 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             t.isStopped ? "STOPPED" : "ACTIVE"
           ]);
         } else {
-          head = [['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date', 'Actual Date', 'Amount', 'Status']];
-          body = filteredOccurrences.map(occ => [
-            occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency,
-            new Date(occ.dueDate).toLocaleDateString('en-GB'),
-            occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--",
-            occ.amountPaid ? formatCurrency(occ.amountPaid) : "--",
-            getStatus(occ)
-          ]);
+          const h = ['Entity', 'Vendor', 'Description', 'Type', 'Freq', 'Due Date'];
+          if (activeTab === 'PAID' || activeTab === 'TRACKER') h.push('Actual Date', 'Amount');
+          if (activeTab === 'LIST' || activeTab === 'TRACKER') h.push('Release Amt');
+          if (activeTab === 'PAID') h.push('Bank');
+          h.push('Status');
+          head = [h];
+          
+          body = filteredOccurrences.map(occ => {
+            const row = [occ.entityName, occ.vendorName, occ.paymentDescription, occ.paymentType, occ.frequency, new Date(occ.dueDate).toLocaleDateString('en-GB')];
+            if (activeTab === 'PAID' || activeTab === 'TRACKER') {
+              row.push(occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--");
+              row.push(occ.amountPaid ? formatCurrency(occ.amountPaid) : "--");
+            }
+            if (activeTab === 'LIST' || activeTab === 'TRACKER') {
+              row.push(occ.amountToRelease ? formatCurrency(occ.amountToRelease) : "--");
+            }
+            if (activeTab === 'PAID') row.push(occ.paidFromAccount || "--");
+            row.push(getStatus(occ));
+            return row;
+          });
         }
 
         autoTable(doc, {
@@ -937,6 +997,12 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             style={{ padding: "8px 16px", borderRadius: "8px", border: "none", background: activeTab === 'ANALYTICS' ? "#2563eb" : "transparent", color: activeTab === 'ANALYTICS' ? "white" : t.textMuted, fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "6px" }}
           >
             <TrendingUp size={16} /> Analytics
+          </button>
+          <button 
+            onClick={() => setActiveTab('PAID')}
+            style={{ padding: "8px 16px", borderRadius: "8px", border: "none", background: activeTab === 'PAID' ? "#2563eb" : "transparent", color: activeTab === 'PAID' ? "white" : t.textMuted, fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <CheckCircle2 size={16} /> Payments Made
           </button>
         </div>
       </div>
@@ -1097,13 +1163,13 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               
               {showDownloadMenu && (
                 <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: "white", borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", border: `1px solid ${t.border}`, zIndex: 100, minWidth: "180px", overflow: "hidden" }}>
-                  <button onClick={handleDownloadExcel} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
+                  <button onClick={() => { setShowDownloadMenu(false); exportToExcel(); }} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
                     <FileSpreadsheet size={16} color="#16a34a" /> Download Excel
                   </button>
-                  <button onClick={handleDownloadPDF} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", borderTop: `1px solid ${t.border}`, background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
+                  <button onClick={() => { setShowDownloadMenu(false); exportToPDF(); }} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", borderTop: `1px solid ${t.border}`, background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
                     <FileText size={16} color="#ef4444" /> Download PDF
                   </button>
-                  <button onClick={() => { setShowShareModal(true); setShowDownloadMenu(false); }} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", borderTop: `1px solid ${t.border}`, background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
+                  <button onClick={() => { setShowShareModal(true); setShowDownloadMenu(false); setShareData({ subject: "Finance Payments Tracker Report", format: 'excel', type: 'payments' }); }} style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", borderTop: `1px solid ${t.border}`, background: "none", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", color: t.text }}>
                     <Mail size={16} color="#2563eb" /> Share via Email
                   </button>
                 </div>
@@ -1286,6 +1352,20 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             </h3>
             <div style={{ display: "flex", gap: "12px" }}>
               <button 
+                onClick={() => { setShareData({...shareData, type: 'payments'}); setShowDownloadMenu(!showDownloadMenu); }}
+                style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <Download size={18} /> Download / Share <ChevronDown size={16} />
+              </button>
+              {showDownloadMenu && (
+                <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden", minWidth: "180px" }}>
+                  <button onClick={() => { setShowDownloadMenu(false); exportToExcel(); }} style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", color: t.text, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem" }}><FileSpreadsheet size={16} color="#16a34a" /> Excel Spreadsheet</button>
+                  <button onClick={() => { setShowDownloadMenu(false); exportToPDF(); }} style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", color: t.text, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem" }}><FileText size={16} color="#ef4444" /> PDF Document</button>
+                  <div style={{ height: "1px", background: t.border }}></div>
+                  <button onClick={() => { setShowDownloadMenu(false); setShareData({ subject: "Pending Payment List Report", format: 'excel', type: 'payments' }); setShowShareModal(true); }} style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", color: "#2563eb", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem", fontWeight: 600 }}><Mail size={16} /> Share via Email</button>
+                </div>
+              )}
+              <button 
                 onClick={fetchData}
                 style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer" }}
               >
@@ -1294,29 +1374,58 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
             </div>
           </div>
 
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ flex: "1 1 200px", position: "relative" }}>
+              <Search size={16} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+              <input 
+                type="text" 
+                placeholder="Search Pending List..." 
+                value={listSearch}
+                onChange={e => setListSearch(e.target.value)}
+                style={{ width: "100%", padding: "8px 8px 8px 34px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem" }}
+              />
+            </div>
+            <select value={listEntityFilter} onChange={e => setListEntityFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">All Entities</option>
+              {Array.from(new Set(occurrences.filter(o => o.isListed).map(o => o.entityName))).map(ent => <option key={ent} value={ent}>{ent}</option>)}
+            </select>
+            <select value={listTypeFilter} onChange={e => setListTypeFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">All Types</option>
+              {(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => <option key={type.trim()} value={type.trim()}>{type.trim()}</option>)}
+            </select>
+            <select value={listFreqFilter} onChange={e => setListFreqFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">All Freq</option>
+              <option value="M">Monthly</option>
+              <option value="Q">Quarterly</option>
+              <option value="H">Half-Yearly</option>
+              <option value="A">Annually</option>
+              <option value="W">Weekly</option>
+            </select>
+          </div>
+
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
             <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#1e293b" }}>
-                  <th style={thStyle}>Entity</th>
-                  <th style={thStyle}>Vendor</th>
-                  <th style={thStyle}>Description</th>
-                  <th style={thStyle}>Due Date</th>
-                  <th style={thStyle}>Amount to Release</th>
+                  <th style={thStyle} onClick={() => requestSort('entityName')}>Entity <SortIcon column="entityName" /></th>
+                  <th style={thStyle} onClick={() => requestSort('vendorName')}>Vendor <SortIcon column="vendorName" /></th>
+                  <th style={thStyle} onClick={() => requestSort('paymentDescription')}>Description <SortIcon column="paymentDescription" /></th>
+                  <th style={thStyle} onClick={() => requestSort('dueDate')}>Due Date <SortIcon column="dueDate" /></th>
+                  <th style={thStyle} onClick={() => requestSort('amountToRelease')}>Amount to Release <SortIcon column="amountToRelease" /></th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredListOccurrences.length === 0 ? (
+                {filteredOccurrences.length === 0 ? (
                   <tr><td colSpan={7} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <ListChecks size={48} style={{ opacity: 0.2 }} />
-                      <p>Your payment list is empty. Go to Tracker to select and move items here.</p>
+                      <p>No matching items found in the pending list.</p>
                     </div>
                   </td></tr>
                 ) : (
-                  filteredListOccurrences.map(occ => {
+                  filteredOccurrences.map(occ => {
                     const status = getStatus(occ);
                     const style = getStatusStyle(status);
                     return (
@@ -1328,68 +1437,112 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                         <td style={tdStyle}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ fontWeight: 700, color: "#1e293b" }}>{formatCurrency(occ.amountToRelease || 0)}</span>
-                            <button 
-                              onClick={() => {
-                                const newAmount = prompt("Enter new Amount to Release:", occ.amountToRelease?.toString() || "0");
-                                if (newAmount !== null) {
-                                  const val = parseFloat(newAmount);
-                                  if (!isNaN(val)) {
-                                    fetch(`/api/payments/tracker/${occ.id}`, {
-                                      method: "PATCH",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ amountToRelease: val })
-                                    }).then(r => { if (r.ok) fetchData(); });
-                                  }
+                            <button onClick={() => {
+                              const newAmount = prompt("Enter new Amount to Release:", occ.amountToRelease?.toString() || "0");
+                              if (newAmount !== null) {
+                                const val = parseFloat(newAmount);
+                                if (!isNaN(val)) {
+                                  fetch(`/api/payments/tracker/${occ.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amountToRelease: val }) }).then(r => { if (r.ok) fetchData(); });
                                 }
-                              }}
-                              style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", padding: "4px" }}
-                              title="Update Amount"
-                            >
-                              <Edit2 size={14} />
-                            </button>
+                              }
+                            }} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", padding: "4px" }} title="Update Amount"><Edit2 size={14} /></button>
                           </div>
                         </td>
-                        <td style={tdStyle}>
-                          <span style={{ 
-                            padding: "4px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700,
-                            background: style.bg, color: style.text, border: `1px solid ${style.border}`
-                          }}>
-                            {status}
-                          </span>
-                        </td>
+                        <td style={tdStyle}><span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700, background: style.bg, color: style.text, border: `1px solid ${style.border}` }}>{status}</span></td>
                         <td style={tdStyle}>
                           <div style={{ display: "flex", gap: "8px" }}>
-                            <button 
-                              onClick={() => { 
-                                setActiveOccurrence(occ); 
-                                setPayData({ 
-                                  actualDate: new Date().toISOString().split('T')[0], 
-                                  amountPaid: (occ.amountToRelease || 0).toString(),
-                                  paidFromAccount: ""
-                                }); 
-                                setShowPayModal(true); 
-                              }}
-                              style={{ padding: "6px 16px", borderRadius: "8px", border: "none", background: "#22c55e", color: "white", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}
-                            >
-                              Mark Paid
-                            </button>
-                            <button 
-                              onClick={() => {
-                                showConfirm("Move this back to Tracker?", async () => {
-                                  await fetch(`/api/payments/tracker/${occ.id}`, {
-                                    method: "PATCH",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ isListed: false })
-                                  });
-                                  fetchData();
-                                });
-                              }}
-                              style={{ padding: "6px", borderRadius: "8px", border: `1px solid ${t.border}`, background: "white", color: "#64748b", cursor: "pointer" }}
-                              title="Remove from List"
-                            >
-                              <X size={16} />
-                            </button>
+                            <button onClick={() => { setActiveOccurrence(occ); setPayData({ actualDate: new Date().toISOString().split('T')[0], amountPaid: (occ.amountToRelease || 0).toString(), paidFromAccount: "" }); setShowPayModal(true); }} style={{ padding: "6px 16px", borderRadius: "8px", border: "none", background: "#22c55e", color: "white", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}>Mark Paid</button>
+                            <button onClick={() => { showConfirm("Move this back to Tracker?", async () => { await fetch(`/api/payments/tracker/${occ.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isListed: false }) }); fetchData(); }); }} style={{ padding: "6px", borderRadius: "8px", border: `1px solid ${t.border}`, background: "white", color: "#64748b", cursor: "pointer" }} title="Remove from List"><X size={16} /></button>
                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : activeTab === 'PAID' ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0, color: t.text, display: "flex", alignItems: "center", gap: "8px" }}>
+              <CheckCircle2 size={24} color="#16a34a" />
+              Payments Made (History)
+            </h3>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button 
+                onClick={() => { setShareData({...shareData, type: 'payments'}); setShowDownloadMenu(!showDownloadMenu); }}
+                style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <Download size={18} /> Download / Share <ChevronDown size={16} />
+              </button>
+              <button onClick={fetchData} style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer" }}>Refresh History</button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ flex: "1 1 200px", position: "relative" }}>
+              <Search size={16} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+              <input type="text" placeholder="Search Payments Made..." value={paidSearch} onChange={e => setPaidSearch(e.target.value)} style={{ width: "100%", padding: "8px 8px 8px 34px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem" }} />
+            </div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ fontSize: "0.75rem", color: t.textMuted, fontWeight: 600 }}>Paid From:</span>
+              <input type="date" value={paidFromDate} onChange={e => setPaidFromDate(e.target.value)} style={{ padding: "7px 10px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem" }} />
+              <span style={{ fontSize: "0.75rem", color: t.textMuted, fontWeight: 600 }}>To:</span>
+              <input type="date" value={paidToDate} onChange={e => setPaidToDate(e.target.value)} style={{ padding: "7px 10px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem" }} />
+            </div>
+            <select value={paidStatusFilter} onChange={e => setPaidStatusFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">All Status</option>
+              <option value="Paid on due date">Paid on due date</option>
+              <option value="Paid Before due date">Paid Before due date</option>
+              <option value="Paid After due date">Paid After due date</option>
+            </select>
+            <select value={paidEntityFilter} onChange={e => setPaidEntityFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
+              <option value="ALL">All Entities</option>
+              {Array.from(new Set(occurrences.filter(o => o.isPaid).map(o => o.entityName))).map(ent => <option key={ent} value={ent}>{ent}</option>)}
+            </select>
+          </div>
+
+          <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+            <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#1e293b" }}>
+                  <th style={thStyle} onClick={() => requestSort('entityName')}>Entity <SortIcon column="entityName" /></th>
+                  <th style={thStyle} onClick={() => requestSort('vendorName')}>Vendor <SortIcon column="vendorName" /></th>
+                  <th style={thStyle} onClick={() => requestSort('paymentDescription')}>Description <SortIcon column="paymentDescription" /></th>
+                  <th style={thStyle} onClick={() => requestSort('dueDate')}>Due Date <SortIcon column="dueDate" /></th>
+                  <th style={thStyle} onClick={() => requestSort('actualDate')}>Paid Date <SortIcon column="actualDate" /></th>
+                  <th style={thStyle} onClick={() => requestSort('amountPaid')}>Amount Paid <SortIcon column="amountPaid" /></th>
+                  <th style={thStyle} onClick={() => requestSort('paidFromAccount')}>Bank <SortIcon column="paidFromAccount" /></th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOccurrences.length === 0 ? (
+                  <tr><td colSpan={9} style={{ padding: "60px", textAlign: "center", color: t.textMuted }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                      <CheckCircle2 size={48} style={{ opacity: 0.2 }} />
+                      <p>No historical payments found matching your filters.</p>
+                    </div>
+                  </td></tr>
+                ) : (
+                  filteredOccurrences.map(occ => {
+                    const status = getStatus(occ);
+                    const style = getStatusStyle(status);
+                    return (
+                      <tr key={occ.id} style={{ borderBottom: `1px solid ${t.border}` }}>
+                        <td style={tdStyle}>{occ.entityName}</td>
+                        <td style={tdStyle}><div style={{ fontWeight: 600 }}>{occ.vendorName}</div></td>
+                        <td style={tdStyle}>{occ.paymentDescription}</td>
+                        <td style={tdStyle}>{new Date(occ.dueDate).toLocaleDateString('en-GB')}</td>
+                        <td style={tdStyle}><div style={{ color: "#16a34a", fontWeight: 600 }}>{occ.actualDate ? new Date(occ.actualDate).toLocaleDateString('en-GB') : "--"}</div></td>
+                        <td style={tdStyle}>{formatCurrency(occ.amountPaid || 0)}</td>
+                        <td style={tdStyle}><div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>{occ.paidFromAccount || "--"}</div></td>
+                        <td style={tdStyle}><span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700, background: style.bg, color: style.text, border: `1px solid ${style.border}` }}>{status}</span></td>
+                        <td style={tdStyle}>
+                          <button onClick={() => { setActiveOccurrence(occ); setEditOccData({ actualDate: occ.actualDate || "", amountPaid: occ.amountPaid?.toString() || "" }); setShowEditOccModal(true); }} style={{ padding: "6px", borderRadius: "8px", border: `1px solid ${t.border}`, background: "white", color: "#2563eb", cursor: "pointer" }} title="Edit Record"><Edit2 size={16} /></button>
                         </td>
                       </tr>
                     );
