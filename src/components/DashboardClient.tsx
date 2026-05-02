@@ -408,6 +408,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   
   const canAllocateAnything = (isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && !isViewer;
 
+  const canImport = isAdmin || (() => {
+    try {
+      const matrix = JSON.parse(settings?.bulkImportMatrix || '{}');
+      return matrix[user.id]?.length > 0 || matrix[user.email]?.length > 0;
+    } catch (e) { return false; }
+  })();
+
+  const canShowControlCenter = isAdmin || canImport;
+
+  const toIsoDate = (d: Date) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const handlePresetChange = (preset: string) => {
     setDateFilterPreset(preset);
     const today = new Date();
@@ -442,21 +458,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       end = new Date(lastFyStartYear + 1, 2, 31); // March 31
     }
 
-  const canImport = isAdmin || (() => {
-    try {
-      const matrix = JSON.parse(settings?.bulkImportMatrix || '{}');
-      return matrix[user.id]?.length > 0 || matrix[user.email]?.length > 0;
-    } catch (e) { return false; }
-  })();
-
-  const canShowControlCenter = isAdmin || canImport;
-
-  const toIsoDate = (d: Date) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
 
     setStartDate(toIsoDate(start));
     setEndDate(toIsoDate(end));
