@@ -2193,6 +2193,11 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                       onChange={e => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          if (file.size > 4 * 1024 * 1024) {
+                            alert("File is too large. Maximum size is 4MB.");
+                            e.target.value = "";
+                            return;
+                          }
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             setPayData({...payData, attachment: reader.result as string});
