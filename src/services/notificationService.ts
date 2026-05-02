@@ -45,7 +45,7 @@ export async function triggerNotification(type: NotificationType, payload: any) 
 }
 
 function buildEmailData(type: NotificationType, payload: any) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://v0-finpulse.vercel.app';
 
   switch (type) {
     case 'TASK_ASSIGNED':
