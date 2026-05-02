@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userRole = (session.user as any)?.role;
+    const userRole = (session?.user as any)?.role;
     if (userRole === "VIEWER") {
       return NextResponse.json({ error: "Forbidden: Viewers cannot modify payment records" }, { status: 403 });
     }

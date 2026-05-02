@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession();
   if (!session || !session.user?.email) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const userRole = (session.user as any)?.role;
+  const userRole = (session?.user as any)?.role;
   if (userRole === "VIEWER") {
     return NextResponse.json({ message: "Forbidden: Viewers cannot create resources" }, { status: 403 });
   }
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession();
-  const userRole = (session.user as any)?.role;
+  const userRole = (session?.user as any)?.role;
   const isAdmin = session?.user?.email === "pavanreddy@intellicar.in" || userRole === "ADMIN";
   
   if (userRole === "VIEWER") {

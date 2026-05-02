@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const resolvedParams = await params;
     const taskId = parseInt(resolvedParams.id);
     const data = await req.json();
-    const userRole = (session.user as any)?.role;
+    const userRole = (session?.user as any)?.role;
 
     if (userRole === "VIEWER") {
       return NextResponse.json({ message: "Forbidden: Viewers cannot modify tasks" }, { status: 403 });
@@ -192,8 +192,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const resolvedParams = await params;
     const taskId = parseInt(resolvedParams.id);
 
-    const userEmail = session.user?.email;
-    const userRole = (session.user as any)?.role;
+    const userEmail = session?.user?.email;
+    const userRole = (session?.user as any)?.role;
     
     // Only Master Admin can delete tasks
     if (userRole === "VIEWER") {

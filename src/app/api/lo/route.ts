@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const fromDate = searchParams.get("from");
   const toDate = searchParams.get("to");
 
-  const isAdmin = session.user.email === "pavanreddy@intellicar.in" || (session.user as any)?.role === "ADMIN";
+  const isAdmin = session?.user?.email === "pavanreddy@intellicar.in" || (session?.user as any)?.role === "ADMIN";
   const shortName = session.user.name || "";
 
   try {
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const userRole = (session.user as any)?.role;
+  const userRole = (session?.user as any)?.role;
   if (userRole === "VIEWER") {
     return NextResponse.json({ message: "Forbidden: Viewers cannot acknowledge LOs" }, { status: 403 });
   }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const userRole = (session.user as any)?.role;
+  const userRole = (session?.user as any)?.role;
   if (userRole === "VIEWER") {
     return NextResponse.json({ message: "Forbidden: Viewers cannot create LOs" }, { status: 403 });
   }

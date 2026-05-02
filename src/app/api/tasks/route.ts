@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const userEmail = session.user?.email;
-    const userRole = (session.user as any)?.role;
+    const userEmail = session?.user?.email;
+    const userRole = (session?.user as any)?.role;
     
     // Master Admin can see everything
     if (userEmail === "pavanreddy@intellicar.in" || userRole === "ADMIN") {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   }
 
   const data = await req.json();
-  const userRole = (session.user as any)?.role;
+  const userRole = (session?.user as any)?.role;
 
   if (userRole === "VIEWER") {
     return NextResponse.json({ message: "Forbidden: Viewers cannot create tasks" }, { status: 403 });
