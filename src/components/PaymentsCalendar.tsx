@@ -1350,7 +1350,7 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               <ListChecks size={24} color="#2563eb" />
               Pending Payment List
             </h3>
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "flex", gap: "12px", position: "relative" }}>
               <button 
                 onClick={() => { setShareData({...shareData, type: 'payments'}); setShowDownloadMenu(!showDownloadMenu); }}
                 style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
@@ -1470,13 +1470,21 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               <CheckCircle2 size={24} color="#16a34a" />
               Payments Made (History)
             </h3>
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "flex", gap: "12px", position: "relative" }}>
               <button 
                 onClick={() => { setShareData({...shareData, type: 'payments'}); setShowDownloadMenu(!showDownloadMenu); }}
                 style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <Download size={18} /> Download / Share <ChevronDown size={16} />
               </button>
+              {showDownloadMenu && (
+                <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden", minWidth: "180px" }}>
+                  <button onClick={() => { setShowDownloadMenu(false); exportToExcel(); }} style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", color: t.text, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem" }}><FileSpreadsheet size={16} color="#16a34a" /> Excel Spreadsheet</button>
+                  <button onClick={() => { setShowDownloadMenu(false); exportToPDF(); }} style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", color: t.text, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem" }}><FileText size={16} color="#ef4444" /> PDF Document</button>
+                  <div style={{ height: "1px", background: t.border }}></div>
+                  <button onClick={() => { setShowDownloadMenu(false); setShareData({ subject: "Payments Made Report", format: 'excel', type: 'payments' }); setShowShareModal(true); }} style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", color: "#2563eb", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem", fontWeight: 600 }}><Mail size={16} /> Share via Email</button>
+                </div>
+              )}
               <button onClick={fetchData} style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer" }}>Refresh History</button>
             </div>
           </div>
