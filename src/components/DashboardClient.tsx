@@ -300,17 +300,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [anaUserFilter, setAnaUserFilter] = useState("ALL");
   const [showAnaShareModal, setShowAnaShareModal] = useState(false);
   const [showAnaDownloadDropdown, setShowAnaDownloadDropdown] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [shareData, setShareData] = useState({
-    type: 'task' as 'task' | 'lo' | 'request',
-    format: 'excel' as 'excel' | 'pdf' | 'both',
-    subject: ''
-  });
-  const [shareLoading, setShareLoading] = useState(false);
-  const [recipientInput, setRecipientInput] = useState("");
-  const [recipientTags, setRecipientTags] = useState<string[]>([]);
-  const [ccInput, setCcInput] = useState("");
-  const [ccTags, setCcTags] = useState<string[]>([]);
   const [anaShareConfig, setAnaShareConfig] = useState({
     recipients: [] as string[],
     ccEmails: [] as string[],
