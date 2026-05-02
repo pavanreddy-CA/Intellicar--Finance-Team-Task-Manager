@@ -3105,28 +3105,28 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                     Learning Modules
                                   </div>
                                   <button 
-                                    onClick={() => { setIsAnalyticsOpen(false); setActiveView('LOS'); setLoActiveFilter('ALL'); setActiveMainView('DASHBOARD'); setShowLearningFlyout(false); }}
+                                    onClick={() => { setActiveView('LOS'); setLoActiveFilter('ALL'); setActiveMainView('DASHBOARD'); setShowLearningFlyout(false); }}
                                     style={{ 
                                       padding: "12px", borderRadius: "10px", border: "none", textAlign: "left", fontSize: "0.8125rem", fontWeight: 600,
-                                      background: activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && !isAnalyticsOpen ? "rgba(59, 130, 246, 0.15)" : "transparent",
-                                      color: activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && !isAnalyticsOpen ? "#60a5fa" : "#e2e8f0",
+                                      background: activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                                      color: activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? "#60a5fa" : "#e2e8f0",
                                       cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "10px"
                                     }}
                                     onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#60a5fa"; }}
-                                    onMouseOut={e => { e.currentTarget.style.background = activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && !isAnalyticsOpen ? "rgba(59, 130, 246, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && !isAnalyticsOpen ? "#60a5fa" : "#e2e8f0"; }}
+                                    onMouseOut={e => { e.currentTarget.style.background = activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? "rgba(59, 130, 246, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? "#60a5fa" : "#e2e8f0"; }}
                                   >
                                     <Lightbulb size={16} /> Learning Opportunities
                                   </button>
                                   <button 
-                                    onClick={() => { setIsAnalyticsOpen(false); setActiveView('LOS'); setLoActiveFilter('RESOURCES'); setActiveMainView('DASHBOARD'); setShowLearningFlyout(false); }}
+                                    onClick={() => { setActiveView('LOS'); setLoActiveFilter('RESOURCES'); setActiveMainView('DASHBOARD'); setShowLearningFlyout(false); }}
                                     style={{ 
                                       padding: "12px", borderRadius: "10px", border: "none", textAlign: "left", fontSize: "0.8125rem", fontWeight: 600,
-                                      background: activeView === 'LOS' && loActiveFilter === 'RESOURCES' && !isAnalyticsOpen ? "rgba(16, 185, 129, 0.15)" : "transparent",
-                                      color: activeView === 'LOS' && loActiveFilter === 'RESOURCES' && !isAnalyticsOpen ? "#10b981" : "#e2e8f0",
+                                      background: activeView === 'LOS' && loActiveFilter === 'RESOURCES' ? "rgba(16, 185, 129, 0.15)" : "transparent",
+                                      color: activeView === 'LOS' && loActiveFilter === 'RESOURCES' ? "#10b981" : "#e2e8f0",
                                       cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "10px"
                                     }}
                                     onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#10b981"; }}
-                                    onMouseOut={e => { e.currentTarget.style.background = activeView === 'LOS' && loActiveFilter === 'RESOURCES' && !isAnalyticsOpen ? "rgba(16, 185, 129, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'LOS' && loActiveFilter === 'RESOURCES' && !isAnalyticsOpen ? "#10b981" : "#e2e8f0"; }}
+                                    onMouseOut={e => { e.currentTarget.style.background = activeView === 'LOS' && loActiveFilter === 'RESOURCES' ? "rgba(16, 185, 129, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'LOS' && loActiveFilter === 'RESOURCES' ? "#10b981" : "#e2e8f0"; }}
                                   >
                                     <BookOpen size={16} /> Library
                                   </button>
