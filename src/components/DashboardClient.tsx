@@ -4151,6 +4151,21 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         >
                           <FileText size={16} /> PDF Document
                         </button>
+                        <div style={{ borderTop: `1px solid ${t.border}` }}></div>
+                        <button 
+                          onClick={() => {
+                            setShareData({
+                              ...shareData,
+                              type: 'request',
+                              subject: `Inter-Departmental Requests Report - ${new Date().toLocaleDateString()}`
+                            });
+                            setShowShareModal(true);
+                            setShowExtReqDownloadDropdown(false);
+                          }}
+                          style={{ width: "100%", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", border: "none", background: t.card, color: "#1e40af", cursor: "pointer", textAlign: "left", fontSize: "0.875rem", fontWeight: 500 }}
+                        >
+                          <Mail size={16} /> Share via Email
+                        </button>
                       </div>
                     )}
                   </div>
