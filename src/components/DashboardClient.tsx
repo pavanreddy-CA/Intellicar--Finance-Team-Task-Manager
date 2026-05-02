@@ -8018,6 +8018,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             </table>
                           </div>
                         </div>
+                      )}
+                    </div>
+
                     {/* Matrix D: Bulk Import Controls */}
                     <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", marginBottom: "16px" }}>
                       <div 
