@@ -300,6 +300,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [anaUserFilter, setAnaUserFilter] = useState("ALL");
   const [showAnaShareModal, setShowAnaShareModal] = useState(false);
   const [showAnaDownloadDropdown, setShowAnaDownloadDropdown] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareData, setShareData] = useState({
+    type: 'task' as 'task' | 'lo' | 'request',
+    format: 'excel' as 'excel' | 'pdf' | 'both',
+    subject: ''
+  });
+  const [shareLoading, setShareLoading] = useState(false);
+  const [recipientInput, setRecipientInput] = useState("");
+  const [recipientTags, setRecipientTags] = useState<string[]>([]);
+  const [ccInput, setCcInput] = useState("");
+  const [ccTags, setCcTags] = useState<string[]>([]);
   const [anaShareConfig, setAnaShareConfig] = useState({
     recipients: [] as string[],
     ccEmails: [] as string[],
@@ -2687,6 +2698,97 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         }
       }
 
+      const stats = {
+        total: visibleExternalRequests.length,
+        pending: visibleExternalRequests.filter(r => (r.status === 'Pending' || r.status === 'Under Process' || !r.status || r.status === 'New') && !r.convertedTaskId).length,
+        processed: visibleExternalRequests.filter(r => r.status === 'Processed').length,
+        rejected: visibleExternalRequests.filter(r => r.status === 'Rejected').length
+      };
+
+      let emailHtml = "";
+      if (shareData.type === 'task') {
+        emailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; padding: 40px 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); padding: 32px; text-align: center; color: #ffffff;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">Task Management Report</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 14px;">Operational Insight & Status Overview</p>
+              </div>
+              <div style="padding: 32px;">
+                <p style="margin: 0 0 24px 0; color: #475569; font-size: 16px; line-height: 1.6;">Hello,</p>
+                <p style="margin: 0 0 24px 0; color: #475569; font-size: 16px; line-height: 1.6;">Please find the consolidated Task report as of <strong>${new Date().toLocaleDateString()}</strong>.</p>
+                <div style="text-align: center; margin-top: 32px;">
+                  <a href="https://v0-finpulse.vercel.app" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">View Dashboard</a>
+                </div>
+              </div>
+              <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                <p style="margin: 0; color: #94a3b8; font-size: 12px;">Automated Report from Finance Hub</p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (shareData.type === 'lo') {
+        emailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdf2f2; padding: 40px 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 32px; text-align: center; color: #ffffff;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">Learning Opportunities Report</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 14px;">Quality Assurance & Compliance Insights</p>
+              </div>
+              <div style="padding: 32px;">
+                <p style="margin: 0 0 24px 0; color: #475569; font-size: 16px; line-height: 1.6;">Hello,</p>
+                <p style="margin: 0 0 24px 0; color: #475569; font-size: 16px; line-height: 1.6;">Please find the Learning Opportunities tracker report as of <strong>${new Date().toLocaleDateString()}</strong>.</p>
+                <div style="text-align: center; margin-top: 32px;">
+                  <a href="https://v0-finpulse.vercel.app" style="display: inline-block; background-color: #ef4444; color: #ffffff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);">View Dashboard</a>
+                </div>
+              </div>
+              <div style="background-color: #fef2f2; padding: 20px; text-align: center; border-top: 1px solid #fee2e2;">
+                <p style="margin: 0; color: #94a3b8; font-size: 12px;">Automated Report from Finance Hub</p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (shareData.type === 'request') {
+        emailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; padding: 40px 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 32px; text-align: center; color: #ffffff;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">Inter-Dept Request Report</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 14px;">Operational Insight & Task Status Overview</p>
+              </div>
+              <div style="padding: 32px;">
+                <p style="margin: 0 0 24px 0; color: #475569; font-size: 16px; line-height: 1.6;">Hello Team,</p>
+                <p style="margin: 0 0 24px 0; color: #475569; font-size: 16px; line-height: 1.6;">Please find the consolidated report of Inter-Departmental requests as of <strong>${new Date().toLocaleDateString()}</strong>.</p>
+                
+                <table style="width: 100%; border-spacing: 12px; margin-bottom: 32px; border-collapse: separate;">
+                  <tr>
+                    <td style="width: 33%; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center;">
+                      <div style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Total</div>
+                      <div style="font-size: 24px; font-weight: 800; color: #1e293b;">${stats.total}</div>
+                    </td>
+                    <td style="width: 33%; background-color: #fffbeb; padding: 20px; border-radius: 12px; border: 1px solid #fef3c7; text-align: center;">
+                      <div style="font-size: 11px; color: #b45309; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Pending</div>
+                      <div style="font-size: 24px; font-weight: 800; color: #d97706;">${stats.pending}</div>
+                    </td>
+                    <td style="width: 33%; background-color: #f0fdf4; padding: 20px; border-radius: 12px; border: 1px solid #dcfce7; text-align: center;">
+                      <div style="font-size: 11px; color: #15803d; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Processed</div>
+                      <div style="font-size: 24px; font-weight: 800; color: #16a34a;">${stats.processed}</div>
+                    </td>
+                  </tr>
+                </table>
+
+                <div style="text-align: center; margin-top: 32px;">
+                  <a href="https://v0-finpulse.vercel.app" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Access Dashboard</a>
+                </div>
+              </div>
+              <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                <p style="margin: 0; color: #94a3b8; font-size: 12px;">Automated Report from Finance Hub</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       const res = await fetch("/api/reports/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2694,6 +2796,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           recipientEmail: recipientTags.join(','),
           ccEmail: ccTags.join(','),
           subject,
+          body: emailHtml,
           attachments
         })
       });
@@ -2701,6 +2804,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       if (res.ok) {
         showNotification("Report shared successfully via email!");
         setShowShareModal(false);
+        setRecipientTags([]);
+        setCcTags([]);
       } else {
         showNotification("Failed to share report.");
       }
