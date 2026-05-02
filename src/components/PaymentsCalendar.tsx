@@ -983,12 +983,19 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
             >
               <option value="ALL">All Freq</option>
-              <option value="M">Monthly</option>
-              <option value="Q">Quarterly</option>
-              <option value="Y">Yearly</option>
-              <option value="W">Weekly</option>
-              <option value="BW">Bi-Weekly</option>
-              <option value="D">Daily</option>
+              {(settings.masterFrequencies || "Ad,M,Y,2Y,H,Q,W,BW,D").split(',').map((f: string) => {
+                const code = f.trim();
+                const label = code === 'M' ? 'Monthly' : 
+                            code === 'Q' ? 'Quarterly' : 
+                            code === 'Y' ? 'Yearly' : 
+                            code === 'W' ? 'Weekly' : 
+                            code === 'BW' ? 'Bi-Weekly' : 
+                            code === 'H' ? 'Half-Yearly' : 
+                            code === 'D' ? 'Daily' : 
+                            code === 'Ad' ? 'Ad-hoc' : 
+                            code === '2Y' ? '2-Yearly' : code;
+                return <option key={code} value={code}>{label}</option>;
+              })}
             </select>
 
             <select 
@@ -1413,15 +1420,18 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                   style={inputStyle}
                 >
                   <option value="">Select Frequency</option>
-                  {(settings.masterFrequencies || "").split(',').map((f: string) => {
-                    const label = f.trim() === 'M' ? 'Monthly' : 
-                                f.trim() === 'Q' ? 'Quarterly' : 
-                                f.trim() === 'Y' ? 'Yearly' : 
-                                f.trim() === 'W' ? 'Weekly' : 
-                                f.trim() === 'BW' ? 'Bi-Weekly' : 
-                                f.trim() === 'H' ? 'Half-Yearly' : 
-                                f.trim() === 'D' ? 'Daily' : f.trim();
-                    return <option key={f} value={f.trim()}>{label}</option>;
+                  {(settings.masterFrequencies || "Ad,M,Y,2Y,H,Q,W,BW,D").split(',').map((f: string) => {
+                    const code = f.trim();
+                    const label = code === 'M' ? 'Monthly' : 
+                                code === 'Q' ? 'Quarterly' : 
+                                code === 'Y' ? 'Yearly' : 
+                                code === 'W' ? 'Weekly' : 
+                                code === 'BW' ? 'Bi-Weekly' : 
+                                code === 'H' ? 'Half-Yearly' : 
+                                code === 'D' ? 'Daily' : 
+                                code === 'Ad' ? 'Ad-hoc' : 
+                                code === '2Y' ? '2-Yearly' : code;
+                    return <option key={code} value={code}>{label}</option>;
                   })}
                 </select>
               </div>
