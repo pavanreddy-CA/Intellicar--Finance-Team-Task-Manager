@@ -441,12 +441,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       end = new Date(lastFyStartYear + 1, 2, 31); // March 31
     }
 
-    const toIsoDate = (d: Date) => {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    };
+  const canImport = isAdmin || (() => {
+    try {
+      const matrix = JSON.parse(settings?.bulkImportMatrix || '{}');
+      return matrix[user.id]?.length > 0 || matrix[user.email]?.length > 0;
+    } catch (e) { return false; }
+  })();
+
+  const canShowControlCenter = isAdmin || canImport;
 
     setStartDate(toIsoDate(start));
     setEndDate(toIsoDate(end));
@@ -2903,9 +2905,23 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           <div style={{ height: "30px", width: "1px", background: t.bg }}></div>
 
 
-          <button onClick={() => { setShowOptionsModal(true); if (isAdmin) { fetchUsersList(); fetchSettings(); } else { setActiveOptionsTab('ACCOUNT'); } }} style={{ padding: "8px 16px", background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.875rem" }}>
-            {isAdmin ? <ShieldCheck size={16} /> : <Sliders size={16} />}
-            {isAdmin ? "Control Center" : "Account Settings"}
+          <button 
+            onClick={() => { 
+              if (isAdmin) {
+                fetchUsersList(); 
+                fetchSettings(); 
+                setActiveOptionsTab('ACCOUNT');
+              } else if (canImport) {
+                setActiveOptionsTab('DATA');
+              } else {
+                setActiveOptionsTab('ACCOUNT');
+              }
+              setShowOptionsModal(true); 
+            }} 
+            style={{ padding: "8px 16px", background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.875rem" }}
+          >
+            {isAdmin ? <ShieldCheck size={16} /> : canImport ? <Sliders size={16} /> : <Sliders size={16} />}
+            {isAdmin ? "Control Center" : canImport ? "Control Center" : "Account Settings"}
           </button>
           
           <button 
@@ -5348,6 +5364,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 >
                   Account
                 </button>
+
+                {canImport && (
+                  <button 
+                    onClick={() => setActiveOptionsTab('DATA')} 
+                    style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                  >
+                    <Download size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Bulk Import
+                  </button>
+                )}
+
                 {isAdmin && (
                   <>
                     <button 
@@ -5392,11 +5418,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       <Zap size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Task Automation
                     </button>
                     <button 
-                      onClick={() => setActiveOptionsTab('DATA')} 
-                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'DATA' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'DATA' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
+                      onClick={() => setActiveOptionsTab('MATRIX')} 
+                      style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MATRIX' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MATRIX' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
                     >
-                      <Download size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Bulk Import
+                      <Shield size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Matrix Module
                     </button>
+                  </>
+                )}
                     <button 
                       onClick={() => setActiveOptionsTab('MATRICES')} 
                       style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: "8px", border: "none", background: activeOptionsTab === 'MATRICES' ? "#e0f2fe" : "transparent", color: activeOptionsTab === 'MATRICES' ? "#0369a1" : "#64748b", fontWeight: 500, cursor: "pointer", marginTop: "8px" }}
@@ -7994,6 +8022,72 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                     </tr>
                                   );
                                 })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                    {/* Matrix D: Bulk Import Controls */}
+                    <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", marginBottom: "16px" }}>
+                      <div 
+                        onClick={() => setActiveMatrixTab(activeMatrixTab === 'BULK_IMPORT_MATRIX' ? '' : 'BULK_IMPORT_MATRIX')}
+                        style={{ padding: "20px 24px", background: activeMatrixTab === 'BULK_IMPORT_MATRIX' ? "#f8fafc" : "white", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: activeMatrixTab === 'BULK_IMPORT_MATRIX' ? "1px solid #e2e8f0" : "none", transition: "all 0.2s" }}
+                      >
+                        <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px", color: activeMatrixTab === 'BULK_IMPORT_MATRIX' ? "#2563eb" : "#0f172a" }}>
+                          <FileSpreadsheet size={20} /> Matrix D : Bulk Import Controls
+                        </h4>
+                        <ChevronDown size={20} style={{ transform: activeMatrixTab === 'BULK_IMPORT_MATRIX' ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s", color: t.textMuted }} />
+                      </div>
+                      
+                      {activeMatrixTab === 'BULK_IMPORT_MATRIX' && (
+                        <div style={{ padding: "24px", animation: "slideDown 0.3s ease-out" }}>
+                          <p style={{ margin: "0 0 20px 0", fontSize: "0.875rem", color: t.textMuted }}>Select users who should have access to the Bulk Import tools.</p>
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                              <thead>
+                                <tr style={{ background: "#1e293b" }}>
+                                  <th style={{ padding: "14px 20px", textAlign: "left", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "2px solid #3b82f6" }}>User & Department</th>
+                                  <th style={{ padding: "14px 20px", textAlign: "center", color: "#ffffff", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "2px solid #3b82f6" }}>Grant Import Access</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {usersList
+                                  .filter(u => !extReqSearch || (u.name || u.email).toLowerCase().includes(extReqSearch.toLowerCase()))
+                                  .filter(u => matrixDeptFilter === 'ALL' || u.department === matrixDeptFilter)
+                                  .filter(u => (u as any).isApproved !== false)
+                                  .map((u) => {
+                                    const matrix = JSON.parse(settings.bulkImportMatrix || '{}');
+                                    const hasAccess = matrix[u.id]?.includes('BULK_IMPORT') || matrix[u.email]?.includes('BULK_IMPORT');
+                                    
+                                    return (
+                                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                        <td style={{ padding: "12px" }}>
+                                           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                             <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f1f5f9", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.75rem", border: "1px solid #e2e8f0" }}>
+                                               {u.name ? u.name[0].toUpperCase() : u.email[0].toUpperCase()}
+                                             </div>
+                                             <div>
+                                               <div style={{ fontWeight: 600, color: t.text, fontSize: "0.875rem" }}>{u.name || "--"}</div>
+                                               <div style={{ fontSize: "0.7rem", color: "#3b82f6", fontWeight: 600 }}>{u.department}</div>
+                                             </div>
+                                           </div>
+                                        </td>
+                                        <td style={{ padding: "12px", textAlign: "center" }}>
+                                          <input 
+                                            type="checkbox" 
+                                            checked={!!hasAccess}
+                                            onChange={(e) => {
+                                              const updated = e.target.checked ? ['BULK_IMPORT'] : [];
+                                              setSettings({
+                                                ...settings, 
+                                                bulkImportMatrix: JSON.stringify({ ...matrix, [u.id]: updated, [u.email]: updated })
+                                              });
+                                            }}
+                                            style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                                          />
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
                               </tbody>
                             </table>
                           </div>

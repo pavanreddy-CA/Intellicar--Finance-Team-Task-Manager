@@ -47,6 +47,7 @@ export async function PATCH(request: Request) {
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "holidayList" TEXT DEFAULT '[]'`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "lastDailyGenerationAt" TIMESTAMP`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterResourceCategories" TEXT DEFAULT 'Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "bulkImportMatrix" TEXT DEFAULT '{}'`;
     } catch (e) {
       console.log("Migration for settings fields failed/skipped");
     }
@@ -65,6 +66,7 @@ export async function PATCH(request: Request) {
           "allocationMatrix",
           "entityMatrix",
           "recurringMatrix",
+          "bulkImportMatrix",
           "homeContent",
           "reminderFrequency",
           "reminderTimes",
@@ -91,6 +93,7 @@ export async function PATCH(request: Request) {
           ${body.allocationMatrix || '{}'},
           ${body.entityMatrix || '{}'},
           ${body.recurringMatrix || '{}'},
+          ${body.bulkImportMatrix || '{}'},
           ${body.homeContent || '{}'},
           ${body.reminderFrequency || 'D'},
           ${body.reminderTimes || '09:00,18:00'},
@@ -128,6 +131,7 @@ export async function PATCH(request: Request) {
         "allocationMatrix" = ${body.allocationMatrix ?? existingSettings[0].allocationMatrix},
         "entityMatrix" = ${body.entityMatrix ?? existingSettings[0].entityMatrix},
         "recurringMatrix" = ${body.recurringMatrix ?? existingSettings[0].recurringMatrix},
+        "bulkImportMatrix" = ${body.bulkImportMatrix ?? existingSettings[0].bulkImportMatrix},
         "homeContent" = ${body.homeContent ?? existingSettings[0].homeContent},
         "reminderFrequency" = ${body.reminderFrequency ?? existingSettings[0].reminderFrequency},
         "reminderTimes" = ${body.reminderTimes ?? existingSettings[0].reminderTimes},
