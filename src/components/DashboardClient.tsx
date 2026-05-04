@@ -14,6 +14,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExternalRequestForm from "@/components/ExternalRequestForm";
 import { COMPLETION_STATUSES } from "@/lib/taskUtils";
+import MultiSelectFilter from "@/components/MultiSelectFilter";
 
 type Task = {
   id: number;
@@ -293,10 +294,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   // Sorting and Filtering State
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
-  const [taskEntityFilter, setTaskEntityFilter] = useState("ALL");
-  const [taskOwnerFilter, setTaskOwnerFilter] = useState("ALL");
-  const [taskStatusFilter, setTaskStatusFilter] = useState("ALL");
-  const [taskReviewerFilter, setTaskReviewerFilter] = useState("ALL");
+  const [taskEntityFilter, setTaskEntityFilter] = useState<string[]>([]);
+  const [taskOwnerFilter, setTaskOwnerFilter] = useState<string[]>([]);
+  const [taskStatusFilter, setTaskStatusFilter] = useState<string[]>([]);
+  const [taskReviewerFilter, setTaskReviewerFilter] = useState<string[]>([]);
   const [taskSortConfig, setTaskSortConfig] = useState<{ key: keyof Task; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
 
   const [loSearchQuery, setLoSearchQuery] = useState("");
@@ -325,11 +326,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [showExtReqForm, setShowExtReqForm] = useState(false);
   const [extReqFilter, setExtReqFilter] = useState<'ALL' | 'ALLOCATION' | 'PROCESS' | 'PROCESSED' | 'REJECTED' | 'CONVERT_PENDING'>('ALL');
   const [extReqSearch, setExtReqSearch] = useState("");
-  const [matrixDeptFilter, setMatrixDeptFilter] = useState("ALL");
-  const [extReqStatusFilter, setExtReqStatusFilter] = useState("ALL");
-  const [loEntityFilter, setLoEntityFilter] = useState("ALL");
-  const [loIdentifiedByFilter, setLoIdentifiedByFilter] = useState("ALL");
-  const [loCommittedByFilter, setLoCommittedByFilter] = useState("ALL");
+  const [matrixDeptFilter, setMatrixDeptFilter] = useState<string[]>([]);
+  const [extReqStatusFilter, setExtReqStatusFilter] = useState<string[]>([]);
+  const [loEntityFilter, setLoEntityFilter] = useState<string[]>([]);
+  const [loIdentifiedByFilter, setLoIdentifiedByFilter] = useState<string[]>([]);
+  const [loCommittedByFilter, setLoCommittedByFilter] = useState<string[]>([]);
   const [loSortConfig, setLoSortConfig] = useState<{ key: keyof LearningOpportunity; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
   const [editRequestSubTab, setEditRequestSubTab] = useState<'TASK_EDIT' | 'TASK_DELETE' | 'LO' | 'PAYMENT' | 'DELETE_PAYMENT'>('TASK_EDIT');
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
@@ -339,7 +340,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [extReqSortConfig, setExtReqSortConfig] = useState<{ key: keyof ExternalRequest; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
   const [extReqDateFrom, setExtReqDateFrom] = useState("");
   const [extReqDateTo, setExtReqDateTo] = useState("");
-  const [extReqFinanceFunctionFilter, setExtReqFinanceFunctionFilter] = useState("ALL");
+  const [extReqFinanceFunctionFilter, setExtReqFinanceFunctionFilter] = useState<string[]>([]);
   const [userSortConfig, setUserSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showLOCaptureModal, setShowLOCaptureModal] = useState(false);
   const [loCaptureForm, setLOCaptureForm] = useState({
@@ -481,8 +482,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   });
 
   // New Filters
-  const [taskTypeFilter, setTaskTypeFilter] = useState<'ALL' | 'INTERNAL' | 'EXTERNAL'>('ALL');
-  const [requestTypeFilter, setRequestTypeFilter] = useState<'ALL' | 'ORIGINAL' | 'TRANSFERRED'>('ALL');
+  const [taskTypeFilter, setTaskTypeFilter] = useState<string[]>([]);
+  const [requestTypeFilter, setRequestTypeFilter] = useState<string[]>([]);
 
   const fetchTasks = async () => {
     try {
@@ -1727,16 +1728,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
     // 4. Dropdown Filters
     let dropdownMatch = true;
-    if (taskEntityFilter !== "ALL" && t.entityName !== taskEntityFilter) dropdownMatch = false;
-    if (taskOwnerFilter !== "ALL" && t.ownerName !== taskOwnerFilter) dropdownMatch = false;
-    if (taskStatusFilter !== "ALL" && t.taskStatus !== taskStatusFilter) dropdownMatch = false;
-    if (taskReviewerFilter !== "ALL" && t.reviewerName !== taskReviewerFilter) dropdownMatch = false;
+    if (taskEntityFilter.length > 0 && !taskEntityFilter.includes(t.entityName)) dropdownMatch = false;
+    if (taskOwnerFilter.length > 0 && !taskOwnerFilter.includes(t.ownerName)) dropdownMatch = false;
+    if (taskStatusFilter.length > 0 && !taskStatusFilter.includes(t.taskStatus)) dropdownMatch = false;
+    if (taskReviewerFilter.length > 0 && !taskReviewerFilter.includes(t.reviewerName || "")) dropdownMatch = false;
     
     // 5. Task Type Filter
     const isActuallyExternal = !!t.linkedRequestId && t.departmentName !== "Finance";
     
-    if (taskTypeFilter === "INTERNAL" && isActuallyExternal) dropdownMatch = false;
-    if (taskTypeFilter === "EXTERNAL" && !isActuallyExternal) dropdownMatch = false;
+    if (taskTypeFilter.length > 0) {
+      if (taskTypeFilter.includes("INTERNAL") && taskTypeFilter.includes("EXTERNAL")) {
+        // Both selected = Show All (dropdownMatch remains true)
+      } else if (taskTypeFilter.includes("INTERNAL") && isActuallyExternal) {
+        dropdownMatch = false;
+      } else if (taskTypeFilter.includes("EXTERNAL") && !isActuallyExternal) {
+        dropdownMatch = false;
+      }
+    }
 
     return statusMatch && dateMatch && searchMatch && dropdownMatch;
   });
@@ -1793,7 +1801,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
     // 3. Entity Filter
     let entityMatch = true;
-    if (loEntityFilter !== "ALL" && lo.entity !== loEntityFilter) entityMatch = false;
+    if (loEntityFilter.length > 0 && !loEntityFilter.includes(lo.entity)) entityMatch = false;
 
     // 4. Date Filter (Universal & Timezone-Safe)
     let dateMatch = true;
@@ -1808,11 +1816,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
     // 5. Identified By Filter
     let identifiedByMatch = true;
-    if (loIdentifiedByFilter !== "ALL" && lo.identifiedBy !== loIdentifiedByFilter) identifiedByMatch = false;
+    if (loIdentifiedByFilter.length > 0 && !loIdentifiedByFilter.includes(lo.identifiedBy)) identifiedByMatch = false;
 
     // 6. Committed By Filter
     let committedByMatch = true;
-    if (loCommittedByFilter !== "ALL" && lo.committedBy !== loCommittedByFilter) committedByMatch = false;
+    if (loCommittedByFilter.length > 0 && !loCommittedByFilter.includes(lo.committedBy)) committedByMatch = false;
 
     return typeMatch && searchMatch && entityMatch && dateMatch && identifiedByMatch && committedByMatch;
   });
@@ -2245,7 +2253,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       if (!r.natureOfRequest.toLowerCase().includes(q) && !r.requestFrom.toLowerCase().includes(q)) return false;
     }
     
-    if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter) return false;
+    if (extReqStatusFilter.length > 0 && !extReqStatusFilter.includes(r.status || "")) return false;
 
     if (extReqFilter === 'ALLOCATION') {
       return r.status === 'Pending' || !r.status || r.status === 'New';
@@ -2264,10 +2272,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     }
 
     // New Request Type Filter (Original vs Transferred)
-    if (requestTypeFilter === 'ORIGINAL' && r.transferStatus === 'T') return false;
-    if (requestTypeFilter === 'TRANSFERRED' && r.transferStatus !== 'T') return false;
+    if (requestTypeFilter.length > 0) {
+      if (requestTypeFilter.includes('ORIGINAL') && !requestTypeFilter.includes('TRANSFERRED') && r.transferStatus === 'T') return false;
+      if (requestTypeFilter.includes('TRANSFERRED') && !requestTypeFilter.includes('ORIGINAL') && r.transferStatus !== 'T') return false;
+    }
 
-    if (extReqFinanceFunctionFilter !== 'ALL' && r.requestType !== extReqFinanceFunctionFilter) return false;
+    if (extReqFinanceFunctionFilter.length > 0 && !extReqFinanceFunctionFilter.includes(r.requestType)) return false;
 
     if (extReqDateFrom && new Date(r.createdAt) < new Date(extReqDateFrom)) return false;
     if (extReqDateTo) {
@@ -2562,17 +2572,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
     worksheet.columns = columns;
 
-    const filteredReqs = externalRequests.filter(r => {
-      const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
-      const isRelevantToUser = (r.requesterEmail?.toLowerCase().trim() === user?.email?.toLowerCase().trim()) || 
-        userAllocatedDepts.some(dept => dept.toLowerCase() === r.requestType?.toLowerCase().trim());
-      if (!isPrimaryAdmin && !isRelevantToUser) return false;
-      if (extReqSearch && !r.natureOfRequest.toLowerCase().includes(extReqSearch.toLowerCase()) && !r.requestFrom.toLowerCase().includes(extReqSearch.toLowerCase())) return false;
-      if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter && (extReqStatusFilter !== 'New' || (r.status !== 'New' && r.status !== ''))) {
-         if (extReqStatusFilter === 'New' && (r.status === 'New' || r.status === '' || !r.status)) {} else return false;
-      }
-      return true;
-    });
+    const filteredReqs = sortedExternalRequests;
 
     sortedExternalRequests.forEach((r, idx) => {
       worksheet.addRow({
@@ -2602,17 +2602,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     doc.setFontSize(10);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
-    const filteredReqs = externalRequests.filter(r => {
-      const isPrimaryAdmin = isAdmin || (user as any).isAllocator;
-      const isRelevantToUser = (r.requesterEmail?.toLowerCase().trim() === user?.email?.toLowerCase().trim()) || 
-        userAllocatedDepts.some(dept => dept.toLowerCase() === r.requestType?.toLowerCase().trim());
-      if (!isPrimaryAdmin && !isRelevantToUser) return false;
-      if (extReqSearch && !r.natureOfRequest.toLowerCase().includes(extReqSearch.toLowerCase()) && !r.requestFrom.toLowerCase().includes(extReqSearch.toLowerCase())) return false;
-      if (extReqStatusFilter !== 'ALL' && r.status !== extReqStatusFilter && (extReqStatusFilter !== 'New' || (r.status !== 'New' && r.status !== ''))) {
-         if (extReqStatusFilter === 'New' && (r.status === 'New' || r.status === '' || !r.status)) {} else return false;
-      }
-      return true;
-    });
+    const filteredReqs = sortedExternalRequests;
 
     const tableColumn = ["Sl No.", "From", "Date", "Type", "Nature", "Status"];
     if (isAdmin) tableColumn.push("Origin", "Original Function", "Transferred By");
@@ -4012,56 +4002,54 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             </div>
 
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-              <select 
-                value={taskEntityFilter} 
-                onChange={e => setTaskEntityFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
-              >
-                <option value="ALL">All Entities</option>
-                {uniqueTaskEntities.map(e => <option key={e} value={e}>{e}</option>)}
-              </select>
+              <MultiSelectFilter
+                options={uniqueTaskEntities}
+                selected={taskEntityFilter}
+                onChange={setTaskEntityFilter}
+                placeholder="All Entities"
+                theme={theme}
+                t={t}
+              />
 
-              <select 
-                value={taskOwnerFilter} 
-                onChange={e => setTaskOwnerFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
-              >
-                <option value="ALL">All Owners</option>
-                {uniqueTaskOwners.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
+              <MultiSelectFilter
+                options={uniqueTaskOwners}
+                selected={taskOwnerFilter}
+                onChange={setTaskOwnerFilter}
+                placeholder="All Owners"
+                theme={theme}
+                t={t}
+              />
 
-              <select 
-                value={taskStatusFilter} 
-                onChange={e => setTaskStatusFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="Not Yet Due">Not Yet Due</option>
-                <option value="Due on Today">Due on Today</option>
-                <option value="Over Due">Over Due</option>
-                <option value="On-Time">On-Time</option>
-                <option value="Early Closure">Early Closure</option>
-                <option value="Delay in Closure">Delay in Closure</option>
-              </select>
+              <MultiSelectFilter
+                options={["Not Yet Due", "Due on Today", "Over Due", "On-Time", "Early Closure", "Delay in Closure"]}
+                selected={taskStatusFilter}
+                onChange={setTaskStatusFilter}
+                placeholder="All Statuses"
+                theme={theme}
+                t={t}
+              />
 
-              <select 
-                value={taskReviewerFilter} 
-                onChange={e => setTaskReviewerFilter(e.target.value)}
-                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted }}
-              >
-                <option value="ALL">All Reviewers</option>
-                {uniqueTaskReviewers.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <MultiSelectFilter
+                options={uniqueTaskReviewers}
+                selected={taskReviewerFilter}
+                onChange={setTaskReviewerFilter}
+                placeholder="All Reviewers"
+                theme={theme}
+                t={t}
+              />
 
-              <select 
-                value={taskTypeFilter} 
-                onChange={e => setTaskTypeFilter(e.target.value as any)}
-                style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted, fontWeight: 600 }}
-              >
-                <option value="ALL">All Task Types</option>
-                <option value="INTERNAL">Internal Only</option>
-                <option value="EXTERNAL">External Only</option>
-              </select>
+              <MultiSelectFilter
+                options={["INTERNAL", "EXTERNAL"]}
+                selected={taskTypeFilter}
+                onChange={setTaskTypeFilter}
+                placeholder="All Task Types"
+                theme={theme}
+                t={t}
+                labelMapping={{
+                  'INTERNAL': 'Internal Only',
+                  'EXTERNAL': 'External Only'
+                }}
+              />
 
               <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px", borderLeft: `1px solid ${t.border}` }}>
                 <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
@@ -4689,20 +4677,23 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </div>
                 </div>
                 
-                {/* Finance Function Filter */}
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}` }}>
-                  <Filter size={14} color={t.textMuted} />
-                  <select 
-                    value={extReqFinanceFunctionFilter} 
-                    onChange={e => setExtReqFinanceFunctionFilter(e.target.value)}
-                    style={{ border: "none", background: "none", fontSize: "0.8125rem", color: t.text, outline: "none", fontWeight: 600, cursor: "pointer" }}
-                  >
-                    <option value="ALL">All Functions</option>
-                    {settings.masterRequestTypes.split(',').map(type => (
-                      <option key={type} value={type.trim()}>{type.trim()}</option>
-                    ))}
-                  </select>
-                </div>
+                <MultiSelectFilter
+                  options={settings.masterRequestTypes.split(',').map(type => type.trim()).filter(Boolean)}
+                  selected={extReqFinanceFunctionFilter}
+                  onChange={setExtReqFinanceFunctionFilter}
+                  placeholder="All Functions"
+                  theme={theme}
+                  t={t}
+                />
+
+                <MultiSelectFilter
+                  options={["New", "Pending", "Under Process", "Processed", "Rejected"]}
+                  selected={extReqStatusFilter}
+                  onChange={setExtReqStatusFilter}
+                  placeholder="All Status"
+                  theme={theme}
+                  t={t}
+                />
                 
                 {/* Pending Conversion Button (Renamed) */}
                 <button 
@@ -4736,15 +4727,14 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 </button>
 
                 {(isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && (
-                  <select 
-                    value={requestTypeFilter} 
-                    onChange={e => setRequestTypeFilter(e.target.value as any)}
-                    style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.card, color: t.textMuted, fontWeight: 600 }}
-                  >
-                    <option value="ALL">All Origins</option>
-                    <option value="ORIGINAL">Original Only</option>
-                    <option value="TRANSFERRED">Transferred Only</option>
-                  </select>
+                  <MultiSelectFilter
+                    options={["ORIGINAL", "TRANSFERRED"]}
+                    selected={requestTypeFilter}
+                    onChange={setRequestTypeFilter}
+                    placeholder="All Origins"
+                    theme={theme}
+                    t={t}
+                  />
                 )}
               </div>
 
@@ -5130,23 +5120,32 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         />
                       </div>
 
-                      <select 
-                        value={loIdentifiedByFilter} 
-                        onChange={e => setLoIdentifiedByFilter(e.target.value)}
-                        style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted, minWidth: "160px" }}
-                      >
-                        <option value="ALL">All Identified By</option>
-                        {uniqueLOIdentifiedBy.map(name => <option key={name} value={name}>{name}</option>)}
-                      </select>
+                       <MultiSelectFilter
+                        options={Array.from(new Set(los.map(l => l.entity))).sort()}
+                        selected={loEntityFilter}
+                        onChange={setLoEntityFilter}
+                        placeholder="All Entities"
+                        theme={theme}
+                        t={t}
+                      />
 
-                      <select 
-                        value={loCommittedByFilter} 
-                        onChange={e => setLoCommittedByFilter(e.target.value)}
-                        style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.textMuted, minWidth: "160px" }}
-                      >
-                        <option value="ALL">All Committed By</option>
-                        {Array.from(new Set(los.map(l => l.committedBy))).sort().map(name => <option key={name} value={name}>{name}</option>)}
-                      </select>
+                      <MultiSelectFilter
+                        options={uniqueLOIdentifiedBy}
+                        selected={loIdentifiedByFilter}
+                        onChange={setLoIdentifiedByFilter}
+                        placeholder="All Identified By"
+                        theme={theme}
+                        t={t}
+                      />
+
+                      <MultiSelectFilter
+                        options={Array.from(new Set(los.map(l => l.committedBy))).sort()}
+                        selected={loCommittedByFilter}
+                        onChange={setLoCommittedByFilter}
+                        placeholder="All Committed By"
+                        theme={theme}
+                        t={t}
+                      />
                     </div>
 
                     <div style={{ overflowX: "auto", overflowY: "hidden", background: t.card, borderRadius: "16px", border: `1px solid ${t.border}` }} className="custom-scrollbar">

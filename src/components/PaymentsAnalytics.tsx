@@ -18,6 +18,7 @@ import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
+import MultiSelectFilter from "./MultiSelectFilter";
 
 interface ManualEntry {
   id: number;
@@ -91,13 +92,26 @@ export default function PaymentsAnalytics({
   const { firstDay, lastDay } = getInitialDates();
 
   const [tableFilters, setTableFilters] = useState({
-    fromDate: firstDay, toDate: lastDay, entity: 'ALL', department: 'ALL', type: 'ALL', status: 'ALL', search: '', bank: 'ALL'
+    fromDate: firstDay, 
+    toDate: lastDay, 
+    entity: [] as string[], 
+    department: [] as string[], 
+    type: [] as string[], 
+    status: [] as string[], 
+    search: '', 
+    bank: [] as string[]
   });
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'payment_date', direction: 'desc' });
 
   const [chartFilters, setChartFilters] = useState({
-    fromDate: firstDay, toDate: lastDay, entity: 'ALL', department: 'ALL', type: 'ALL', status: 'ALL', bank: 'ALL'
+    fromDate: firstDay, 
+    toDate: lastDay, 
+    entity: [] as string[], 
+    department: [] as string[], 
+    type: [] as string[], 
+    status: [] as string[], 
+    bank: [] as string[]
   });
 
   const [newEntry, setNewEntry] = useState({
@@ -107,8 +121,8 @@ export default function PaymentsAnalytics({
   const [forecastFilters, setForecastFilters] = useState({
     fromDate: new Date().toISOString().split('T')[0],
     toDate: new Date(new Date().getFullYear(), new Date().getMonth() + 3, 0).toISOString().split('T')[0],
-    department: 'ALL',
-    type: 'ALL'
+    department: [] as string[],
+    type: [] as string[]
   });
 
   useEffect(() => { fetchManualEntries(); }, []);
@@ -195,11 +209,11 @@ export default function PaymentsAnalytics({
   const filteredTableData = useMemo(() => {
     const filtered = combinedData.filter(d => {
       const dateInRange = d.payment_date >= tableFilters.fromDate && d.payment_date <= tableFilters.toDate;
-      const entityMatch = tableFilters.entity === 'ALL' || d.entity_name === tableFilters.entity;
-      const deptMatch = tableFilters.department === 'ALL' || d.department_name === tableFilters.department;
-      const typeMatch = tableFilters.type === 'ALL' || d.payment_type === tableFilters.type;
-      const statusMatch = tableFilters.status === 'ALL' || d.status === tableFilters.status;
-      const bankMatch = tableFilters.bank === 'ALL' || (d as any).paidFromAccount === tableFilters.bank;
+      const entityMatch = tableFilters.entity.length === 0 || tableFilters.entity.includes(d.entity_name);
+      const deptMatch = tableFilters.department.length === 0 || tableFilters.department.includes(d.department_name || 'N/A');
+      const typeMatch = tableFilters.type.length === 0 || tableFilters.type.includes(d.payment_type);
+      const statusMatch = tableFilters.status.length === 0 || tableFilters.status.includes(d.status);
+      const bankMatch = tableFilters.bank.length === 0 || (d as any).paidFromAccount && tableFilters.bank.includes((d as any).paidFromAccount);
       const searchMatch = !tableFilters.search || d.entity_name.toLowerCase().includes(tableFilters.search.toLowerCase());
       return dateInRange && entityMatch && deptMatch && typeMatch && statusMatch && bankMatch && searchMatch;
     });
@@ -235,11 +249,11 @@ export default function PaymentsAnalytics({
   const filteredChartData = useMemo(() => {
     return combinedData.filter(d => {
       const dateInRange = d.payment_date >= chartFilters.fromDate && d.payment_date <= chartFilters.toDate;
-      const entityMatch = chartFilters.entity === 'ALL' || d.entity_name === chartFilters.entity;
-      const deptMatch = chartFilters.department === 'ALL' || d.department_name === chartFilters.department;
-      const typeMatch = chartFilters.type === 'ALL' || d.payment_type === chartFilters.type;
-      const statusMatch = chartFilters.status === 'ALL' || d.status === chartFilters.status;
-      const bankMatch = chartFilters.bank === 'ALL' || (d as any).paidFromAccount === chartFilters.bank;
+      const entityMatch = chartFilters.entity.length === 0 || chartFilters.entity.includes(d.entity_name);
+      const deptMatch = chartFilters.department.length === 0 || chartFilters.department.includes(d.department_name || 'N/A');
+      const typeMatch = chartFilters.type.length === 0 || chartFilters.type.includes(d.payment_type);
+      const statusMatch = chartFilters.status.length === 0 || chartFilters.status.includes(d.status);
+      const bankMatch = chartFilters.bank.length === 0 || (d as any).paidFromAccount && chartFilters.bank.includes((d as any).paidFromAccount);
       return dateInRange && entityMatch && deptMatch && typeMatch && statusMatch && bankMatch;
     });
   }, [combinedData, chartFilters]);
@@ -333,8 +347,8 @@ export default function PaymentsAnalytics({
     const filtered = futureOccs.filter(o => {
       const occDate = o.dueDate.split('T')[0];
       const dateInRange = occDate >= forecastFilters.fromDate && occDate <= forecastFilters.toDate;
-      const deptMatch = forecastFilters.department === 'ALL' || o.departmentName === forecastFilters.department;
-      const typeMatch = forecastFilters.type === 'ALL' || o.paymentType === forecastFilters.type;
+      const deptMatch = forecastFilters.department.length === 0 || forecastFilters.department.includes(o.departmentName || 'N/A');
+      const typeMatch = forecastFilters.type.length === 0 || forecastFilters.type.includes(o.paymentType);
       return dateInRange && deptMatch && typeMatch;
     });
 
@@ -583,10 +597,61 @@ export default function PaymentsAnalytics({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", background: theme === 'DARK' ? "rgba(30, 41, 59, 0.4)" : "#f8fafc", padding: "24px", borderRadius: "20px", border: `1px solid ${theme === 'DARK' ? "rgba(255,255,255,0.05)" : "#e2e8f0"}` }}>
             <div><label style={filterLabelStyle}>From Date</label><input type="date" value={tableFilters.fromDate} onChange={e => setTableFilters({...tableFilters, fromDate: e.target.value})} style={filterInputStyle(theme)} /></div>
             <div><label style={filterLabelStyle}>To Date</label><input type="date" value={tableFilters.toDate} onChange={e => setTableFilters({...tableFilters, toDate: e.target.value})} style={filterInputStyle(theme)} /></div>
-            <div><label style={filterLabelStyle}>By Entity</label><select value={tableFilters.entity} onChange={e => setTableFilters({...tableFilters, entity: e.target.value})} style={filterInputStyle(theme)}><option value="ALL">All Entities</option>{settings.masterEntities.split(',').map((e: string) => <option key={e} value={e.trim()}>{e.trim()}</option>)}</select></div>
-            <div><label style={filterLabelStyle}>By Department</label><select value={tableFilters.department} onChange={e => setTableFilters({...tableFilters, department: e.target.value})} style={filterInputStyle(theme)}><option value="ALL">All Departments</option>{settings.masterDepartments?.split(',').map((d: string) => <option key={d} value={d.trim()}>{d.trim()}</option>)}</select></div>
-            <div><label style={filterLabelStyle}>By Type</label><select value={tableFilters.type} onChange={e => setTableFilters({...tableFilters, type: e.target.value})} style={filterInputStyle(theme)}><option value="ALL">All Types</option>{settings.masterPaymentTypes.split(',').map((t: string) => <option key={t} value={t.trim()}>{t.trim()}</option>)}</select></div>
-            <div><label style={filterLabelStyle}>By Bank</label><select value={tableFilters.bank} onChange={e => setTableFilters({...tableFilters, bank: e.target.value})} style={filterInputStyle(theme)}><option value="ALL">All Banks</option>{Array.from(new Set(combinedData.map(d => (d as any).paidFromAccount).filter(Boolean))).map(b => <option key={b} value={b}>{b}</option>)}</select></div>
+            <div>
+              <label style={filterLabelStyle}>By Entity</label>
+              <MultiSelectFilter
+                options={settings.masterEntities.split(',').map((e: string) => e.trim()).filter(Boolean)}
+                selected={tableFilters.entity}
+                onChange={(val) => setTableFilters({...tableFilters, entity: val})}
+                placeholder="All Entities"
+                theme={theme}
+                t={t}
+              />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>By Department</label>
+              <MultiSelectFilter
+                options={settings.masterDepartments?.split(',').map((d: string) => d.trim()).filter(Boolean) || []}
+                selected={tableFilters.department}
+                onChange={(val) => setTableFilters({...tableFilters, department: val})}
+                placeholder="All Departments"
+                theme={theme}
+                t={t}
+              />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>By Type</label>
+              <MultiSelectFilter
+                options={settings.masterPaymentTypes.split(',').map((t: string) => t.trim()).filter(Boolean)}
+                selected={tableFilters.type}
+                onChange={(val) => setTableFilters({...tableFilters, type: val})}
+                placeholder="All Types"
+                theme={theme}
+                t={t}
+              />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>By Status</label>
+              <MultiSelectFilter
+                options={["Paid on due date", "Paid Before due date", "Paid After due date", "CANCELLED"]}
+                selected={tableFilters.status}
+                onChange={(val) => setTableFilters({...tableFilters, status: val})}
+                placeholder="All Status"
+                theme={theme}
+                t={t}
+              />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>By Bank</label>
+              <MultiSelectFilter
+                options={Array.from(new Set(combinedData.map(d => (d as any).paidFromAccount).filter(Boolean))).sort() as string[]}
+                selected={tableFilters.bank}
+                onChange={(val) => setTableFilters({...tableFilters, bank: val})}
+                placeholder="All Banks"
+                theme={theme}
+                t={t}
+              />
+            </div>
             <div style={{ display: "flex", alignItems: "flex-end" }}><button onClick={() => setShowAddEntry(true)} style={addBtnStyle}><Plus size={18} /> Add Entry</button></div>
           </div>
           <div style={{ background: theme === 'DARK' ? "rgba(30, 41, 59, 0.7)" : "white", borderRadius: "20px", border: `1px solid ${theme === 'DARK' ? "rgba(255,255,255,0.1)" : "#e2e8f0"}`, overflow: "hidden" }}>
@@ -626,9 +691,42 @@ export default function PaymentsAnalytics({
           <div style={chartFilterBarStyle}>
             <div><label style={labelLight}>Analysis From</label><input type="date" value={chartFilters.fromDate} onChange={e => setChartFilters({...chartFilters, fromDate: e.target.value})} style={chartInputStyle} /></div>
             <div><label style={labelLight}>Analysis To</label><input type="date" value={chartFilters.toDate} onChange={e => setChartFilters({...chartFilters, toDate: e.target.value})} style={chartInputStyle} /></div>
-            <div><label style={labelLight}>Entity focus</label><select value={chartFilters.entity} onChange={e => setChartFilters({...chartFilters, entity: e.target.value})} style={chartInputStyle}><option value="ALL">All Entities</option>{settings.masterEntities.split(',').map((e: string) => <option key={e} value={e.trim()}>{e.trim()}</option>)}</select></div>
-            <div><label style={labelLight}>Department focus</label><select value={chartFilters.department} onChange={e => setChartFilters({...chartFilters, department: e.target.value})} style={chartInputStyle}><option value="ALL">All Departments</option>{settings.masterDepartments?.split(',').map((d: string) => <option key={d} value={d.trim()}>{d.trim()}</option>)}</select></div>
-            <div><label style={labelLight}>Type Focus</label><select value={chartFilters.type} onChange={e => setChartFilters({...chartFilters, type: e.target.value})} style={chartInputStyle}><option value="ALL">All Types</option>{settings.masterPaymentTypes.split(',').map((t: string) => <option key={t} value={t.trim()}>{t.trim()}</option>)}</select></div>
+            <div>
+              <label style={labelLight}>Entity focus</label>
+              <MultiSelectFilter
+                options={settings.masterEntities.split(',').map((e: string) => e.trim()).filter(Boolean)}
+                selected={chartFilters.entity}
+                onChange={(val) => setChartFilters({...chartFilters, entity: val})}
+                placeholder="All Entities"
+                theme={theme}
+                t={t}
+                customStyle={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}
+              />
+            </div>
+            <div>
+              <label style={labelLight}>Department focus</label>
+              <MultiSelectFilter
+                options={settings.masterDepartments?.split(',').map((d: string) => d.trim()).filter(Boolean) || []}
+                selected={chartFilters.department}
+                onChange={(val) => setChartFilters({...chartFilters, department: val})}
+                placeholder="All Departments"
+                theme={theme}
+                t={t}
+                customStyle={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}
+              />
+            </div>
+            <div>
+              <label style={labelLight}>Type Focus</label>
+              <MultiSelectFilter
+                options={settings.masterPaymentTypes.split(',').map((t: string) => t.trim()).filter(Boolean)}
+                selected={chartFilters.type}
+                onChange={(val) => setChartFilters({...chartFilters, type: val})}
+                placeholder="All Types"
+                theme={theme}
+                t={t}
+                customStyle={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}
+              />
+            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
@@ -733,10 +831,25 @@ export default function PaymentsAnalytics({
             </div>
             <div>
               <label style={filterLabelStyle}>By Dept</label>
-              <select value={forecastFilters.department} onChange={e => setForecastFilters({...forecastFilters, department: e.target.value})} style={{ ...filterInputStyle(theme), padding: "8px 12px", minWidth: "140px" }}>
-                <option value="ALL">All Depts</option>
-                {settings.masterDepartments?.split(',').map((d: string) => <option key={d} value={d.trim()}>{d.trim()}</option>)}
-              </select>
+              <MultiSelectFilter
+                options={settings.masterDepartments?.split(',').map((d: string) => d.trim()).filter(Boolean) || []}
+                selected={forecastFilters.department}
+                onChange={(val) => setForecastFilters({...forecastFilters, department: val})}
+                placeholder="All Depts"
+                theme={theme}
+                t={t}
+              />
+            </div>
+            <div>
+              <label style={filterLabelStyle}>By Type</label>
+              <MultiSelectFilter
+                options={settings.masterPaymentTypes.split(',').map((t: string) => t.trim()).filter(Boolean)}
+                selected={forecastFilters.type}
+                onChange={(val) => setForecastFilters({...forecastFilters, type: val})}
+                placeholder="All Types"
+                theme={theme}
+                t={t}
+              />
             </div>
           </div>
         </div>

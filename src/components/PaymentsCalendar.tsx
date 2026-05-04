@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Edit2, CheckCircle2, AlertTriangle, Calendar, Users, Briefcase, Filter, Search, ChevronRight, ListChecks, StopCircle, Download, Share2, FileText, Table as TableIcon, Eye, EyeOff, ArrowUp, ArrowDown, ChevronDown, Mail, X, FileSpreadsheet, Send, Wallet, ArrowRight, TrendingUp } from "lucide-react";
 import PaymentsAnalytics from "./PaymentsAnalytics";
+import MultiSelectFilter from "./MultiSelectFilter";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -84,25 +85,25 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   
   // Tracker Filtering
   const [trackerSearch, setTrackerSearch] = useState("");
-  const [trackerStatusFilter, setTrackerStatusFilter] = useState("ALL");
-  const [trackerEntityFilter, setTrackerEntityFilter] = useState("ALL");
-  const [trackerTypeFilter, setTrackerTypeFilter] = useState("ALL");
-  const [trackerFreqFilter, setTrackerFreqFilter] = useState("ALL");
+  const [trackerStatusFilter, setTrackerStatusFilter] = useState<string[]>([]);
+  const [trackerEntityFilter, setTrackerEntityFilter] = useState<string[]>([]);
+  const [trackerTypeFilter, setTrackerTypeFilter] = useState<string[]>([]);
+  const [trackerFreqFilter, setTrackerFreqFilter] = useState<string[]>([]);
   
   // List Filtering
   const [listSearch, setListSearch] = useState("");
-  const [listEntityFilter, setListEntityFilter] = useState("ALL");
-  const [listTypeFilter, setListTypeFilter] = useState("ALL");
-  const [listFreqFilter, setListFreqFilter] = useState("ALL");
+  const [listEntityFilter, setListEntityFilter] = useState<string[]>([]);
+  const [listTypeFilter, setListTypeFilter] = useState<string[]>([]);
+  const [listFreqFilter, setListFreqFilter] = useState<string[]>([]);
   
   // Paid Filtering
   const [paidSearch, setPaidSearch] = useState("");
-  const [paidStatusFilter, setPaidStatusFilter] = useState("ALL");
-  const [paidEntityFilter, setPaidEntityFilter] = useState("ALL");
-  const [paidTypeFilter, setPaidTypeFilter] = useState("ALL");
-  const [paidFreqFilter, setPaidFreqFilter] = useState("ALL");
-  const [paidBankFilter, setPaidBankFilter] = useState("ALL");
-  const [paidAdviceFilter, setPaidAdviceFilter] = useState("ALL");
+  const [paidStatusFilter, setPaidStatusFilter] = useState<string[]>([]);
+  const [paidEntityFilter, setPaidEntityFilter] = useState<string[]>([]);
+  const [paidTypeFilter, setPaidTypeFilter] = useState<string[]>([]);
+  const [paidFreqFilter, setPaidFreqFilter] = useState<string[]>([]);
+  const [paidBankFilter, setPaidBankFilter] = useState<string[]>([]);
+  const [paidAdviceFilter, setPaidAdviceFilter] = useState<string[]>([]);
   const [paidFromDate, setPaidFromDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -679,10 +680,10 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           const search = trackerSearch.toLowerCase();
           const status = getStatus(o);
           const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
-          const matchesStatus = trackerStatusFilter === "ALL" || status === trackerStatusFilter;
-          const matchesEntity = trackerEntityFilter === "ALL" || o.entityName === trackerEntityFilter;
-          const matchesType = trackerTypeFilter === "ALL" || o.paymentType === trackerTypeFilter;
-          const matchesFreq = trackerFreqFilter === "ALL" || o.frequency === trackerFreqFilter;
+          const matchesStatus = trackerStatusFilter.length === 0 || trackerStatusFilter.includes(status);
+          const matchesEntity = trackerEntityFilter.length === 0 || trackerEntityFilter.includes(o.entityName);
+          const matchesType = trackerTypeFilter.length === 0 || trackerTypeFilter.includes(o.paymentType);
+          const matchesFreq = trackerFreqFilter.length === 0 || trackerFreqFilter.includes(o.frequency);
           const occDate = new Date(o.dueDate);
           const from = new Date(trackerFromDate);
           const to = new Date(trackerToDate);
@@ -693,21 +694,21 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
         if (activeTab === 'LIST') {
           const search = listSearch.toLowerCase();
           const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
-          const matchesEntity = listEntityFilter === "ALL" || o.entityName === listEntityFilter;
-          const matchesType = listTypeFilter === "ALL" || o.paymentType === listTypeFilter;
-          const matchesFreq = listFreqFilter === "ALL" || o.frequency === listFreqFilter;
+          const matchesEntity = listEntityFilter.length === 0 || listEntityFilter.includes(o.entityName);
+          const matchesType = listTypeFilter.length === 0 || listTypeFilter.includes(o.paymentType);
+          const matchesFreq = listFreqFilter.length === 0 || listFreqFilter.includes(o.frequency);
           return matchesSearch && matchesEntity && matchesType && matchesFreq && o.isListed && !o.isPaid;
         }
         if (activeTab === 'PAID') {
           const search = paidSearch.toLowerCase();
           const status = getStatus(o);
           const matchesSearch = o.vendorName.toLowerCase().includes(search) || o.paymentDescription.toLowerCase().includes(search) || o.entityName.toLowerCase().includes(search);
-          const matchesStatus = paidStatusFilter === "ALL" || status === paidStatusFilter;
-          const matchesEntity = paidEntityFilter === "ALL" || o.entityName === paidEntityFilter;
-          const matchesType = paidTypeFilter === "ALL" || o.paymentType === paidTypeFilter;
-          const matchesFreq = paidFreqFilter === "ALL" || o.frequency === paidFreqFilter;
-          const matchesBank = paidBankFilter === "ALL" || o.paidFromAccount === paidBankFilter;
-          const matchesAdvice = paidAdviceFilter === 'ALL' || (paidAdviceFilter === 'SHARED' ? o.adviceShared : !o.adviceShared);
+          const matchesStatus = paidStatusFilter.length === 0 || paidStatusFilter.includes(status);
+          const matchesEntity = paidEntityFilter.length === 0 || paidEntityFilter.includes(o.entityName);
+          const matchesType = paidTypeFilter.length === 0 || paidTypeFilter.includes(o.paymentType);
+          const matchesFreq = paidFreqFilter.length === 0 || paidFreqFilter.includes(o.frequency);
+          const matchesBank = paidBankFilter.length === 0 || (o.paidFromAccount && paidBankFilter.includes(o.paidFromAccount));
+          const matchesAdvice = paidAdviceFilter.length === 0 || (paidAdviceFilter.includes('SHARED') ? o.adviceShared : !o.adviceShared);
           const occDate = new Date(o.actualDate || o.dueDate);
           const from = new Date(paidFromDate);
           const to = new Date(paidToDate);
@@ -1199,61 +1200,49 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               />
             </div>
 
-            <select 
-              value={trackerStatusFilter}
-              onChange={e => setTrackerStatusFilter(e.target.value)}
-              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
-            >
-              <option value="ALL">All Status</option>
-              <option value="ON HOLD">On Hold</option>
-              <option value="OVERDUE">Overdue</option>
-              <option value="Due On Today">Due On Today</option>
-              <option value="Not Yet Due">Not Yet Due</option>
-              <option value="Paid Before due date">Paid Before due date</option>
-              <option value="Paid on due date">Paid on due date</option>
-              <option value="Paid After due date">Paid After due date</option>
-            </select>
+            <MultiSelectFilter
+              options={[
+                "ON HOLD", "OVERDUE", "Due On Today", "Not Yet Due",
+                "Paid Before due date", "Paid on due date", "Paid After due date",
+                "CANCELLED"
+              ]}
+              selected={trackerStatusFilter}
+              onChange={setTrackerStatusFilter}
+              placeholder="All Status"
+              theme={theme}
+              t={t}
+            />
 
-            <select 
-              value={trackerTypeFilter}
-              onChange={e => setTrackerTypeFilter(e.target.value)}
-              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
-            >
-              <option value="ALL">All Types</option>
-              {(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => (
-                <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
-              ))}
-            </select>
+            <MultiSelectFilter
+              options={(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => type.trim()).filter(Boolean)}
+              selected={trackerTypeFilter}
+              onChange={setTrackerTypeFilter}
+              placeholder="All Types"
+              theme={theme}
+              t={t}
+            />
 
-            <select 
-              value={trackerFreqFilter}
-              onChange={e => setTrackerFreqFilter(e.target.value)}
-              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
-            >
-              <option value="ALL">All Freq</option>
-              {(settings.masterFrequencies || "Ad,M,Y,2Y,H,Q,W,BW,D").split(',').map((f: string) => {
-                const code = f.trim();
-                const label = code === 'M' ? 'Monthly' : 
-                            code === 'Q' ? 'Quarterly' : 
-                            code === 'Y' ? 'Yearly' : 
-                            code === 'W' ? 'Weekly' : 
-                            code === 'BW' ? 'Bi-Weekly' : 
-                            code === 'H' ? 'Half-Yearly' : 
-                            code === 'D' ? 'Daily' : 
-                            code === 'Ad' ? 'Ad-hoc' : 
-                            code === '2Y' ? '2-Yearly' : code;
-                return <option key={code} value={code}>{label}</option>;
-              })}
-            </select>
+            <MultiSelectFilter
+              options={(settings.masterFrequencies || "Ad,M,Y,2Y,H,Q,W,BW,D").split(',').map((f: string) => f.trim()).filter(Boolean)}
+              selected={trackerFreqFilter}
+              onChange={setTrackerFreqFilter}
+              placeholder="All Freq"
+              theme={theme}
+              t={t}
+              labelMapping={{
+                'M': 'Monthly', 'Q': 'Quarterly', 'Y': 'Yearly', 'W': 'Weekly',
+                'BW': 'Bi-Weekly', 'H': 'Half-Yearly', 'D': 'Daily', 'Ad': 'Ad-hoc', '2Y': '2-Yearly'
+              }}
+            />
 
-            <select 
-              value={trackerEntityFilter}
-              onChange={e => setTrackerEntityFilter(e.target.value)}
-              style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem", minWidth: "120px" }}
-            >
-              <option value="ALL">All Entities</option>
-              {settings.masterEntities.split(',').map((e: string) => <option key={e} value={e.trim()}>{e.trim()}</option>)}
-            </select>
+            <MultiSelectFilter
+              options={settings.masterEntities.split(',').map((e: string) => e.trim()).filter(Boolean)}
+              selected={trackerEntityFilter}
+              onChange={setTrackerEntityFilter}
+              placeholder="All Entities"
+              theme={theme}
+              t={t}
+            />
 
             <div style={{ position: "relative" }}>
               <button 
@@ -1491,22 +1480,33 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                 style={{ width: "100%", padding: "8px 8px 8px 34px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, outline: "none", fontSize: "0.8125rem" }}
               />
             </div>
-            <select value={listEntityFilter} onChange={e => setListEntityFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Entities</option>
-              {Array.from(new Set(occurrences.filter(o => o.isListed).map(o => o.entityName))).map(ent => <option key={ent} value={ent}>{ent}</option>)}
-            </select>
-            <select value={listTypeFilter} onChange={e => setListTypeFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Types</option>
-              {(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => <option key={type.trim()} value={type.trim()}>{type.trim()}</option>)}
-            </select>
-            <select value={listFreqFilter} onChange={e => setListFreqFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Freq</option>
-              <option value="M">Monthly</option>
-              <option value="Q">Quarterly</option>
-              <option value="H">Half-Yearly</option>
-              <option value="A">Annually</option>
-              <option value="W">Weekly</option>
-            </select>
+            <MultiSelectFilter
+              options={Array.from(new Set(occurrences.filter(o => o.isListed).map(o => o.entityName))).sort()}
+              selected={listEntityFilter}
+              onChange={setListEntityFilter}
+              placeholder="All Entities"
+              theme={theme}
+              t={t}
+            />
+            <MultiSelectFilter
+              options={(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => type.trim()).filter(Boolean)}
+              selected={listTypeFilter}
+              onChange={setListTypeFilter}
+              placeholder="All Types"
+              theme={theme}
+              t={t}
+            />
+            <MultiSelectFilter
+              options={["M", "Q", "H", "A", "W"]}
+              selected={listFreqFilter}
+              onChange={setListFreqFilter}
+              placeholder="All Freq"
+              theme={theme}
+              t={t}
+              labelMapping={{
+                'M': 'Monthly', 'Q': 'Quarterly', 'H': 'Half-Yearly', 'A': 'Annually', 'W': 'Weekly'
+              }}
+            />
           </div>
 
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
@@ -1621,29 +1621,46 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
               <span style={{ fontSize: "0.75rem", color: t.textMuted, fontWeight: 600 }}>To:</span>
               <input type="date" value={paidToDate} onChange={e => setPaidToDate(e.target.value)} style={{ padding: "7px 10px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem" }} />
             </div>
-            <select value={paidStatusFilter} onChange={e => setPaidStatusFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Status</option>
-              <option value="Paid on due date">Paid on due date</option>
-              <option value="Paid Before due date">Paid Before due date</option>
-              <option value="Paid After due date">Paid After due date</option>
-            </select>
-            <select value={paidEntityFilter} onChange={e => setPaidEntityFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Entities</option>
-              {Array.from(new Set(occurrences.filter(o => o.isPaid).map(o => o.entityName))).map(ent => <option key={ent} value={ent}>{ent}</option>)}
-            </select>
-            <select value={paidTypeFilter} onChange={e => setPaidTypeFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Types</option>
-              {(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => <option key={type.trim()} value={type.trim()}>{type.trim()}</option>)}
-            </select>
-            <select value={paidBankFilter} onChange={e => setPaidBankFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">All Banks</option>
-              {Array.from(new Set(occurrences.filter(o => o.isPaid && o.paidFromAccount).map(o => o.paidFromAccount))).map(bank => <option key={bank} value={bank}>{bank}</option>)}
-            </select>
-            <select value={paidAdviceFilter} onChange={e => setPaidAdviceFilter(e.target.value)} style={{ padding: "8px", borderRadius: "8px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontSize: "0.8125rem", minWidth: "120px" }}>
-              <option value="ALL">Advice: All</option>
-              <option value="SHARED">Shared</option>
-              <option value="PENDING">Pending</option>
-            </select>
+            <MultiSelectFilter
+              options={["Paid on due date", "Paid Before due date", "Paid After due date", "CANCELLED"]}
+              selected={paidStatusFilter}
+              onChange={setPaidStatusFilter}
+              placeholder="All Status"
+              theme={theme}
+              t={t}
+            />
+            <MultiSelectFilter
+              options={Array.from(new Set(occurrences.filter(o => o.isPaid).map(o => o.entityName))).sort()}
+              selected={paidEntityFilter}
+              onChange={setPaidEntityFilter}
+              placeholder="All Entities"
+              theme={theme}
+              t={t}
+            />
+            <MultiSelectFilter
+              options={(settings.masterPaymentTypes || "AMC,Rent,Security,Utility,Salaries,Other").split(',').map((type: string) => type.trim()).filter(Boolean)}
+              selected={paidTypeFilter}
+              onChange={setPaidTypeFilter}
+              placeholder="All Types"
+              theme={theme}
+              t={t}
+            />
+            <MultiSelectFilter
+              options={Array.from(new Set(occurrences.filter(o => o.isPaid && o.paidFromAccount).map(o => o.paidFromAccount))).sort() as string[]}
+              selected={paidBankFilter}
+              onChange={setPaidBankFilter}
+              placeholder="All Banks"
+              theme={theme}
+              t={t}
+            />
+            <MultiSelectFilter
+              options={["SHARED", "PENDING"]}
+              selected={paidAdviceFilter}
+              onChange={setPaidAdviceFilter}
+              placeholder="Advice: All"
+              theme={theme}
+              t={t}
+            />
           </div>
 
           <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflowX: "auto", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
