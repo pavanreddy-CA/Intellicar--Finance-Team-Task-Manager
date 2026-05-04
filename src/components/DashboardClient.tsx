@@ -1347,6 +1347,21 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
       if (field === 'reviewCompletionDate') {
         if (value) {
+          // Validation: Review date must be >= Task Completion Date
+          if (task && task.completionDate) {
+            const tDate = new Date(task.completionDate);
+            const rDate = new Date(value);
+            
+            // Set both to midnight for pure date comparison
+            tDate.setHours(0, 0, 0, 0);
+            rDate.setHours(0, 0, 0, 0);
+
+            if (rDate < tDate) {
+              showNotification(`Error: Review completion date (${value}) cannot be before task completion date (${new Date(task.completionDate).toLocaleDateString()}).`, "error");
+              setEditingCell(null);
+              return;
+            }
+          }
           updates.reviewStatus = 'Completed';
         } else if (task && task.reviewerName !== 'Not Applicable' && task.reviewerName !== 'N/A') {
           updates.reviewStatus = 'Pending';
