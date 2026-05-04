@@ -3445,22 +3445,24 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     zIndex: 1,
                     padding: "48px 32px", 
                     textAlign: "center", 
-                    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", 
+                    background: "rgba(255, 255, 255, 0.8)", 
+                    backdropFilter: "blur(12px)",
                     borderRadius: "32px",
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                    border: "1px solid rgba(59, 130, 246, 0.2)",
+                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.04)",
                     overflow: "hidden"
                   }}>
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')", opacity: 0.05 }}></div>
-                    <Quote size={40} color="#3b82f6" style={{ marginBottom: "20px", opacity: 0.3 }} />
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(59, 130, 246, 0.02)", pointerEvents: "none" }}></div>
+                    <Quote size={40} color="#2563eb" style={{ marginBottom: "20px", opacity: 0.2 }} />
                     <h3 style={{ 
                       fontSize: "1.75rem", 
                       fontFamily: "'Outfit', serif", 
                       fontStyle: "italic", 
                       maxWidth: "900px", 
                       margin: "0 auto 24px auto", 
-                      color: "#f8fafc",
+                      color: "#2563eb",
                       lineHeight: 1.4,
-                      fontWeight: 300,
+                      fontWeight: 600,
                       letterSpacing: "-0.01em"
                     }}>
                       "{quote.text}"
@@ -3468,11 +3470,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <div style={{ 
                       display: "inline-block",
                       padding: "8px 24px",
-                      background: "rgba(59, 130, 246, 0.1)",
+                      background: "rgba(59, 130, 246, 0.08)",
                       borderRadius: "20px",
                       border: "1px solid rgba(59, 130, 246, 0.2)",
                       fontWeight: 800, 
-                      color: "#60a5fa", 
+                      color: "#2563eb", 
                       textTransform: "uppercase", 
                       letterSpacing: "0.2em",
                       fontSize: "0.875rem"
