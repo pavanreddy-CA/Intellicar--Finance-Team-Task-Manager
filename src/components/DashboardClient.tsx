@@ -3470,15 +3470,17 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <div style={{ 
                       display: "inline-block",
                       padding: "8px 24px",
-                      background: "rgba(59, 130, 246, 0.08)",
+                      background: "rgba(0, 0, 0, 0.05)",
                       borderRadius: "20px",
-                      border: "1px solid rgba(59, 130, 246, 0.2)",
+                      border: "1px solid rgba(0, 0, 0, 0.1)",
                       fontWeight: 800, 
-                      color: "#2563eb", 
+                      color: "#000000", 
                       textTransform: "uppercase", 
                       letterSpacing: "0.2em",
                       fontSize: "0.875rem"
-                    }}>— {quote.author}</div>
+                    }}>
+                      — {quote.author}
+                    </div>
                   </div>
 
                   {/* 3. Wall of Fame - Premium Floating Cards */}
