@@ -321,9 +321,15 @@ export async function GET(req: NextRequest) {
         if (settings.paymentReportFrequency !== 'OFF' && settings.paymentReportFrequency) {
           const pTimes = (settings.paymentReportTimes || "10:00").split(',').map((t: string) => t.trim());
           if (pTimes.includes(currentHHmm)) {
-            if (settings.paymentReportFrequency === 'D') shouldPaymentReport = true;
-            else if (settings.paymentReportFrequency === 'W' && currentDay === 1) shouldPaymentReport = true;
-            else if (settings.paymentReportFrequency === 'M' && currentDate === 1) shouldPaymentReport = true;
+            if (settings.paymentReportFrequency === 'D') {
+              shouldPaymentReport = true;
+            } else if (settings.paymentReportFrequency === 'W') {
+              const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+              const targetDay = dayMap[settings.paymentReportDay || 'Monday'];
+              if (currentDay === targetDay) shouldPaymentReport = true;
+            } else if (settings.paymentReportFrequency === 'M') {
+              if (currentDate === (settings.paymentReportDate || 1)) shouldPaymentReport = true;
+            }
           }
         }
 

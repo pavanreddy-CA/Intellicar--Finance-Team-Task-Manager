@@ -171,6 +171,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     paymentReportFrequency: 'OFF',
     paymentReportTimes: '10:00',
     paymentReportEmail: '',
+    paymentReportDay: 'Monday',
+    paymentReportDate: 1,
     masterDepartments: 'SW - Engineering,Manufacturing and Supply Chain,Field Operations Technicians,HW - Engineering,Operations,CSM & Sales,Finance,HR and Admin,External People',
     masterEntities: 'Intellicar-BLR,Intellicar-MUM,Intellicar-DEL',
     masterTaskTypes: 'Accounts Receivable,Accounts Payable,MIS,Inventory,Banking & Treasury,Customer Reconciliations,Vendor Reconciliation,Reporting,Financial Audit,Tax Audit,Other Audits,Assements & Notices,Month Closure,Corporate Taxation,GST,Employee Laws,Due Diligence,Presentations & Trainings,Other Reconciallitions,MCA Filings,Miscellaneous Activities,Month End Billing,Credit Cards & Debt,Customizations / Automations',
@@ -6116,6 +6118,37 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           </label>
                         ))}
                       </div>
+
+                      {settings.paymentReportFrequency === 'W' && (
+                        <div style={{ marginBottom: "16px" }}>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 700, color: "#a21caf" }}>SELECT DAY</label>
+                          <select 
+                            value={settings.paymentReportDay}
+                            onChange={(e) => setSettings({...settings, paymentReportDay: e.target.value})}
+                            style={{ padding: "10px", borderRadius: "10px", border: "1px solid #f5d0fe", width: "100%", background: "white", fontSize: "0.875rem", fontWeight: 600, color: "#a21caf" }}
+                          >
+                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                              <option key={day} value={day}>{day}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {settings.paymentReportFrequency === 'M' && (
+                        <div style={{ marginBottom: "16px" }}>
+                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 700, color: "#a21caf" }}>SELECT DATE</label>
+                          <select 
+                            value={settings.paymentReportDate}
+                            onChange={(e) => setSettings({...settings, paymentReportDate: parseInt(e.target.value)})}
+                            style={{ padding: "10px", borderRadius: "10px", border: "1px solid #f5d0fe", width: "100%", background: "white", fontSize: "0.875rem", fontWeight: 600, color: "#a21caf" }}
+                          >
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
+                              <option key={date} value={date}>{date}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
 
                       {settings.paymentReportFrequency !== 'OFF' && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>

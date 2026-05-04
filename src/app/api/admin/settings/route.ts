@@ -49,6 +49,11 @@ export async function PATCH(request: Request) {
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterResourceCategories" TEXT DEFAULT 'Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous'`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "bulkImportMatrix" TEXT DEFAULT '{}'`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterBankAccounts" TEXT DEFAULT 'HDFC,ICICI,SBI'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportFrequency" TEXT DEFAULT 'OFF'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportTimes" TEXT DEFAULT '10:00'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportEmail" TEXT DEFAULT ''`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportDay" TEXT DEFAULT 'Monday'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportDate" INTEGER DEFAULT 1`;
     } catch (e) {
       console.log("Migration for settings fields failed/skipped");
     }
@@ -75,6 +80,11 @@ export async function PATCH(request: Request) {
           "managerReportTimes",
           "loReportFrequency",
           "loReportTimes",
+          "paymentReportFrequency",
+          "paymentReportTimes",
+          "paymentReportEmail",
+          "paymentReportDay",
+          "paymentReportDate",
           "managerEmail",
           "loReportEmail",
           "masterFrequencies",
@@ -102,6 +112,11 @@ export async function PATCH(request: Request) {
           ${body.managerReportTimes || '10:00'},
           ${body.loReportFrequency || 'W'},
           ${body.loReportTimes || '10:00'},
+          ${body.paymentReportFrequency || 'OFF'},
+          ${body.paymentReportTimes || '10:00'},
+          ${body.paymentReportEmail || ''},
+          ${body.paymentReportDay || 'Monday'},
+          ${body.paymentReportDate || 1},
           ${body.managerEmail || ''},
           ${body.loReportEmail || ''},
           ${body.masterFrequencies || 'Ad,M,Y,2Y,H,Q,W,BW,D'},
@@ -141,6 +156,11 @@ export async function PATCH(request: Request) {
         "managerReportTimes" = ${body.managerReportTimes ?? existingSettings[0].managerReportTimes},
         "loReportFrequency" = ${body.loReportFrequency ?? existingSettings[0].loReportFrequency},
         "loReportTimes" = ${body.loReportTimes ?? existingSettings[0].loReportTimes},
+        "paymentReportFrequency" = ${body.paymentReportFrequency ?? existingSettings[0].paymentReportFrequency},
+        "paymentReportTimes" = ${body.paymentReportTimes ?? existingSettings[0].paymentReportTimes},
+        "paymentReportEmail" = ${body.paymentReportEmail ?? existingSettings[0].paymentReportEmail},
+        "paymentReportDay" = ${body.paymentReportDay ?? existingSettings[0].paymentReportDay},
+        "paymentReportDate" = ${body.paymentReportDate ?? existingSettings[0].paymentReportDate},
         "managerEmail" = ${body.managerEmail ?? existingSettings[0].managerEmail},
         "loReportEmail" = ${body.loReportEmail ?? existingSettings[0].loReportEmail},
         "masterFrequencies" = ${body.masterFrequencies ?? existingSettings[0].masterFrequencies},
