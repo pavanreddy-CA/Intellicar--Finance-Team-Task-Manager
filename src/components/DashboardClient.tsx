@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink, Eye, Filter, User, CreditCard } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, UserPlus, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink, Eye, Filter, User, CreditCard } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -468,6 +468,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [pendingUserUpdates, setPendingUserUpdates] = useState<Record<string, { role?: string; department?: string; isSuspended?: boolean }>>({});
   const [isSavingUsers, setIsSavingUsers] = useState(false);
   
+  // Add Employee States
+  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+  const [isAddingEmployee, setIsAddingEmployee] = useState(false);
+  const [newEmployeeData, setNewEmployeeData] = useState({
+    name: '',
+    email: '',
+    department: '',
+    role: 'USER'
+  });
+
   // New Filters
   const [taskTypeFilter, setTaskTypeFilter] = useState<'ALL' | 'INTERNAL' | 'EXTERNAL'>('ALL');
   const [requestTypeFilter, setRequestTypeFilter] = useState<'ALL' | 'ORIGINAL' | 'TRANSFERRED'>('ALL');
@@ -1138,13 +1148,44 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }, "Intellicar@123");
   };
 
+  const handleAddEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmployeeData.name || !newEmployeeData.email || !newEmployeeData.department) {
+      showNotification("Please fill in all required fields.", "error");
+      return;
+    }
+
+    setIsAddingEmployee(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEmployeeData)
+      });
+
+      if (res.ok) {
+        showNotification("Employee added successfully! Default password is: Intellicar@123", "success");
+        setShowAddEmployeeModal(false);
+        setNewEmployeeData({ name: '', email: '', department: '', role: 'USER' });
+        fetchUsersList();
+      } else {
+        const data = await res.json();
+        showNotification(`Error: ${data.message || "Failed to add employee"}`, "error");
+      }
+    } catch (error) {
+      console.error("Add employee failed", error);
+      showNotification("Network error. Failed to add employee.", "error");
+    } finally {
+      setIsAddingEmployee(false);
+    }
+  };
+
   const handleApproveUser = async (id: string) => {
     showConfirm("Approve this user for access?", async () => {
       try {
-        const res = await fetch("/api/admin/users/approve", {
+        const res = await fetch(`/api/admin/users/${id}/approve`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: id }),
         });
         if (res.ok) {
           showNotification("User approved successfully.");
@@ -6235,6 +6276,17 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           <h4 style={{ margin: 0, fontSize: "1.125rem", color: t.text }}>Active Employees</h4>
                         </div>
                         <div style={{ display: "flex", gap: "12px" }}>
+                          <button 
+                            onClick={() => setShowAddEmployeeModal(true)}
+                            style={{ 
+                              padding: "8px 16px", background: "#f0fdf4", color: "#166534", 
+                              borderRadius: "10px", border: "1px solid #bbf7d0", fontWeight: 600, 
+                              cursor: "pointer", fontSize: "0.8125rem", display: "flex", 
+                              alignItems: "center", gap: "6px", transition: "all 0.2s" 
+                            }}
+                          >
+                            <UserPlus size={16} /> Add Employee
+                          </button>
                           {Object.keys(pendingUserUpdates).length > 0 && (
                             <button 
                               onClick={handleSaveUserUpdates}
@@ -8896,6 +8948,90 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           </div>
         </div>
       )}
+
+      {/* Add Employee Modal */}
+      {showAddEmployeeModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div style={{ background: t.card, borderRadius: "16px", width: "100%", maxWidth: "450px", border: `1px solid ${t.border}`, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }} className="animate-fade-in-up">
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ padding: "8px", background: "#dcfce7", borderRadius: "10px" }}>
+                  <UserPlus size={20} color="#166534" />
+                </div>
+                <h3 style={{ margin: 0, fontSize: "1.125rem", color: t.text }}>Add New Employee</h3>
+              </div>
+              <button onClick={() => setShowAddEmployeeModal(false)} style={{ background: "none", border: "none", color: t.textMuted, cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleAddEmployee} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>FULL NAME</label>
+                <input 
+                  type="text" required
+                  value={newEmployeeData.name}
+                  onChange={e => setNewEmployeeData({...newEmployeeData, name: e.target.value})}
+                  style={getInputStyle(t)} 
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>EMAIL ADDRESS</label>
+                <input 
+                  type="email" required
+                  value={newEmployeeData.email}
+                  onChange={e => setNewEmployeeData({...newEmployeeData, email: e.target.value})}
+                  style={getInputStyle(t)} 
+                  placeholder="e.g. john@intellicar.in"
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>DEPARTMENT</label>
+                  <select 
+                    required
+                    value={newEmployeeData.department}
+                    onChange={e => setNewEmployeeData({...newEmployeeData, department: e.target.value})}
+                    style={getInputStyle(t)}
+                  >
+                    <option value="">Select Dept</option>
+                    {settings.masterDepartments.split(',').filter(d => d.trim()).map(dept => (
+                      <option key={dept.trim()} value={dept.trim()}>{dept.trim()}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: t.textMuted }}>ROLE</label>
+                  <select 
+                    required
+                    value={newEmployeeData.role}
+                    onChange={e => setNewEmployeeData({...newEmployeeData, role: e.target.value})}
+                    style={getInputStyle(t)}
+                  >
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ background: "#fef9c3", padding: "12px", borderRadius: "10px", border: "1px solid #fde047", marginTop: "4px" }}>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "#854d0e", fontWeight: 500 }}>
+                  <Key size={12} style={{ marginRight: "4px" }} /> Default password will be <strong>Intellicar@123</strong>
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                <button type="button" onClick={() => setShowAddEmployeeModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `1px solid ${t.border}`, background: "transparent", color: t.text, fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={isAddingEmployee} style={{ flex: 2, padding: "12px", borderRadius: "10px", border: "none", background: "#10b981", color: "white", fontWeight: 600, cursor: isAddingEmployee ? "not-allowed" : "pointer" }}>
+                  {isAddingEmployee ? "Creating..." : "Add Employee"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
   </div>
 </div>
   );
