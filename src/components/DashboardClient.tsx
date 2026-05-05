@@ -7079,7 +7079,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             )}
                           </div>
                         ) : (
-                          <div>
+                          <>
                             <h3 style={{ margin: "0 0 16px 0", color: t.text }}>Pending Payment Deletion Requests</h3>
                             <p style={{ color: t.textMuted, marginBottom: "24px", fontSize: "0.875rem" }}>Review requests to permanently remove specific payment records created by mistake.</p>
                             
@@ -7122,7 +7122,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 ))}
                               </div>
                             )}
-                          </div>
+                          </>
                         )}
                       </div>
                     )}
@@ -7614,7 +7614,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                       </div>
 
-                    </div>
                   </div>
                 )}
 
