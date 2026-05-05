@@ -210,8 +210,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Tasks created", count: createdTasks.length }, { status: 201 });
   } catch (error: any) {
     console.error("CRITICAL Task creation error:", error);
+    // Return detailed error to UI for diagnosis
     return NextResponse.json({ 
-      message: "Failed to create task", 
+      message: `DB Error: ${error.message || "Unknown error"}`, 
       details: error.message,
       error: error.message 
     }, { status: 500 });
