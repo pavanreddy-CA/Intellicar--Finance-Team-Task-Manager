@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { sendEmail, getEmailFromName } from "@/lib/email";
 
 // GET /api/payments/requests
 export async function GET(req: NextRequest) {
@@ -48,15 +49,18 @@ export async function GET(req: NextRequest) {
         );
       `;
       
-      // Add missing columns to SystemSettings if not exist (handled by schema.prisma usually, but for safety)
+      await sql`ALTER TABLE "PaymentRequest" ADD COLUMN IF NOT EXISTS "supportings" JSONB`;
+      await sql`ALTER TABLE "PaymentOccurrence" ADD COLUMN IF NOT EXISTS "requestId" INTEGER`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "departmentHeadMatrix" TEXT DEFAULT '{}'`;
     } catch (err) {
       console.error("PaymentRequest migration error:", err);
     }
 
     const search = searchParams.get("search");
-    const department = searchParams.get("department");
-    const status = searchParams.get("status");
+    const department = searchParams.get("department"); // Comma-separated
+    const status = searchParams.get("status"); // Comma-separated
+    const entity = searchParams.get("entity"); // Comma-separated
+    const vendor = searchParams.get("vendor"); // Comma-separated
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
@@ -92,12 +96,27 @@ export async function GET(req: NextRequest) {
       const searchPattern = `%${search}%`;
       conditions.push(sql`("vendorName" ILIKE ${searchPattern} OR "entityName" ILIKE ${searchPattern} OR description ILIKE ${searchPattern})`);
     }
-    if (department && department !== 'ALL') {
-      conditions.push(sql`department = ${department}`);
+    
+    if (department) {
+      const depts = department.split(',').map(d => d.trim());
+      conditions.push(sql`department = ANY(${depts})`);
     }
-    if (status && status !== 'ALL') {
-      conditions.push(sql`status = ${status}`);
+    
+    if (status) {
+      const statuses = status.split(',').map(s => s.trim());
+      conditions.push(sql`status = ANY(${statuses})`);
     }
+
+    if (entity) {
+      const entities = entity.split(',').map(e => e.trim());
+      conditions.push(sql`"entityName" = ANY(${entities})`);
+    }
+
+    if (vendor) {
+      const vendors = vendor.split(',').map(v => v.trim());
+      conditions.push(sql`"vendorName" = ANY(${vendors})`);
+    }
+
     if (startDate) {
       conditions.push(sql`"dueDate" >= ${startDate}`);
     }
@@ -114,7 +133,19 @@ export async function GET(req: NextRequest) {
       requests = await sql`${baseQuery} ORDER BY "createdAt" DESC`;
     }
 
-    return NextResponse.json(requests);
+    // Add Due Date Status calculations
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const enrichedRequests = requests.map((r: any) => {
+      const dueDate = new Date(r.dueDate);
+      dueDate.setHours(0,0,0,0);
+      let dateStatus = "UPCOMING";
+      if (dueDate.getTime() === now.getTime()) dateStatus = "DUE TODAY";
+      else if (dueDate.getTime() < now.getTime()) dateStatus = "OVERDUE";
+      return { ...r, dateStatus };
+    });
+
+    return NextResponse.json(enrichedRequests);
   } catch (error: any) {
     console.error("Fetch payment requests error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -134,7 +165,7 @@ export async function POST(req: NextRequest) {
     const { 
       id, action, // "SUBMIT", "APPROVE", "REJECT", "PROCESS"
       entityName, vendorName, description, paymentType, frequency, amount, dueDate, isNewVendor, kycDocuments,
-      comments
+      supportings, comments
     } = data;
 
     const userEmail = (session.user as any)?.email;
@@ -142,28 +173,32 @@ export async function POST(req: NextRequest) {
     const userDept = (session.user as any)?.department;
 
     if (id && action) {
-      // Handle Transitions
       const current = await sql`SELECT * FROM "PaymentRequest" WHERE id = ${id}`;
       if (current.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
       if (action === "APPROVE" || (action === "REJECT" && userDept !== "Finance")) {
-        // Authorization: Check if user is a Dept Head for this request's department
         const settings = await sql`SELECT "departmentHeadMatrix" FROM "SystemSettings" LIMIT 1`;
         const matrix = JSON.parse(settings[0]?.departmentHeadMatrix || "{}");
         const heads = matrix[current[0].department] || [];
-        
         if (!heads.includes(userEmail) && (session.user as any)?.role !== "ADMIN") {
           return NextResponse.json({ error: "Forbidden: Not a Department Head" }, { status: 403 });
         }
       }
 
       if (action === "APPROVE") {
-        // Dept Head Approval
         await sql`
           UPDATE "PaymentRequest"
           SET status = 'PENDING_FINANCE', "approvedBy" = ${userName}, "approvedByEmail" = ${userEmail}, "deptHeadComments" = ${comments}, "updatedAt" = NOW()
           WHERE id = ${id}
         `;
+        
+        // Email: Notify User that Dept Head approved
+        await sendEmail({
+          to: current[0].requesterEmail,
+          subject: `Payment Request Approved by ${userName} - ${current[0].vendorName}`,
+          html: `<p>Your payment request for <strong>${current[0].vendorName}</strong> has been approved by <strong>${userName}</strong> and is now with Finance for final review.</p>`
+        });
+
       } else if (action === "REJECT") {
         const isFinance = userDept === "Finance";
         await sql`
@@ -173,8 +208,15 @@ export async function POST(req: NextRequest) {
               "updatedAt" = NOW()
           WHERE id = ${id}
         `;
+        
+        // Email: Notify User of rejection
+        await sendEmail({
+          to: current[0].requesterEmail,
+          subject: `Payment Request Rejected - ${current[0].vendorName}`,
+          html: `<p>Your payment request for <strong>${current[0].vendorName}</strong> has been rejected by <strong>${userName}</strong>.</p><p>Comments: ${comments || 'None'}</p>`
+        });
+
       } else if (action === "PROCESS") {
-        // Finance Approval -> Create Payment Occurrence
         if (userDept !== "Finance" && (session.user as any)?.role !== "ADMIN") {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
@@ -186,13 +228,6 @@ export async function POST(req: NextRequest) {
         `;
 
         // Create Payment Occurrence (Ad-hoc)
-        // We'll create a dummy template or just insert into Occurrence with a special flag if needed
-        // For now, we'll follow the user's request: "Once he approve, it will go to Payment list directly"
-        // Since occurrences need a templateId, we might need a hidden "AD-HOC" template or allow null templateId
-        // Looking at the schema, templateId is NOT NULL in raw SQL? Wait, let's check.
-        // `templateId INTEGER REFERENCES "PaymentTemplate"(id) ON DELETE CASCADE`
-        // So we NEED a template. I'll create a generic "AD-HOC REQUESTS" template if it doesn't exist.
-        
         let adHocTemplate = await sql`SELECT id FROM "PaymentTemplate" WHERE "paymentDescription" = 'AD-HOC REQUESTS' LIMIT 1`;
         if (adHocTemplate.length === 0) {
           adHocTemplate = await sql`
@@ -204,12 +239,19 @@ export async function POST(req: NextRequest) {
 
         await sql`
           INSERT INTO "PaymentOccurrence" (
-            "templateId", "dueDate", "actualDate", "amountToRelease", "amountPaid", "isPaid", "isListed", "paidFromAccount"
+            "templateId", "dueDate", "amountToRelease", "isPaid", "isListed", "paidFromAccount", "requestId"
           )
           VALUES (
-            ${adHocTemplate[0].id}, ${new Date(current[0].dueDate)}, NOW(), ${current[0].amount}, ${current[0].amount}, TRUE, TRUE, 'AUTO-PROCESSED'
+            ${adHocTemplate[0].id}, ${new Date(current[0].dueDate)}, ${current[0].amount}, FALSE, TRUE, 'PENDING-FINANCE', ${id}
           )
         `;
+
+        // Email: Notify User that Finance approved (Processing)
+        await sendEmail({
+          to: current[0].requesterEmail,
+          subject: `Payment Request Processed by Finance - ${current[0].vendorName}`,
+          html: `<p>Your payment request for <strong>${current[0].vendorName}</strong> has been approved by Finance and added to the payment list.</p>`
+        });
       }
       return NextResponse.json({ success: true });
     } else {
@@ -217,15 +259,39 @@ export async function POST(req: NextRequest) {
       const result = await sql`
         INSERT INTO "PaymentRequest" (
           "requesterId", "requesterName", "requesterEmail", department, "entityName", "vendorName",
-          description, "paymentType", frequency, amount, "dueDate", "isNewVendor", "kycDocuments", status
+          description, "paymentType", frequency, amount, "dueDate", "isNewVendor", "kycDocuments", "supportings", status
         )
         VALUES (
           ${(session.user as any)?.id || 'unknown'}, ${userName}, ${userEmail}, ${userDept}, ${entityName}, ${vendorName},
-          ${description}, ${paymentType}, ${frequency}, ${amount}, ${new Date(dueDate)}, ${isNewVendor}, ${JSON.stringify(kycDocuments)}, 'PENDING_DEPT'
+          ${description}, ${paymentType}, ${frequency}, ${amount}, ${new Date(dueDate)}, ${isNewVendor}, 
+          ${JSON.stringify(kycDocuments)}, ${JSON.stringify(supportings)}, 'PENDING_DEPT'
         )
         RETURNING *
       `;
-      return NextResponse.json(result[0], { status: 201 });
+      const newReq = result[0];
+
+      // Email: Notify User & Dept Head
+      const settings = await sql`SELECT "departmentHeadMatrix" FROM "SystemSettings" LIMIT 1`;
+      const matrix = JSON.parse(settings[0]?.departmentHeadMatrix || "{}");
+      const deptHeads = matrix[userDept] || [];
+
+      // To Requester
+      await sendEmail({
+        to: userEmail,
+        subject: `Payment Request Submitted - ${vendorName}`,
+        html: `<p>Hi ${userName},</p><p>Your payment request for <strong>${vendorName}</strong> has been submitted and is pending Department Head approval.</p>`
+      });
+
+      // To Dept Heads
+      for (const headEmail of deptHeads) {
+        await sendEmail({
+          to: headEmail,
+          subject: `New Payment Request for Approval - ${userName} (${vendorName})`,
+          html: `<p>A new payment request has been submitted by <strong>${userName}</strong> from your department for <strong>${vendorName}</strong>.</p><p>Amount: ₹${Number(amount).toLocaleString()}</p><p>Please review it in the Finance Dashboard.</p>`
+        });
+      }
+
+      return NextResponse.json(newReq, { status: 201 });
     }
   } catch (error: any) {
     console.error("Save payment request error:", error);

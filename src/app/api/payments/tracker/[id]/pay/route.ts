@@ -55,7 +55,41 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const occ = result[0];
 
-    // Trigger Payment Advice Email if requested
+    // Notification: If this was linked to a PaymentRequest, notify Requester and Dept Head
+    if (occ.requestId) {
+      try {
+        const { sendEmail } = await import("@/lib/email");
+        const request = await sql`SELECT * FROM "PaymentRequest" WHERE id = ${occ.requestId}`;
+        if (request.length > 0) {
+          const req = request[0];
+          const subject = `Payment Confirmed - ${req.vendorName} - ₹${Number(occ.amountPaid).toLocaleString()}`;
+          const html = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+              <h2 style="color: #16a34a;">Payment Processed Successfully</h2>
+              <p>The payment request for <strong>${req.vendorName}</strong> has been marked as <strong>PAID</strong> by Finance.</p>
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #f8fafc;"><td style="padding: 10px; font-weight: 600;">Entity</td><td style="padding: 10px;">${req.entityName}</td></tr>
+                <tr><td style="padding: 10px; font-weight: 600;">Amount</td><td style="padding: 10px; color: #16a34a; font-weight: 700;">₹${Number(occ.amountPaid).toLocaleString()}</td></tr>
+                <tr style="background: #f8fafc;"><td style="padding: 10px; font-weight: 600;">UTR Number</td><td style="padding: 10px;">${occ.utrNumber || 'N/A'}</td></tr>
+                <tr><td style="padding: 10px; font-weight: 600;">Paid From</td><td style="padding: 10px;">${occ.paidFromAccount || 'N/A'}</td></tr>
+              </table>
+            </div>
+          `;
+          
+          // Send to Requester
+          await sendEmail({ to: req.requesterEmail, subject, html });
+          
+          // Send to Dept Head
+          if (req.approvedByEmail) {
+            await sendEmail({ to: req.approvedByEmail, subject, html });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to send payment confirmation email:", err);
+      }
+    }
+
+    // Trigger Payment Advice Email to Vendor if requested
     if (sendAdvice && adviceRecipient) {
       try {
         const { sendEmail } = await import("@/lib/email");
