@@ -135,18 +135,8 @@ export async function POST(req: NextRequest) {
       const yearStr = String(now.getFullYear()).slice(-2);
       const prefix = `${monthStr}${yearStr}`;
 
-      let displayId = "";
+      let displayId = null;
       try {
-        // Ensure displayId and TaskSequence exist
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "displayId" TEXT`;
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "completedSubmissionAt" TIMESTAMP(3)`;
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "reviewedSubmissionAt" TIMESTAMP(3)`;
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedSubmissionAt" TIMESTAMP(3)`;
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "completedBy" TEXT`;
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "reviewedBy" TEXT`;
-        await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedBy" TEXT`;
-        await sql`CREATE TABLE IF NOT EXISTS "TaskSequence" ("monthYear" TEXT PRIMARY KEY, "nextVal" INTEGER DEFAULT 1)`;
-        
         const sequences = await sql`
           INSERT INTO "TaskSequence" ("monthYear", "nextVal")
           VALUES (${prefix}, 1)
@@ -157,14 +147,13 @@ export async function POST(req: NextRequest) {
         const nextVal = sequences[0].nextVal;
         displayId = `${prefix}-${String(nextVal).padStart(2, '0')}`;
       } catch (e) {
-        console.error("Display ID generation error", e);
+        console.error("Display ID generation error (Non-fatal):", e);
       }
 
       const parseDate = (d: string) => {
         if (!d) return null;
         const parsed = new Date(d);
         if (!isNaN(parsed.getTime())) return parsed.toISOString();
-        // Try DD-MM-YYYY
         const parts = d.split(/[-/]/);
         if (parts.length === 3) {
           if (parts[0].length === 2 && parts[2].length === 4) {
@@ -175,41 +164,56 @@ export async function POST(req: NextRequest) {
         return null;
       };
 
-      const newTasks = await sql`
-        INSERT INTO "Task" (
-          "taskName", "entityName", "taskType", "departmentName", "requestFrom",
-          "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
-          "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "frequency", "displayId", "isApproved", "createdByEmail", "createdAt", "updatedAt"
-        )
-        VALUES (
-          ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
-          ${ownerName}, ${resolvedReviewer}, ${parseDate(dueDate)}, ${mailLink || null}, 'Pending',
-          ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, ${data.frequency || null}, ${displayId || null}, TRUE, ${session.user.email}, NOW(), NOW()
-        )
-        RETURNING *
-      `;
-      
-      const newTask = newTasks[0];
-      createdTasks.push(newTask);
+      try {
+        const newTasks = await sql`
+          INSERT INTO "Task" (
+            "taskName", "entityName", "taskType", "departmentName", "requestFrom",
+            "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
+            "reviewStatus", "linkedRequestId", "requestStatus", "transferStatus", "originalRequestType", "frequency", "displayId", "isApproved", "createdByEmail", "createdAt", "updatedAt"
+          )
+          VALUES (
+            ${taskName}, ${entityName}, ${taskType}, ${departmentName}, ${requestFrom},
+            ${ownerName}, ${resolvedReviewer}, ${parseDate(dueDate)}, ${mailLink || null}, 'Pending',
+            ${reviewStatus}, ${linkedRequestId || null}, ${requestStatus}, ${data.transferStatus || 'O'}, ${data.originalRequestType || null}, ${data.frequency || null}, ${displayId}, TRUE, ${session.user.email}, NOW(), NOW()
+          )
+          RETURNING *
+        `;
+        
+        const newTask = newTasks[0];
+        createdTasks.push(newTask);
 
-      // Trigger Notification (Wait for it to ensure Vercel doesn't kill the process)
-      await triggerNotification('TASK_ASSIGNED', newTask);
+        // Trigger Notification
+        try {
+          await triggerNotification('TASK_ASSIGNED', newTask);
+        } catch (notifErr) {
+          console.error("Notification failed (Non-fatal):", notifErr);
+        }
+      } catch (insertErr: any) {
+        console.error("INSERT FAILED for assignment:", assignment, insertErr);
+        throw insertErr; // Re-throw to catch block
+      }
     }
 
-    // Link back to External Request if applicable (link to the FIRST created task)
+    // Link back to External Request if applicable
     if (linkedRequestId && createdTasks.length > 0) {
-      await sql`
-        UPDATE "ExternalRequest"
-        SET status = 'Under Process', "convertedTaskId" = ${createdTasks[0].id}
-        WHERE id = ${Number(linkedRequestId)}
-      `;
+      try {
+        await sql`
+          UPDATE "ExternalRequest"
+          SET status = 'Under Process', "convertedTaskId" = ${createdTasks[0].id}
+          WHERE id = ${Number(linkedRequestId)}
+        `;
+      } catch (linkErr) {
+        console.error("Link back to ExternalRequest failed:", linkErr);
+      }
     }
 
     return NextResponse.json({ message: "Tasks created", count: createdTasks.length }, { status: 201 });
   } catch (error: any) {
-    console.error("Task creation error:", error);
-    console.error("Task creation error - Full Data:", { taskName, assignments, dueDate });
-    console.error("Error details:", error);
-    return NextResponse.json({ message: "Failed to create task", error: error.message }, { status: 500 });
+    console.error("CRITICAL Task creation error:", error);
+    return NextResponse.json({ 
+      message: "Failed to create task", 
+      details: error.message,
+      error: error.message 
+    }, { status: 500 });
   }
 }
