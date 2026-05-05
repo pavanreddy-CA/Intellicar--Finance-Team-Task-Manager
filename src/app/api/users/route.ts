@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    const { name, email, department, role } = await req.json();
+    const { name, email, department, role, employeeId } = await req.json();
 
     if (!name || !email || !department || !role) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -154,8 +154,8 @@ export async function POST(req: NextRequest) {
     const userId = crypto.randomUUID();
 
     const users = await sql`
-      INSERT INTO "User" (id, name, email, password, department, "isApproved", role, "createdAt", "updatedAt")
-      VALUES (${userId}, ${name}, ${email}, ${hashedPassword}, ${department}, true, ${role}, NOW(), NOW())
+      INSERT INTO "User" (id, name, email, password, department, "employeeId", "isApproved", role, "createdAt", "updatedAt")
+      VALUES (${userId}, ${name}, ${email}, ${hashedPassword}, ${department}, ${employeeId || null}, true, ${role}, NOW(), NOW())
       RETURNING id, name, email
     `;
     const user = users[0];
