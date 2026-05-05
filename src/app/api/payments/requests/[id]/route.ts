@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const sql = getDb();
@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const request = await sql`
       SELECT * FROM "PaymentRequest" WHERE id = ${id}
     `;
