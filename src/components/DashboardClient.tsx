@@ -1348,6 +1348,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }));
   };
 
+  const handleUpdateUserEmployeeId = (userId: string, employeeId: string) => {
+    setPendingUserUpdates(prev => ({
+      ...prev,
+      [userId]: { ...prev[userId], employeeId }
+    }));
+  };
+
   const handleUpdate = async (taskId: number, field: string, value: string) => {
     try {
       const task = tasks.find(t => t.id === taskId);
@@ -6593,7 +6600,23 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           <tbody>
                                                          {filteredAndSortedUsers.filter(u => (u as any).isApproved !== false).map(u => (
                                <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                                <td style={{ padding: "12px 8px", fontWeight: 700, color: "#1e40af" }}>{(u as any).employeeId || "--"}</td>
+                                <td style={{ padding: "12px 8px" }}>
+                                  <input 
+                                    type="text"
+                                    value={pendingUserUpdates[u.id]?.employeeId !== undefined ? pendingUserUpdates[u.id].employeeId : ((u as any).employeeId || "")}
+                                    onChange={(e) => handleUpdateUserEmployeeId(u.id, e.target.value)}
+                                    placeholder="Emp ID"
+                                    style={{ 
+                                      padding: "6px 12px", 
+                                      borderRadius: "6px", 
+                                      border: pendingUserUpdates[u.id]?.employeeId !== undefined ? "2px solid #10b981" : "1px solid #cbd5e1", 
+                                      width: "100%", 
+                                      maxWidth: "100px",
+                                      fontWeight: 700,
+                                      color: "#1e40af"
+                                    }}
+                                  />
+                                </td>
                                 <td style={{ padding: "12px 8px" }}>{u.name || "--"}</td>
                                 <td style={{ padding: "12px 8px" }}>{u.email}</td>
                                  <td style={{ padding: "12px 8px" }}>

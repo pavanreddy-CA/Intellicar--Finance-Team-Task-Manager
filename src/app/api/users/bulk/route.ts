@@ -24,17 +24,17 @@ export async function PUT(req: NextRequest) {
     for (const update of updates) {
       const { userId, role, department, employeeId, isSuspended } = update;
       
-      const fields: string[] = [];
-      const values: any[] = [];
-      
-      if (role !== undefined) { fields.push(`role = $${fields.length + 1}`); values.push(role); }
-      if (department !== undefined) { fields.push(`department = $${fields.length + 1}`); values.push(department); }
-      if (employeeId !== undefined) { fields.push(`"employeeId" = $${fields.length + 1}`); values.push(employeeId); }
-      if (isSuspended !== undefined) { fields.push(`"isSuspended" = $${fields.length + 1}`); values.push(isSuspended); }
-      
-      if (fields.length > 0) {
-        values.push(userId);
-        await sql`UPDATE "User" SET ${sql.unsafe(fields.join(', '))} WHERE id = $${fields.length + 1}`;
+      if (role !== undefined) {
+        await sql`UPDATE "User" SET "role" = ${role} WHERE "id" = ${userId}`;
+      }
+      if (department !== undefined) {
+        await sql`UPDATE "User" SET "department" = ${department} WHERE "id" = ${userId}`;
+      }
+      if (employeeId !== undefined) {
+        await sql`UPDATE "User" SET "employeeId" = ${employeeId} WHERE "id" = ${userId}`;
+      }
+      if (isSuspended !== undefined) {
+        await sql`UPDATE "User" SET "isSuspended" = ${isSuspended} WHERE "id" = ${userId}`;
       }
     }
 
