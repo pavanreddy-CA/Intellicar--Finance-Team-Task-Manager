@@ -7,9 +7,9 @@ import { sendEmail } from "@/lib/email";
 export async function POST(req: NextRequest) {
   try {
     const sql = getDb();
-    const { name, email, password, department } = await req.json();
+    const { name, email, password, department, employeeId } = await req.json();
 
-    if (!name || !email || !password || !department) {
+    if (!name || !email || !password || !department || !employeeId) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
