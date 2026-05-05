@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
             ${taskItem.taskName}, ${taskItem.entityName}, ${taskItem.taskType}, ${taskItem.departmentName || 'Finance'}, ${taskItem.financeFunction || null}, 'System (Recurring)',
             ${taskItem.ownerName}, ${resolvedReviewer}, ${taskItem.dueDate ? new Date(taskItem.dueDate).toISOString() : null},
             'Pending', ${reviewStatus},
-            ${taskItem.templateId}, ${taskItem.periodKey}, ${taskItem.freqLabel || null}, ${displayId}, FALSE, NOW(), NOW()
+            ${taskItem.templateId}, ${taskItem.periodKey}, ${taskItem.freqLabel || null}, ${displayId}, TRUE, NOW(), NOW()
           )
           RETURNING *
         `;
