@@ -111,8 +111,10 @@ export async function POST(req: NextRequest) {
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "frequency" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "isApproved" BOOLEAN DEFAULT TRUE`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "createdByEmail" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "displayId" TEXT`;
     } catch (e) {
-      console.log("Task migration check skipped/failed");
+      console.error("Task migration check skipped/failed", e);
     }
 
     if (!taskName || !taskType || !departmentName || !requestFrom || !assignments || !assignments.length) {
