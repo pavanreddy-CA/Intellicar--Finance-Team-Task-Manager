@@ -484,7 +484,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
 
-  const [pendingUserUpdates, setPendingUserUpdates] = useState<Record<string, { role?: string; department?: string; isSuspended?: boolean }>>({});
+  const [pendingUserUpdates, setPendingUserUpdates] = useState<Record<string, { role?: string; department?: string; isSuspended?: boolean; employeeId?: string }>>({});
   const [isSavingUsers, setIsSavingUsers] = useState(false);
   
   // Add Employee States
