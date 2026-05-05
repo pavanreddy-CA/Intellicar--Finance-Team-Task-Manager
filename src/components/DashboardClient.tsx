@@ -3984,603 +3984,605 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               <div style={{ marginTop: "16px", height: "4px", width: "60px", background: "rgba(255,255,255,0.3)", borderRadius: "2px", margin: "16px auto 0" }}></div>
             </div>
           </div>
-        ) : null}
-
-        {activeView === 'TASKS' && activeSubView === 'MAIN' && (
+        ) : n        {activeView === 'TASKS' && activeSubView === 'MAIN' && (
           <div className="main-tasks-view">
-        {/* Action Toolbar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", background: t.card, padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: t.textMuted }}>Filter by Date:</span>
-            <select
-              value={dateFilterPreset}
-              onChange={(e) => handlePresetChange(e.target.value)}
-              style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text, background: t.bg }}
-            >
-              <option value="ALL_TIME">All Time</option>
-              <option value="CURRENT_MONTH">Current Month</option>
-              <option value="LAST_MONTH">Last Month</option>
-              <option value="LAST_3_MONTHS">Last 3 Months</option>
-              <option value="LAST_6_MONTHS">Last 6 Months</option>
-              <option value="LAST_FY">Last Financial Year</option>
-              <option value="CUSTOM">Custom Range</option>
-            </select>
-
-            {dateFilterPreset === "CUSTOM" && (
-              <>
-                <input 
-                  type="date" 
-                  value={startDate} 
-                  onChange={e => setStartDate(e.target.value)}
-                  style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text }}
-                />
-                <span style={{ color: t.textMuted }}>to</span>
-                <input 
-                  type="date" 
-                  value={endDate} 
-                  onChange={e => setEndDate(e.target.value)}
-                  style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text }}
-                />
-                {(startDate || endDate) && (
-                  <button 
-                    onClick={() => { setStartDate(""); setEndDate(""); setDateFilterPreset("ALL_TIME"); }}
-                    style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600, padding: "4px 8px" }}
-                  >
-                    Clear
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-          
-          <div className="download-container" style={{ position: "relative" }}>
-              <button 
-                onClick={() => setShowTaskDownloadDropdown(!showTaskDownloadDropdown)}
-                style={{ 
-                  display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
-                  padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
-                  cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" 
-                }} 
-                onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
-              >
-                <Download size={18} color="#2563eb" /> Download Report
-              </button>
-              
-              {showTaskDownloadDropdown && (
-                <div style={{ 
-                  position: "absolute", top: "100%", right: 0, marginTop: "8px", 
-                  background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
-                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
-                  minWidth: "160px", overflow: "hidden" 
-                }}>
-                  <button 
-                    onClick={() => { exportToExcel(); setShowTaskDownloadDropdown(false); }}
-                    style={{ 
-                      width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                      padding: "12px 16px", border: "none", background: t.card, 
-                      color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
-                      textAlign: "left", transition: "background 0.2s" 
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
-                    onMouseOut={e => e.currentTarget.style.background = "white"}
-                  >
-                    <FileSpreadsheet size={16} color="#166534" /> Excel Format
-                  </button>
-                  <button 
-                    onClick={() => { exportToPDF(); setShowTaskDownloadDropdown(false); }}
-                    style={{ 
-                      width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                      padding: "12px 16px", border: "none", background: t.card, 
-                      color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
-                      textAlign: "left", transition: "background 0.2s" 
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
-                    onMouseOut={e => e.currentTarget.style.background = "white"}
-                  >
-                    <FileText size={16} color="#991b1b" /> PDF Document
-                  </button>
-                  <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
-                  <button 
-                    onClick={() => { 
-                      setShareData({...shareData, type: 'task', format: 'excel', subject: `Task Report - ${new Date().toISOString().split('T')[0]}`});
-                      setShowShareModal(true); 
-                      setShowTaskDownloadDropdown(false); 
-                    }}
-                    style={{ 
-                      width: "100%", display: "flex", alignItems: "center", gap: "10px", 
-                      padding: "12px 16px", border: "none", background: t.card, 
-                      color: "#2563eb", cursor: "pointer", fontSize: "0.875rem", 
-                      textAlign: "left", transition: "background 0.2s", fontWeight: 600
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
-                    onMouseOut={e => e.currentTarget.style.background = "white"}
-                  >
-                    <Share2 size={16} color="#2563eb" /> Share via Email
-                  </button>
-                </div>
-              )}
-          </div>
-        </div>
-          
-          {/* Filter Bar */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: t.card, padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", marginBottom: "16px", alignItems: "center" }}>
-            <div style={{ position: "relative", flex: 1, minWidth: "250px" }}>
-              <Search style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={18} />
-              <input 
-                type="text" 
-                placeholder="Search tasks, types, entities, owners..." 
-                value={taskSearchQuery}
-                onChange={e => setTaskSearchQuery(e.target.value)}
-                style={{ width: "100%", padding: "10px 10px 10px 40px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg }} 
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-              <MultiSelectFilter
-                options={uniqueTaskEntities}
-                selected={taskEntityFilter}
-                onChange={setTaskEntityFilter}
-                placeholder="All Entities"
-                theme={theme}
-                t={t}
-              />
-
-              <MultiSelectFilter
-                options={uniqueTaskDepts}
-                selected={taskDeptFilter}
-                onChange={setTaskDeptFilter}
-                placeholder="All Departments"
-                theme={theme}
-                t={t}
-              />
-
-              <MultiSelectFilter
-                options={uniqueTaskOwners}
-                selected={taskOwnerFilter}
-                onChange={setTaskOwnerFilter}
-                placeholder="All Owners"
-                theme={theme}
-                t={t}
-              />
-
-              <MultiSelectFilter
-                options={["Not Yet Due", "Due on Today", "Over Due", "On-Time", "Early Closure", "Delay in Closure"]}
-                selected={taskStatusFilter}
-                onChange={setTaskStatusFilter}
-                placeholder="All Statuses"
-                theme={theme}
-                t={t}
-              />
-
-              <MultiSelectFilter
-                options={uniqueTaskReviewers}
-                selected={taskReviewerFilter}
-                onChange={setTaskReviewerFilter}
-                placeholder="All Reviewers"
-                theme={theme}
-                t={t}
-              />
-
-              <MultiSelectFilter
-                options={["INTERNAL", "EXTERNAL"]}
-                selected={taskTypeFilter}
-                onChange={setTaskTypeFilter}
-                placeholder="All Task Types"
-                theme={theme}
-                t={t}
-                labelMapping={{
-                  'INTERNAL': 'Internal Only',
-                  'EXTERNAL': 'External Only'
-                }}
-              />
-
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px", borderLeft: `1px solid ${t.border}` }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
-                <select 
-                  value={itemsPerPage} 
-                  onChange={e => setItemsPerPage(Number(e.target.value))}
-                  style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer" }}
+            {/* Action Toolbar */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", background: t.card, padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.875rem", fontWeight: 500, color: t.textMuted }}>Filter by Date:</span>
+                <select
+                  value={dateFilterPreset}
+                  onChange={(e) => handlePresetChange(e.target.value)}
+                  style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text, background: t.bg }}
                 >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
+                  <option value="ALL_TIME">All Time</option>
+                  <option value="CURRENT_MONTH">Current Month</option>
+                  <option value="LAST_MONTH">Last Month</option>
+                  <option value="LAST_3_MONTHS">Last 3 Months</option>
+                  <option value="LAST_6_MONTHS">Last 6 Months</option>
+                  <option value="LAST_FY">Last Financial Year</option>
+                  <option value="CUSTOM">Custom Range</option>
                 </select>
+
+                {dateFilterPreset === "CUSTOM" && (
+                  <>
+                    <input 
+                      type="date" 
+                      value={startDate} 
+                      onChange={e => setStartDate(e.target.value)}
+                      style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text }}
+                    />
+                    <span style={{ color: t.textMuted }}>to</span>
+                    <input 
+                      type="date" 
+                      value={endDate} 
+                      onChange={e => setEndDate(e.target.value)}
+                      style={{ border: `1px solid ${t.border}`, borderRadius: "6px", padding: "4px 8px", fontSize: "0.875rem", outline: "none", color: t.text }}
+                    />
+                    {(startDate || endDate) && (
+                      <button 
+                        onClick={() => { setStartDate(""); setEndDate(""); setDateFilterPreset("ALL_TIME"); }}
+                        style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600, padding: "4px 8px" }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              <div className="download-container" style={{ position: "relative" }}>
+                  <button 
+                    onClick={() => setShowTaskDownloadDropdown(!showTaskDownloadDropdown)}
+                    style={{ 
+                      display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.textMuted, 
+                      padding: "8px 16px", borderRadius: "10px", border: `1px solid ${t.border}`, 
+                      cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s" 
+                    }} 
+                    onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
+                  >
+                    <Download size={18} color="#2563eb" /> Download Report
+                  </button>
+                  
+                  {showTaskDownloadDropdown && (
+                    <div style={{ 
+                      position: "absolute", top: "100%", right: 0, marginTop: "8px", 
+                      background: t.card, borderRadius: "12px", border: `1px solid ${t.border}`, 
+                      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
+                      minWidth: "160px", overflow: "hidden" 
+                    }}>
+                      <button 
+                        onClick={() => { exportToExcel(); setShowTaskDownloadDropdown(false); }}
+                        style={{ 
+                          width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                          padding: "12px 16px", border: "none", background: t.card, 
+                          color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
+                          textAlign: "left", transition: "background 0.2s" 
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
+                        onMouseOut={e => e.currentTarget.style.background = "white"}
+                      >
+                        <FileSpreadsheet size={16} color="#166534" /> Excel Format
+                      </button>
+                      <button 
+                        onClick={() => { exportToPDF(); setShowTaskDownloadDropdown(false); }}
+                        style={{ 
+                          width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                          padding: "12px 16px", border: "none", background: t.card, 
+                          color: t.textMuted, cursor: "pointer", fontSize: "0.875rem", 
+                          textAlign: "left", transition: "background 0.2s" 
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
+                        onMouseOut={e => e.currentTarget.style.background = "white"}
+                      >
+                        <FileText size={16} color="#991b1b" /> PDF Document
+                      </button>
+                      <div style={{ height: "1px", background: t.bg, margin: "4px 0" }}></div>
+                      <button 
+                        onClick={() => { 
+                          setShareData({...shareData, type: 'task', format: 'excel', subject: `Task Report - ${new Date().toISOString().split('T')[0]}`});
+                          setShowShareModal(true); 
+                          setShowTaskDownloadDropdown(false); 
+                        }}
+                        style={{ 
+                          width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                          padding: "12px 16px", border: "none", background: t.card, 
+                          color: "#2563eb", cursor: "pointer", fontSize: "0.875rem", 
+                          textAlign: "left", transition: "background 0.2s", fontWeight: 600
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
+                        onMouseOut={e => e.currentTarget.style.background = "white"}
+                      >
+                        <Share2 size={16} color="#2563eb" /> Share via Email
+                      </button>
+                    </div>
+                  )}
               </div>
             </div>
               
-          </div>
+            {/* Filter Bar */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: t.card, padding: "16px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", marginBottom: "16px", alignItems: "center" }}>
+              <div style={{ position: "relative", flex: 1, minWidth: "250px" }}>
+                <Search style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search tasks, types, entities, owners..." 
+                  value={taskSearchQuery}
+                  onChange={e => setTaskSearchQuery(e.target.value)}
+                  style={{ width: "100%", padding: "10px 10px 10px 40px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg }} 
+                />
+              </div>
 
-        {/* Data Table */}
-        <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)", overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
-          <div style={{ minWidth: "1600px" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
-              <thead>
-                <tr>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('displayId')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Task ID {taskSortConfig?.key === 'displayId' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Created At {taskSortConfig?.key === 'createdAt' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('entityName')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskName')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Task Name {taskSortConfig?.key === 'taskName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('departmentName')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Dept {taskSortConfig?.key === 'departmentName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskType')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Task Type {taskSortConfig?.key === 'taskType' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('frequency')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Frequency {taskSortConfig?.key === 'frequency' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Requested From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('transferStatus')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Origin {taskSortConfig?.key === 'transferStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('dueDate')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Due Date {taskSortConfig?.key === 'dueDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('completionDate')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Completion Date {taskSortConfig?.key === 'completionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskStatus')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Review Date {taskSortConfig?.key === 'reviewCompletionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewStatus')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerComments')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Owner Comments {taskSortConfig?.key === 'ownerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerComments')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Reviewer Comments {taskSortConfig?.key === 'reviewerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                    </div>
-                  </th>
-                  {!isViewer && (
-                    <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={20} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading tasks...</td></tr>
-                ) : paginatedTasks.length === 0 ? (
-                  <tr><td colSpan={20} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No tasks found for the current filters.</td></tr>
-                ) : (
-                  paginatedTasks.map((task) => {
-                    const currentUserName = user?.name || user?.email;
-                    const isCurrentUserOwner = task.ownerName === currentUserName;
-                    const isCurrentUserReviewer = task.reviewerName === currentUserName;
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <MultiSelectFilter
+                  options={uniqueTaskEntities}
+                  selected={taskEntityFilter}
+                  onChange={setTaskEntityFilter}
+                  placeholder="All Entities"
+                  theme={theme}
+                  t={t}
+                />
 
-                    const todayDate = new Date();
-                    todayDate.setHours(0, 0, 0, 0);
-                    const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < todayDate;
+                <MultiSelectFilter
+                  options={uniqueTaskDepts}
+                  selected={taskDeptFilter}
+                  onChange={setTaskDeptFilter}
+                  placeholder="All Departments"
+                  theme={theme}
+                  t={t}
+                />
 
-                    const isOwnerRestricted = (COMPLETION_STATUSES.includes(task.taskStatus) && !isAdmin) || (!isCurrentUserOwner && !isAdmin);
-                    const isReviewerRestricted = ((task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required") && !isAdmin) || (!isCurrentUserReviewer && !isAdmin);
-                    
-                    return (
-                    <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "all 0.2s", color: isOverdue ? "#ef4444" : "#334155", fontWeight: isOverdue ? 700 : 400 }} className="table-row">
-                      <td style={getTdStyle(t)}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                           <button 
-                             onClick={() => setSelectedTaskForView(task)}
-                             style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                             title="View Task Details"
-                             className="hover-bg-indigo-50"
-                           >
-                             <Eye size={16} />
-                           </button>
-                           <span style={{ color: isOverdue ? "inherit" : "#94a3b8", fontWeight: isOverdue ? "inherit" : 500 }}>{task.displayId || `#${task.id}`}</span>
-                        </div>
-                      </td>
-                      <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}><span style={{ color: isOverdue ? "inherit" : "#64748b", fontWeight: isOverdue ? "inherit" : "normal" }}>{formatDateTime(task.createdAt)}</span></td>
-                      <td style={getTdStyle(t)}>{task.entityName}</td>
-                      <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "250px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
-                      <td style={getTdStyle(t)}>
-                        <span style={{ padding: "4px 8px", background: "#f8fafc", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", border: "1px solid #e2e8f0" }}>
-                          {task.departmentName}
-                        </span>
-                      </td>
-                      <td style={getTdStyle(t)}>
+                <MultiSelectFilter
+                  options={uniqueTaskOwners}
+                  selected={taskOwnerFilter}
+                  onChange={setTaskOwnerFilter}
+                  placeholder="All Owners"
+                  theme={theme}
+                  t={t}
+                />
+
+                <MultiSelectFilter
+                  options={["Not Yet Due", "Due on Today", "Over Due", "On-Time", "Early Closure", "Delay in Closure"]}
+                  selected={taskStatusFilter}
+                  onChange={setTaskStatusFilter}
+                  placeholder="All Statuses"
+                  theme={theme}
+                  t={t}
+                />
+
+                <MultiSelectFilter
+                  options={uniqueTaskReviewers}
+                  selected={taskReviewerFilter}
+                  onChange={setTaskReviewerFilter}
+                  placeholder="All Reviewers"
+                  theme={theme}
+                  t={t}
+                />
+
+                <MultiSelectFilter
+                  options={["INTERNAL", "EXTERNAL"]}
+                  selected={taskTypeFilter}
+                  onChange={setTaskTypeFilter}
+                  placeholder="All Task Types"
+                  theme={theme}
+                  t={t}
+                  labelMapping={{
+                    'INTERNAL': 'Internal Only',
+                    'EXTERNAL': 'External Only'
+                  }}
+                />
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px", borderLeft: `1px solid ${t.border}` }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
+                  <select 
+                    value={itemsPerPage} 
+                    onChange={e => setItemsPerPage(Number(e.target.value))}
+                    style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer" }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Table */}
+            <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)", overflowX: "auto", overflowY: "hidden" }} className="custom-scrollbar">
+              <div style={{ minWidth: "1600px" }}>
+                <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem", textAlign: "left" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('displayId')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <span style={{ padding: "4px 8px", background: t.bg, borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>
-                            {task.taskType}
-                          </span>
+                          Task ID {taskSortConfig?.key === 'displayId' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
-                      </td>
-                      <td style={getTdStyle(t)}>
-                        <span style={{ 
-                          padding: "2px 6px", background: t.bg, color: t.textMuted, 
-                          borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, border: `1px solid ${t.border}` 
-                        }}>
-                          {task.frequency || "--"}
-                        </span>
-                      </td>
-                      <td style={getTdStyle(t)}>{task.requestFrom}</td>
-                      <td style={getTdStyle(t)}>
-                        <span style={{ 
-                          padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700,
-                          background: task.transferStatus === 'T' ? "#fef3c7" : "#f1f5f9",
-                          color: task.transferStatus === 'T' ? "#b45309" : "#64748b"
-                        }}>
-                          {task.transferStatus === 'T' ? 'Transferred' : 'Original'}
-                        </span>
-                      </td>
-                      <td style={getTdStyle(t)}>{task.ownerName}</td>
-                      <td style={getTdStyle(t)}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
-                      <td style={{ ...getTdStyle(t), fontWeight: 600, color: isOverdue ? "inherit" : "#475569" }} title={task.completedSubmissionAt ? `Submitted on: ${new Date(task.completedSubmissionAt).toLocaleString()}` : ""}>
-                        {formatDate(task.completionDate)}
-                      </td>
-                      <td style={getTdStyle(t)}>
-                        <StatusPill 
-                          status={task.taskStatus} 
-                          type="task" 
-                          taskId={task.id} 
-                          onUpdate={handleUpdate} 
-                          disabled={isOwnerRestricted}
-                          t={t}
-                        />
-                      </td>
-                      <td style={getTdStyle(t)}>{(task.reviewerName === "Not Applicable" || !task.reviewerName) ? <span style={{ color: t.textMuted }}>N/A</span> : task.reviewerName}</td>
-                      <td style={{ ...getTdStyle(t), fontWeight: 600, color: "#64748b" }} title={task.reviewedSubmissionAt ? `Submitted on: ${new Date(task.reviewedSubmissionAt).toLocaleString()}` : ""}>
-                        {formatDate(task.reviewCompletionDate)}
-                      </td>
-                      <td style={getTdStyle(t)}>
-                        <StatusPill 
-                          status={task.reviewStatus} 
-                          type="review" 
-                          taskId={task.id} 
-                          onUpdate={handleUpdate} 
-                          disabled={isReviewerRestricted}
-                          t={t}
-                        />
-                      </td>
-                      {/* Editable Owner Comments */}
-                      <td 
-                        style={{ ...getTdStyle(t), cursor: (isAdmin || isCurrentUserOwner) ? "text" : "not-allowed", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
-                        onClick={() => { 
-                          if (!isAdmin && !isCurrentUserOwner) return;
-                          setEditingCell({ id: task.id, field: "ownerComments" }); 
-                          setEditValue(task.ownerComments || ""); 
-                        }}
-                      >
-                        {editingCell?.id === task.id && editingCell.field === "ownerComments" ? (
-                          <input 
-                            autoFocus
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={() => handleUpdate(task.id, "ownerComments", editValue)}
-                            onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "ownerComments", editValue)}
-                            style={getInputStyle(t)}
-                          />
-                        ) : (
-                          <span style={{ color: task.ownerComments ? "#475569" : "#cbd5e1" }}>{task.ownerComments || "Click to add..."}</span>
-                        )}
-                      </td>
-
-                      <td 
-                        style={{ ...getTdStyle(t), cursor: (isAdmin || isCurrentUserReviewer) ? "text" : "not-allowed", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
-                        onClick={() => { 
-                          if (!isAdmin && !isCurrentUserReviewer) return;
-                          setEditingCell({ id: task.id, field: "reviewerComments" }); 
-                          setEditValue(task.reviewerComments || ""); 
-                        }}
-                      >
-                        {editingCell?.id === task.id && editingCell.field === "reviewerComments" ? (
-                          <input 
-                            autoFocus
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={() => handleUpdate(task.id, "reviewerComments", editValue)}
-                            onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "reviewerComments", editValue)}
-                            style={getInputStyle(t)}
-                          />
-                        ) : (
-                          <span style={{ color: task.reviewerComments ? "#475569" : "#cbd5e1" }}>
-                            {task.reviewerComments || "Click to add..."}
-                          </span>
-                        )}
-                      </td>
-                      <td style={getTdStyle(t)}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                          <span 
-                            style={{ 
-                              padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: 700,
-                              background: task.requestStatus === 'Processed' ? "#dcfce7" : "#fef3c7",
-                              color: task.requestStatus === 'Processed' ? "#15803d" : "#b45309",
-                              textAlign: "center", whiteSpace: "nowrap"
-                            }}
-                            title={task.processedSubmissionAt ? `Processed on: ${new Date(task.processedSubmissionAt).toLocaleString()}` : ""}
-                          >
-                            {task.requestStatus || "Pending"}
-                          </span>
-                          {isFinished(task) && task.requestStatus !== 'Processed' && 
-                           (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required' || task.reviewerName === 'Not Applicable') && 
-                           (isCurrentUserOwner || isAdmin) && (
-                            <button 
-                              onClick={async () => {
-                                await handleUpdate(task.id, "requestStatus", "Processed");
-                                showNotification("Marked as Processed and Stakeholders notified!");
-                              }}
-                              style={{ 
-                                padding: "2px 6px", fontSize: "0.65rem", background: "#4f46e5", 
-                                color: "white", border: "none", borderRadius: "4px", cursor: "pointer" 
-                              }}
-                            >
-                              Mark Processed
-                            </button>
-                          )}
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Created At {taskSortConfig?.key === 'createdAt' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
-                      </td>
-                      
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('entityName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Task Name {taskSortConfig?.key === 'taskName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('departmentName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Dept {taskSortConfig?.key === 'departmentName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskType')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Task Type {taskSortConfig?.key === 'taskType' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('frequency')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Frequency {taskSortConfig?.key === 'frequency' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Requested From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('transferStatus')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Origin {taskSortConfig?.key === 'transferStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('dueDate')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Due Date {taskSortConfig?.key === 'dueDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('completionDate')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Completion Date {taskSortConfig?.key === 'completionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskStatus')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Review Date {taskSortConfig?.key === 'reviewCompletionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewStatus')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerComments')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Owner Comments {taskSortConfig?.key === 'ownerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerComments')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Reviewer Comments {taskSortConfig?.key === 'reviewerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       {!isViewer && (
-                        <td style={{ ...getTdStyle(t), textAlign: "center" }}>
-                          <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: "center" }}>
-                            {(isAdmin || task.editApproved) && (
-                               <button 
-                                 onClick={() => { setPreFilledTask(task); setShowForm(true); }}
-                                 style={{ 
-                                   background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, 
-                                   cursor: "pointer", padding: "6px", borderRadius: "8px", 
-                                   display: "flex", alignItems: "center", justifyContent: "center",
-                                   transition: "all 0.2s"
-                                  }}
-                                  title="Edit Task"
-                                  onMouseOver={e => { e.currentTarget.style.color = "#2563eb"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#eff6ff"; }}
-                                  onMouseOut={e => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#f8fafc"; }}
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                             )}
-
-                               {isAdmin ? (
-                                 <button 
-                                   onClick={() => {
-                                     showConfirm(`Are you sure you want to delete "${task.taskName}"?`, async () => {
-                                        const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
-                                        if (res.ok) {
-                                          setTasks(tasks.filter(t => t.id !== task.id));
-                                          showNotification("Task deleted successfully.");
-                                        } else {
-                                          showNotification("Failed to delete task.", "error");
-                                        }
-                                     });
-                                   }}
-                                   style={{ 
-                                     background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", 
-                                     cursor: "pointer", padding: "4px 8px", borderRadius: "6px", 
-                                     fontSize: "0.75rem", fontWeight: 500 
-                                   }}
-                                   title="Delete Task Directly"
-                                 >
-                                   Delete
-                                 </button>
-                               ) : (isCurrentUserOwner || isCurrentUserReviewer) ? (
-                                 <button 
-                                   onClick={() => handleRequestDelete(task.id)}
-                                   disabled={task.deleteRequested}
-                                   style={{ 
-                                     background: task.deleteRequested ? "#e2e8f0" : "#fef2f2", 
-                                     color: task.deleteRequested ? "#94a3b8" : "#ef4444", 
-                                     border: task.deleteRequested ? "1px solid #cbd5e1" : "1px solid #fca5a5", 
-                                     cursor: task.deleteRequested ? "not-allowed" : "pointer", 
-                                     padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
-                                   }}
-                                   title={task.deleteRequested ? "Delete Pending" : "Request Delete"}
-                                 >
-                                   {task.deleteRequested ? "Requested" : "Del Req"}
-                                 </button>
-                               ) : null}
-
-                               {(!isAdmin && !task.editApproved && (isCurrentUserOwner || isCurrentUserReviewer)) && (
-                                <button 
-                                  onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
-                                  disabled={task.editRequested}
-                                  style={{ 
-                                    background: task.editRequested ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
-                                    color: task.editRequested ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
-                                    border: task.editRequested ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
-                                    cursor: task.editRequested ? "not-allowed" : "pointer", 
-                                    padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
-                                  }}
-                                  title={task.editRequested ? "Edit Pending" : "Request Edit"}
-                                >
-                                  {task.editRequested ? "Requested" : "Edit Req"}
-                                </button>
-                               )}
-                            </div>
-                        </td>
+                        <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
                       )}
                     </tr>
-                    )
-                  })
-                )}
-          
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${t.border}`, background: t.bg }}>
-              <div style={{ fontSize: "0.875rem", color: t.textMuted }}>
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredTasksToDisplay.length)} of {filteredTasksToDisplay.length} tasks
-              </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: currentPage === 1 ? "#94a3b8" : "#0f172a", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}
-                >
-                  <ChevronLeft size={16} /> Prev
-                </button>
-                <div style={{ fontSize: "0.875rem", fontWeight: 500, padding: "0 12px" }}>
-                  Page {currentPage} of {totalPages}
-                </div>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: currentPage === totalPages ? "#94a3b8" : "#0f172a", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}
-                >
-                  Next <ChevronRight size={16} />
-                </button>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr><td colSpan={20} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading tasks...</td></tr>
+                    ) : paginatedTasks.length === 0 ? (
+                      <tr><td colSpan={20} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No tasks found for the current filters.</td></tr>
+                    ) : (
+                      paginatedTasks.map((task) => {
+                        const currentUserName = user?.name || user?.email;
+                        const isCurrentUserOwner = task.ownerName === currentUserName;
+                        const isCurrentUserReviewer = task.reviewerName === currentUserName;
+
+                        const todayDate = new Date();
+                        todayDate.setHours(0, 0, 0, 0);
+                        const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < todayDate;
+
+                        const isOwnerRestricted = (COMPLETION_STATUSES.includes(task.taskStatus) && !isAdmin) || (!isCurrentUserOwner && !isAdmin);
+                        const isReviewerRestricted = ((task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required") && !isAdmin) || (!isCurrentUserReviewer && !isAdmin);
+                        
+                        return (
+                          <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "all 0.2s", color: isOverdue ? "#ef4444" : "#334155", fontWeight: isOverdue ? 700 : 400 }} className="table-row">
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <button 
+                                  onClick={() => setSelectedTaskForView(task)}
+                                  style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                  title="View Task Details"
+                                  className="hover-bg-indigo-50"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <span style={{ color: isOverdue ? "inherit" : "#94a3b8", fontWeight: isOverdue ? "inherit" : 500 }}>{task.displayId || `#${task.id}`}</span>
+                              </div>
+                            </td>
+                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}><span style={{ color: isOverdue ? "inherit" : "#64748b", fontWeight: isOverdue ? "inherit" : "normal" }}>{formatDateTime(task.createdAt)}</span></td>
+                            <td style={getTdStyle(t)}>{task.entityName}</td>
+                            <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "250px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
+                            <td style={getTdStyle(t)}>
+                              <span style={{ padding: "4px 8px", background: "#f8fafc", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", border: "1px solid #e2e8f0" }}>
+                                {task.departmentName}
+                              </span>
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ padding: "4px 8px", background: t.bg, borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>
+                                  {task.taskType}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <span style={{ 
+                                padding: "2px 6px", background: t.bg, color: t.textMuted, 
+                                borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, border: `1px solid ${t.border}` 
+                              }}>
+                                {task.frequency || "--"}
+                              </span>
+                            </td>
+                            <td style={getTdStyle(t)}>{task.requestFrom}</td>
+                            <td style={getTdStyle(t)}>
+                              <span style={{ 
+                                padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700,
+                                background: task.transferStatus === 'T' ? "#fef3c7" : "#f1f5f9",
+                                color: task.transferStatus === 'T' ? "#b45309" : "#64748b"
+                              }}>
+                                {task.transferStatus === 'T' ? 'Transferred' : 'Original'}
+                              </span>
+                            </td>
+                            <td style={getTdStyle(t)}>{task.ownerName}</td>
+                            <td style={getTdStyle(t)}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
+                            <td style={{ ...getTdStyle(t), fontWeight: 600, color: isOverdue ? "inherit" : "#475569" }} title={task.completedSubmissionAt ? `Submitted on: ${new Date(task.completedSubmissionAt).toLocaleString()}` : ""}>
+                              {formatDate(task.completionDate)}
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <StatusPill 
+                                status={task.taskStatus} 
+                                type="task" 
+                                taskId={task.id} 
+                                onUpdate={handleUpdate} 
+                                disabled={isOwnerRestricted}
+                                t={t}
+                              />
+                            </td>
+                            <td style={getTdStyle(t)}>{(task.reviewerName === "Not Applicable" || !task.reviewerName) ? <span style={{ color: t.textMuted }}>N/A</span> : task.reviewerName}</td>
+                            <td style={{ ...getTdStyle(t), fontWeight: 600, color: "#64748b" }} title={task.reviewedSubmissionAt ? `Submitted on: ${new Date(task.reviewedSubmissionAt).toLocaleString()}` : ""}>
+                              {formatDate(task.reviewCompletionDate)}
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <StatusPill 
+                                status={task.reviewStatus} 
+                                type="review" 
+                                taskId={task.id} 
+                                onUpdate={handleUpdate} 
+                                disabled={isReviewerRestricted}
+                                t={t}
+                              />
+                            </td>
+                            {/* Editable Owner Comments */}
+                            <td 
+                              style={{ ...getTdStyle(t), cursor: (isAdmin || isCurrentUserOwner) ? "text" : "not-allowed", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
+                              onClick={() => { 
+                                if (!isAdmin && !isCurrentUserOwner) return;
+                                setEditingCell({ id: task.id, field: "ownerComments" }); 
+                                setEditValue(task.ownerComments || ""); 
+                              }}
+                            >
+                              {editingCell?.id === task.id && editingCell.field === "ownerComments" ? (
+                                <input 
+                                  autoFocus
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  onBlur={() => handleUpdate(task.id, "ownerComments", editValue)}
+                                  onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "ownerComments", editValue)}
+                                  style={getInputStyle(t)}
+                                />
+                              ) : (
+                                <span style={{ color: task.ownerComments ? "#475569" : "#cbd5e1" }}>{task.ownerComments || "Click to add..."}</span>
+                              )}
+                            </td>
+
+                            <td 
+                              style={{ ...getTdStyle(t), cursor: (isAdmin || isCurrentUserReviewer) ? "text" : "not-allowed", minWidth: "200px", maxWidth: "380px", whiteSpace: "normal" }}
+                              onClick={() => { 
+                                if (!isAdmin && !isCurrentUserReviewer) return;
+                                setEditingCell({ id: task.id, field: "reviewerComments" }); 
+                                setEditValue(task.reviewerComments || ""); 
+                              }}
+                            >
+                              {editingCell?.id === task.id && editingCell.field === "reviewerComments" ? (
+                                <input 
+                                  autoFocus
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  onBlur={() => handleUpdate(task.id, "reviewerComments", editValue)}
+                                  onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, "reviewerComments", editValue)}
+                                  style={getInputStyle(t)}
+                                />
+                              ) : (
+                                <span style={{ color: task.reviewerComments ? "#475569" : "#cbd5e1" }}>
+                                  {task.reviewerComments || "Click to add..."}
+                                </span>
+                              )}
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <span 
+                                  style={{ 
+                                    padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: 700,
+                                    background: task.requestStatus === 'Processed' ? "#dcfce7" : "#fef3c7",
+                                    color: task.requestStatus === 'Processed' ? "#15803d" : "#b45309",
+                                    textAlign: "center", whiteSpace: "nowrap"
+                                  }}
+                                  title={task.processedSubmissionAt ? `Processed on: ${new Date(task.processedSubmissionAt).toLocaleString()}` : ""}
+                                >
+                                  {task.requestStatus || "Pending"}
+                                </span>
+                                {isFinished(task) && task.requestStatus !== 'Processed' && 
+                                 (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required' || task.reviewerName === 'Not Applicable') && 
+                                 (isCurrentUserOwner || isAdmin) && (
+                                  <button 
+                                    onClick={async () => {
+                                      await handleUpdate(task.id, "requestStatus", "Processed");
+                                      showNotification("Marked as Processed and Stakeholders notified!");
+                                    }}
+                                    style={{ 
+                                      padding: "2px 6px", fontSize: "0.65rem", background: "#4f46e5", 
+                                      color: "white", border: "none", borderRadius: "4px", cursor: "pointer" 
+                                    }}
+                                  >
+                                    Mark Processed
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                            
+                            {!isViewer && (
+                              <td style={{ ...getTdStyle(t), textAlign: "center" }}>
+                                <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: "center" }}>
+                                  {(isAdmin || task.editApproved) && (
+                                    <button 
+                                      onClick={() => { setPreFilledTask(task); setShowForm(true); }}
+                                      style={{ 
+                                        background: t.bg, color: t.textMuted, border: `1px solid ${t.border}`, 
+                                        cursor: "pointer", padding: "6px", borderRadius: "8px", 
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        transition: "all 0.2s"
+                                      }}
+                                      title="Edit Task"
+                                      onMouseOver={e => { e.currentTarget.style.color = "#2563eb"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#eff6ff"; }}
+                                      onMouseOut={e => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#f8fafc"; }}
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                  )}
+
+                                  {isAdmin ? (
+                                    <button 
+                                      onClick={() => {
+                                        showConfirm(`Are you sure you want to delete "${task.taskName}"?`, async () => {
+                                          const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
+                                          if (res.ok) {
+                                            setTasks(tasks.filter(t => t.id !== task.id));
+                                            showNotification("Task deleted successfully.");
+                                          } else {
+                                            showNotification("Failed to delete task.", "error");
+                                          }
+                                        });
+                                      }}
+                                      style={{ 
+                                        background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", 
+                                        cursor: "pointer", padding: "4px 8px", borderRadius: "6px", 
+                                        fontSize: "0.75rem", fontWeight: 500 
+                                      }}
+                                      title="Delete Task Directly"
+                                    >
+                                      Delete
+                                    </button>
+                                  ) : (isCurrentUserOwner || isCurrentUserReviewer) ? (
+                                    <button 
+                                      onClick={() => handleRequestDelete(task.id)}
+                                      disabled={task.deleteRequested}
+                                      style={{ 
+                                        background: task.deleteRequested ? "#e2e8f0" : "#fef2f2", 
+                                        color: task.deleteRequested ? "#94a3b8" : "#ef4444", 
+                                        border: task.deleteRequested ? "1px solid #cbd5e1" : "1px solid #fca5a5", 
+                                        cursor: task.deleteRequested ? "not-allowed" : "pointer", 
+                                        padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
+                                      }}
+                                      title={task.deleteRequested ? "Delete Pending" : "Request Delete"}
+                                    >
+                                      {task.deleteRequested ? "Requested" : "Del Req"}
+                                    </button>
+                                  ) : null}
+
+                                  {(!isAdmin && !task.editApproved && (isCurrentUserOwner || isCurrentUserReviewer)) && (
+                                    <button 
+                                      onClick={() => handleRequestEdit(task.id, isCurrentUserReviewer ? "REVIEWER" : "OWNER")}
+                                      disabled={task.editRequested}
+                                      style={{ 
+                                        background: task.editRequested ? "#e2e8f0" : (isCurrentUserReviewer ? "#fdf4ff" : "#eff6ff"), 
+                                        color: task.editRequested ? "#94a3b8" : (isCurrentUserReviewer ? "#d946ef" : "#3b82f6"), 
+                                        border: task.editRequested ? "1px solid #cbd5e1" : (isCurrentUserReviewer ? "1px solid #f5d0fe" : "1px solid #bfdbfe"), 
+                                        cursor: task.editRequested ? "not-allowed" : "pointer", 
+                                        padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500 
+                                      }}
+                                      title={task.editRequested ? "Edit Pending" : "Request Edit"}
+                                    >
+                                      {task.editRequested ? "Requested" : "Edit Req"}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-          )}
+              
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${t.border}`, background: t.bg }}>
+                <div style={{ fontSize: "0.875rem", color: t.textMuted }}>
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredTasksToDisplay.length)} of {filteredTasksToDisplay.length} tasks
+                </div>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: currentPage === 1 ? "#94a3b8" : "#0f172a", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}
+                  >
+                    <ChevronLeft size={16} /> Prev
+                  </button>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 500, padding: "0 12px" }}>
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: currentPage === totalPages ? "#94a3b8" : "#0f172a", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}
+                  >
+                    Next <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
+    )}
 
 
         {activeMainView === 'DASHBOARD' && activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' && (
