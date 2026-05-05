@@ -5,7 +5,7 @@ import {
   Plus, Search, Filter, ChevronRight, FileText, CheckCircle2, XCircle, Clock, 
   Eye, Download, MoreHorizontal, ArrowRight, User, Users, ShieldCheck, 
   AlertCircle, Calendar, CreditCard, Building2, Tag, Check, X, Mail, 
-  FileCheck, FileSearch, ArrowUpRight, History
+  FileCheck, FileSearch, ArrowUpRight, History, Wallet
 } from 'lucide-react';
 import MultiSelectFilter from './MultiSelectFilter';
 
