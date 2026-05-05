@@ -6790,7 +6790,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </table>
                       </div>
                     )}
-                )}
 
                 {activeOptionsTab === 'EDIT_REQUESTS' && (
                   <div>
