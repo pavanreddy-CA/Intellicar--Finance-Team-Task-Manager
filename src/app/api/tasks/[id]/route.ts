@@ -22,6 +22,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ message: "Forbidden: Viewers cannot modify tasks" }, { status: 403 });
     }
 
+    // Ensure columns exist (Self-healing)
+    try {
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "captureLO" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "transferStatus" TEXT DEFAULT 'O'`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "originalRequestType" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "isApproved" BOOLEAN DEFAULT TRUE`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "completedSubmissionAt" TIMESTAMP(3)`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "reviewedSubmissionAt" TIMESTAMP(3)`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedSubmissionAt" TIMESTAMP(3)`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "completedBy" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "reviewedBy" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedBy" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "createdByEmail" TEXT`;
+    } catch (e) {
+      console.error("Task update migration check failed", e);
+    }
+
     const existingTasks = await sql`SELECT * FROM "Task" WHERE id = ${taskId}`;
     const existingTask = existingTasks[0];
     
