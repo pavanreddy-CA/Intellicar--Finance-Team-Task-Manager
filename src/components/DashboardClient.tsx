@@ -1961,14 +1961,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       });
 
       if (res.ok) {
-        showNotification(`${rows.length} records imported successfully!`);
-        if (type === 'tasks') fetchTasks();
-        else if (type === 'lo') fetchLOs();
-        else if (type === 'payments') fetchPaymentRequests();
-        else if (type === 'employees') fetchUsersList();
+        showNotification("Learning Opportunity acknowledged successfully!");
+        setAcknowledgingLO(null);
+        fetchLOs();
       } else {
         const data = await res.json();
-        showNotification(data.message || "Bulk upload failed", "error");
+        showNotification(data.message || "Acknowledgement failed", "error");
       }
     } catch (err) {
       console.error("Bulk upload error", err);
