@@ -161,6 +161,7 @@ export async function authenticate(
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "editRequested" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "editApproved" BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "editRequestReason" TEXT`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "taskId" INTEGER`;
 
       await sql`
         CREATE TABLE IF NOT EXISTS "LearningResource" (

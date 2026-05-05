@@ -98,6 +98,7 @@ type LearningOpportunity = {
   deleteRequested?: boolean;
   deleteRequestReason?: string | null;
   createdByEmail?: string | null;
+  taskId?: number | null;
 };
 
 const hours12 = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -4329,6 +4330,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={{ ...getThStyle(t), textAlign: "center" }}>
+                        CAPTURE LO?
+                      </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerComments')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Owner Comments {taskSortConfig?.key === 'ownerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -4484,6 +4488,57 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 disabled={isReviewerRestricted}
                                 t={t}
                               />
+                            </td>
+                            <td style={{ ...getTdStyle(t), textAlign: "center" }}>
+                              {["Completed", "Review Not Required"].includes(task.reviewStatus) ? (
+                                los.some(lo => lo.taskId === task.id) ? (
+                                  <span style={{ 
+                                    padding: "4px 8px", 
+                                    borderRadius: "6px", 
+                                    fontSize: "0.75rem", 
+                                    fontWeight: 700, 
+                                    background: "rgba(16,185,129,0.1)", 
+                                    color: "#10b981",
+                                    display: "inline-block"
+                                  }}>
+                                    Captured
+                                  </span>
+                                ) : (
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!isAdmin && !isCurrentUserReviewer) return;
+                                      setLOCaptureForm({
+                                        ...loCaptureForm,
+                                        entity: task.entityName,
+                                        identifiedBy: task.reviewerName && task.reviewerName !== "Not Applicable" ? task.reviewerName : currentUserName || '',
+                                        taskId: task.id,
+                                        dateOfIdentification: new Date().toISOString().split('T')[0]
+                                      });
+                                      setShowLOCaptureModal(true);
+                                    }}
+                                    disabled={!isAdmin && !isCurrentUserReviewer}
+                                    style={{
+                                      padding: "4px 10px",
+                                      borderRadius: "8px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: 700,
+                                      background: (isAdmin || isCurrentUserReviewer) ? "linear-gradient(135deg, #ec4899 0%, #be185d 100%)" : "#e2e8f0",
+                                      color: (isAdmin || isCurrentUserReviewer) ? "white" : "#94a3b8",
+                                      border: "none",
+                                      cursor: (isAdmin || isCurrentUserReviewer) ? "pointer" : "not-allowed",
+                                      boxShadow: (isAdmin || isCurrentUserReviewer) ? "0 2px 4px rgba(236,72,153,0.3)" : "none",
+                                      transition: "transform 0.2s"
+                                    }}
+                                    onMouseOver={(e) => { if (isAdmin || isCurrentUserReviewer) e.currentTarget.style.transform = "scale(1.05)"; }}
+                                    onMouseOut={(e) => { if (isAdmin || isCurrentUserReviewer) e.currentTarget.style.transform = "scale(1)"; }}
+                                  >
+                                    Yes
+                                  </button>
+                                )
+                              ) : (
+                                <span style={{ color: t.textMuted, fontSize: "0.75rem", fontWeight: 600 }}>N/A</span>
+                              )}
                             </td>
                             {/* Editable Owner Comments */}
                             <td 

@@ -105,14 +105,14 @@ export async function POST(req: NextRequest) {
         "entity", "dateOfIdentification", "learningOpportunity", "identifiedBy",
         "committedBy", "resolutionProvided", "modeOfCommunication", "emailSub",
         "comments", "createdByEmail", "createdAt", "updatedAt",
-        "isAcknowledged"
+        "isAcknowledged", "taskId"
       )
       VALUES (
         ${data.entity}, ${new Date(data.dateOfIdentification).toISOString()}, 
         ${data.learningOpportunity}, ${data.identifiedBy},
         ${data.committedBy}, ${data.resolutionProvided}, ${data.modeOfCommunication}, 
         ${data.emailSub}, ${data.comments}, ${session.user.email}, NOW(), NOW(),
-        false
+        false, ${data.taskId || null}
       )
       RETURNING *
     `;
