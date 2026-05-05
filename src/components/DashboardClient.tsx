@@ -3406,8 +3406,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.95rem", fontWeight: 500 }}>
                     {activeView === 'TASKS' ? 
                       (activeSubView === 'MAIN' ? "Track team productivity and operational milestones." : "View and manage incoming tasks from other departments.") :
-                     activeView === 'PAYMENTS' ? "Manage and track recurring vendor payments." :
-                     activeView === 'PAYMENT_REQUESTS' ? "Submit and approve payment requests through a multi-tier workflow." :
+                     activeView === 'PAYMENTS' ? "Manage and track recurring vendor payments and Treasury obligations." :
                      "Turning challenges into structured growth opportunities."}
                   </p>
                 </div>
