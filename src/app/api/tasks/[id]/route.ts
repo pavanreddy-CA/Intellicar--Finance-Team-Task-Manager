@@ -130,6 +130,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (data.ownerComments !== undefined) ownerComments = data.ownerComments;
     if (data.reviewerComments !== undefined) reviewerComments = data.reviewerComments;
 
+    // RULE: If completion date or review date is removed, requestStatus must revert to Pending
+    if ((data.completionDate === null || data.completionDate === "") || 
+        (data.reviewCompletionDate === null || data.reviewCompletionDate === "")) {
+      requestStatus = "Pending";
+    }
+
+    // RULE: Once an approved edit is saved by a non-admin, revoke the edit access
+    let editApproved = existingTask.editApproved;
+    let editRequested = existingTask.editRequested;
+
+    if (existingTask.editApproved && !isMasterAdmin) {
+      editApproved = false;
+      editRequested = false;
+    }
+
     if (data.requestStatus !== undefined) {
       requestStatus = data.requestStatus;
       if (data.requestStatus === "Processed" && existingTask.requestStatus !== "Processed") {
@@ -167,8 +182,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           "originalRequestType" = ${data.originalRequestType !== undefined ? data.originalRequestType : existingTask.originalRequestType},
           "captureLO" = ${data.captureLO !== undefined ? data.captureLO : existingTask.captureLO},
           "isApproved" = ${data.isApproved !== undefined ? data.isApproved : existingTask.isApproved},
-          "editApproved" = ${data.editApproved !== undefined ? data.editApproved : existingTask.editApproved},
-          "editRequested" = ${data.editRequested !== undefined ? data.editRequested : existingTask.editRequested}
+          "editApproved" = ${editApproved},
+          "editRequested" = ${editRequested}
       WHERE id = ${taskId}
       RETURNING *
     `;
