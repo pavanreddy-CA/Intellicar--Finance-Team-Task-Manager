@@ -384,7 +384,22 @@ export default function PaymentRequestPortal({
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'right' }}>
                     <button 
-                      onClick={() => setViewRequest(req)}
+                      onClick={async () => {
+                        setLoading(true);
+                        try {
+                          const res = await fetch(`/api/payments/requests/${req.id}`);
+                          if (res.ok) {
+                            const fullData = await res.json();
+                            setViewRequest(fullData);
+                          } else {
+                            showNotification("Failed to load request details", "error");
+                          }
+                        } catch (err) {
+                          showNotification("Error loading details", "error");
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
                       style={{ padding: '8px 16px', borderRadius: '10px', background: 'transparent', border: `1px solid ${t.border}`, color: t.text, cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.borderColor = '#2563eb'}
                       onMouseOut={e => e.currentTarget.style.borderColor = t.border}

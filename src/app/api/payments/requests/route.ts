@@ -65,7 +65,15 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get("endDate");
 
     let requests;
-    let baseQuery = sql`SELECT * FROM "PaymentRequest"`;
+    let baseQuery = sql`
+      SELECT 
+        id, "requesterId", "requesterName", "requesterEmail", department, 
+        "entityName", "vendorName", description, "paymentType", frequency, 
+        amount, "dueDate", "isNewVendor", status, "approvedBy", "approvedByEmail", 
+        "processedBy", "processedByEmail", "deptHeadComments", "financeComments", 
+        "createdAt", "updatedAt"
+      FROM "PaymentRequest"
+    `;
     let conditions = [];
 
     // Base Type filtering
