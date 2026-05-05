@@ -6,9 +6,10 @@ import crypto from "crypto";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const sql = getDb();
     const session = await getServerSession();
     const userRole = (session?.user as any)?.role;
@@ -18,7 +19,6 @@ export async function POST(
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    const userId = params.userId;
     const users = await sql`SELECT id, name, email FROM "User" WHERE id = ${userId} LIMIT 1`;
     
     if (users.length === 0) {
