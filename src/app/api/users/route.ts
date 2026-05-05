@@ -46,7 +46,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { userId, role, department, isAllocator, isApproved } = body;
+    const { userId, role, department, isAllocator, isApproved, employeeId, isSuspended } = body;
 
     if (!userId) {
       return NextResponse.json({ message: "User ID is required" }, { status: 400 });
@@ -71,6 +71,14 @@ export async function PUT(req: NextRequest) {
     if (isApproved !== undefined) {
       updates.push(`"isApproved" = $${values.length + 1}`);
       values.push(isApproved);
+    }
+    if (employeeId !== undefined) {
+      updates.push(`"employeeId" = $${values.length + 1}`);
+      values.push(employeeId);
+    }
+    if (isSuspended !== undefined) {
+      updates.push(`"isSuspended" = $${values.length + 1}`);
+      values.push(isSuspended);
     }
 
     if (updates.length === 0) {
