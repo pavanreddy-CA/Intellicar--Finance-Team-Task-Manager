@@ -7614,6 +7614,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                       </div>
 
+                    </div>
                   </div>
                 )}
 
