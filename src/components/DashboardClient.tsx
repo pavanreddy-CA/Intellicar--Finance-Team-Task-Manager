@@ -3795,7 +3795,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                         <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b", margin: "0 0 12px 0", lineHeight: 1.25, letterSpacing: "-0.03em", fontFamily: "'Outfit', sans-serif" }}>{mission}</h2>
                         <div style={{ height: "4px", width: "50px", background: "linear-gradient(to right, #3b82f6, #60a5fa)", borderRadius: "2px", marginBottom: "20px" }}></div>
-                        <p style={{ margin: 0, fontSize: "1rem", color: "#475569", lineHeight: 1.6, fontWeight: 500 }}>Driving daily excellence through disciplined execution and data-driven insights.</p>
+                        <p style={{ margin: 0, fontSize: "1rem", color: "#475569", lineHeight: 1.6, fontWeight: 500 }}>{content.missionCaption || "Driving daily excellence through disciplined execution and data-driven insights."}</p>
                       </div>
                     </div>
 
@@ -3823,7 +3823,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                         <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b", margin: "0 0 12px 0", lineHeight: 1.25, letterSpacing: "-0.03em", fontFamily: "'Outfit', sans-serif" }}>{vision}</h2>
                         <div style={{ height: "4px", width: "50px", background: "linear-gradient(to right, #10b981, #34d399)", borderRadius: "2px", marginBottom: "20px" }}></div>
-                        <p style={{ margin: 0, fontSize: "1rem", color: "#475569", lineHeight: 1.6, fontWeight: 500 }}>Building a future where finance is the engine of innovation and sustainable growth.</p>
+                        <p style={{ margin: 0, fontSize: "1rem", color: "#475569", lineHeight: 1.6, fontWeight: 500 }}>{content.visionCaption || "Building a future where finance is the engine of innovation and sustainable growth."}</p>
                       </div>
                     </div>
                   </div>
@@ -3851,15 +3851,10 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       margin: "0 auto 24px auto", 
                       lineHeight: 1.4,
                       fontWeight: 600,
-                      letterSpacing: "-0.01em"
+                      letterSpacing: "-0.01em",
+                      color: "#2563eb"
                     }}>
-                      <span style={{ color: "#2563eb" }}>
-                        "Your work is going to fill a large part of your life,
-                      </span>
-                      <br />
-                      <span style={{ color: "#e11d48" }}>
-                        and the only way to be truly satisfied is to do what you believe is great work."
-                      </span>
+                      "{quote.text}"
                     </h3>
                     <div style={{ 
                       display: "inline-block",
@@ -8312,7 +8307,24 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 setSettings({ ...settings, homeContent: JSON.stringify(content) });
                               }}
                               placeholder="Describe your daily mission..."
-                              style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical", fontSize: "0.9375rem" }}
+                              style={{ ...getInputStyle(t), minHeight: "80px", resize: "vertical", fontSize: "0.9375rem", marginBottom: "12px" }}
+                            />
+                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.025em" }}>Mission Caption</label>
+                            <input 
+                              type="text"
+                              value={(() => {
+                                try {
+                                  const content = JSON.parse(settings.homeContent || '{}');
+                                  return content.missionCaption || "";
+                                } catch { return ""; }
+                              })()}
+                              onChange={(e) => {
+                                const content = JSON.parse(settings.homeContent || '{}');
+                                content.missionCaption = e.target.value;
+                                setSettings({ ...settings, homeContent: JSON.stringify(content) });
+                              }}
+                              placeholder="Driving daily excellence..."
+                              style={{ ...getInputStyle(t), fontSize: "0.9375rem" }}
                             />
                           </div>
                           <div>
@@ -8330,7 +8342,24 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 setSettings({ ...settings, homeContent: JSON.stringify(content) });
                               }}
                               placeholder="Where is the team headed?"
-                              style={{ ...getInputStyle(t), minHeight: "100px", resize: "vertical", fontSize: "0.9375rem" }}
+                              style={{ ...getInputStyle(t), minHeight: "80px", resize: "vertical", fontSize: "0.9375rem", marginBottom: "12px" }}
+                            />
+                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.025em" }}>Vision Caption</label>
+                            <input 
+                              type="text"
+                              value={(() => {
+                                try {
+                                  const content = JSON.parse(settings.homeContent || '{}');
+                                  return content.visionCaption || "";
+                                } catch { return ""; }
+                              })()}
+                              onChange={(e) => {
+                                const content = JSON.parse(settings.homeContent || '{}');
+                                content.visionCaption = e.target.value;
+                                setSettings({ ...settings, homeContent: JSON.stringify(content) });
+                              }}
+                              placeholder="Building a future..."
+                              style={{ ...getInputStyle(t), fontSize: "0.9375rem" }}
                             />
                           </div>
                         </div>
