@@ -69,6 +69,7 @@ export async function PATCH(req: NextRequest) {
         "isAcknowledged" = ${isAcknowledged},
         "learnerComments" = ${learnerComments},
         "acknowledgedAt" = NOW(),
+        "acknowledgedBy" = ${session.user.name || session.user.email},
         "updatedAt" = NOW()
       WHERE "id" = ${id}
       RETURNING *

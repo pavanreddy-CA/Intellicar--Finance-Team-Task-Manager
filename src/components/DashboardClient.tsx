@@ -5763,7 +5763,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               <td style={getTdStyle(t)}>{lo.committedBy}</td>
                               <td style={getTdStyle(t)}>
                                 <span 
-                                  title={lo.isAcknowledged ? `Acknowledged by ${lo.acknowledgedBy || 'User'} on ${formatDateTime(lo.acknowledgedAt!)}` : 'Pending acknowledgment'}
+                                  title={lo.isAcknowledged ? `Acknowledged by ${lo.acknowledgedBy || lo.committedBy || 'Owner'} on ${formatDateTime(lo.acknowledgedAt!)}` : 'Pending acknowledgment'}
                                   style={{ padding: "4px 10px", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 700, background: lo.isAcknowledged ? "#dcfce7" : "#fef3c7", color: lo.isAcknowledged ? "#15803d" : "#b45309", cursor: lo.isAcknowledged ? "help" : "default" }}>
                                   {lo.isAcknowledged ? "Acknowledged" : "Pending"}
                                 </span>
