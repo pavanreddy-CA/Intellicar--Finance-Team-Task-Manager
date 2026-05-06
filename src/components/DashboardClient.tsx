@@ -5540,8 +5540,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 </span>
                               </div>
                             </td>
-                            <td style={{ ...getTdStyle(t), maxWidth: "250px", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
-                            <td style={{ ...getTdStyle(t), maxWidth: "250px", whiteSpace: "normal" }}>{req.reasonForRequest || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
+                            <td style={{ ...getTdStyle(t), maxWidth: "380px", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
+                            <td style={{ ...getTdStyle(t), maxWidth: "380px", whiteSpace: "normal" }}>{req.reasonForRequest || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
                             <td style={{ ...getTdStyle(t), minWidth: "160px" }}>
                                 {(!req.status || req.status === 'Pending') && (
                                   <span style={{ padding: "4px 10px", borderRadius: "100px", background: "#fff7ed", fontSize: "0.75rem", fontWeight: 700, color: "#9a3412", border: "1px solid #ffedd5", whiteSpace: "nowrap" }}>
