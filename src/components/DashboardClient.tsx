@@ -5012,7 +5012,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <button 
-                                  onClick={() => setSelectedExternalReqForView(req)}
+                                  onClick={() => setSelectedExternalReqForView({
+                                      id: req.id,
+                                      requirement: req.natureOfRequest,
+                                      fromDepartment: req.departmentName,
+                                      toDepartment: req.requestType,
+                                      raisedBy: req.requestFrom,
+                                      currentOwner: req.assignedAllocatorEmail,
+                                      timeline: new Date(req.requestDate).toLocaleDateString(),
+                                      status: req.status
+                                   })}
                                   style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
                                   title="Quick View"
                                 >
@@ -5437,7 +5446,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 <span style={{ fontSize: "1rem", fontWeight: 500 }}>No learning opportunities recorded.</span>
                               </div>
                             </td></tr>
-                          ) : sortedLOs.map((lo, idx) => (
+                          ) : sortedLOs.map((lo: any, idx) => (
                             <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} className="table-row">
                               <td style={{ ...getTdStyle(t), padding: "16px 20px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
