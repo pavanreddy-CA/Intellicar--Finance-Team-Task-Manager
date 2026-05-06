@@ -211,6 +211,8 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
   const [requestDeleteData, setRequestDeleteData] = useState({ reason: "" });
   const [requestEditMasterData, setRequestEditMasterData] = useState({ reason: "" });
   const [activeMaster, setActiveMaster] = useState<PaymentTemplate | null>(null);
+  const [selectedOccForView, setSelectedOccForView] = useState<PaymentOccurrence | null>(null);
+  const [selectedTemplateForView, setSelectedTemplateForView] = useState<PaymentTemplate | null>(null);
 
   useEffect(() => {
     if (settings?.paymentReportEmail) {
@@ -1333,19 +1335,28 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                     const style = getStatusStyle(status);
                     return (
                       <tr key={occ.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.background = theme === 'DARK' ? "rgba(255,255,255,0.02)" : "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                        <td style={{ ...tdStyle, width: "40px" }}>
-                          <input 
-                            type="checkbox" 
-                            checked={selectedOccs.includes(occ.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedOccs([...selectedOccs, occ.id]);
-                              } else {
-                                setSelectedOccs(selectedOccs.filter(id => id !== occ.id));
-                              }
-                            }}
-                            style={{ cursor: "pointer" }}
-                          />
+                        <td style={{ ...tdStyle, width: "70px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={selectedOccs.includes(occ.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedOccs([...selectedOccs, occ.id]);
+                                } else {
+                                  setSelectedOccs(selectedOccs.filter(id => id !== occ.id));
+                                }
+                              }}
+                              style={{ cursor: "pointer" }}
+                            />
+                            <button 
+                                onClick={() => setSelectedOccForView(occ)}
+                                style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                title="Quick View"
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </div>
                         </td>
                         <td style={tdStyle}>{occ.entityName}</td>
                         <td style={tdStyle}>
@@ -1537,7 +1548,18 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                     const style = getStatusStyle(status);
                     return (
                       <tr key={occ.id} style={{ borderBottom: `1px solid ${t.border}` }}>
-                        <td style={tdStyle}>{occ.entityName}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <button 
+                                onClick={() => setSelectedOccForView(occ)}
+                                style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                title="Quick View"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            {occ.entityName}
+                          </div>
+                        </td>
                         <td style={tdStyle}><div style={{ fontWeight: 600 }}>{occ.vendorName}</div></td>
                         <td style={tdStyle}>{occ.paymentDescription}</td>
                         <td style={tdStyle}><span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", background: "#f1f5f9", color: "#475569", fontWeight: 600 }}>{occ.paymentType}</span></td>
@@ -1694,7 +1716,18 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                     const style = getStatusStyle(status);
                     return (
                       <tr key={occ.id} style={{ borderBottom: `1px solid ${t.border}` }}>
-                        <td style={tdStyle}>{occ.entityName}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <button 
+                                onClick={() => setSelectedOccForView(occ)}
+                                style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                title="Quick View"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            {occ.entityName}
+                          </div>
+                        </td>
                         <td style={tdStyle}><div style={{ fontWeight: 600 }}>{occ.vendorName}</div></td>
                         <td style={tdStyle}>{occ.paymentDescription}</td>
                         <td style={tdStyle}><span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", background: "#f1f5f9", color: "#475569", fontWeight: 600 }}>{occ.paymentType}</span></td>
@@ -1812,7 +1845,18 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
                 ) : (
                   filteredAndSortedTemplates.map((temp: PaymentTemplate) => (
                     <tr key={temp.id} style={{ borderBottom: `1px solid ${t.border}` }}>
-                      <td style={tdStyle}>{temp.entityName}</td>
+                      <td style={tdStyle}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <button 
+                              onClick={() => setSelectedTemplateForView(temp)}
+                              style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                              title="Quick View"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          {temp.entityName}
+                        </div>
+                      </td>
                       <td style={tdStyle}>{temp.paymentDescription}</td>
                       <td style={tdStyle}>{temp.vendorName}</td>
                       <td style={tdStyle}>{temp.paymentType}</td>
@@ -2704,6 +2748,117 @@ export default function PaymentsCalendar({   user, isAdmin, t, theme, settings ,
           </div>
         </div>
       )}
+      {/* ── Quick View: Payment Occurrence Details ─────────────────────── */}
+      {selectedOccForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#eff6ff", padding: "10px", borderRadius: "12px", color: "#2563eb" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>Payment Transaction Detail</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>Due Date: {new Date(selectedOccForView.dueDate).toLocaleDateString('en-GB')}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedOccForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={viewLabelStyle}>Payment Description</label>
+                  <div style={viewValueBoxStyle}>{selectedOccForView.paymentDescription}</div>
+                </div>
+                
+                <DetailViewItem label="Entity" value={selectedOccForView.entityName} />
+                <DetailViewItem label="Vendor" value={selectedOccForView.vendorName} />
+                <DetailViewItem label="Department" value={selectedOccForView.departmentName} />
+                <DetailViewItem label="Finance Function" value={selectedOccForView.financeFunction} />
+                <DetailViewItem label="Frequency" value={selectedOccForView.frequency} />
+                <DetailViewItem label="Amount To Release" value={selectedOccForView.amountToRelease ? `₹${Number(selectedOccForView.amountToRelease).toLocaleString()}` : "--"} />
+                
+                <div style={{ gridColumn: "span 2", padding: "16px", background: "#f1f5f9", borderRadius: "16px" }}>
+                   <label style={viewLabelStyle}>Payment Status</label>
+                   <div style={{ display: "inline-flex", padding: "6px 12px", borderRadius: "8px", background: getStatusStyle(getStatus(selectedOccForView)).bg, color: getStatusStyle(getStatus(selectedOccForView)).text, fontWeight: 700, fontSize: "0.875rem", border: `1px solid ${getStatusStyle(getStatus(selectedOccForView)).border}` }}>
+                     {getStatus(selectedOccForView)}
+                   </div>
+                </div>
+
+                {selectedOccForView.isPaid && (
+                  <>
+                    <DetailViewItem label="Paid Date" value={selectedOccForView.actualDate ? new Date(selectedOccForView.actualDate).toLocaleDateString('en-GB') : "--"} />
+                    <DetailViewItem label="Amount Paid" value={selectedOccForView.amountPaid ? `₹${Number(selectedOccForView.amountPaid).toLocaleString()}` : "--"} />
+                    <DetailViewItem label="Paid From Bank" value={selectedOccForView.paidFromAccount || "--"} />
+                    <DetailViewItem label="UTR Number" value={selectedOccForView.utrNumber || "--"} />
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button onClick={() => setSelectedOccForView(null)} style={doneButtonStyle}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick View: Payment Master Template Details ─────────────────── */}
+      {selectedTemplateForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#fef3c7", padding: "10px", borderRadius: "12px", color: "#d97706" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>Payment Master Detail</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>Master ID: #{selectedTemplateForView.id}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedTemplateForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={viewLabelStyle}>Description</label>
+                  <div style={viewValueBoxStyle}>{selectedTemplateForView.paymentDescription}</div>
+                </div>
+                
+                <DetailViewItem label="Entity" value={selectedTemplateForView.entityName} />
+                <DetailViewItem label="Vendor" value={selectedTemplateForView.vendorName} />
+                <DetailViewItem label="Department" value={selectedTemplateForView.departmentName} />
+                <DetailViewItem label="Finance Function" value={selectedTemplateForView.financeFunction} />
+                <DetailViewItem label="Frequency" value={selectedTemplateForView.frequency} />
+                <DetailViewItem label="Amount To Release" value={selectedTemplateForView.amountToRelease ? `₹${Number(selectedTemplateForView.amountToRelease).toLocaleString()}` : "--"} />
+                <DetailViewItem label="Due Day/Week" value={selectedTemplateForView.dueDay ? `Day ${selectedTemplateForView.dueDay}` : (selectedTemplateForView.weeklyDay || "--")} />
+                <DetailViewItem label="Vendor Email" value={selectedTemplateForView.vendorEmail || "--"} />
+                <DetailViewItem label="Start Date" value={new Date(selectedTemplateForView.startDate).toLocaleDateString('en-GB')} />
+                <DetailViewItem label="End Date" value={selectedTemplateForView.endDate ? new Date(selectedTemplateForView.endDate).toLocaleDateString('en-GB') : "Forever"} />
+                
+                <div style={{ gridColumn: "span 2" }}>
+                   <label style={viewLabelStyle}>Master Status</label>
+                   <div style={{ display: "inline-flex", padding: "6px 12px", borderRadius: "8px", background: selectedTemplateForView.isStopped ? "#fee2e2" : "#dcfce7", color: selectedTemplateForView.isStopped ? "#ef4444" : "#16a34a", fontWeight: 700, fontSize: "0.875rem" }}>
+                     {selectedTemplateForView.isStopped ? "Stopped" : "Active"}
+                   </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button onClick={() => setSelectedTemplateForView(null)} style={doneButtonStyle}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -2726,3 +2881,16 @@ const modalOverlayStyle = { position: "fixed" as const, inset: 0, background: "r
 const modalContentStyle = { background: "white", borderRadius: "20px", width: "100%", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden" };
 const labelStyle = { display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" as const };
 const inputStyle = { width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.875rem", outline: "none" };
+
+const viewLabelStyle = { display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase" as const, marginBottom: "6px", letterSpacing: "0.05em" };
+const viewValueBoxStyle = { fontSize: "1.0625rem", fontWeight: 700, color: "#1e293b", background: "#f8fafc", padding: "16px", borderRadius: "16px", border: "1px solid #f1f5f9", lineHeight: 1.5 };
+const doneButtonStyle = { padding: "10px 24px", background: "#2563eb", border: "none", color: "white", borderRadius: "12px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" };
+
+const DetailViewItem = ({ label, value }: { label: string; value: string }) => (
+  <div style={{ gridColumn: "span 1" }}>
+    <label style={viewLabelStyle}>{label}</label>
+    <div style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#1e293b" }}>
+      {value}
+    </div>
+  </div>
+);

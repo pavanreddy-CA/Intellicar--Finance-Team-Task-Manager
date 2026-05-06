@@ -115,6 +115,8 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   const [resumeModal, setResumeModal] = useState<{ isOpen: boolean; templateId: number | null; templateName: string }>({ isOpen: false, templateId: null, templateName: '' });
   const [resumeDate, setResumeDate] = useState(new Date().toISOString().split('T')[0]);
   const [resumeLoading, setResumeLoading] = useState(false);
+  const [selectedTemplateForView, setSelectedTemplateForView] = useState<RecurringTemplate | null>(null);
+  const [selectedStagingForView, setSelectedStagingForView] = useState<StagingTask | null>(null);
 
   const handleDailySort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -1259,8 +1261,17 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                     </td>
                     <td style={tdStyle}>{task.entityName}</td>
                     <td style={tdStyle}>
-                       <div style={{ fontWeight: 600, color: "#1e293b" }}>{task.taskName}</div>
-                       <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px" }}>Func: {task.financeFunction || "--"}</div>
+                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                         <button 
+                            onClick={() => setSelectedStagingForView(task)}
+                            style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            title="Quick View"
+                         >
+                           <Eye size={14} />
+                         </button>
+                         <div style={{ fontWeight: 600, color: "#1e293b" }}>{task.taskName}</div>
+                       </div>
+                       <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px", marginLeft: "22px" }}>Func: {task.financeFunction || "--"}</div>
                     </td>
                     <td style={tdStyle}>
                       <span style={{ padding: "2px 8px", background: task.isConverted ? "#e2e8f0" : "#eff6ff", color: task.isConverted ? "#64748b" : "#2563eb", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700 }}>{task.frequency}</span>
@@ -1640,7 +1651,18 @@ export default function RecurringActivities({   settings, usersList = [] , showN
               <tbody>
                 {filteredAndSortedMaster.map(t => (
                   <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9" }} className="table-row">
-                    <td style={{...tdStyle, fontWeight: 600, color: "#0f172a"}}>{t.taskNamePattern}</td>
+                    <td style={{...tdStyle, fontWeight: 600, color: "#0f172a"}}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button 
+                            onClick={() => setSelectedTemplateForView(t)}
+                            style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            title="Quick View"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        {t.taskNamePattern}
+                      </div>
+                    </td>
                     <td style={tdStyle}>
                         <div>{t.entityName}</div>
                         <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{t.financeFunction || "--"}</div>
@@ -2059,8 +2081,134 @@ export default function RecurringActivities({   settings, usersList = [] , showN
         </div>
       )}
 
+      {/* ── Quick View: Staging Task Details ─────────────────────────────── */}
+      {selectedStagingForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#eff6ff", padding: "10px", borderRadius: "12px", color: "#2563eb" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>Staging Task Detail</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>Period: {selectedStagingForView.periodKey}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedStagingForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={viewLabelStyle}>Task Name (Resolved)</label>
+                  <div style={viewValueBoxStyle}>{selectedStagingForView.taskName}</div>
+                </div>
+                
+                <DetailViewItem label="Entity Name" value={selectedStagingForView.entityName} />
+                <DetailViewItem label="Department" value={selectedStagingForView.departmentName} />
+                <DetailViewItem label="Finance Function" value={selectedStagingForView.financeFunction || "--"} />
+                <DetailViewItem label="Frequency" value={selectedStagingForView.frequency} />
+                <DetailViewItem label="Period Key" value={selectedStagingForView.periodKey} />
+                <DetailViewItem label="Target Due Date" value={selectedStagingForView.dueDate} />
+                <DetailViewItem label="Assigned Owner" value={selectedStagingForView.ownerName || "Not Assigned"} />
+                <DetailViewItem label="Assigned Reviewer" value={selectedStagingForView.reviewerName || "Not Assigned"} />
+                
+                <div style={{ gridColumn: "span 2" }}>
+                   <label style={viewLabelStyle}>Conversion Status</label>
+                   <div style={{ display: "inline-flex", padding: "6px 12px", borderRadius: "8px", background: selectedStagingForView.isConverted ? "#dcfce7" : "#fef3c7", color: selectedStagingForView.isConverted ? "#15803d" : "#b45309", fontWeight: 700, fontSize: "0.875rem" }}>
+                     {selectedStagingForView.isConverted ? "Converted to Live Task" : "Pending Conversion"}
+                   </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button onClick={() => setSelectedStagingForView(null)} style={doneButtonStyle}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick View: Template Master Details ───────────────────────────── */}
+      {selectedTemplateForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#fef3c7", padding: "10px", borderRadius: "12px", color: "#d97706" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>Template Master Detail</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>Rule ID: #{selectedTemplateForView.id}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedTemplateForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={viewLabelStyle}>Task Name Pattern</label>
+                  <div style={viewValueBoxStyle}>{selectedTemplateForView.taskNamePattern}</div>
+                </div>
+                
+                <DetailViewItem label="Entity" value={selectedTemplateForView.entityName} />
+                <DetailViewItem label="Department" value={selectedTemplateForView.departmentName} />
+                <DetailViewItem label="Finance Function" value={selectedTemplateForView.financeFunction || "General"} />
+                <DetailViewItem label="Frequency" value={selectedTemplateForView.frequency} />
+                <DetailViewItem label="Day Offset" value={`${selectedTemplateForView.dayOffset} (Day of month/week)`} />
+                <DetailViewItem label="Month Offset" value={selectedTemplateForView.monthOffset.toString()} />
+                <DetailViewItem label="Default Owner" value={selectedTemplateForView.defaultOwner || "None"} />
+                <DetailViewItem label="Default Reviewer" value={selectedTemplateForView.defaultReviewer || "None"} />
+                <DetailViewItem label="Validity Start" value={selectedTemplateForView.startDate ? new Date(selectedTemplateForView.startDate).toLocaleDateString('en-GB') : "Not Set"} />
+                <DetailViewItem label="Validity End" value={selectedTemplateForView.endDate ? new Date(selectedTemplateForView.endDate).toLocaleDateString('en-GB') : "Forever"} />
+                
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={viewLabelStyle}>Excluded / Dismissed Periods</label>
+                  <div style={{ ...viewValueBoxStyle, fontSize: "0.8125rem", color: "#64748b", minHeight: "40px" }}>
+                    {Array.isArray(selectedTemplateForView.excludedDates) && selectedTemplateForView.excludedDates.length > 0 
+                      ? selectedTemplateForView.excludedDates.join(", ") 
+                      : "No periods have been dismissed for this rule."}
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: "span 2" }}>
+                   <label style={viewLabelStyle}>Rule Status</label>
+                   <div style={{ display: "inline-flex", padding: "6px 12px", borderRadius: "8px", background: selectedTemplateForView.isActive && !selectedTemplateForView.isStopped ? "#dcfce7" : "#fee2e2", color: selectedTemplateForView.isActive && !selectedTemplateForView.isStopped ? "#16a34a" : "#ef4444", fontWeight: 700, fontSize: "0.875rem" }}>
+                     {selectedTemplateForView.isStopped ? "Currently Stopped" : (selectedTemplateForView.isActive ? "Active Generation" : "Inactive")}
+                   </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button onClick={() => setSelectedTemplateForView(null)} style={doneButtonStyle}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
 const labelStyle = { display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.025em" };
+
+const viewLabelStyle = { display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase" as const, marginBottom: "6px", letterSpacing: "0.05em" };
+const viewValueBoxStyle = { fontSize: "1.0625rem", fontWeight: 700, color: "#1e293b", background: "#f8fafc", padding: "16px", borderRadius: "16px", border: "1px solid #f1f5f9", lineHeight: 1.5 };
+const doneButtonStyle = { padding: "10px 24px", background: "#2563eb", border: "none", color: "white", borderRadius: "12px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" };
+
+const DetailViewItem = ({ label, value }: { label: string; value: string }) => (
+  <div style={{ gridColumn: "span 1" }}>
+    <label style={viewLabelStyle}>{label}</label>
+    <div style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#1e293b" }}>
+      {value}
+    </div>
+  </div>
+);

@@ -223,6 +223,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [editValue, setEditValue] = useState("");
   const [editingLO, setEditingLO] = useState<LearningOpportunity | null>(null);
   const [selectedTaskForView, setSelectedTaskForView] = useState<Task | null>(null);
+  const [selectedExternalReqForView, setSelectedExternalReqForView] = useState<any | null>(null);
+  const [selectedLOForView, setSelectedLOForView] = useState<LearningOpportunity | null>(null);
+  const [selectedPaymentForView, setSelectedPaymentForView] = useState<any | null>(null);
 
   // Universal Navigation Watcher: Persists view state and handles menu auto-collapse
   useEffect(() => {
@@ -5006,7 +5009,18 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         
                         return (
                           <tr key={req.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                            <td style={getTdStyle(t)}>{idx + 1}</td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <button 
+                                  onClick={() => setSelectedExternalReqForView(req)}
+                                  style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                  title="Quick View"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                                {idx + 1}
+                              </div>
+                            </td>
                             <td style={getTdStyle(t)}>
                               <div style={{ fontWeight: 600, color: t.text }}>{req.requestFrom}</div>
                               <div style={{ fontSize: "0.7rem", color: t.textMuted }}>{req.departmentName}</div>
@@ -5425,7 +5439,29 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             </td></tr>
                           ) : sortedLOs.map((lo, idx) => (
                             <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} className="table-row">
-                              <td style={{ ...getTdStyle(t), padding: "16px 20px" }}>{idx + 1}</td>
+                              <td style={{ ...getTdStyle(t), padding: "16px 20px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  <button 
+                                      onClick={() => setSelectedLOForView({
+                                          id: lo.id,
+                                          learningOpportunity: lo.learningOpportunity,
+                                          resolutionPlan: lo.resolutionProvided,
+                                          sourceTaskName: lo.taskName || "Direct Entry",
+                                          ownerName: lo.committedBy,
+                                          status: lo.isAcknowledged ? "Acknowledged" : "Pending",
+                                          createdAt: lo.createdAt || lo.dateOfIdentification,
+                                          ackBy: lo.ackBy,
+                                          ackAt: lo.ackAt,
+                                          ackComments: lo.ackComments
+                                      })}
+                                      style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                      title="Quick View"
+                                  >
+                                    <Eye size={14} />
+                                  </button>
+                                  {idx + 1}
+                                </div>
+                              </td>
                               <td style={getTdStyle(t)}>{formatDate(lo.dateOfIdentification)}</td>
                               <td style={getTdStyle(t)}>{lo.entity}</td>
                               <td style={getTdStyle(t)}>{lo.identifiedBy}</td>
@@ -9586,6 +9622,112 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               >
                 Done
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick View: External Request Details */}
+      {selectedExternalReqForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#f0fdf4", padding: "10px", borderRadius: "12px", color: "#16a34a" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>Shared Request Details</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>External Interaction</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedExternalReqForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "6px" }}>Requirement</label>
+                  <div style={{ fontSize: "1rem", color: "#1e293b", background: "#f8fafc", padding: "16px", borderRadius: "16px", border: "1px solid #f1f5f9", lineHeight: 1.5 }}>
+                    {selectedExternalReqForView.requirement}
+                  </div>
+                </div>
+                
+                <DetailItemView label="From Department" value={selectedExternalReqForView.fromDepartment} />
+                <DetailItemView label="To Department" value={selectedExternalReqForView.toDepartment} />
+                <DetailItemView label="Raised By" value={selectedExternalReqForView.raisedBy} />
+                <DetailItemView label="Current Owner" value={selectedExternalReqForView.currentOwner || "Unassigned"} />
+                <DetailItemView label="Timeline" value={selectedExternalReqForView.timeline} />
+                <DetailItemView label="Status" value={selectedExternalReqForView.status} />
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button onClick={() => setSelectedExternalReqForView(null)} style={{ padding: "10px 24px", background: "#2563eb", border: "none", color: "white", borderRadius: "12px", fontWeight: 700, cursor: "pointer" }}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick View: Learning Opportunity Details */}
+      {selectedLOForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#fff7ed", padding: "10px", borderRadius: "12px", color: "#ea580c" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>LO Hub Detail</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>Learning Opportunity</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedLOForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "6px" }}>Finding / Opportunity</label>
+                  <div style={{ fontSize: "1rem", color: "#1e293b", background: "#f8fafc", padding: "16px", borderRadius: "16px", border: "1px solid #f1f5f9", lineHeight: 1.5 }}>
+                    {selectedLOForView.learningOpportunity}
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "6px" }}>Resolution Plan</label>
+                  <div style={{ fontSize: "0.9375rem", color: "#475569", background: "#f8fafc", padding: "16px", borderRadius: "16px", border: "1px solid #f1f5f9", minHeight: "60px" }}>
+                    {selectedLOForView.resolutionPlan || "No resolution plan provided yet."}
+                  </div>
+                </div>
+                
+                <DetailItemView label="Source Task" value={selectedLOForView.sourceTaskName} />
+                <DetailItemView label="Owner" value={selectedLOForView.ownerName} />
+                <DetailItemView label="Status" value={selectedLOForView.status} />
+                <DetailItemView label="Raised Date" value={new Date(selectedLOForView.createdAt).toLocaleDateString()} />
+                
+                {selectedLOForView.ackBy && (
+                  <>
+                    <DetailItemView label="Acknowledged By" value={selectedLOForView.ackBy} />
+                    <DetailItemView label="Ack Date" value={new Date(selectedLOForView.ackAt!).toLocaleDateString()} />
+                    <div style={{ gridColumn: "span 2" }}>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "6px" }}>Ack Comments</label>
+                      <div style={{ fontSize: "0.9375rem", color: "#475569", background: "#f0f9ff", padding: "16px", borderRadius: "16px", border: "1px solid #e0f2fe" }}>
+                        {selectedLOForView.ackComments}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button onClick={() => setSelectedLOForView(null)} style={{ padding: "10px 24px", background: "#2563eb", border: "none", color: "white", borderRadius: "12px", fontWeight: 700, cursor: "pointer" }}>Done</button>
             </div>
           </div>
         </div>

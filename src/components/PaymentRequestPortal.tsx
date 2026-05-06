@@ -169,6 +169,8 @@ export default function PaymentRequestPortal({
     supportings: [] as { name: string; data: string; type: string }[]
   });
 
+  const [activeMaster, setActiveMaster] = useState<PaymentRequest | null>(null);
+  const [selectedPaymentForView, setSelectedPaymentForView] = useState<PaymentRequest | null>(null);
   const [reviewComments, setReviewComments] = useState("");
   const [filters, setFilters] = useState({
     search: '',
@@ -384,7 +386,18 @@ export default function PaymentRequestPortal({
               const dateStyle = getDateStatusStyle(req.dateStatus);
               return (
                 <tr key={req.id} style={{ borderBottom: `1px solid ${t.border}`, transition: 'background 0.2s' }} className="table-row-hover">
-                  <td style={{ ...tdStyle, color: '#3b82f6', fontWeight: 700 }}>{req.entityName}</td>
+                  <td style={tdStyle}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button 
+                          onClick={() => setSelectedPaymentForView(req)}
+                          style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          title="Quick View"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <span style={{ color: '#3b82f6', fontWeight: 700 }}>{req.entityName}</span>
+                    </div>
+                  </td>
                   <td style={{ ...tdStyle, fontWeight: 700 }}>{req.vendorName}</td>
                   <td style={{ ...tdStyle, color: t.textMuted, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.description}</td>
                   <td style={{ ...tdStyle, fontWeight: 800, color: t.text }}>₹{Number(req.amount).toLocaleString()}</td>
@@ -786,6 +799,59 @@ export default function PaymentRequestPortal({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Quick View: Payment Request Details ────────────────────────── */}
+      {selectedPaymentForView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(8px)", padding: "24px" }}>
+          <div style={{ background: "white", width: "100%", maxWidth: "700px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to right, #f8fafc, #ffffff)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: "#eef2ff", padding: "10px", borderRadius: "12px", color: "#4f46e5" }}>
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>Quick View: Payment Request</h3>
+                  <span style={{ fontSize: "0.8125rem", color: "#64748b", fontWeight: 600 }}>Request ID: #{selectedPaymentForView.id}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedPaymentForView(null)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "8px", borderRadius: "10px" }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: "32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <DetailBox label="Payment Description" value={selectedPaymentForView.description} />
+                </div>
+                
+                <DetailBox label="Entity" value={selectedPaymentForView.entityName} />
+                <DetailBox label="Vendor" value={selectedPaymentForView.vendorName} />
+                <DetailBox label="Amount" value={`₹${Number(selectedPaymentForView.amount).toLocaleString()}`} />
+                <DetailBox label="Due Date" value={new Date(selectedPaymentForView.dueDate).toLocaleDateString('en-GB')} />
+                <DetailBox label="Requested By" value={selectedPaymentForView.requesterName} />
+                <DetailBox label="Department" value={selectedPaymentForView.department} />
+                <DetailBox label="Status" value={getStatusStyle(selectedPaymentForView.status).label} />
+                <DetailBox label="Payment Type" value={selectedPaymentForView.paymentType} />
+                
+                {selectedPaymentForView.financeComments && (
+                  <div style={{ gridColumn: "span 2" }}>
+                    <DetailBox label="Finance Comments" value={selectedPaymentForView.financeComments} />
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ padding: "24px 32px", borderTop: "1px solid #f1f5f9", textAlign: "right", background: "#f8fafc" }}>
+              <button 
+                onClick={() => setSelectedPaymentForView(null)} 
+                style={{ padding: '12px 24px', borderRadius: '12px', background: '#4f46e5', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)' }}
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
