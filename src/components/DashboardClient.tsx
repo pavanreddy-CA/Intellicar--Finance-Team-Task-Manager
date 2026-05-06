@@ -91,6 +91,7 @@ type ExternalRequest = {
   processedBy?: string | null;
   processedAt?: string | null;
   transferredAt?: string | null;
+  taskDisplayId?: string | null;
 };
 
 type LearningOpportunity = {
