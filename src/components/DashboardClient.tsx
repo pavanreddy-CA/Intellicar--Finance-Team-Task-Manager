@@ -4500,7 +4500,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", whiteSpace: "nowrap" }} onClick={() => handleTaskSort('source' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Source {taskSortConfig?.key === ('source' as any) && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Source {taskSortConfig?.key === ('source' as any) && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
