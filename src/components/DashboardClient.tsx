@@ -3314,6 +3314,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           
           <button 
             onClick={async () => {
+              if (!window.confirm("Are you sure you want to sign out?")) return;
               // Clear navigation persistence on logout
               sessionStorage.removeItem('finpulse_session_active');
               localStorage.removeItem('finpulse_active_view');
