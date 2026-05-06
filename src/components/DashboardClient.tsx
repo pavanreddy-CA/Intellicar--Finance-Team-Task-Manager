@@ -4008,8 +4008,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
     ) : activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? (
           <div style={{ 
             marginBottom: "32px", 
