@@ -176,7 +176,7 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }}>
             <div>
-              <label style={labelStyle}>Finance Function *</label>
+              <label style={labelStyle}>Origin *</label>
               <select 
                 name="requestType" 
                 required 
@@ -184,7 +184,7 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
                 onChange={handleChange} 
                 style={inputStyle}
               >
-                <option value="">Select Function</option>
+                <option value="">Select Origin</option>
                 {settings?.masterRequestTypes?.split(',').filter((t: string) => t.trim()).map((type: string) => (
                   <option key={type.trim()} value={type.trim()}>{type.trim()}</option>
                 ))}

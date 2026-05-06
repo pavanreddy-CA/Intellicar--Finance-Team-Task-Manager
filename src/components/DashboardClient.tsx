@@ -2932,7 +2932,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const filteredReqs = sortedExternalRequests;
 
     const tableColumn = ["Sl No.", "From", "Date", "Type", "Nature", "Status"];
-    if (isAdmin) tableColumn.push("Request Source", "Original Function", "Transferred By");
+    if (isAdmin) tableColumn.push("Origin", "Original Function", "Transferred By");
 
     const tableRows = sortedExternalRequests.map((r, idx) => {
       const row = [
@@ -3036,7 +3036,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           const worksheet = workbook.addWorksheet("Requests");
           worksheet.addRow(['Shared Inter-Dept Requests Report']);
           const headers = ['Sl No.', 'Request From', 'Finance Function', 'Nature', 'Status'];
-          if (isAdmin) headers.push('Request Source', 'Original Function', 'Transferred By');
+          if (isAdmin) headers.push('Origin', 'Original Function', 'Transferred By');
           worksheet.addRow(headers);
           externalRequests.forEach((r, i) => {
             const row = [i+1, r.requestFrom, r.requestType, r.natureOfRequest, r.status];
@@ -3087,7 +3087,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           const doc = new jsPDF('landscape');
           doc.text("Shared Inter-Dept Requests Report", 14, 15);
           const headers = [["ID", "From", "Type", "Nature", "Status"]];
-          if (isAdmin) headers[0].push("Request Source", "Original Function", "Transferred By");
+          if (isAdmin) headers[0].push("Origin", "Original Function", "Transferred By");
           autoTable(doc, {
             head: headers,
             body: externalRequests.map(r => {
@@ -4517,12 +4517,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Requested From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Request From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('transferStatus')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Request Source {taskSortConfig?.key === 'transferStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Origin {taskSortConfig?.key === 'transferStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
@@ -7735,11 +7735,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                       </div>
 
-                      {/* Request Sources */}
+                      {/* Origin Settings */}
                       <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
                           <FileText size={18} color="#8b5cf6" />
-                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Finance Functions</h4>
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Origin</h4>
                         </div>
                         <p style={{ fontSize: "0.75rem", color: t.textMuted, margin: "0 0 12px 0" }}>Used in Inter Department Request form.</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -7762,14 +7762,14 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           <div style={{ display: "flex", gap: "8px" }}>
                             <input 
                               type="text" 
-                              placeholder="Add finance function..." 
+                              placeholder="Add origin..." 
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   const val = e.currentTarget.value.trim();
                                   if (val) {
                                     const currentItems = (settings.masterRequestTypes || "").split(',').map(i => i.trim().toLowerCase());
                                     if (currentItems.includes(val.toLowerCase())) {
-                                      showNotification(`"${val}" already exists in Finance Functions.`);
+                                      showNotification(`"${val}" already exists in Origins.`);
                                       return;
                                     }
                                     setSettings({...settings, masterRequestTypes: (settings.masterRequestTypes || "") + (settings.masterRequestTypes?.trim() ? "," : "") + val});

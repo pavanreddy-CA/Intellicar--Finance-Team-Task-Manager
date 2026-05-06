@@ -118,7 +118,7 @@ function buildEmailData(type: NotificationType, payload: any) {
         badgeType: 'blue',
         rows: [
           { label: 'Nature of Request', value: payload.natureOfRequest },
-          { label: 'Requested From', value: payload.requestFrom },
+          { label: 'Request From', value: payload.requestFrom },
           { label: 'Requester Email', value: payload.requesterEmail },
           { label: 'Request Type', value: payload.requestType }
         ],
