@@ -10391,6 +10391,82 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           </div>
         </div>
       )}
+
+      {showProcessingModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "550px", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden", animation: "modal-in 0.3s ease-out" }}>
+            <div style={{ padding: "24px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <CheckCircle2 size={24} color="#10b981" />
+                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#0f172a" }}>Mark as Processed</h2>
+              </div>
+              <button onClick={() => setShowProcessingModal(false)} style={{ background: "transparent", border: "none", color: "#64748b", cursor: "pointer" }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Mode of Communication <span style={{ color: "#ef4444" }}>*</span></label>
+                <select 
+                  value={processingMode}
+                  onChange={(e) => setProcessingMode(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", outline: "none" }}
+                >
+                  <option value="">Select Mode</option>
+                  {settings.masterCommunicationModes.split(',').map(m => (
+                    <option key={m.trim()} value={m.trim()}>{m.trim()}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Mail Link (Optional)</label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <Link size={16} color="#94a3b8" />
+                  <input 
+                    type="url"
+                    placeholder="https://mail.google.com/..."
+                    value={processingMailLink}
+                    onChange={(e) => setProcessingMailLink(e.target.value)}
+                    style={{ flex: 1, border: "none", outline: "none", fontSize: "0.875rem" }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Attachments (Max 5, 25MB each)</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
+                  {processingAttachments.map((file, idx) => (
+                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "0.75rem" }}>
+                      <FileText size={14} color="#64748b" />
+                      <span style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</span>
+                      <button onClick={() => setProcessingAttachments(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "2px" }}>
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {processingAttachments.length < 5 && (
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", background: "#f0fdf4", border: "1px dashed #22c55e", borderRadius: "6px", color: "#166534", fontSize: "0.75rem", cursor: "pointer" }}>
+                      <Paperclip size={14} />
+                      Attach
+                      <input type="file" multiple onChange={handleFileUpload} style={{ display: "none" }} />
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: "20px 24px", background: "#f8fafc", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button onClick={() => setShowProcessingModal(false)} style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button 
+                onClick={handleFinalizeProcessing}
+                disabled={isProcessing}
+                style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: "#10b981", color: "white", fontWeight: 700, cursor: isProcessing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                {isProcessing ? "Processing..." : "Submit Delivery"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   </div>
 </div>
   );
