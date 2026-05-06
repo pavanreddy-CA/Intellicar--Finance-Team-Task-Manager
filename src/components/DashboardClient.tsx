@@ -4011,8 +4011,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "32px", padding: "10px" }}>
                   
                   {/* Background Mesh Gradient Blobs (Subtle) */}
-                  <div style={{ position: "absolute", top: "-10%", right: "-10%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0) 70%)", borderRadius: "50%", zIndex: 0, filter: "blur(60px)" }}></div>
-                  <div style={{ position: "absolute", bottom: "20%", left: "-5%", width: "350px", height: "350px", background: "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(255, 255, 255, 0) 70%)", borderRadius: "50%", zIndex: 0, filter: "blur(50px)" }}></div>
+                  <div style={{ position: "absolute", top: "-5%", left: "-5%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(59, 130, 246, 0.07) 0%, transparent 70%)", borderRadius: "50%", zIndex: 0, filter: "blur(80px)" }}></div>
+                  <div style={{ position: "absolute", bottom: "-5%", right: "-5%", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)", borderRadius: "50%", zIndex: 0, filter: "blur(90px)" }}></div>
 
                   {/* 1. Mission & Vision Pillars */}
                   <div style={{ position: "relative", zIndex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
@@ -4020,8 +4020,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <div style={{ 
                       padding: "28px", 
                       borderRadius: "24px", 
-                      background: "rgba(255, 255, 255, 0.7)", 
-                      backdropFilter: "blur(12px)",
+                      background: "rgba(255, 255, 255, 0.72)", 
+                      backdropFilter: "blur(18px)",
                       border: "1px solid rgba(59, 130, 246, 0.2)",
                       position: "relative",
                       overflow: "hidden",
@@ -4048,8 +4048,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <div style={{ 
                       padding: "28px", 
                       borderRadius: "24px", 
-                      background: "rgba(255, 255, 255, 0.7)", 
-                      backdropFilter: "blur(12px)",
+                      background: "rgba(255, 255, 255, 0.72)", 
+                      backdropFilter: "blur(18px)",
                       border: "1px solid rgba(16, 185, 129, 0.2)",
                       position: "relative",
                       overflow: "hidden",
@@ -4079,8 +4079,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     zIndex: 1,
                     padding: "48px 32px", 
                     textAlign: "center", 
-                    background: "rgba(255, 255, 255, 0.8)", 
-                    backdropFilter: "blur(12px)",
+                    background: "rgba(255, 255, 255, 0.72)", 
+                    backdropFilter: "blur(18px)",
                     borderRadius: "32px",
                     border: "1px solid rgba(16, 185, 129, 0.2)",
                     boxShadow: "0 10px 15px -3px rgba(0,0,0,0.04)",
