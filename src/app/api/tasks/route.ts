@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
 
   let taskName: string = "", taskType: string = "", assignments: any[] = [], dueDate: string = "";
   let departmentName: string = "", requestFrom: string = "", mailLink: string = "", linkedRequestId: any = null;
+  let transferredBy: string | null = null, transferredAt: string | null = null;
 
   try {
     ({
