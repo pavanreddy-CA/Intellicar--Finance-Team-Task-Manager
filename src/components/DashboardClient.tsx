@@ -3924,7 +3924,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               <div style={{ fontSize: "1.75rem", fontWeight: 800, color: t.text }}>{total > 0 ? Math.round((ack/total)*100) : 0}%</div>
                               <div style={{ fontSize: "0.65rem", color: t.textMuted, fontWeight: 600 }}>RESOLVED</div>
                             </div>
-                          </div>
+                          </div></div>
                           <div style={{ marginTop: "32px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -4007,7 +4007,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               </div>
             </div>
           </div>
-        </div>
     ) : activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? (
           <div style={{ 
             marginBottom: "32px", 
