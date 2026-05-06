@@ -4711,7 +4711,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskName')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "10cm", maxWidth: "10cm" }} onClick={() => handleTaskSort('taskName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Task Name {taskSortConfig?.key === 'taskName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
@@ -4871,7 +4871,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               </div>
                             </td>
                             <td style={getTdStyle(t)}>{task.entityName}</td>
-                            <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "250px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
+                            <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "10cm", maxWidth: "10cm", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
                             <td style={{ ...getTdStyle(t), minWidth: "7.7cm", maxWidth: "7.7cm" }}>
                               <span style={{ padding: "4px 8px", background: "#f8fafc", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", border: "1px solid #e2e8f0" }}>
                                 {task.departmentName}
