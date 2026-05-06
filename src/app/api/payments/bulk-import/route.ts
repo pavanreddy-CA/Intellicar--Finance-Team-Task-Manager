@@ -53,7 +53,9 @@ export async function POST(req: NextRequest) {
           VALUES (
             ${entityName}, ${paymentDescription}, ${vendorName}, ${paymentType},
             ${departmentName}, ${financeFunction}, ${frequency}, ${dueDay ? Number(dueDay) : null}, ${weeklyDay || null},
-            ${vendorEmail}, ${prodEmail}, ${defaultOwner}, ${defaultReviewer},
+            ${vendorEmail}, ${prodEmail}, 
+            ${(defaultOwner === "N/A" || !defaultOwner) ? null : defaultOwner}, 
+            ${(defaultReviewer === "N/A" || !defaultReviewer) ? null : defaultReviewer},
             ${startDate ? new Date(startDate) : null}, ${endDate ? new Date(endDate) : null},
             TRUE, NOW(), NOW()
           )

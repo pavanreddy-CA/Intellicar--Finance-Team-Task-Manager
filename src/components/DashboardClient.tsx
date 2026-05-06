@@ -1050,10 +1050,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     const workbook = new ExcelJS.Workbook();
     
     // 1. Filter Finance Users
-    const financeUsers = usersList
-      .filter(u => u.department === 'Finance' && u.isApproved !== false)
-      .map(u => u.name)
-      .sort();
+    const financeUsers = [
+      "N/A",
+      ...usersList
+        .filter(u => u.department === 'Finance' && u.isApproved !== false)
+        .map(u => u.name)
+        .sort()
+    ];
 
     // 2. Add Instructions Sheet (Simplified)
     const insSheet = workbook.addWorksheet('Instructions');

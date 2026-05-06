@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const prefix = `${monthStr}${yearStr}`;
 
     for (const task of data) {
-      const reviewerName = task.reviewerName || "Not Applicable";
+      const reviewerName = (task.reviewerName === "N/A" || !task.reviewerName) ? "Not Applicable" : task.reviewerName;
       const reviewStatus = task.reviewStatus || (reviewerName !== "Not Applicable" ? "Task Pending From Owner" : "Review Not Required");
       
       let displayId = null;
