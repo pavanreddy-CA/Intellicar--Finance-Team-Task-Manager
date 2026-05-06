@@ -78,9 +78,9 @@ type ExternalRequest = {
   originalRequestType: string | null;
   transferStatus: string | null;
   transferredBy: string | null;
-  createdAt: string;
   entityName: string | null;
   frequency: string | null;
+  remarks?: string;
   processedMode?: string | null;
   processedMailLink?: string | null;
   processedAttachments?: any | null;
