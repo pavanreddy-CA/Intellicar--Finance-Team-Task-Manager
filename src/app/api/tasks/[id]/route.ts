@@ -116,6 +116,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (data.reviewCompletionDate !== undefined) {
       if (data.reviewCompletionDate) {
+        // STRICT RULE: Review completion is locked until the owner completes the task
+        if (taskStatus !== "Completed") {
+          return NextResponse.json({ 
+            message: "Forbidden: Review cannot be completed until the owner officially completes the task." 
+          }, { status: 403 });
+        }
+
         reviewCompletionDate = new Date(data.reviewCompletionDate).toISOString();
         reviewStatus = "Completed";
         reviewedSubmissionAt = new Date().toISOString();
