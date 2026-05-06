@@ -1801,20 +1801,22 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                   <input type="date" value={templateForm.endDate || ""} onChange={e => setTemplateForm({...templateForm, endDate: e.target.value})} style={inputStyle} />
                 </div>
 
-                <div>
-                  <label style={labelStyle}>Day of Month (Due Date)</label>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="31" 
-                    value={templateForm.dayOffset === undefined ? "" : templateForm.dayOffset} 
-                    onChange={e => {
-                        const val = e.target.value;
-                        setTemplateForm({...templateForm, dayOffset: val === "" ? undefined : parseInt(val)});
-                    }} 
-                    style={inputStyle} 
-                  />
-                </div>
+                {templateForm.frequency !== 'D' && templateForm.frequency !== 'W' && (
+                  <div>
+                    <label style={labelStyle}>Day of Month (Due Date)</label>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max="31" 
+                      value={templateForm.dayOffset === undefined ? "" : templateForm.dayOffset} 
+                      onChange={e => {
+                          const val = e.target.value;
+                          setTemplateForm({...templateForm, dayOffset: val === "" ? undefined : parseInt(val)});
+                      }} 
+                      style={inputStyle} 
+                    />
+                  </div>
+                )}
 
                 {templateForm.frequency === 'W' && (
                     <div>
