@@ -2041,7 +2041,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     if (taskEntityFilter.length > 0 && !taskEntityFilter.includes(t.entityName)) dropdownMatch = false;
     if (taskDeptFilter.length > 0 && !taskDeptFilter.includes(t.departmentName)) dropdownMatch = false;
     if (taskOwnerFilter.length > 0 && !taskOwnerFilter.includes(t.ownerName)) dropdownMatch = false;
-    if (taskStatusFilter.length > 0 && !taskStatusFilter.includes(t.taskStatus)) dropdownMatch = false;
+    if (taskStatusFilter.length > 0) {
+      const currentTracking = t.trackingStatus || getTrackingStatus({ taskStatus: t.taskStatus, dueDate: t.dueDate, completionDate: t.completionDate });
+      if (!taskStatusFilter.includes(currentTracking) && !taskStatusFilter.includes(t.taskStatus)) {
+        dropdownMatch = false;
+      }
+    }
     if (taskReviewerFilter.length > 0 && !taskReviewerFilter.includes(t.reviewerName || "")) dropdownMatch = false;
     if (taskSourceFilter.length > 0 && !taskSourceFilter.includes((t as any).source || 'TDB')) dropdownMatch = false;
     
@@ -2728,7 +2733,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         formatDate(t.dueDate),
         formatDate(t.completionDate),
         t.completedBy || "N/A",
-        t.taskStatus,
+        t.trackingStatus || getTrackingStatus({ taskStatus: t.taskStatus, dueDate: t.dueDate, completionDate: t.completionDate }),
         t.reviewerName,
         t.reviewStatus,
         formatDate(t.reviewCompletionDate),
