@@ -963,8 +963,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         worksheet.getCell(`F${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
         worksheet.getCell(`G${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
       }
-      
-      worksheet.addRow(['Sample Task', '', '', 'Finance', 'Manager Name', '', '', '31-12-2026']);
+      }
     } else if (type === 'lo') {
       addIns('Entity', 'Dropdown (Master Data)', 'Pick from the available entities.');
       addIns('Date', 'User Input (Date)', 'Format: DD-MM-YYYY (e.g. 21-04-2026)');
@@ -987,7 +986,6 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         worksheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
         worksheet.getCell(`E${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
       }
-      worksheet.addRow(['', '21-04-2026', 'Sample LO description...', '', '', 'Fixed']);
     } else if (type === 'recurring') {
       addIns('Task Name Pattern', 'User Input', 'Use {{MONTH}}, {{YEAR}} placeholders.');
       addIns('Entity Name', 'Dropdown (Master Data)', 'Target entity.');
