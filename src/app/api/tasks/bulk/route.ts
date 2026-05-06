@@ -23,16 +23,34 @@ export async function POST(req: NextRequest) {
     }
 
     let count = 0;
+    const now = new Date();
+    const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+    const yearStr = String(now.getFullYear()).slice(-2);
+    const prefix = `${monthStr}${yearStr}`;
+
     for (const task of data) {
       const reviewerName = task.reviewerName || "Not Applicable";
       const reviewStatus = task.reviewStatus || (reviewerName !== "Not Applicable" ? "Task Pending From Owner" : "Review Not Required");
       
+      let displayId = null;
+      try {
+        const sequences = await sql`
+          INSERT INTO "TaskSequence" ("monthYear", "nextVal")
+          VALUES (${prefix}, 1)
+          ON CONFLICT ("monthYear")
+          DO UPDATE SET "nextVal" = "TaskSequence"."nextVal" + 1
+          RETURNING "nextVal"
+        `;
+        displayId = `${prefix}-${String(sequences[0].nextVal).padStart(2, '0')}`;
+      } catch (e) {
+        console.error("Display ID generation error in bulk:", e);
+      }
+
       await sql`
         INSERT INTO "Task" (
           "taskName", "entityName", "taskType", "departmentName", "requestFrom",
           "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
-          "reviewStatus", "completionDate", "reviewCompletionDate", "ownerComments",
-          "reviewerComments", "createdAt", "updatedAt"
+          "reviewStatus", "displayId", "isApproved", "createdByEmail", "createdAt", "updatedAt"
         )
         VALUES (
           ${task.taskName}, ${task.entityName}, ${task.taskType || "General"}, 
@@ -40,10 +58,7 @@ export async function POST(req: NextRequest) {
           ${task.ownerName}, ${reviewerName}, 
           ${task.dueDate ? new Date(task.dueDate).toISOString() : null}, 
           ${task.mailLink || null}, ${task.taskStatus || "Pending"},
-          ${reviewStatus}, 
-          ${task.completionDate ? new Date(task.completionDate).toISOString() : null},
-          ${task.reviewCompletionDate ? new Date(task.reviewCompletionDate).toISOString() : null},
-          ${task.ownerComments || null}, ${task.reviewerComments || null},
+          ${reviewStatus}, ${displayId}, TRUE, ${userEmail},
           NOW(), NOW()
         )
       `;

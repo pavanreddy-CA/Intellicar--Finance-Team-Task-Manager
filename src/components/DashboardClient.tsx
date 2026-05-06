@@ -1204,8 +1204,16 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     if (!importPreview) return;
     const { type, rows, errors } = importPreview;
 
+    const errorRowIndices = new Set(errors.map(e => e.row));
+    const validRows = rows.filter((_, idx) => !errorRowIndices.has(idx + 2));
+
+    if (validRows.length === 0) {
+      showNotification("No valid records to import. Please fix errors and re-upload.", "error");
+      return;
+    }
+
     if (errors.length > 0) {
-      if (!confirm(`There are ${errors.length} validation errors. These rows will likely fail. Proceed anyway?`)) return;
+      if (!confirm(`Only ${validRows.length} out of ${rows.length} records are valid. Skip ${errors.length} invalid rows and proceed with valid ones?`)) return;
     }
 
     setIsImporting(true);
@@ -1221,28 +1229,107 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
-          type === 'payments' ? { items: rows } : 
-          type === 'employees' ? { employees: rows } : 
-          rows
+          type === 'payments' ? { items: validRows } : 
+          type === 'employees' ? { employees: validRows } : 
+          validRows
         )
       });
 
       if (res.ok) {
-        showNotification("Import successful!");
+        showNotification(`${validRows.length} records imported successfully!`);
         setImportPreview(null);
         if (type === 'tasks') fetchTasks(); 
         else if (type === 'lo') fetchLOs();
         else if (type === 'employees') fetchUsersList();
-        else fetchTasks(); // Refresh for recurring/payments
+        else fetchTasks(); 
       } else {
         const errorData = await res.json();
-        showNotification(errorData.message || "Import failed. Please check data format.");
+        showNotification(errorData.message || "Import failed. Please check data format.", "error");
       }
     } catch (err) {
-      showNotification("An error occurred during import.");
+      showNotification("An error occurred during import.", "error");
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const downloadErrorReport = async () => {
+    if (!importPreview || importPreview.errors.length === 0) return;
+    const { type, rows, errors } = importPreview;
+    
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Errors to Fix');
+    
+    let headerConfig: {header: string, key: string, width: number}[] = [];
+    if (type === 'tasks') {
+      headerConfig = [
+        { header: 'Task Name', key: 'taskName', width: 25 },
+        { header: 'Entity', key: 'entityName', width: 20 },
+        { header: 'Type', key: 'taskType', width: 15 },
+        { header: 'Dept', key: 'departmentName', width: 15 },
+        { header: 'Requester', key: 'requestFrom', width: 20 },
+        { header: 'Owner', key: 'ownerName', width: 20 },
+        { header: 'Reviewer', key: 'reviewerName', width: 20 },
+        { header: 'Due Date', key: 'dueDate', width: 20 },
+      ];
+    } else if (type === 'lo') {
+      headerConfig = [
+        { header: 'Entity', key: 'entity', width: 20 },
+        { header: 'Date', key: 'dateOfIdentification', width: 20 },
+        { header: 'LO Description', key: 'learningOpportunity', width: 40 },
+        { header: 'Identified By', key: 'identifiedBy', width: 20 },
+        { header: 'Committed By', key: 'committedBy', width: 20 },
+        { header: 'Resolution', key: 'resolutionProvided', width: 40 },
+      ];
+    } else if (type === 'recurring') {
+      headerConfig = [
+        { header: 'Task Name Pattern', key: 'taskNamePattern', width: 30 },
+        { header: 'Entity Name', key: 'entityName', width: 20 },
+        { header: 'Task Type', key: 'taskType', width: 15 },
+        { header: 'Department', key: 'departmentName', width: 15 },
+        { header: 'Finance Function', key: 'financeFunction', width: 20 },
+        { header: 'Frequency', key: 'frequency', width: 15 },
+        { header: 'Day Offset', key: 'dayOffset', width: 15 },
+        { header: 'Month Offset', key: 'monthOffset', width: 15 },
+        { header: 'Default Owner', key: 'defaultOwner', width: 20 },
+        { header: 'Default Reviewer', key: 'defaultReviewer', width: 20 },
+        { header: 'Start Date', key: 'startDate', width: 20 },
+        { header: 'End Date', key: 'endDate', width: 20 },
+        { header: 'Is Active', key: 'isActive', width: 15 },
+        { header: 'Freq Label', key: 'freqLabel', width: 20 },
+      ];
+    } else if (type === 'employees') {
+      headerConfig = [
+        { header: 'Employee ID', key: 'employeeId', width: 15 },
+        { header: 'Full Name', key: 'name', width: 25 },
+        { header: 'Email Address', key: 'email', width: 30 },
+        { header: 'Department', key: 'department', width: 20 },
+        { header: 'Role', key: 'role', width: 15 },
+      ];
+    }
+
+    worksheet.columns = [...headerConfig, { header: 'VALIDATION ERROR', key: 'error', width: 50 }];
+    const headRow = worksheet.getRow(1);
+    headRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+
+    const errorRowMap = new Map();
+    errors.forEach(e => {
+        const existing = errorRowMap.get(e.row) || [];
+        errorRowMap.set(e.row, [...existing, e.msg]);
+    });
+
+    rows.forEach((row, idx) => {
+        const rowNumber = idx + 2;
+        if (errorRowMap.has(rowNumber)) {
+            const errorMsg = errorRowMap.get(rowNumber).join('; ');
+            worksheet.addRow({ ...row, error: errorMsg });
+        }
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Fix_Errors_${type}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    showNotification("Error report downloaded. Fix and re-upload.");
   };
 
   const fetchUsersList = async () => {
@@ -9308,21 +9395,33 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             </div>
 
             {/* Actions */}
-            <div style={{ padding: "24px 32px", borderTop: `1px solid ${t.border}`, background: t.bg, display: "flex", justifyContent: "flex-end", gap: "16px" }}>
-              <button 
-                onClick={() => setImportPreview(null)}
-                style={{ padding: "12px 24px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer" }}
-              >
-                Discard & Close
-              </button>
-              <button 
-                onClick={handleConfirmBulkImport}
-                disabled={isImporting}
-                style={{ padding: "12px 32px", borderRadius: "12px", border: "none", background: "#10b981", color: "white", fontWeight: 700, cursor: isImporting ? "not-allowed" : "pointer", boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                {isImporting ? <RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> : <Download size={18} />}
-                {isImporting ? "Processing..." : "Confirm & Import All"}
-              </button>
+            <div style={{ padding: "24px 32px", borderTop: `1px solid ${t.border}`, background: t.bg, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                {importPreview.errors.length > 0 && (
+                  <button 
+                    onClick={downloadErrorReport}
+                    style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid #ef4444", background: "white", color: "#ef4444", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem" }}
+                  >
+                    <Download size={16} /> Download Error Report
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <button 
+                  onClick={() => setImportPreview(null)}
+                  style={{ padding: "12px 24px", borderRadius: "12px", border: `1px solid ${t.border}`, background: t.card, color: t.text, fontWeight: 600, cursor: "pointer" }}
+                >
+                  Discard & Close
+                </button>
+                <button 
+                  onClick={handleConfirmBulkImport}
+                  disabled={isImporting}
+                  style={{ padding: "12px 32px", borderRadius: "12px", border: "none", background: "#10b981", color: "white", fontWeight: 700, cursor: isImporting ? "not-allowed" : "pointer", boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", gap: "10px" }}
+                >
+                  {isImporting ? <RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> : <Download size={18} />}
+                  {isImporting ? "Processing..." : `Confirm & Import (${importPreview.rows.length - importPreview.errors.length} Ready)`}
+                </button>
+              </div>
             </div>
             <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }` }} />
           </div>
