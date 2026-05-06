@@ -200,18 +200,31 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
       padding: "20px"
     }}>
       <div style={{
-        background: t.card, borderRadius: "12px", width: "100%", maxWidth: "600px",
-        maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
-        position: "relative", border: `1px solid ${t.border}`
+        background: t.card, borderRadius: "24px", width: "100%", maxWidth: "650px",
+        maxHeight: "90vh", overflowY: "auto", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        position: "relative", border: `1px solid ${t.border}`, overflow: "hidden"
       }}>
-        <div style={{ padding: "24px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: t.card, zIndex: 10 }}>
-          <h2 style={{ margin: 0, fontSize: "1.25rem", color: t.text }}>{isEditing ? "Edit Task" : "Create New Task"}</h2>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.textMuted }}>
-            <X size={24} />
+        <div style={{ 
+          padding: "24px 32px", 
+          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", 
+          color: "white", 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          position: "sticky", 
+          top: 0, 
+          zIndex: 10 
+        }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{isEditing ? "Edit Task" : "Create New Task"}</h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", opacity: 0.8 }}>Assign tasks to specific entities and owners.</p>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "white", cursor: "pointer", width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        <form onSubmit={handleSubmit} style={{ padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
           {error && <div style={{ background: "#fee2e2", color: "#b91c1c", padding: "12px", borderRadius: "6px", fontSize: "0.875rem" }}>{error}</div>}
           
           {/* Request Type Transfer Option - Only show when converting from external request */}
