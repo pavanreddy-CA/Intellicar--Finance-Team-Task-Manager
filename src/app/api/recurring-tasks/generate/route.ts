@@ -73,13 +73,13 @@ export async function POST(req: NextRequest) {
           INSERT INTO "Task" (
             "taskName", "entityName", "taskType", "departmentName", "financeFunction", "requestFrom",
             "ownerName", "reviewerName", "dueDate", "taskStatus", "reviewStatus",
-            "templateId", "periodKey", "frequency", "displayId", "source", "isApproved", "createdAt", "updatedAt"
+            "templateId", "periodKey", "frequency", "displayId", "source", "isApproved", "createdByEmail", "createdAt", "updatedAt"
           )
           VALUES (
             ${taskItem.taskName}, ${taskItem.entityName}, ${taskItem.taskType}, ${taskItem.departmentName || 'Finance'}, ${taskItem.financeFunction || null}, 'System (Recurring)',
             ${taskItem.ownerName}, ${resolvedReviewer}, ${taskItem.dueDate ? new Date(taskItem.dueDate).toISOString() : null},
             'Pending', ${reviewStatus},
-            ${taskItem.templateId}, ${taskItem.periodKey}, ${taskItem.frequency || null}, ${displayId}, 'RA', TRUE, NOW(), NOW()
+            ${taskItem.templateId}, ${taskItem.periodKey}, ${taskItem.frequency || null}, ${displayId}, 'RA', TRUE, ${session.user.email}, NOW(), NOW()
           )
           RETURNING *
         `;

@@ -57,6 +57,7 @@ type Task = {
   completedBy?: string | null;
   reviewedBy?: string | null;
   processedBy?: string | null;
+  createdByEmail?: string | null;
 };
 
 type ExternalRequest = {
@@ -157,6 +158,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [activeView, setActiveView] = useState<'HOME' | 'TASKS' | 'RECURRING' | 'LOS' | 'PAYMENTS' | 'PAYMENT_REQUESTS'>('HOME');
   const [usersList, setUsersList] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+
+  const getUserDisplayName = (email: string | null | undefined) => {
+    if (!email) return "N/A";
+    if (email.toLowerCase() === "system") return "System";
+    const user = usersList.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    if (user && user.name) return user.name;
+    return email.split('@')[0];
+  };
   const [showLOForm, setShowLOForm] = useState(false);
   const [los, setLos] = useState<LearningOpportunity[]>([]);
   const [loLoading, setLoLoading] = useState(false);
@@ -2672,6 +2681,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     worksheet.columns = [
       { width: 8 },  // SI No
       { width: 20 }, // Timestamp
+      { width: 25 }, // Created By
       { width: 45 }, // Task Name
       { width: 25 }, // Entity
       { width: 20 }, // Type
@@ -2699,7 +2709,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     // Row 3: Column Headers (Dark Blue background, White text)
     const headerRow = worksheet.getRow(3);
     const headers = [
-      'SI No', 'Timestamp', 'Task Name', 'Entity', 'Type', 
+      'SI No', 'Timestamp', 'Created By', 'Task Name', 'Entity', 'Type', 
       'Department', 'Requested By', 'Owner', 'Due Date', 
       'Completion Date', 'Completed By', 'Status', 'Reviewer', 'Review Status', 
       'Review Date', 'Reviewed By', 'Owner Comments', 'Reviewer Comments', 'Mail Link',
@@ -2725,6 +2735,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       const row = worksheet.addRow([
         index + 1,
         formatDateTime(t.createdAt),
+        getUserDisplayName(t.createdByEmail),
         t.taskName,
         t.entityName,
         t.taskType,
@@ -2868,9 +2879,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     doc.setFontSize(10);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
-    const tableColumn = ["ID", "Task Name", "Entity", "Owner", "Due Date", "Comp. Date", "Comp. By", "Status", "Reviewer", "Rev. Status", "Rev. Date", "Rev. By", "Processed By"];
+    const tableColumn = ["ID", "Created At", "Created By", "Task Name", "Entity", "Owner", "Due Date", "Comp. Date", "Comp. By", "Status", "Reviewer", "Rev. Status", "Rev. Date", "Rev. By", "Processed By"];
     const tableRows = sortedTasks.map(t => [
       t.displayId || t.id,
+      formatDateTime(t.createdAt),
+      getUserDisplayName(t.createdByEmail),
       t.taskName,
       t.entityName,
       t.ownerName,
@@ -3039,9 +3052,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet("Tasks");
           worksheet.addRow(['Shared Tasks Report']);
-          worksheet.addRow(['ID', 'Task Name', 'Entity', 'Target Date', 'Status', 'Owner', 'Reviewer']);
+          worksheet.addRow(['ID', 'Created At', 'Created By', 'Task Name', 'Entity', 'Target Date', 'Status', 'Owner', 'Reviewer']);
           sortedTasks.forEach(t => {
-            worksheet.addRow([t.id, t.taskName, t.entityName, formatDate(t.dueDate), t.taskStatus, t.ownerName, t.reviewerName]);
+            worksheet.addRow([t.id, formatDateTime(t.createdAt), getUserDisplayName(t.createdByEmail), t.taskName, t.entityName, formatDate(t.dueDate), t.taskStatus, t.ownerName, t.reviewerName]);
           });
           buffer = await workbook.xlsx.writeBuffer();
           filename = `Tasks_Report_${dateSuffix}.xlsx`;
@@ -3091,8 +3104,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           const doc = new jsPDF('landscape');
           doc.text("Shared Tasks Report", 14, 15);
           autoTable(doc, {
-            head: [["ID", "Task Name", "Entity", "Target Date", "Status", "Owner"]],
-            body: sortedTasks.map(t => [t.id, t.taskName, t.entityName, formatDate(t.dueDate), t.taskStatus, t.ownerName]),
+            head: [["ID", "Created At", "Created By", "Task Name", "Entity", "Target Date", "Status", "Owner"]],
+            body: sortedTasks.map(t => [t.id, formatDateTime(t.createdAt), getUserDisplayName(t.createdByEmail), t.taskName, t.entityName, formatDate(t.dueDate), t.taskStatus, t.ownerName]),
             startY: 20
           });
           pdfData = doc.output('arraybuffer');
@@ -4672,7 +4685,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 );
                               })()}
                             </td>
-                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}><span style={{ color: isOverdue ? "inherit" : "#64748b", fontWeight: isOverdue ? "inherit" : "normal" }}>{formatDateTime(task.createdAt)}</span></td>
+                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>
+                              <span style={{ color: isOverdue ? "inherit" : "#64748b", fontWeight: isOverdue ? "inherit" : "normal" }}>{formatDateTime(task.createdAt)}</span>
+                              <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "2px", fontWeight: 500 }}>
+                                {getUserDisplayName(task.createdByEmail)}
+                              </div>
+                            </td>
                             <td style={getTdStyle(t)}>{task.entityName}</td>
                             <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "250px", maxWidth: "500px", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
                             <td style={getTdStyle(t)}>
