@@ -71,6 +71,9 @@ model Task {
   createdByEmail        String?
   captureLO             String?
   source                String?   @default("TDB")
+  processedMode         String?
+  processedMailLink     String?
+  processedAttachments  Json?
 
   @@unique([templateId, periodKey], map: "task_template_period_idx")
 }
@@ -168,6 +171,11 @@ model ExternalRequest {
   transferStatus         String?  @default("O")
   transferredBy          String?
   frequency              String?
+  processedMode          String?
+  processedMailLink      String?
+  processedAttachments   Json?
+  processedBy            String?
+  processedAt            DateTime?
 }
 
 model SystemSettings {

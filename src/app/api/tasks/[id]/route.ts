@@ -37,6 +37,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "reviewedBy" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedBy" TEXT`;
       await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "createdByEmail" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedMode" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedMailLink" TEXT`;
+      await sql`ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "processedAttachments" JSONB`;
+      
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "processedMode" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "processedMailLink" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "processedAttachments" JSONB`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "processedBy" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "processedAt" TIMESTAMP(3)`;
     } catch (e) {
       console.error("Task update migration check failed", e);
     }
@@ -160,6 +169,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    let processedMode = existingTask.processedMode;
+    let processedMailLink = existingTask.processedMailLink;
+    let processedAttachments = existingTask.processedAttachments;
+
+    if (data.processedMode !== undefined) processedMode = data.processedMode;
+    if (data.processedMailLink !== undefined) processedMailLink = data.processedMailLink;
+    if (data.processedAttachments !== undefined) processedAttachments = data.processedAttachments;
+
     const updatedTasks = await sql`
       UPDATE "Task"
       SET "taskName" = ${data.taskName !== undefined ? data.taskName : existingTask.taskName},
@@ -190,7 +207,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           "captureLO" = ${data.captureLO !== undefined ? data.captureLO : existingTask.captureLO},
           "isApproved" = ${data.isApproved !== undefined ? data.isApproved : existingTask.isApproved},
           "editApproved" = ${editApproved},
-          "editRequested" = ${editRequested}
+          "editRequested" = ${editRequested},
+          "processedMode" = ${processedMode},
+          "processedMailLink" = ${processedMailLink},
+          "processedAttachments" = ${processedAttachments !== undefined ? JSON.stringify(processedAttachments) : (existingTask.processedAttachments ? JSON.stringify(existingTask.processedAttachments) : null)}
       WHERE id = ${taskId}
       RETURNING *
     `;
@@ -215,7 +235,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         await sql`
           UPDATE "ExternalRequest"
-          SET status = ${requestStatus}
+          SET status = ${requestStatus},
+              "processedMode" = ${processedMode},
+              "processedMailLink" = ${processedMailLink},
+              "processedAttachments" = ${processedAttachments !== undefined ? JSON.stringify(processedAttachments) : (existingTask.processedAttachments ? JSON.stringify(existingTask.processedAttachments) : null)},
+              "processedBy" = ${processedBy},
+              "processedAt" = ${processedSubmissionAt}
           WHERE id = ${Number(updatedTask.linkedRequestId)}
         `;
 

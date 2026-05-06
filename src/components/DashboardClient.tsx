@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, UserPlus, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink, Eye, Filter, User, CreditCard } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, UserPlus, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink, Eye, Filter, User, CreditCard, Paperclip } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -58,6 +58,9 @@ type Task = {
   reviewedBy?: string | null;
   processedBy?: string | null;
   createdByEmail?: string | null;
+  processedMode?: string | null;
+  processedMailLink?: string | null;
+  processedAttachments?: any | null;
 };
 
 type ExternalRequest = {
@@ -77,6 +80,11 @@ type ExternalRequest = {
   transferredBy: string | null;
   createdAt: string;
   remarks?: string;
+  processedMode?: string | null;
+  processedMailLink?: string | null;
+  processedAttachments?: any | null;
+  processedBy?: string | null;
+  processedAt?: string | null;
 };
 
 type LearningOpportunity = {
@@ -236,6 +244,73 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [selectedExternalReqForView, setSelectedExternalReqForView] = useState<any | null>(null);
   const [selectedLOForView, setSelectedLOForView] = useState<any | null>(null);
   const [selectedPaymentForView, setSelectedPaymentForView] = useState<any | null>(null);
+
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [processingTask, setProcessingTask] = useState<Task | null>(null);
+  const [processingMode, setProcessingMode] = useState("");
+  const [processingMailLink, setProcessingMailLink] = useState("");
+  const [processingAttachments, setProcessingAttachments] = useState<Array<{ name: string; type: string; data: string }>>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (processingAttachments.length + files.length > 5) {
+      showNotification("Maximum 5 files allowed", "error");
+      return;
+    }
+    files.forEach(file => {
+      if (file.size > 25 * 1024 * 1024) {
+        showNotification(`${file.name} exceeds 25MB limit`, "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProcessingAttachments(prev => [...prev, {
+          name: file.name,
+          type: file.type,
+          data: event.target?.result as string
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFinalizeProcessing = async () => {
+    if (!processingTask) return;
+    if (!processingMode) {
+      showNotification("Please select a mode of communication", "error");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`/api/tasks/${processingTask.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestStatus: "Processed",
+          processedMode: processingMode,
+          processedMailLink: processingMailLink,
+          processedAttachments: processingAttachments
+        })
+      });
+      if (res.ok) {
+        showNotification("Task finalized and processed successfully.");
+        setShowProcessingModal(false);
+        setProcessingTask(null);
+        setProcessingMode("");
+        setProcessingMailLink("");
+        setProcessingAttachments([]);
+        fetchData();
+      } else {
+        const error = await res.json();
+        showNotification(`Error: ${error.message}`, "error");
+      }
+    } catch (error) {
+      showNotification("Failed to process task", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Universal Navigation Watcher: Persists view state and handles menu auto-collapse
   useEffect(() => {
@@ -2703,7 +2778,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       { width: 25 }, // Original Category
       { width: 25 }, // Transferred By
       { width: 25 }, // Processed By
-      { width: 20 }  // Processed At
+      { width: 20 }, // Processed At
+      { width: 20 }, // Comm. Mode
+      { width: 30 }  // Processed Mail Link
     ];
 
     // Row 3: Column Headers (Dark Blue background, White text)
@@ -2713,7 +2790,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       'Department', 'Requested By', 'Owner', 'Due Date', 
       'Completion Date', 'Completed By', 'Status', 'Reviewer', 'Review Status', 
       'Review Date', 'Reviewed By', 'Owner Comments', 'Reviewer Comments', 'Mail Link',
-      'Origin', 'Original Category', 'Transferred By', 'Processed By', 'Processed At'
+      'Origin', 'Original Category', 'Transferred By', 'Processed By', 'Processed At', 'Comm. Mode', 'Processed Mail Link'
     ];
     
     headers.forEach((h, i) => {
@@ -2757,7 +2834,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         t.originalRequestType || "N/A",
         t.requestFrom !== t.departmentName ? t.requestFrom : "N/A",
         t.processedBy || "N/A",
-        t.processedSubmissionAt ? formatDateTime(t.processedSubmissionAt) : "N/A"
+        t.processedSubmissionAt ? formatDateTime(t.processedSubmissionAt) : "N/A",
+        t.processedMode || "N/A",
+        t.processedMailLink || "N/A"
       ]);
       row.alignment = { vertical: 'middle', wrapText: true };
       row.eachCell((cell) => {
@@ -2879,7 +2958,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     doc.setFontSize(10);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
-    const tableColumn = ["ID", "Created At", "Created By", "Task Name", "Entity", "Owner", "Due Date", "Comp. Date", "Comp. By", "Status", "Reviewer", "Rev. Status", "Rev. Date", "Rev. By", "Processed By"];
+    const tableColumn = ["ID", "Created At", "Created By", "Task Name", "Entity", "Owner", "Due Date", "Comp. Date", "Comp. By", "Status", "Reviewer", "Rev. Status", "Rev. Date", "Rev. By", "Processed By", "Comm. Mode"];
     const tableRows = sortedTasks.map(t => [
       t.displayId || t.id,
       formatDateTime(t.createdAt),
@@ -2895,7 +2974,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       t.reviewStatus,
       formatDate(t.reviewCompletionDate),
       t.reviewedBy || "N/A",
-      t.processedBy || "N/A"
+      t.processedBy || "N/A",
+      t.processedMode || "N/A"
     ]);
 
     autoTable(doc, {
@@ -2921,7 +3001,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       { header: 'Finance Function', key: 'type', width: 20 },
       { header: 'What is Needed', key: 'nature', width: 40 },
       { header: 'Reason for Request', key: 'reason', width: 40 },
-      { header: 'Status', key: 'status', width: 15 }
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Comm. Mode', key: 'processedMode', width: 20 },
+      { header: 'Mail Link', key: 'processedMailLink', width: 30 },
+      { header: 'Processed By', key: 'processedBy', width: 25 },
+      { header: 'Processed At', key: 'processedAt', width: 25 }
     ];
 
     if (isAdmin) {
@@ -2946,6 +3030,10 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         nature: r.natureOfRequest,
         reason: r.reasonForRequest || "N/A",
         status: r.status || "New",
+        processedMode: r.processedMode || "N/A",
+        processedMailLink: r.processedMailLink || "N/A",
+        processedBy: r.processedBy || "N/A",
+        processedAt: r.processedAt ? new Date(r.processedAt).toLocaleDateString() : "N/A",
         ...(isAdmin ? {
           origin: r.transferStatus === 'T' ? 'Transferred' : 'Original',
           originalType: r.originalRequestType || 'N/A',
@@ -4621,6 +4709,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('processedMode' as any)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Comm. Mode {taskSortConfig?.key === ('processedMode' as any) && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), textAlign: "center" }}>Reports/Docs</th>
                       {!isViewer && (
                         <th style={{ ...getThStyle(t), textAlign: "center" }}>Actions</th>
                       )}
@@ -4628,9 +4722,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan={20} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading tasks...</td></tr>
+                      <tr><td colSpan={22} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading tasks...</td></tr>
                     ) : paginatedTasks.length === 0 ? (
-                      <tr><td colSpan={20} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No tasks found for the current filters.</td></tr>
+                      <tr><td colSpan={22} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No tasks found for the current filters.</td></tr>
                     ) : (
                       paginatedTasks.map((task) => {
                         const currentUserName = user?.name || user?.email;
@@ -4641,7 +4735,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         todayDate.setHours(0, 0, 0, 0);
                         const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < todayDate;
 
-                        const isOwnerRestricted = (COMPLETION_STATUSES.includes(task.taskStatus) && !isAdmin) || (!isCurrentUserOwner && !isAdmin);
+                        const isOwnerRestricted = (COMPLETION_STATUSES.includes(task.taskStatus) && !isAdmin) || (!isCurrentUserOwner && !isAdmin) || (!!task.reviewCompletionDate && !isAdmin);
                         const isReviewerRestricted = ((task.reviewStatus === "Completed" || task.reviewStatus === "Review Not Required") && !isAdmin) || (!isCurrentUserReviewer && !isAdmin);
                         
                         return (
@@ -4925,9 +5019,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                  (task.reviewStatus === 'Completed' || task.reviewStatus === 'Review Not Required' || task.reviewerName === 'Not Applicable') && 
                                  (isCurrentUserOwner || isAdmin) && (
                                   <button 
-                                    onClick={async () => {
-                                      await handleUpdate(task.id, "requestStatus", "Processed");
-                                      showNotification("Marked as Processed and Stakeholders notified!");
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProcessingTask(task);
+                                      setProcessingMode("");
+                                      setProcessingMailLink("");
+                                      setProcessingAttachments([]);
+                                      setShowProcessingModal(true);
                                     }}
                                     style={{ 
                                       padding: "2px 6px", fontSize: "0.65rem", background: "#4f46e5", 
@@ -4939,7 +5037,54 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 )}
                               </div>
                             </td>
-                            
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ fontSize: "0.75rem", color: task.processedMode ? "#0f172a" : "#94a3b8" }}>
+                                  {task.processedMode || "N/A"}
+                                </span>
+                                {task.processedMailLink && (
+                                  <a 
+                                    href={task.processedMailLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    title="View Mail Link"
+                                    style={{ color: "#4f46e5", display: "flex", alignItems: "center" }}
+                                  >
+                                    <ExternalLink size={14} />
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
+                                {(() => {
+                                  let attachments = [];
+                                  try {
+                                    attachments = typeof task.processedAttachments === 'string' 
+                                      ? JSON.parse(task.processedAttachments) 
+                                      : (task.processedAttachments || []);
+                                  } catch (e) {
+                                    attachments = [];
+                                  }
+                                  if (!Array.isArray(attachments)) attachments = [];
+                                  return attachments.length > 0 ? (
+                                    attachments.map((file: any, idx: number) => (
+                                      <a 
+                                        key={idx}
+                                        href={file.data}
+                                        download={file.name}
+                                        title={`Download ${file.name}`}
+                                        style={{ color: "#4f46e5", background: "#f5f3ff", padding: "4px", borderRadius: "4px" }}
+                                      >
+                                        <Download size={14} />
+                                      </a>
+                                    ))
+                                  ) : (
+                                    <span style={{ color: "#cbd5e1" }}>N/A</span>
+                                  );
+                                })()}
+                              </div>
+                            </td>
                             {!isViewer && (
                               <td style={{ ...getTdStyle(t), textAlign: "center" }}>
                                 <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: "center" }}>
@@ -5299,6 +5444,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={getThStyle(t)}>Comm. Mode</th>
+                      <th style={getThStyle(t)}>Reports/Docs</th>
                       {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('remarks')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -5456,6 +5603,54 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 </div>
                               </td>
                             )}
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ fontSize: "0.75rem", color: req.processedMode ? "#0f172a" : "#94a3b8" }}>
+                                  {req.processedMode || "N/A"}
+                                </span>
+                                {req.processedMailLink && (
+                                  <a 
+                                    href={req.processedMailLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    title="View Mail Link"
+                                    style={{ color: "#4f46e5", display: "flex", alignItems: "center" }}
+                                  >
+                                    <ExternalLink size={14} />
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
+                                {(() => {
+                                  let attachments = [];
+                                  try {
+                                    attachments = typeof req.processedAttachments === 'string' 
+                                      ? JSON.parse(req.processedAttachments) 
+                                      : (req.processedAttachments || []);
+                                  } catch (e) {
+                                    attachments = [];
+                                  }
+                                  if (!Array.isArray(attachments)) attachments = [];
+                                  return attachments.length > 0 ? (
+                                    attachments.map((file: any, idx: number) => (
+                                      <a 
+                                        key={idx}
+                                        href={file.data}
+                                        download={file.name}
+                                        title={`Download ${file.name}`}
+                                        style={{ color: "#4f46e5", background: "#f5f3ff", padding: "4px", borderRadius: "4px" }}
+                                      >
+                                        <Download size={14} />
+                                      </a>
+                                    ))
+                                  ) : (
+                                    <span style={{ color: "#cbd5e1" }}>N/A</span>
+                                  );
+                                })()}
+                              </div>
+                            </td>
                             <td style={{ ...getTdStyle(t), maxWidth: "280px", whiteSpace: "normal", color: t.textMuted, fontSize: "0.8rem" }}>
                               {req.status === 'Rejected' ? (
                                 <span style={{ color: "#ef4444", fontWeight: 500 }}>
