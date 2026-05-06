@@ -62,6 +62,8 @@ type Task = {
   processedMode?: string | null;
   processedMailLink?: string | null;
   processedAttachments?: any | null;
+  transferredBy?: string | null;
+  transferredAt?: string | null;
 };
 
 type ExternalRequest = {
@@ -88,6 +90,7 @@ type ExternalRequest = {
   processedAttachments?: any | null;
   processedBy?: string | null;
   processedAt?: string | null;
+  transferredAt?: string | null;
 };
 
 type LearningOpportunity = {
