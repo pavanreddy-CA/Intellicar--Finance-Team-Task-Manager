@@ -48,13 +48,13 @@ export async function POST(req: NextRequest) {
 
       await sql`
         INSERT INTO "Task" (
-          "taskName", "entityName", "taskType", "departmentName", "requestFrom",
+          "taskName", "entityName", "taskType", "departmentName", "frequency", "requestFrom",
           "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus",
           "reviewStatus", "displayId", "isApproved", "createdByEmail", "createdAt", "updatedAt"
         )
         VALUES (
           ${task.taskName}, ${task.entityName}, ${task.taskType || "General"}, 
-          ${task.departmentName || "Finance"}, ${task.requestFrom || "Admin"},
+          ${task.departmentName || "Finance"}, ${task.frequency || null}, ${task.requestFrom || "Admin"},
           ${task.ownerName}, ${reviewerName}, 
           ${task.dueDate ? new Date(task.dueDate).toISOString() : null}, 
           ${task.mailLink || null}, ${task.taskStatus || "Pending"},

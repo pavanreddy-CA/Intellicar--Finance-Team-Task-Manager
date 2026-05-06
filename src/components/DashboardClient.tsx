@@ -939,6 +939,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       addIns('Entity', 'Dropdown (Master Data)', 'Pick from the available entities.');
       addIns('Type', 'Dropdown (Master Data)', 'Category of task (e.g. GST, TDS).');
       addIns('Dept', 'Dropdown (Master Data)', 'Department handling the task.');
+      addIns('Frequency', 'Dropdown (Master Data)', 'Task recurrence frequency.');
       addIns('Requester', 'User Input (Name)', 'Person requesting the task.');
       addIns('Owner', 'Dropdown (Finance Users)', 'Assigned Finance team member.');
       addIns('Reviewer', 'Dropdown (Finance Users)', 'Assigned reviewer.');
@@ -949,6 +950,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         { header: 'Entity', key: 'entityName', width: 20 },
         { header: 'Type', key: 'taskType', width: 15 },
         { header: 'Dept', key: 'departmentName', width: 15 },
+        { header: 'Frequency', key: 'frequency', width: 15 },
         { header: 'Requester', key: 'requestFrom', width: 20 },
         { header: 'Owner', key: 'ownerName', width: 20 },
         { header: 'Reviewer', key: 'reviewerName', width: 20 },
@@ -960,8 +962,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
         worksheet.getCell(`B${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Entities']] };
         worksheet.getCell(`C${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Task Types']] };
         worksheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Departments']] };
-        worksheet.getCell(`F${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
+        worksheet.getCell(`E${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Frequencies']] };
         worksheet.getCell(`G${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
+        worksheet.getCell(`H${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [ranges['Finance Users']] };
       }
       }
     } else if (type === 'lo') {
@@ -1125,10 +1128,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           entityName: values[2],
           taskType: values[3] || "General",
           departmentName: values[4] || "Finance",
-          requestFrom: values[5],
-          ownerName: values[6],
-          reviewerName: values[7],
-          dueDate: parseExcelDate(values[8]),
+          frequency: values[5],
+          requestFrom: values[6],
+          ownerName: values[7],
+          reviewerName: values[8],
+          dueDate: parseExcelDate(values[9]),
         });
       } else if (type === 'lo') {
         checkRequired(1, "Entity");
