@@ -74,6 +74,8 @@ model Task {
   processedMode         String?
   processedMailLink     String?
   processedAttachments  Json?
+  transferredBy         String?
+  transferredAt         DateTime?
 
   @@unique([templateId, periodKey], map: "task_template_period_idx")
 }
@@ -170,6 +172,7 @@ model ExternalRequest {
   originalRequestType    String?
   transferStatus         String?  @default("O")
   transferredBy          String?
+  transferredAt          DateTime?
   frequency              String?
   processedMode          String?
   processedMailLink      String?

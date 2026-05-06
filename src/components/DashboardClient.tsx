@@ -567,6 +567,30 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     .map(([dept, _]) => dept.trim());
   
   const canAllocateAnything = (isAdmin || (user as any).isAllocator || userAllocatedDepts.length > 0) && !isViewer;
+  
+  const renderOriginBadge = (item: any) => {
+    const isTransferred = item.transferStatus === 'T';
+    const transferredAtStr = item.transferredAt ? new Date(item.transferredAt).toLocaleString() : 'N/A';
+    const hoverText = isTransferred 
+      ? `Transferred By: ${item.transferredBy || 'Unknown'}\nDate & Time: ${transferredAtStr}`
+      : 'This is an original request.';
+      
+    return (
+      <span 
+        title={hoverText}
+        style={{ 
+          padding: "2px 8px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: 800,
+          background: isTransferred ? "#fff7ed" : "#f1f5f9",
+          color: isTransferred ? "#ea580c" : "#64748b",
+          border: `1px solid ${isTransferred ? "#ffedd5" : "#e2e8f0"}`,
+          cursor: isTransferred ? "help" : "default",
+          display: "inline-block"
+        }}
+      >
+        {isTransferred ? 'Transferred' : 'Original'}
+      </span>
+    );
+  };
 
   const canImport = isAdmin || (() => {
     try {
@@ -2794,6 +2818,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     // Define Columns and Widths
     worksheet.columns = [
       { width: 8 },  // SI No
+      { width: 15 }, // Task ID
       { width: 20 }, // Timestamp
       { width: 25 }, // Created By
       { width: 45 }, // Task Name
@@ -2816,6 +2841,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       { width: 20 }, // Origin
       { width: 25 }, // Original Category
       { width: 25 }, // Transferred By
+      { width: 25 }, // Transferred At
       { width: 25 }, // Processed By
       { width: 20 }, // Processed At
       { width: 20 }, // Comm. Mode
@@ -2825,11 +2851,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     // Row 3: Column Headers (Dark Blue background, White text)
     const headerRow = worksheet.getRow(3);
     const headers = [
-      'SI No', 'Timestamp', 'Created By', 'Task Name', 'Entity', 'Type', 
+      'SI No', 'Task ID', 'Timestamp', 'Created By', 'Task Name', 'Entity', 'Type', 
       'Department', 'Requested By', 'Owner', 'Due Date', 
       'Completion Date', 'Completed By', 'Status', 'Reviewer', 'Review Status', 
       'Review Date', 'Reviewed By', 'Owner Comments', 'Reviewer Comments', 'Mail Link',
-      'Origin', 'Original Category', 'Transferred By', 'Processed By', 'Processed At', 'Comm. Mode', 'Processed Mail Link'
+      'Origin', 'Original Category', 'Transferred By', 'Transferred At', 'Processed By', 'Processed At', 'Comm. Mode', 'Processed Mail Link'
     ];
     
     headers.forEach((h, i) => {
@@ -2848,8 +2874,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
     // Add Data
     sortedTasks.forEach((t, index) => {
-      const row = worksheet.addRow([
+      const rowData = [
         index + 1,
+        t.displayId || `#${t.id}`,
         formatDateTime(t.createdAt),
         getUserDisplayName(t.createdByEmail),
         t.taskName,
@@ -2871,12 +2898,21 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         t.mailLink || "",
         t.transferStatus === 'T' ? 'Transferred' : 'Original',
         t.originalRequestType || "N/A",
-        t.requestFrom !== t.departmentName ? t.requestFrom : "N/A",
+        t.transferredBy || "N/A",
+        t.transferredAt ? formatDateTime(t.transferredAt) : "N/A",
         t.processedBy || "N/A",
         t.processedSubmissionAt ? formatDateTime(t.processedSubmissionAt) : "N/A",
         t.processedMode || "N/A",
         t.processedMailLink || "N/A"
-      ]);
+      ];
+      
+      // Security: If not admin/allocator, redact sensitive transfer info
+      if (!canAllocateAnything) {
+        rowData[23] = "REDACTED"; // Transferred By
+        rowData[24] = "REDACTED"; // Transferred At
+      }
+
+      const row = worksheet.addRow(rowData);
       row.alignment = { vertical: 'middle', wrapText: true };
       row.eachCell((cell) => {
         cell.font = { name: 'Calibri', size: 10 };
@@ -3034,6 +3070,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     
     const columns = [
       { header: 'Sl No.', key: 'sl', width: 10 },
+      { header: 'Task ID', key: 'taskId', width: 15 },
       { header: 'Request From', key: 'requestFrom', width: 25 },
       { header: 'Email', key: 'email', width: 30 },
       { header: 'Date', key: 'date', width: 15 },
@@ -3047,11 +3084,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       { header: 'Processed At', key: 'processedAt', width: 25 }
     ];
 
-    if (isAdmin) {
+    if (canAllocateAnything) {
       columns.push(
         { header: 'Request Origin', key: 'origin', width: 20 },
         { header: 'Original Category', key: 'originalType', width: 20 },
-        { header: 'Transferred By', key: 'transferredBy', width: 20 }
+        { header: 'Transferred By', key: 'transferredBy', width: 25 },
+        { header: 'Transferred At', key: 'transferredAt', width: 25 }
       );
     }
 
@@ -3062,6 +3100,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     sortedExternalRequests.forEach((r, idx) => {
       worksheet.addRow({
         sl: idx + 1,
+        taskId: r.taskDisplayId || (r.convertedTaskId ? `#${r.convertedTaskId}` : "N/A"),
         requestFrom: r.requestFrom,
         email: r.requesterEmail,
         date: new Date(r.createdAt).toLocaleDateString(),
@@ -3073,10 +3112,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         processedMailLink: r.processedMailLink || "N/A",
         processedBy: r.processedBy || "N/A",
         processedAt: r.processedAt ? new Date(r.processedAt).toLocaleDateString() : "N/A",
-        ...(isAdmin ? {
+        ...(canAllocateAnything ? {
           origin: r.transferStatus === 'T' ? 'Transferred' : 'Original',
           originalType: r.originalRequestType || 'N/A',
-          transferredBy: r.transferredBy || 'N/A'
+          transferredBy: r.transferredBy || 'N/A',
+          transferredAt: r.transferredAt ? new Date(r.transferredAt).toLocaleString() : 'N/A'
         } : {})
       });
     });
@@ -3094,12 +3134,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
     const filteredReqs = sortedExternalRequests;
 
-    const tableColumn = ["Sl No.", "From", "Date", "Type", "What is Needed", "Reason", "Status"];
-    if (isAdmin) tableColumn.push("Origin", "Original Function", "Transferred By");
+    const tableColumn = ["Sl No.", "Task ID", "From", "Date", "Type", "What is Needed", "Reason", "Status"];
+    if (canAllocateAnything) tableColumn.push("Origin", "Original Function", "Transferred By", "Transferred At");
 
     const tableRows = sortedExternalRequests.map((r, idx) => {
       const row = [
         idx + 1,
+        r.taskDisplayId || (r.convertedTaskId ? `#${r.convertedTaskId}` : "N/A"),
         r.requestFrom,
         new Date(r.createdAt).toLocaleDateString(),
         r.requestType,
@@ -3107,11 +3148,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         r.reasonForRequest || "N/A",
         r.status || "New"
       ];
-      if (isAdmin) {
+      if (canAllocateAnything) {
         row.push(
           r.transferStatus === 'T' ? 'Transferred' : 'Original',
           r.originalRequestType || 'N/A',
-          r.transferredBy || 'N/A'
+          r.transferredBy || 'N/A',
+          r.transferredAt ? new Date(r.transferredAt).toLocaleString() : 'N/A'
         );
       }
       return row;
@@ -4848,13 +4890,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             </td>
                             <td style={getTdStyle(t)}>{task.requestFrom}</td>
                             <td style={getTdStyle(t)}>
-                              <span style={{ 
-                                padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700,
-                                background: task.transferStatus === 'T' ? "#fef3c7" : "#f1f5f9",
-                                color: task.transferStatus === 'T' ? "#b45309" : "#64748b"
-                              }}>
-                                {task.transferStatus === 'T' ? 'Transferred' : 'Original'}
-                              </span>
+                              {renderOriginBadge(task)}
                             </td>
                             <td style={getTdStyle(t)}>{task.ownerName}</td>
                             <td style={getTdStyle(t)}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
@@ -5458,6 +5494,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      {canAllocateAnything && (
+                        <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('transferStatus')}>
+                           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                             Origin {extReqSortConfig?.key === 'transferStatus' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                           </div>
+                        </th>
+                      )}
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('createdAt')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Date {extReqSortConfig?.key === 'createdAt' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -5495,9 +5538,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </thead>
                   <tbody>
                     {extReqLoading ? (
-                      <tr><td colSpan={canAllocateAnything ? 11 : 10} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading requests...</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 12 : 10} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading requests...</td></tr>
                     ) : sortedExternalRequests.length === 0 ? (
-                      <tr><td colSpan={canAllocateAnything ? 11 : 10} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No requests found.</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 12 : 10} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No requests found.</td></tr>
                     ) : (
                       sortedExternalRequests.map((req, idx) => {
                         const matrix = JSON.parse(settings.allocationMatrix || '{}');
@@ -5528,10 +5571,15 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {idx + 1}
                               </div>
                             </td>
-                            <td style={getTdStyle(t)}>
-                              <div style={{ fontWeight: 600, color: t.text }}>{req.requestFrom}</div>
-                              <div style={{ fontSize: "0.7rem", color: t.textMuted }}>{req.departmentName}</div>
-                            </td>
+                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>
+                               <div style={{ fontWeight: 600, color: t.text }}>{req.requestFrom}</div>
+                               <div style={{ fontSize: "0.75rem", color: t.textMuted }}>{req.departmentName}</div>
+                             </td>
+                             {canAllocateAnything && (
+                               <td style={getTdStyle(t)}>
+                                 {renderOriginBadge(req)}
+                               </td>
+                             )}
                             <td style={getTdStyle(t)}>{new Date(req.createdAt).toLocaleDateString()}</td>
                             <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

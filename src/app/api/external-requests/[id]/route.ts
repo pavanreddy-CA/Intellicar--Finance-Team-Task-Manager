@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { triggerNotification } from '@/services/notificationService';
+import { getServerSession } from '@/lib/session';
 
 
 export async function PATCH(
@@ -12,6 +13,8 @@ export async function PATCH(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
+    const session = await getServerSession();
+    const userName = session?.user?.name || session?.user?.email || "Unknown";
     
     // Self-healing migration: Ensure column exists without crashing the request
     try {
@@ -38,11 +41,14 @@ export async function PATCH(
       // If the new requestType is different from the originalRequestType, it's a transfer
       if (currentRequest && body.requestType !== currentRequest.originalRequestType) {
         updateData.transferStatus = 'T';
+        updateData.transferredBy = userName;
+        updateData.transferredAt = new Date().toISOString();
       }
     }
     
-    if (body.transferredBy !== undefined) {
+    if (body.transferredBy !== undefined && !updateData.transferredBy) {
       updateData.transferredBy = body.transferredBy;
+      updateData.transferredAt = new Date().toISOString();
     }
     
     if (Object.keys(updateData).length === 0) {

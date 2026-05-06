@@ -210,7 +210,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           "editRequested" = ${editRequested},
           "processedMode" = ${processedMode},
           "processedMailLink" = ${processedMailLink},
-          "processedAttachments" = ${processedAttachments !== undefined ? JSON.stringify(processedAttachments) : (existingTask.processedAttachments ? JSON.stringify(existingTask.processedAttachments) : null)}
+          "processedAttachments" = ${processedAttachments !== undefined ? JSON.stringify(processedAttachments) : (existingTask.processedAttachments ? JSON.stringify(existingTask.processedAttachments) : null)},
+          "transferredBy" = ${ (data.departmentName !== undefined && data.departmentName !== existingTask.departmentName) || (data.financeFunction !== undefined && data.financeFunction !== existingTask.financeFunction) ? userName : existingTask.transferredBy },
+          "transferredAt" = ${ (data.departmentName !== undefined && data.departmentName !== existingTask.departmentName) || (data.financeFunction !== undefined && data.financeFunction !== existingTask.financeFunction) ? new Date().toISOString() : existingTask.transferredAt },
+          "transferStatus" = ${ (data.departmentName !== undefined && data.departmentName !== existingTask.departmentName) || (data.financeFunction !== undefined && data.financeFunction !== existingTask.financeFunction) ? 'T' : (data.transferStatus !== undefined ? data.transferStatus : existingTask.transferStatus) }
       WHERE id = ${taskId}
       RETURNING *
     `;
