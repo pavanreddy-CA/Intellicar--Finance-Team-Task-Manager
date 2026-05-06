@@ -10254,9 +10254,9 @@ function StatusPill({
         onChange={(e) => onUpdate(taskId, "taskStatus", e.target.value)}
         style={pillStyle}
       >
-        <option value="Pending">Pending</option>
+        <option value="Pending">{(!isCompleted && effectiveTrackingStatus) ? effectiveTrackingStatus : "Pending"}</option>
         <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
+        <option value="Completed">{isCompleted ? (effectiveTrackingStatus || "Completed") : "Completed"}</option>
       </select>
     );
   }
