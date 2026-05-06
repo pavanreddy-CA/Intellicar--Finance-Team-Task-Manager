@@ -2802,7 +2802,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const worksheet = workbook.addWorksheet("Tasks");
 
     // Row 1: Main Title (Dark Blue background, White text)
-    worksheet.mergeCells('A1:Q1');
+    worksheet.mergeCells('A1:AC1');
     const titleCell = worksheet.getCell('A1');
     titleCell.value = 'ITPL - Finance Task Management';
     titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -2814,7 +2814,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const dateStr = `${now.getDate()}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
     
     // Row 2: Subtitle (Light Blue background, Italicized Blue text)
-    worksheet.mergeCells('A2:Q2');
+    worksheet.mergeCells('A2:AC2');
     const subCell = worksheet.getCell('A2');
     subCell.value = `Task Report - As of ${dateStr}`;
     subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
@@ -2942,7 +2942,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const worksheet = workbook.addWorksheet("Learning Opportunities");
 
     // Row 1: Main Title
-    worksheet.mergeCells('A1:K1');
+    worksheet.mergeCells('A1:M1');
     const titleCell = worksheet.getCell('A1');
     titleCell.value = 'ITPL - Finance Learning Opportunity Report';
     titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -2954,7 +2954,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const dateStr = `${now.getDate()}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
     
     // Row 2: Subtitle (Light Blue background, Italicized Blue text)
-    worksheet.mergeCells('A2:K2');
+    worksheet.mergeCells('A2:M2');
     const subCell = worksheet.getCell('A2');
     subCell.value = `Consolidated Report (All Entries) - As of ${dateStr}`;
     subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
@@ -2971,6 +2971,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       { width: 20 }, // Identified By
       { width: 20 }, // Committed By
       { width: 45 }, // Resolution Provided
+      { width: 20 }, // Status
+      { width: 30 }, // Ack Remarks
       { width: 20 }, // Mode Of Communication
       { width: 30 }, // Email Sub
       { width: 40 }  // Comments
@@ -3074,6 +3076,30 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Inter-Dept Requests");
     
+    const lastCol = canAllocateAnything ? 'Q' : 'M';
+
+    // Row 1: Main Title
+    worksheet.mergeCells(`A1:${lastCol}1`);
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'ITPL - Finance Inter-Departmental Request Report';
+    titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const dateStr = `${now.getDate()}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
+    
+    // Row 2: Subtitle
+    worksheet.mergeCells(`A2:${lastCol}2`);
+    const subCell = worksheet.getCell('A2');
+    subCell.value = `IDR Report - As of ${dateStr}`;
+    subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF3B5998' } };
+    subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+    subCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    
+    // Header Row styling will be handled by worksheet.columns automatically for Row 3
+    // but we need to account for the 2 title rows before adding data
     const columns = [
       { header: 'Sl No.', key: 'sl', width: 10 },
       { header: 'Task ID', key: 'taskId', width: 15 },
@@ -3100,6 +3126,22 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     }
 
     worksheet.columns = columns;
+
+    // Style the header row (Row 3)
+    const headerRow = worksheet.getRow(3);
+    headerRow.height = 25;
+    columns.forEach((col, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B5998' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
 
     const filteredReqs = sortedExternalRequests;
 
