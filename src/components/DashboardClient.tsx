@@ -263,8 +263,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
 
     files.forEach(file => {
-      if (file.size > 50 * 1024 * 1024) {
-        showNotification(`${file.name} exceeds 50MB limit`, "error");
+      if (file.size > 3.5 * 1024 * 1024) {
+        showNotification(`${file.name} exceeds 3.5MB limit`, "error");
         return;
       }
 
@@ -2598,8 +2598,8 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     try {
       let dataStr = "";
       if (resourceType === 'FILE' && resourceFile) {
-        if (resourceFile.size > 50 * 1024 * 1024) {
-          showNotification("File too large. Maximum size is 50MB.", "error");
+        if (resourceFile.size > 3.5 * 1024 * 1024) {
+          showNotification("File too large. Maximum size is 3.5MB.", "error");
           setResourcesLoading(false);
           return;
         }
@@ -10127,7 +10127,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     onChange={e => setResourceFile(e.target.files?.[0] || null)}
                     style={{ ...getInputStyle(t), padding: "8px" }} 
                   />
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.65rem", color: t.textMuted }}>Supported: PDF, JPG, PNG (Max 50MB)</p>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "0.65rem", color: t.textMuted }}>Supported: PDF, JPG, PNG (Max 3.5MB)</p>
                 </div>
               )}
 
@@ -10470,7 +10470,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 </div>
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Attachments (Max 5, 50MB each)</label>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Attachments (Max 5, 3.5MB each)</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                   {processingAttachments.map((file, idx) => (
                     <div key={file.id || idx} style={{ display: "flex", flexDirection: "column", gap: "4px", padding: "10px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px" }}>
