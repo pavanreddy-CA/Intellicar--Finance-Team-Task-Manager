@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         INSERT INTO "LearningOpportunity" (
           "entity", "dateOfIdentification", "learningOpportunity", "identifiedBy",
           "committedBy", "resolutionProvided", "modeOfCommunication", "emailSub",
-          "comments", "createdByEmail", "createdAt", "updatedAt"
+          "comments", "createdByEmail", "createdAt", "updatedAt", "classification"
         )
         VALUES (
           ${lo.entity}, 
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
           ${lo.learningOpportunity}, ${lo.identifiedBy}, ${lo.committedBy},
           ${lo.resolutionProvided || "Pending"}, ${lo.modeOfCommunication || "Email"},
           ${lo.emailSub || null}, ${lo.comments || null}, 
-          ${lo.createdByEmail || userEmail}, NOW(), NOW()
+          ${lo.createdByEmail || userEmail}, NOW(), NOW(), ${lo.classification || null}
         )
       `;
       count++;

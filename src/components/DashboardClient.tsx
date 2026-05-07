@@ -135,6 +135,7 @@ type LearningOpportunity = {
   deleteRequestReason?: string | null;
   createdByEmail?: string | null;
   taskId?: number | null;
+  classification?: string | null;
 };
 
 const hours12 = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -246,7 +247,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     userModuleExceptions: '{}',
     bulkImportMatrix: '{}',
     masterBankAccounts: '',
-    departmentHeadMatrix: '{}'
+    departmentHeadMatrix: '{}',
+    masterLOClassifications: 'Process Error,Calculation Error,Communication Gap,Documentation Miss,System Issue,Miscellaneous'
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [originalSettings, setOriginalSettings] = useState<any>(null);
@@ -6278,6 +6280,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 Identified By {loSortConfig?.key === 'identifiedBy' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                               </div>
                             </th>
+                            <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('classification' as any)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                Classification {loSortConfig?.key === 'classification' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                              </div>
+                            </th>
                             <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                                 Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -6346,6 +6353,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               <td style={getTdStyle(t)}>{formatDate(lo.dateOfIdentification)}</td>
                               <td style={getTdStyle(t)}>{lo.entity}</td>
                               <td style={getTdStyle(t)}>{lo.identifiedBy}</td>
+                              <td style={getTdStyle(t)}>{lo.classification || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
                               <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.learningOpportunity}</td>
                               <td style={{ ...getTdStyle(t), maxWidth: "300px", whiteSpace: "normal" }}>{lo.resolutionProvided || "--"}</td>
                               <td style={getTdStyle(t)}>{lo.committedBy}</td>
@@ -6522,6 +6530,21 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   onChange={e => setLOCaptureForm({...loCaptureForm, resolutionProvided: e.target.value})}
                   style={{ ...getInputStyle(t), resize: "none" }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>LO Classification *</label>
+                <select 
+                  value={loCaptureForm.classification}
+                  onChange={e => setLOCaptureForm({...loCaptureForm, classification: e.target.value})}
+                  style={getInputStyle(t)}
+                  required
+                >
+                  <option value="">Choose Classification</option>
+                  {settings?.masterLOClassifications?.split(',').filter((c: string) => c.trim()).map((cls: string) => (
+                    <option key={cls.trim()} value={cls.trim()}>{cls.trim()}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -8437,6 +8460,54 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                       </div>
 
+                      {/* Week Days */}
+                      <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>
+                          <Lightbulb size={18} color="#f59e0b" />
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>LO Classifications</h4>
+                        </div>
+                        <p style={{ fontSize: "0.75rem", color: t.textMuted, margin: "0 0 12px 0" }}>Used for classifying Learning Opportunities.</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {(settings.masterLOClassifications || "").split(',').filter(t => t.trim()).map((cls, idx) => (
+                              <div key={idx} style={{ background: t.card, border: `1px solid ${t.border}`, padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {cls.trim()}
+                                <button 
+                                  onClick={() => {
+                                    const items = settings.masterLOClassifications.split(',').filter((_, i) => i !== idx);
+                                    setSettings({...settings, masterLOClassifications: items.join(',')});
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Add classification..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    const currentItems = (settings.masterLOClassifications || "").split(',').map(i => i.trim().toLowerCase());
+                                    if (currentItems.includes(val.toLowerCase())) {
+                                      showNotification(`"${val}" already exists in Classifications.`);
+                                      return;
+                                    }
+                                    setSettings({...settings, masterLOClassifications: (settings.masterLOClassifications || "") + (settings.masterLOClassifications?.trim() ? "," : "") + val});
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                              style={{ ...getInputStyle(t), padding: "8px 12px", fontSize: "0.8125rem" }} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
                       {/* Week Days */}
                       <div style={{ padding: "20px", background: t.bg, borderRadius: "16px", border: `1px solid ${t.border}` }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", color: t.text }}>

@@ -29,6 +29,7 @@ export default function LOForm({ onClose, onSuccess, settings, usersList = [], u
     modeOfCommunication: "",
     emailSub: "",
     comments: "",
+    classification: "",
   });
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function LOForm({ onClose, onSuccess, settings, usersList = [], u
         modeOfCommunication: initialData.modeOfCommunication || "",
         emailSub: initialData.emailSub || "",
         comments: initialData.comments || "",
+        classification: initialData.classification || "",
       });
     }
   }, [initialData]);
@@ -174,6 +176,16 @@ export default function LOForm({ onClose, onSuccess, settings, usersList = [], u
                 {finalEmployees.map(emp => <option key={emp} value={emp}>{emp}</option>)}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label style={dynamicLabelStyle}>LO Classification *</label>
+            <select name="classification" required value={formData.classification} onChange={handleChange} style={dynamicInputStyle}>
+              <option value="">Choose Classification</option>
+              {settings?.masterLOClassifications?.split(',').filter((c: string) => c.trim()).map((cls: string) => (
+                <option key={cls.trim()} value={cls.trim()}>{cls.trim()}</option>
+              ))}
+            </select>
           </div>
 
           <div>

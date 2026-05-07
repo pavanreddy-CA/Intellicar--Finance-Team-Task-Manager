@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
 
     try {
       await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "taskId" INTEGER`;
+      await sql`ALTER TABLE "LearningOpportunity" ADD COLUMN IF NOT EXISTS "classification" TEXT`;
     } catch (e) {
       console.log("Migration check failed silently", e);
     }
@@ -113,14 +114,14 @@ export async function POST(req: NextRequest) {
         "entity", "dateOfIdentification", "learningOpportunity", "identifiedBy",
         "committedBy", "resolutionProvided", "modeOfCommunication", "emailSub",
         "comments", "createdByEmail", "createdAt", "updatedAt",
-        "isAcknowledged", "taskId"
+        "isAcknowledged", "taskId", "classification"
       )
       VALUES (
         ${data.entity}, ${new Date(data.dateOfIdentification).toISOString()}, 
         ${data.learningOpportunity}, ${data.identifiedBy},
         ${data.committedBy}, ${data.resolutionProvided}, ${data.modeOfCommunication}, 
         ${data.emailSub || null}, ${data.comments || null}, ${session.user.email}, NOW(), NOW(),
-        false, ${data.taskId || null}
+        false, ${data.taskId || null}, ${data.classification || null}
       )
       RETURNING *
     `;

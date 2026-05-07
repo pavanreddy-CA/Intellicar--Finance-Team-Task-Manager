@@ -55,6 +55,7 @@ export async function PATCH(request: Request) {
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportDay" TEXT DEFAULT 'Monday'`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "paymentReportDate" INTEGER DEFAULT 1`;
       await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "departmentHeadMatrix" TEXT DEFAULT '{}'`;
+      await sql`ALTER TABLE "SystemSettings" ADD COLUMN IF NOT EXISTS "masterLOClassifications" TEXT DEFAULT 'Process Error,Calculation Error,Communication Gap,Documentation Miss,System Issue,Miscellaneous'`;
     } catch (e) {
       console.log("Migration for settings fields failed/skipped");
     }
@@ -94,7 +95,8 @@ export async function PATCH(request: Request) {
           "dailyTaskGenerationTime",
           "holidayList",
           "masterResourceCategories",
-          "departmentHeadMatrix"
+          "departmentHeadMatrix",
+          "masterLOClassifications"
         ) VALUES (
           'singleton',
           ${body.masterDepartments || ''},
@@ -128,7 +130,8 @@ export async function PATCH(request: Request) {
           ${body.dailyTaskGenerationTime || '06:00'},
           ${body.holidayList || '[]'},
           ${body.masterResourceCategories || 'Goods & Service Tax,Income Tax,Audit,ROC,IND AS,Miscellaneous'},
-          ${body.departmentHeadMatrix || '{}'}
+          ${body.departmentHeadMatrix || '{}'},
+          ${body.masterLOClassifications || 'Process Error,Calculation Error,Communication Gap,Documentation Miss,System Issue,Miscellaneous'}
         )
         RETURNING *
       `;
@@ -173,7 +176,8 @@ export async function PATCH(request: Request) {
         "dailyTaskGenerationTime" = ${body.dailyTaskGenerationTime ?? existingSettings[0].dailyTaskGenerationTime},
         "holidayList" = ${body.holidayList ?? existingSettings[0].holidayList},
         "masterResourceCategories" = ${body.masterResourceCategories ?? existingSettings[0].masterResourceCategories},
-        "departmentHeadMatrix" = ${body.departmentHeadMatrix ?? existingSettings[0].departmentHeadMatrix}
+        "departmentHeadMatrix" = ${body.departmentHeadMatrix ?? existingSettings[0].departmentHeadMatrix},
+        "masterLOClassifications" = ${body.masterLOClassifications ?? existingSettings[0].masterLOClassifications}
       WHERE id = ${settingsId}
       RETURNING *
     `;
