@@ -248,6 +248,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     departmentHeadMatrix: '{}'
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [originalSettings, setOriginalSettings] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareData, setShareData] = useState({
@@ -924,7 +925,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       const res = await fetch("/api/admin/settings");
       if (res.ok) {
         const data = await res.json();
-        if (data) setSettings(data);
+        if (data) {
+          setSettings(data);
+          setOriginalSettings(JSON.parse(JSON.stringify(data)));
+        }
       }
     } catch (error) {
       console.error("Failed to fetch settings", error);
@@ -969,6 +973,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       });
       if (res.ok) {
         showNotification("Matrix settings saved successfully!");
+        setOriginalSettings(JSON.parse(JSON.stringify(settings)));
       } else {
         const errData = await res.json();
         showNotification(`Failed to save matrix settings: ${errData.details || errData.message || 'Unknown error'}`);
@@ -977,6 +982,23 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       console.error("Failed to save settings", error);
     } finally {
       setIsSavingSettings(false);
+    }
+  };
+
+  const handleCloseOptionsModal = (onConfirm?: () => void) => {
+    const hasSettingsChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+    const hasUserChanges = Object.keys(pendingUserUpdates).length > 0;
+
+    if (hasSettingsChanges || hasUserChanges) {
+      showConfirm("You have unsaved changes in the Control Center. Are you sure you want to close without saving?", () => {
+        setSettings(JSON.parse(JSON.stringify(originalSettings)));
+        setPendingUserUpdates({});
+        setShowOptionsModal(false);
+        if (onConfirm) onConfirm();
+      });
+    } else {
+      setShowOptionsModal(false);
+      if (onConfirm) onConfirm();
     }
   };
 
@@ -1737,6 +1759,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
       if (res.ok) {
         setPendingUserUpdates({});
+        // Since originalSettings primarily tracks 'settings' object, we don't strictly need to update it here 
+        // unless user management is part of the 'settings' object. 
+        // But for the 'dirty' check, clearing pendingUserUpdates is enough for the user section.
         fetchUsersList();
         showNotification("User updates saved successfully!");
       } else {
@@ -3632,6 +3657,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
           <button 
             onClick={() => { 
+              setOriginalSettings(JSON.parse(JSON.stringify(settings)));
               if (isAdmin) {
                 fetchUsersList(); 
                 fetchSettings(); 
@@ -6253,7 +6279,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                     
                                     {isAdmin ? (
                                       <>
-                                        <button onClick={() => { setEditingLO(lo); setShowOptionsModal(false); }} style={{ padding: "4px", color: "#3b82f6", background: "none", border: "none", cursor: "pointer" }}><Edit2 size={16} /></button>
+                                        <button onClick={() => handleCloseOptionsModal(() => setEditingLO(lo))} style={{ padding: "4px", color: "#3b82f6", background: "none", border: "none", cursor: "pointer" }}><Edit2 size={16} /></button>
                                         <button onClick={() => handleDeleteLO(lo.id)} style={{ padding: "4px", color: "#ef4444", background: "none", border: "none", cursor: "pointer" }}><Trash2 size={16} /></button>
                                       </>
                                     ) : (
@@ -6448,7 +6474,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 {isAdmin ? <ShieldCheck size={24} color="#4f46e5" /> : <Sliders size={24} color="#4f46e5" />}
                 <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>{isAdmin ? "Control Center" : "Account Settings"}</h2>
               </div>
-              <button onClick={() => setShowOptionsModal(false)} style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", fontSize: "1.5rem", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+              <button 
+                onClick={() => handleCloseOptionsModal()} 
+                style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", fontSize: "1.5rem", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                ×
+              </button>
             </div>
             
             <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
