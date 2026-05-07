@@ -5948,46 +5948,57 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             {canAllocateAnything && (
                               <td style={getTdStyle(t)}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                  {((!req.status || req.status === 'Pending' || req.status === 'Under Process' || req.status === 'New') && !req.convertedTaskId && isAuthorizedAllocator) && (
-                                    <div style={{ display: "flex", gap: "8px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    {((!req.status || req.status === 'Pending' || req.status === 'Under Process' || req.status === 'New') && !req.convertedTaskId && isAuthorizedAllocator) && (
+                                      <>
+                                        <button 
+                                          onClick={() => handleConvertToTask(req)}
+                                          style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}
+                                          title="Convert to Task"
+                                        >
+                                          <Plus size={16} />
+                                        </button>
+                                        <button 
+                                          onClick={() => { setRejectingReq(req); setShowRejectModal(true); }}
+                                          style={{ background: t.card, color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}
+                                          title="Reject"
+                                        >
+                                          <X size={16} />
+                                        </button>
+                                      </>
+                                    )}
+                                    {!req.convertedTaskId && isAdmin && (
                                       <button 
-                                        onClick={() => handleConvertToTask(req)}
-                                        style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}
-                                        title="Convert to Task"
+                                        onClick={() => handleDeleteExtRequest(req.id)}
+                                        style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "6px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+                                        onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
+                                        onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
+                                        title="Delete Request"
                                       >
-                                        <Plus size={16} />
+                                        <Trash2 size={16} />
                                       </button>
-                                      <button 
-                                        onClick={() => { setRejectingReq(req); setShowRejectModal(true); }}
-                                        style={{ background: t.card, color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}
-                                        title="Reject"
-                                      >
-                                        <X size={16} />
-                                      </button>
-                                    </div>
-                                  )}
+                                    )}
+                                  </div>
                                   
                                   {req.convertedTaskId && (
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd" }}>
-                                          TASK CREATED
-                                        </span>
-                                        {isAdmin && (
-                                          <button 
-                                            onClick={() => handleDeleteExtRequest(req.id)}
-                                            style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "2px", borderRadius: "4px" }}
-                                            onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
-                                            onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
-                                            title="Delete Request"
-                                          >
-                                            <Trash2 size={14} />
-                                          </button>
-                                        )}
-                                      </div>
-                                      <span style={{ fontSize: "0.75rem", color: t.text, fontWeight: 700, marginLeft: "4px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd", whiteSpace: "nowrap" }}>
+                                        TASK CREATED
+                                      </span>
+                                      <span style={{ fontSize: "0.75rem", color: t.text, fontWeight: 700, whiteSpace: "nowrap" }}>
                                         ID: { (req as any).taskDisplayId || req.convertedTaskId }
                                       </span>
+                                      {isAdmin && (
+                                        <button 
+                                          onClick={() => handleDeleteExtRequest(req.id)}
+                                          style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "2px", borderRadius: "4px" }}
+                                          onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
+                                          onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
+                                          title="Delete Request"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      )}
                                     </div>
                                   )}
 
@@ -5995,18 +6006,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                     <div style={{ fontSize: "0.7rem", color: "#ef4444", maxWidth: "200px", padding: "8px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fee2e2" }}>
                                       <strong>Rejected:</strong> { (req as any).rejectReason || "No reason provided" }
                                     </div>
-                                  )}
-
-                                  {!req.convertedTaskId && isAdmin && (
-                                    <button 
-                                      onClick={() => handleDeleteExtRequest(req.id)}
-                                      style={{ alignSelf: "flex-start", marginTop: "4px", background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "6px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-                                      onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
-                                      onMouseOut={(e) => e.currentTarget.style.color = "#94a3b8"}
-                                      title="Delete Request"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
                                   )}
                                 </div>
                               </td>
