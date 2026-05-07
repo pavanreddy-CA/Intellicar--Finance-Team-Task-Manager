@@ -4933,6 +4933,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Created At {taskSortConfig?.key === 'createdAt' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('entityName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -4968,11 +4978,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Origin {taskSortConfig?.key === 'transferStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('dueDate')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Due Date {taskSortConfig?.key === 'dueDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -4986,11 +4991,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskStatus')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-                        </div>
-                      </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
@@ -5097,6 +5097,18 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {getUserDisplayName(task.createdByEmail)}
                               </div>
                             </td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem" }}>
+                                <User size={12} color="#6366f1" />
+                                <span>{task.ownerName}</span>
+                              </div>
+                            </td>
+                            <td style={getTdStyle(t)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem" }}>
+                                <ShieldCheck size={12} color="#10b981" />
+                                <span>{(task.reviewerName === "Not Applicable" || !task.reviewerName) ? "N/A" : task.reviewerName}</span>
+                              </div>
+                            </td>
                             <td style={getTdStyle(t)}>{task.entityName}</td>
                             <td style={{ ...getTdStyle(t), fontWeight: isOverdue ? 700 : 500, color: isOverdue ? "inherit" : "#0f172a", minWidth: "10cm", maxWidth: "10cm", whiteSpace: "normal", wordWrap: "break-word" }}>{task.taskName}</td>
                             <td style={{ ...getTdStyle(t), minWidth: "7.7cm", maxWidth: "7.7cm" }}>
@@ -5123,7 +5135,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             <td style={getTdStyle(t)}>
                               {renderOriginBadge(task)}
                             </td>
-                            <td style={getTdStyle(t)}>{task.ownerName}</td>
                             <td style={getTdStyle(t)}>{task.dueDate ? formatDate(task.dueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}</td>
                             <td 
                               style={{ ...getTdStyle(t), cursor: (isAdmin || (isCurrentUserOwner && task.requestStatus !== "Processed" && !task.reviewCompletionDate)) ? "pointer" : "default", fontWeight: 600, color: isOverdue ? "inherit" : "#475569" }} 
@@ -5182,7 +5193,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 completionDate={task.completionDate}
                               />
                             </td>
-                            <td style={getTdStyle(t)}>{(task.reviewerName === "Not Applicable" || !task.reviewerName) ? <span style={{ color: t.textMuted }}>N/A</span> : task.reviewerName}</td>
                             <td 
                               style={{ ...getTdStyle(t), cursor: (isAdmin || (isCurrentUserReviewer && task.requestStatus !== "Processed")) ? "pointer" : "default", fontWeight: 600, color: "#64748b" }} 
                               title={task.reviewedSubmissionAt ? `[Audit Log]\nReviewed: ${new Date(task.reviewedSubmissionAt).toLocaleString()}\nBy: ${task.reviewedBy || "Unknown"}` : ""}
@@ -5761,6 +5771,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('assignedAllocatorEmail' as any)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Allocator {extReqSortConfig?.key === ('assignedAllocatorEmail' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('taskOwnerName' as any)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Task Owner {extReqSortConfig?.key === ('taskOwnerName' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       {canAllocateAnything && (
                         <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('transferStatus')}>
                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -5798,8 +5818,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={getThStyle(t)}>Due Date</th>
-                      <th style={getThStyle(t)}>Comm. Mode</th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('taskDueDate' as any)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Due Date {extReqSortConfig?.key === ('taskDueDate' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('processedMode' as any)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Comm. Mode {extReqSortConfig?.key === ('processedMode' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       <th style={getThStyle(t)}>Reports/Docs</th>
                       {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('remarks')}>
@@ -5807,8 +5835,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Remarks {extReqSortConfig?.key === 'remarks' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t) }}>Allocator</th>
-                      <th style={{ ...getThStyle(t) }}>Task Owner</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5849,6 +5875,52 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>
                                <div style={{ fontWeight: 600, color: t.text }}>{req.requestFrom}</div>
                                <div style={{ fontSize: "0.75rem", color: t.textMuted }}>{req.departmentName}</div>
+                             </td>
+                             <td style={{ ...getTdStyle(t), minWidth: "180px" }}>
+                                {(() => {
+                                  const allocatorEmail = req.assignedAllocatorEmail;
+                                  let pName = "Unassigned";
+                                  
+                                  if (allocatorEmail) {
+                                    const allocator = usersList.find(u => u.email === allocatorEmail);
+                                    pName = allocator ? allocator.name : allocatorEmail;
+                                  } else {
+                                    const rawMatrix = JSON.parse(settings.allocationMatrix || '{}');
+                                    const allocData = rawMatrix[req.requestType];
+                                    let primaryEmail = "";
+                                    if (allocData && typeof allocData === 'object' && !Array.isArray(allocData)) {
+                                      primaryEmail = allocData.primary || "";
+                                    } else if (Array.isArray(allocData)) {
+                                      primaryEmail = allocData[0] || "";
+                                    } else if (typeof allocData === 'string') {
+                                      primaryEmail = allocData;
+                                    }
+                                    const pAllocator = usersList.find(u => u.email === primaryEmail);
+                                    pName = pAllocator ? pAllocator.name : (primaryEmail || "Unassigned");
+                                  }
+                                  
+                                  return (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem" }}>
+                                      <User size={12} color="#6366f1" />
+                                      <span>{pName}</span>
+                                    </div>
+                                  );
+                                })()}
+                             </td>
+                             <td style={{ ...getTdStyle(t), minWidth: "220px" }}>
+                                {req.taskOwnerName ? (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.8125rem" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <ShieldCheck size={12} color="#10b981" />
+                                      <span style={{ fontWeight: 600, color: t.text }}>{req.taskOwnerName}</span>
+                                    </div>
+                                    <div style={{ fontSize: "0.7rem", color: t.textMuted, marginLeft: "18px" }}>
+                                      {req.taskCreatedAt ? `(${new Date(req.taskCreatedAt).toLocaleString()})` : ""}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span style={{ color: "#cbd5e1", fontSize: "0.8rem" }}>-</span>
+                                )}
                              </td>
                              {canAllocateAnything && (
                                <td style={getTdStyle(t)}>
@@ -6076,53 +6148,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 <span style={{ color: "#cbd5e1" }}>-</span>
                               )}
                             </td>
-                             <td style={{ ...getTdStyle(t), minWidth: "180px" }}>
-                                {(() => {
-                                  const allocatorEmail = req.assignedAllocatorEmail;
-                                  let pName = "Unassigned";
-                                  
-                                  if (allocatorEmail) {
-                                    const allocator = usersList.find(u => u.email === allocatorEmail);
-                                    pName = allocator ? allocator.name : allocatorEmail;
-                                  } else {
-                                    // Fallback for legacy requests without assignedAllocatorEmail
-                                    const rawMatrix = JSON.parse(settings.allocationMatrix || '{}');
-                                    const allocData = rawMatrix[req.requestType];
-                                    let primaryEmail = "";
-                                    if (allocData && typeof allocData === 'object' && !Array.isArray(allocData)) {
-                                      primaryEmail = allocData.primary || "";
-                                    } else if (Array.isArray(allocData)) {
-                                      primaryEmail = allocData[0] || "";
-                                    } else if (typeof allocData === 'string') {
-                                      primaryEmail = allocData;
-                                    }
-                                    const pAllocator = usersList.find(u => u.email === primaryEmail);
-                                    pName = pAllocator ? pAllocator.name : (primaryEmail || "Unassigned");
-                                  }
-                                  
-                                  return (
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem" }}>
-                                      <User size={12} color="#6366f1" />
-                                      <span>{pName}</span>
-                                    </div>
-                                  );
-                                })()}
-                             </td>
-                             <td style={{ ...getTdStyle(t), minWidth: "220px" }}>
-                                {req.taskOwnerName ? (
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.8125rem" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <ShieldCheck size={12} color="#10b981" />
-                                      <span style={{ fontWeight: 600, color: t.text }}>{req.taskOwnerName}</span>
-                                    </div>
-                                    <div style={{ fontSize: "0.7rem", color: t.textMuted, marginLeft: "18px" }}>
-                                      {req.taskCreatedAt ? `(${new Date(req.taskCreatedAt).toLocaleString()})` : ""}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span style={{ color: "#cbd5e1", fontSize: "0.8rem" }}>-</span>
-                                )}
-                             </td>
                           </tr>
                         );
                       })
