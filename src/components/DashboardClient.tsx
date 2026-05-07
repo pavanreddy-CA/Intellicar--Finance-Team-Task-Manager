@@ -6002,8 +6002,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                       )}
                                     </div>
                                   )}
-            )}
-
                                   {req.status === 'Rejected' && (
                                     <div style={{ fontSize: "0.7rem", color: "#ef4444", maxWidth: "200px", padding: "8px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fee2e2" }}>
                                       <strong>Rejected:</strong> { (req as any).rejectReason || "No reason provided" }
