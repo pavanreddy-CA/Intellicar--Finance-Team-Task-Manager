@@ -5723,17 +5723,17 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Finance Function {extReqSortConfig?.key === 'requestType' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('natureOfRequest')}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer", width: "7cm" }} onClick={() => handleExtReqSort('natureOfRequest')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           What is Needed {extReqSortConfig?.key === 'natureOfRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('reasonForRequest' as any)}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer", width: "7cm" }} onClick={() => handleExtReqSort('reasonForRequest' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Reason for Request {extReqSortConfig?.key === 'reasonForRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "5.5cm", maxWidth: "5.5cm" }} onClick={() => handleExtReqSort('mailSubject' as any)}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer", width: "5.5cm" }} onClick={() => handleExtReqSort('mailSubject' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Mail Subject {extReqSortConfig?.key === 'mailSubject' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
@@ -5808,9 +5808,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 </span>
                               </div>
                             </td>
-                            <td style={{ ...getTdStyle(t), minWidth: "10cm", maxWidth: "10cm", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
-                            <td style={{ ...getTdStyle(t), minWidth: "10cm", maxWidth: "10cm", whiteSpace: "normal" }}>{req.reasonForRequest || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
-                            <td style={{ ...getTdStyle(t), minWidth: "5.5cm", maxWidth: "5.5cm", whiteSpace: "normal" }}>{(req as any).mailSubject || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
+                            <td style={{ ...getTdStyle(t), width: "7cm", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
+                            <td style={{ ...getTdStyle(t), width: "7cm", whiteSpace: "normal" }}>{req.reasonForRequest || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
+                            <td style={{ ...getTdStyle(t), width: "5.5cm", whiteSpace: "normal", wordBreak: "break-word" }}>{(req as any).mailSubject || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
                             <td style={{ ...getTdStyle(t), minWidth: "160px" }}>
                                 {(!req.status || req.status === 'Pending') && (
                                   <span style={{ padding: "4px 10px", borderRadius: "100px", background: "#fff7ed", fontSize: "0.75rem", fontWeight: 700, color: "#9a3412", border: "1px solid #ffedd5", whiteSpace: "nowrap" }}>
