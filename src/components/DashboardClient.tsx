@@ -284,6 +284,53 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [processingAttachments, setProcessingAttachments] = useState<Array<{ id?: string; name: string; type: string; data: string; progress?: number; isLoaded?: boolean }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const checkValueUsage = (type: 'Department' | 'Entity' | 'TaskType' | 'CommMode' | 'Frequency' | 'Category' | 'FinanceFunction', value: string) => {
+    const v = value.trim().toLowerCase();
+    let count = 0;
+    let usedBy: string[] = [];
+
+    if (type === 'Department') {
+      const tCount = tasks.filter(t => t.departmentName?.trim().toLowerCase() === v).length;
+      const rCount = externalRequests.filter(r => r.departmentName?.trim().toLowerCase() === v).length;
+      count = tCount + rCount;
+      if (tCount > 0) usedBy.push("Tasks");
+      if (rCount > 0) usedBy.push("External Requests");
+    } else if (type === 'Entity') {
+      const tCount = tasks.filter(t => t.entityName?.trim().toLowerCase() === v).length;
+      const rCount = externalRequests.filter(r => r.entityName?.trim().toLowerCase() === v).length;
+      count = tCount + rCount;
+      if (tCount > 0) usedBy.push("Tasks");
+      if (rCount > 0) usedBy.push("External Requests");
+    } else if (type === 'TaskType') {
+      const tCount = tasks.filter(t => t.taskType?.trim().toLowerCase() === v).length;
+      count = tCount;
+      if (tCount > 0) usedBy.push("Tasks");
+    } else if (type === 'CommMode') {
+      const tCount = tasks.filter(t => t.processedMode?.trim().toLowerCase() === v).length;
+      const rCount = externalRequests.filter(r => r.processedMode?.trim().toLowerCase() === v).length;
+      count = tCount + rCount;
+      if (tCount > 0) usedBy.push("Tasks");
+      if (rCount > 0) usedBy.push("External Requests");
+    } else if (type === 'Frequency') {
+      const tCount = tasks.filter(t => t.frequency?.trim().toLowerCase() === v).length;
+      const rCount = externalRequests.filter(r => r.frequency?.trim().toLowerCase() === v).length;
+      count = tCount + rCount;
+      if (tCount > 0) usedBy.push("Tasks");
+      if (rCount > 0) usedBy.push("External Requests");
+    } else if (type === 'FinanceFunction') {
+      const tCount = tasks.filter(t => (t as any).financeFunction?.trim().toLowerCase() === v).length;
+      const rCount = externalRequests.filter(r => r.requestType?.trim().toLowerCase() === v).length;
+      count = tCount + rCount;
+      if (tCount > 0) usedBy.push("Tasks");
+      if (rCount > 0) usedBy.push("External Requests");
+    } else if (type === 'Category') {
+      // Resource categories are usually not in tasks, but could be in future.
+      // For now, no specific transaction table for resources is fully tracked here.
+    }
+
+    return { count, usedBy: usedBy.join(", ") };
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (processingAttachments.length + files.length > 5) {
@@ -8195,8 +8242,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {dept.trim()}
                                 <button 
                                   onClick={() => {
-                                    const items = settings.masterDepartments.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, masterDepartments: items.join(',')});
+                                    const usage = checkValueUsage('Department', dept);
+                                    if (usage.count > 0) {
+                                      showConfirm(`Warning: "${dept.trim()}" is used in ${usage.count} ${usage.usedBy}. Removing it may cause issues in filtering or reports. Do you still want to delete it?`, () => {
+                                        const items = settings.masterDepartments.split(',').filter((_, i) => i !== idx);
+                                        setSettings({...settings, masterDepartments: items.join(',')});
+                                      });
+                                    } else {
+                                      const items = settings.masterDepartments.split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, masterDepartments: items.join(',')});
+                                    }
                                   }}
                                   style={{ background: "transparent", border: "none", color: "#3b82f6", cursor: "pointer", fontWeight: "bold", fontSize: "14px", opacity: 0.7 }}
                                 >
@@ -8242,8 +8297,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {ent.trim()}
                                 <button 
                                   onClick={() => {
-                                    const items = settings.masterEntities.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, masterEntities: items.join(',')});
+                                    const usage = checkValueUsage('Entity', ent);
+                                    if (usage.count > 0) {
+                                      showConfirm(`Warning: "${ent.trim()}" is used in ${usage.count} ${usage.usedBy}. Removing it may cause issues in filtering or reports. Do you still want to delete it?`, () => {
+                                        const items = settings.masterEntities.split(',').filter((_, i) => i !== idx);
+                                        setSettings({...settings, masterEntities: items.join(',')});
+                                      });
+                                    } else {
+                                      const items = settings.masterEntities.split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, masterEntities: items.join(',')});
+                                    }
                                   }}
                                   style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
                                 >
@@ -8289,8 +8352,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {type.trim()}
                                 <button 
                                   onClick={() => {
-                                    const items = settings.masterTaskTypes.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, masterTaskTypes: items.join(',')});
+                                    const usage = checkValueUsage('TaskType', type);
+                                    if (usage.count > 0) {
+                                      showConfirm(`Warning: "${type.trim()}" is used in ${usage.count} ${usage.usedBy}. Removing it may cause issues in filtering or reports. Do you still want to delete it?`, () => {
+                                        const items = settings.masterTaskTypes.split(',').filter((_, i) => i !== idx);
+                                        setSettings({...settings, masterTaskTypes: items.join(',')});
+                                      });
+                                    } else {
+                                      const items = settings.masterTaskTypes.split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, masterTaskTypes: items.join(',')});
+                                    }
                                   }}
                                   style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
                                 >
@@ -8335,8 +8406,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {mode.trim()}
                                 <button 
                                   onClick={() => {
-                                    const items = settings.masterCommunicationModes.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, masterCommunicationModes: items.join(',')});
+                                    const usage = checkValueUsage('CommMode', mode);
+                                    if (usage.count > 0) {
+                                      showConfirm(`Warning: "${mode.trim()}" is used in ${usage.count} ${usage.usedBy}. Removing it may cause issues in filtering or reports. Do you still want to delete it?`, () => {
+                                        const items = settings.masterCommunicationModes.split(',').filter((_, i) => i !== idx);
+                                        setSettings({...settings, masterCommunicationModes: items.join(',')});
+                                      });
+                                    } else {
+                                      const items = settings.masterCommunicationModes.split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, masterCommunicationModes: items.join(',')});
+                                    }
                                   }}
                                   style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
                                 >
@@ -8382,8 +8461,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {freq.trim()}
                                 <button 
                                   onClick={() => {
-                                    const items = settings.masterFrequencies.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, masterFrequencies: items.join(',')});
+                                    const usage = checkValueUsage('Frequency', freq);
+                                    if (usage.count > 0) {
+                                      showConfirm(`Warning: "${freq.trim()}" is used in ${usage.count} ${usage.usedBy}. Removing it may cause issues in filtering or reports. Do you still want to delete it?`, () => {
+                                        const items = settings.masterFrequencies.split(',').filter((_, i) => i !== idx);
+                                        setSettings({...settings, masterFrequencies: items.join(',')});
+                                      });
+                                    } else {
+                                      const items = settings.masterFrequencies.split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, masterFrequencies: items.join(',')});
+                                    }
                                   }}
                                   style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
                                 >
@@ -8477,8 +8564,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 {type.trim()}
                                 <button 
                                   onClick={() => {
-                                    const items = settings.masterRequestTypes.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, masterRequestTypes: items.join(',')});
+                                    const usage = checkValueUsage('FinanceFunction', type);
+                                    if (usage.count > 0) {
+                                      showConfirm(`Warning: "${type.trim()}" is used in ${usage.count} ${usage.usedBy}. Removing it may cause issues in filtering or reports. Do you still want to delete it?`, () => {
+                                        const items = settings.masterRequestTypes.split(',').filter((_, i) => i !== idx);
+                                        setSettings({...settings, masterRequestTypes: items.join(',')});
+                                      });
+                                    } else {
+                                      const items = settings.masterRequestTypes.split(',').filter((_, i) => i !== idx);
+                                      setSettings({...settings, masterRequestTypes: items.join(',')});
+                                    }
                                   }}
                                   style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
                                 >
