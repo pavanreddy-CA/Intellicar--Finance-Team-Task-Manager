@@ -51,6 +51,9 @@ export async function GET(req: NextRequest) {
       // Reviewer can always see their tasks
       if (reviewerEmail === userEmail) return true;
 
+      // Requester of an Inter-Dept Request should see the task details for transparency
+      if (requesterEmail === userEmail) return true;
+
       return false;
     }).map(t => ({
       ...t,
