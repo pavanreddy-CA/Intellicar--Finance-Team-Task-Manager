@@ -539,6 +539,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [rejectingReq, setRejectingReq] = useState<ExternalRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [hoveredRejectId, setHoveredRejectId] = useState<number | null>(null);
+  const [hoveredProcessedId, setHoveredProcessedId] = useState<number | null>(null);
 
   // Dropdown Refs
   const taskDropdownRef = useState<HTMLDivElement | null>(null)[0]; // Actually I should use useRef
@@ -5698,6 +5699,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={{ ...getThStyle(t) }}>Finance POC</th>
                       <th style={getThStyle(t)}>Comm. Mode</th>
                       <th style={getThStyle(t)}>Reports/Docs</th>
                       {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
@@ -5774,9 +5776,40 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   </span>
                                 )}
                                 {req.status === 'Processed' && (
-                                  <span style={{ padding: "4px 10px", borderRadius: "100px", background: "#f0fdf4", fontSize: "0.75rem", fontWeight: 700, color: "#166534", border: "1px solid #dcfce7", whiteSpace: "nowrap" }}>
-                                    Processed
-                                  </span>
+                                  <div 
+                                    style={{ position: "relative" }}
+                                    onMouseEnter={() => setHoveredProcessedId(req.id)}
+                                    onMouseLeave={() => setHoveredProcessedId(null)}
+                                  >
+                                    <span style={{ padding: "4px 10px", borderRadius: "100px", background: "#f0fdf4", fontSize: "0.75rem", fontWeight: 700, color: "#166534", border: "1px solid #dcfce7", cursor: "help", whiteSpace: "nowrap" }}>
+                                      Processed
+                                    </span>
+                                    {hoveredProcessedId === req.id && (
+                                      <div style={{
+                                        position: "absolute",
+                                        bottom: "100%",
+                                        left: "50%",
+                                        transform: "translateX(-50%)",
+                                        marginBottom: "8px",
+                                        padding: "10px 14px",
+                                        background: "#1e293b",
+                                        color: "white",
+                                        fontSize: "0.75rem",
+                                        borderRadius: "10px",
+                                        whiteSpace: "normal",
+                                        width: "220px",
+                                        zIndex: 100,
+                                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.2)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        lineHeight: "1.4"
+                                      }}>
+                                        <div style={{ fontWeight: 700, marginBottom: "4px", color: "#4ade80", fontSize: "0.65rem", textTransform: "uppercase" }}>Completion Details</div>
+                                        Processed by: {req.processedBy || "System"} <br/>
+                                        Date: {req.processedAt ? new Date(req.processedAt).toLocaleString() : "N/A"}
+                                        <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", border: "6px solid transparent", borderTopColor: "#1e293b" }}></div>
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
                                 {req.status === 'Rejected' && (
                                   <div 
@@ -5814,6 +5847,45 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   </div>
                                 )}
                             </td>
+                             <td style={{ ...getTdStyle(t), minWidth: "220px" }}>
+                                {(() => {
+                                  const rawMatrix = JSON.parse(settings.allocationMatrix || '{}');
+                                  const allocData = rawMatrix[req.requestType];
+                                  let primaryEmail = "";
+                                  if (allocData && typeof allocData === 'object' && !Array.isArray(allocData)) {
+                                    primaryEmail = allocData.primary || "";
+                                  } else if (Array.isArray(allocData)) {
+                                    primaryEmail = allocData[0] || "";
+                                  } else if (typeof allocData === 'string') {
+                                    primaryEmail = allocData;
+                                  }
+                                  
+                                  const pAllocator = usersList.find(u => u.email === primaryEmail);
+                                  const pName = pAllocator ? pAllocator.name : (primaryEmail || "Unassigned");
+                                  
+                                  const linkedTask = req.convertedTaskId ? tasks.find(t_ => t_.id === req.convertedTaskId) : null;
+                                  
+                                  return (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8125rem" }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <User size={12} color="#6366f1" />
+                                        <span>{pName} - <span style={{ fontWeight: 600, color: "#6366f1" }}>Allocator</span></span>
+                                      </div>
+                                      {linkedTask && (
+                                        <>
+                                          <div style={{ borderTop: `1px dashed ${t.border}`, marginTop: "4px", paddingTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                            <ShieldCheck size={12} color="#10b981" />
+                                            <span>{linkedTask.ownerName} - <span style={{ fontWeight: 600, color: "#10b981" }}>Task Owner</span></span>
+                                          </div>
+                                          <div style={{ fontSize: "0.7rem", color: t.textMuted, marginLeft: "18px" }}>
+                                            ({new Date(linkedTask.createdAt).toLocaleString()})
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+                             </td>
                             <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ fontSize: "0.75rem", color: req.processedMode ? "#0f172a" : "#94a3b8" }}>
