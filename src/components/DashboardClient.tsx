@@ -393,6 +393,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       showNotification("Please select a mode of communication", "error");
       return;
     }
+    if (processingMode.toLowerCase() === 'email' && !processingMailLink.trim()) {
+      showNotification("Mail Subject is mandatory when mode is Email", "error");
+      return;
+    }
     setIsProcessing(true);
     try {
       const res = await fetch(`/api/tasks/${processingTask.id}`, {
@@ -5366,27 +5370,31 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                       color: "white", border: "none", borderRadius: "4px", cursor: "pointer" 
                                     }}
                                   >
-                                    Mark Processed
+                                    Mark as Processed
                                   </button>
                                 )}
                               </div>
                             </td>
                             <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <span style={{ fontSize: "0.75rem", color: task.processedMode ? "#0f172a" : "#94a3b8" }}>
+                                <span 
+                                  title={task.processedMode?.toLowerCase() === 'email' ? `Subject: ${task.processedMailLink || 'N/A'} (Click to copy)` : undefined}
+                                  onClick={() => {
+                                    if (task.processedMode?.toLowerCase() === 'email' && task.processedMailLink) {
+                                      navigator.clipboard.writeText(task.processedMailLink);
+                                      showNotification("Subject copied to clipboard!");
+                                    }
+                                  }}
+                                  style={{ 
+                                    fontSize: "0.75rem", 
+                                    color: task.processedMode ? "#0f172a" : "#94a3b8",
+                                    cursor: task.processedMode?.toLowerCase() === 'email' ? 'pointer' : 'default',
+                                    textDecoration: task.processedMode?.toLowerCase() === 'email' ? 'underline dotted' : 'none',
+                                    fontWeight: task.processedMode?.toLowerCase() === 'email' ? 600 : 400
+                                  }}
+                                >
                                   {task.processedMode || "N/A"}
                                 </span>
-                                {task.processedMailLink && (
-                                  <a 
-                                    href={task.processedMailLink} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    title="View Mail Link"
-                                    style={{ color: "#4f46e5", display: "flex", alignItems: "center" }}
-                                  >
-                                    <ExternalLink size={14} />
-                                  </a>
-                                )}
                               </div>
                             </td>
                             <td style={getTdStyle(t)}>
@@ -11084,12 +11092,14 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 </select>
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>Mail Link (Optional)</label>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.875rem", fontWeight: 600 }}>
+                  Mail Subject {processingMode.toLowerCase() === 'email' && <span style={{ color: "#ef4444" }}>*</span>}
+                </label>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                  <Link size={16} color="#94a3b8" />
+                  <Mail size={16} color="#94a3b8" />
                   <input 
-                    type="url"
-                    placeholder="https://mail.google.com/..."
+                    type="text"
+                    placeholder={processingMode.toLowerCase() === 'email' ? "Enter email subject line (Mandatory)..." : "Enter mail subject (Optional)..."}
                     value={processingMailLink}
                     onChange={(e) => setProcessingMailLink(e.target.value)}
                     style={{ flex: 1, border: "none", outline: "none", fontSize: "0.875rem" }}
