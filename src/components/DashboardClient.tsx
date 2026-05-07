@@ -127,6 +127,7 @@ type LearningOpportunity = {
   modeOfCommunication: string;
   emailSub: string | null;
   comments: string | null;
+  submittedBy?: string | null;
   createdAt: string;
   isAcknowledged?: boolean;
   acknowledgedAt?: string | null;
