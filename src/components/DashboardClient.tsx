@@ -489,6 +489,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [extReqCurrentPage, setExtReqCurrentPage] = useState(1);
+  const [extReqItemsPerPage, setExtReqItemsPerPage] = useState(10);
   const [dateFilterPreset, setDateFilterPreset] = useState("ALL_TIME");
   const [loActiveFilter, setLoActiveFilter] = useState<'ALL' | 'REPORTS' | 'LEARNINGS' | 'RESOURCES' | 'ANALYTICS'>('ALL');
   const [loDateFrom, setLoDateFrom] = useState(() => {
@@ -2972,10 +2974,20 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     currentPage * itemsPerPage
   );
 
+  const totalExtReqPages = Math.ceil(sortedExternalRequests.length / extReqItemsPerPage);
+  const paginatedExternalRequests = sortedExternalRequests.slice(
+    (extReqCurrentPage - 1) * extReqItemsPerPage,
+    extReqCurrentPage * extReqItemsPerPage
+  );
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [activeFilter, startDate, endDate, itemsPerPage, taskSearchQuery, taskEntityFilter, taskOwnerFilter, taskStatusFilter]);
+
+  useEffect(() => {
+    setExtReqCurrentPage(1);
+  }, [extReqItemsPerPage, extReqStatusFilter, extReqSearchQuery, extReqDeptFilter, extReqTypeFilter]);
 
   // Export Handlers
   const exportToExcel = async () => {
@@ -5562,6 +5574,18 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               <div style={{ padding: "28px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa" }}>
                 <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: t.text }}>Inter Dept Request</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 12px", borderRight: `1px solid ${t.border}` }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
+                    <select 
+                      value={extReqItemsPerPage} 
+                      onChange={e => setExtReqItemsPerPage(Number(e.target.value))}
+                      style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer" }}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
                   <div style={{ position: "relative" }}>
                     <button 
                       onClick={() => setShowExtReqDownloadDropdown(!showExtReqDownloadDropdown)}
@@ -5840,10 +5864,10 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   <tbody>
                     {extReqLoading ? (
                       <tr><td colSpan={canAllocateAnything ? 16 : 14} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading requests...</td></tr>
-                    ) : sortedExternalRequests.length === 0 ? (
+                    ) : paginatedExternalRequests.length === 0 ? (
                       <tr><td colSpan={canAllocateAnything ? 16 : 14} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No requests found.</td></tr>
                     ) : (
-                      sortedExternalRequests.map((req, idx) => {
+                      paginatedExternalRequests.map((req, idx) => {
                         const matrix = JSON.parse(settings.allocationMatrix || '{}');
                         const allocators = Array.isArray(matrix[req.requestType]) ? matrix[req.requestType] : (matrix[req.requestType] ? [matrix[req.requestType]] : []);
                         const isAuthorizedAllocator = allocators.includes(user?.email) || isAdmin || (user as any).isAllocator;
@@ -6156,6 +6180,34 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 </table>
               </div>
             </div>
+              
+            {/* Pagination Controls */}
+            {totalExtReqPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${t.border}`, background: t.bg, borderBottomLeftRadius: "24px", borderBottomRightRadius: "24px" }}>
+                <div style={{ fontSize: "0.875rem", color: t.textMuted }}>
+                  Showing {(extReqCurrentPage - 1) * extReqItemsPerPage + 1} to {Math.min(extReqCurrentPage * extReqItemsPerPage, sortedExternalRequests.length)} of {sortedExternalRequests.length} requests
+                </div>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button 
+                    onClick={() => setExtReqCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={extReqCurrentPage === 1}
+                    style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: extReqCurrentPage === 1 ? "#94a3b8" : "#0f172a", cursor: extReqCurrentPage === 1 ? "not-allowed" : "pointer" }}
+                  >
+                    <ChevronLeft size={16} /> Prev
+                  </button>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 500, padding: "0 12px" }}>
+                    Page {extReqCurrentPage} of {totalExtReqPages}
+                  </div>
+                  <button 
+                    onClick={() => setExtReqCurrentPage(prev => Math.min(prev + 1, totalExtReqPages))}
+                    disabled={extReqCurrentPage === totalExtReqPages}
+                    style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: extReqCurrentPage === totalExtReqPages ? "#94a3b8" : "#0f172a", cursor: extReqCurrentPage === totalExtReqPages ? "not-allowed" : "pointer" }}
+                  >
+                    Next <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
