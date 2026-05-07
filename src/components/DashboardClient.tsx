@@ -5100,17 +5100,15 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   />
                                   <button 
                                     onClick={() => handleUpdate(task.id, 'completionDate', editValue)}
-                                    style={{ padding: "6px", background: "#22c55e", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                    title="Confirm"
+                                    style={{ padding: "4px 10px", background: "#22c55e", color: "white", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                                   >
-                                    <CheckCircle2 size={16} />
+                                    Save
                                   </button>
                                   <button 
                                     onClick={() => setEditingCell(null)}
-                                    style={{ padding: "6px", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                    title="Cancel"
+                                    style={{ padding: "4px 10px", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                                   >
-                                    <X size={16} />
+                                    Cancel
                                   </button>
                                 </div>
                               ) : (
@@ -5156,17 +5154,15 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   />
                                   <button 
                                     onClick={() => handleUpdate(task.id, 'reviewCompletionDate', editValue)}
-                                    style={{ padding: "6px", background: "#22c55e", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                    title="Confirm Review"
+                                    style={{ padding: "4px 10px", background: "#22c55e", color: "white", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                                   >
-                                    <CheckCircle2 size={16} />
+                                    Save
                                   </button>
                                   <button 
                                     onClick={() => setEditingCell(null)}
-                                    style={{ padding: "6px", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                    title="Cancel"
+                                    style={{ padding: "4px 10px", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                                   >
-                                    <X size={16} />
+                                    Cancel
                                   </button>
                                 </div>
                               ) : (
