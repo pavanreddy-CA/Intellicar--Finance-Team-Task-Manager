@@ -4920,7 +4920,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <tr>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('displayId')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Task ID {taskSortConfig?.key === 'displayId' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Task ID {taskSortConfig?.key === 'displayId' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", whiteSpace: "nowrap" }} onClick={() => handleTaskSort('source' as any)}>
@@ -4930,77 +4930,77 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('createdAt')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Created At {taskSortConfig?.key === 'createdAt' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Created At {taskSortConfig?.key === 'createdAt' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Owner {taskSortConfig?.key === 'ownerName' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Reviewer {taskSortConfig?.key === 'reviewerName' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('entityName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Entity {taskSortConfig?.key === 'entityName' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "10cm", maxWidth: "10cm" }} onClick={() => handleTaskSort('taskName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Task Name {taskSortConfig?.key === 'taskName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Task Name {taskSortConfig?.key === 'taskName' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "7.7cm", maxWidth: "7.7cm" }} onClick={() => handleTaskSort('departmentName')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Dept {taskSortConfig?.key === 'departmentName' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Dept {taskSortConfig?.key === 'departmentName' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskType')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Task Type {taskSortConfig?.key === 'taskType' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Task Type {taskSortConfig?.key === 'taskType' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('frequency')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Frequency {taskSortConfig?.key === 'frequency' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Frequency {taskSortConfig?.key === 'frequency' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestFrom')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Request From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Request From {taskSortConfig?.key === 'requestFrom' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('transferStatus')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Origin {taskSortConfig?.key === 'transferStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Origin {taskSortConfig?.key === 'transferStatus' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('dueDate')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Due Date {taskSortConfig?.key === 'dueDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Due Date {taskSortConfig?.key === 'dueDate' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('completionDate')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Completion Date {taskSortConfig?.key === 'completionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Completion Date {taskSortConfig?.key === 'completionDate' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('taskStatus')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Task Status {taskSortConfig?.key === 'taskStatus' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewCompletionDate')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Review Date {taskSortConfig?.key === 'reviewCompletionDate' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Review Date {taskSortConfig?.key === 'reviewCompletionDate' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewStatus')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Review Status {taskSortConfig?.key === 'reviewStatus' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), textAlign: "center" }}>
@@ -5008,17 +5008,17 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('ownerComments')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Owner Comments {taskSortConfig?.key === 'ownerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Owner Comments {taskSortConfig?.key === 'ownerComments' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('reviewerComments')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Reviewer Comments {taskSortConfig?.key === 'reviewerComments' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Reviewer Comments {taskSortConfig?.key === 'reviewerComments' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('requestStatus')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Request Status {taskSortConfig?.key === 'requestStatus' && (taskSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleTaskSort('processedMode' as any)}>
@@ -5768,71 +5768,71 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       <th style={{ ...getThStyle(t), width: "50px" }}>Sl No.</th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('requestFrom')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('assignedAllocatorEmail' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Allocator {extReqSortConfig?.key === ('assignedAllocatorEmail' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Allocator {extReqSortConfig?.key === ('assignedAllocatorEmail' as any) && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('taskOwnerName' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Task Owner {extReqSortConfig?.key === ('taskOwnerName' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Task Owner {extReqSortConfig?.key === ('taskOwnerName' as any) && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       {canAllocateAnything && (
                         <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('transferStatus')}>
                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                             Origin {extReqSortConfig?.key === 'transferStatus' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                             Origin {extReqSortConfig?.key === 'transferStatus' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                            </div>
                         </th>
                       )}
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('createdAt')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Date {extReqSortConfig?.key === 'createdAt' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Date {extReqSortConfig?.key === 'createdAt' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('requestType')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Finance Function {extReqSortConfig?.key === 'requestType' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Finance Function {extReqSortConfig?.key === 'requestType' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "10cm", maxWidth: "10cm" }} onClick={() => handleExtReqSort('natureOfRequest')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          What is Needed {extReqSortConfig?.key === 'natureOfRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          What is Needed {extReqSortConfig?.key === 'natureOfRequest' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "10cm", maxWidth: "10cm" }} onClick={() => handleExtReqSort('reasonForRequest' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Reason for Request {extReqSortConfig?.key === 'reasonForRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Reason for Request {extReqSortConfig?.key === 'reasonForRequest' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "7.5cm", maxWidth: "7.5cm" }} onClick={() => handleExtReqSort('mailSubject' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Mail Subject {extReqSortConfig?.key === 'mailSubject' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Mail Subject {extReqSortConfig?.key === 'mailSubject' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('status')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('taskDueDate' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Due Date {extReqSortConfig?.key === ('taskDueDate' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Due Date {extReqSortConfig?.key === ('taskDueDate' as any) && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('processedMode' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Comm. Mode {extReqSortConfig?.key === ('processedMode' as any) && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Comm. Mode {extReqSortConfig?.key === ('processedMode' as any) && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                       <th style={getThStyle(t)}>Reports/Docs</th>
                       {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('remarks')}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          Remarks {extReqSortConfig?.key === 'remarks' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                          Remarks {extReqSortConfig?.key === 'remarks' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
                     </tr>
