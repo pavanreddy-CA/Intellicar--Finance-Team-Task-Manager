@@ -6488,22 +6488,22 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             </th>
                             <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('learningOpportunity')}>
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size {14} />)}
+                                Opportunity {loSortConfig?.key === 'learningOpportunity' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                               </div>
                             </th>
                             <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('resolutionProvided')}>
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size {14} />)}
+                                Resolution {loSortConfig?.key === 'resolutionProvided' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                               </div>
                             </th>
                             <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('isAcknowledged' as any)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                Status {loSortConfig?.key === 'isAcknowledged' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size {14} />)}
+                                Status {loSortConfig?.key === 'isAcknowledged' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                               </div>
                             </th>
                             <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleLOSort('acknowledgedAt')}>
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                Ack At {loSortConfig?.key === 'acknowledgedAt' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size {14} />)}
+                                Ack At {loSortConfig?.key === 'acknowledgedAt' && (loSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                               </div>
                             </th>
                             <th style={getThStyle(t)}>Ack Remarks</th>
