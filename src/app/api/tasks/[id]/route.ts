@@ -202,7 +202,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           "reviewedBy" = ${reviewedBy},
           "processedBy" = ${processedBy},
           "frequency" = ${data.frequency !== undefined ? data.frequency : existingTask.frequency},
-          "transferStatus" = ${data.transferStatus !== undefined ? data.transferStatus : existingTask.transferStatus},
           "originalRequestType" = ${data.originalRequestType !== undefined ? data.originalRequestType : existingTask.originalRequestType},
           "captureLO" = ${data.captureLO !== undefined ? data.captureLO : existingTask.captureLO},
           "isApproved" = ${data.isApproved !== undefined ? data.isApproved : existingTask.isApproved},
