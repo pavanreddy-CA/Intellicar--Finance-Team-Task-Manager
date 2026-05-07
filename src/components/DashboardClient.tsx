@@ -5086,15 +5086,33 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               }}
                             >
                               {editingCell?.id === task.id && editingCell.field === 'completionDate' ? (
-                                <input 
-                                  type="date"
-                                  autoFocus
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  onBlur={() => handleUpdate(task.id, 'completionDate', editValue)}
-                                  onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, 'completionDate', editValue)}
-                                  style={getInputStyle(t)}
-                                />
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
+                                  <input 
+                                    type="date"
+                                    autoFocus
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") handleUpdate(task.id, 'completionDate', editValue);
+                                      if (e.key === "Escape") setEditingCell(null);
+                                    }}
+                                    style={{ ...getInputStyle(t), padding: "4px 8px", fontSize: "0.8125rem", minWidth: "120px" }}
+                                  />
+                                  <button 
+                                    onClick={() => handleUpdate(task.id, 'completionDate', editValue)}
+                                    style={{ padding: "6px", background: "#22c55e", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                    title="Confirm"
+                                  >
+                                    <CheckCircle2 size={16} />
+                                  </button>
+                                  <button 
+                                    onClick={() => setEditingCell(null)}
+                                    style={{ padding: "6px", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                    title="Cancel"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
                               ) : (
                                 formatDate(task.completionDate)
                               )}
@@ -5124,15 +5142,33 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               }}
                             >
                               {editingCell?.id === task.id && editingCell.field === 'reviewCompletionDate' ? (
-                                <input 
-                                  type="date"
-                                  autoFocus
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  onBlur={() => handleUpdate(task.id, 'reviewCompletionDate', editValue)}
-                                  onKeyDown={(e) => e.key === "Enter" && handleUpdate(task.id, 'reviewCompletionDate', editValue)}
-                                  style={getInputStyle(t)}
-                                />
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
+                                  <input 
+                                    type="date"
+                                    autoFocus
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") handleUpdate(task.id, 'reviewCompletionDate', editValue);
+                                      if (e.key === "Escape") setEditingCell(null);
+                                    }}
+                                    style={{ ...getInputStyle(t), padding: "4px 8px", fontSize: "0.8125rem", minWidth: "120px" }}
+                                  />
+                                  <button 
+                                    onClick={() => handleUpdate(task.id, 'reviewCompletionDate', editValue)}
+                                    style={{ padding: "6px", background: "#22c55e", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                    title="Confirm Review"
+                                  >
+                                    <CheckCircle2 size={16} />
+                                  </button>
+                                  <button 
+                                    onClick={() => setEditingCell(null)}
+                                    style={{ padding: "6px", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                    title="Cancel"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
                               ) : (
                                 formatDate(task.reviewCompletionDate)
                               )}
