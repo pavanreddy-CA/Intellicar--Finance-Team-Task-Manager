@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "transferredBy" TEXT`;
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "frequency" TEXT`;
       await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "reasonForRequest" TEXT`;
+      await sql`ALTER TABLE "ExternalRequest" ADD COLUMN IF NOT EXISTS "mailSubject" TEXT`;
     } catch (e) {
       console.log("ExternalRequest migration check failed/skipped");
     }
@@ -74,11 +75,11 @@ export async function POST(request: Request) {
       const result = await sql`
         INSERT INTO "ExternalRequest" (
           "requestFrom", "requesterEmail", "natureOfRequest", "reasonForRequest", "departmentName", 
-          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "frequency", "createdAt", "updatedAt"
+          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "frequency", "mailSubject", "createdAt", "updatedAt"
         )
         VALUES (
           ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${reasonForRequest || null}, ${departmentName},
-          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, ${frequency || null}, NOW(), NOW()
+          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, ${frequency || null}, ${body.mailSubject || null}, NOW(), NOW()
         )
         RETURNING *
       `;

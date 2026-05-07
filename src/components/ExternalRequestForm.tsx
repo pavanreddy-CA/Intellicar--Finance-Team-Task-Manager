@@ -21,6 +21,7 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     departmentName: "",
     requestType: "",
     entityNames: [] as string[],
+    mailSubject: "",
   });
 
   const [allowedEntities, setAllowedEntities] = useState<string[]>([]);
@@ -218,6 +219,18 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
               onChange={handleChange} 
               style={{ ...inputStyle, minHeight: "80px", resize: "none" }} 
               placeholder="Explain why this information or document is needed..."
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Mail Subject (Optional)</label>
+            <input 
+              name="mailSubject" 
+              type="text"
+              value={formData.mailSubject} 
+              onChange={handleChange} 
+              style={inputStyle} 
+              placeholder="Enter subject for this request..."
             />
           </div>
 
