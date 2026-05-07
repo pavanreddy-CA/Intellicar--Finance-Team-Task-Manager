@@ -2110,21 +2110,73 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     COMPLETION_STATUSES.includes(t.taskStatus) || 
     !!t.completionDate;
 
-  const pendingActionCount = tasks.filter(t => !isFinished(t)).length;
+  // New Base Filtered Tasks for Metrics (ignores activeFilter only)
+  const baseFilteredTasks = tasks.filter(t => {
+    if (t.isApproved === false) return false;
+
+    // Date Match
+    if (startDate || endDate) {
+      const taskDate = new Date(t.createdAt);
+      taskDate.setHours(0, 0, 0, 0);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (taskDate < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+        if (taskDate > end) return false;
+      }
+    }
+
+    // Search Match
+    if (taskSearchQuery) {
+      const q = taskSearchQuery.toLowerCase();
+      if (!(t.taskName.toLowerCase().includes(q) || 
+          t.taskType.toLowerCase().includes(q) || 
+          t.entityName.toLowerCase().includes(q) || 
+          t.ownerName.toLowerCase().includes(q) ||
+          (t.reviewerName || "").toLowerCase().includes(q))) return false;
+    }
+
+    // Dropdown Match
+    if (taskEntityFilter.length > 0 && !taskEntityFilter.includes(t.entityName)) return false;
+    if (taskDeptFilter.length > 0 && !taskDeptFilter.includes(t.departmentName)) return false;
+    if (taskOwnerFilter.length > 0 && !taskOwnerFilter.includes(t.ownerName)) return false;
+    if (taskStatusFilter.length > 0) {
+      const currentTracking = t.trackingStatus || getTrackingStatus({ taskStatus: t.taskStatus, dueDate: t.dueDate, completionDate: t.completionDate });
+      if (!taskStatusFilter.includes(currentTracking) && !taskStatusFilter.includes(t.taskStatus)) return false;
+    }
+    if (taskReviewerFilter.length > 0 && !taskReviewerFilter.includes(t.reviewerName || "")) return false;
+    if (taskSourceFilter.length > 0 && !taskSourceFilter.includes((t as any).source || 'TDB')) return false;
+    
+    // Task Type Match
+    const isActuallyExternal = !!t.linkedRequestId && t.departmentName !== "Finance";
+    if (taskTypeFilter.length > 0) {
+      if (taskTypeFilter.includes("INTERNAL") && taskTypeFilter.includes("EXTERNAL")) { /* Show all */ }
+      else if (taskTypeFilter.includes("INTERNAL") && isActuallyExternal) return false;
+      else if (taskTypeFilter.includes("EXTERNAL") && !isActuallyExternal) return false;
+    }
+
+    return true;
+  });
+
+  const pendingActionCount = baseFilteredTasks.filter(t => !isFinished(t)).length;
   
-  const pendingReviewCount = tasks.filter(t => 
+  const pendingReviewCount = baseFilteredTasks.filter(t => 
     isFinished(t) && 
     (t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner") && 
     t.reviewerName !== "Not Applicable"
   ).length;
 
-  const pendingStatusUpdateCount = tasks.filter(t => 
+  const pendingStatusUpdateCount = baseFilteredTasks.filter(t => 
     isFinished(t) && 
     (t.reviewStatus === "Completed" || t.reviewerName === "Not Applicable" || t.reviewStatus === "Review Not Required") && 
     t.requestStatus !== "Processed"
   ).length;
 
-  const completedCount = tasks.filter(t => 
+  const completedCount = baseFilteredTasks.filter(t => 
     isFinished(t) && 
     (t.reviewStatus === "Completed" || t.reviewStatus === "Review Not Required" || t.reviewerName === "Not Applicable") && 
     t.requestStatus === "Processed"
@@ -2762,22 +2814,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     
     if (extReqStatusFilter.length > 0 && !extReqStatusFilter.includes(r.status || "")) return false;
 
-    if (extReqFilter === 'ALLOCATION') {
-      return r.status === 'Pending' || !r.status || r.status === 'New';
-    }
-    if (extReqFilter === 'PROCESS') {
-      return r.status === 'Under Process';
-    }
-    if (extReqFilter === 'PROCESSED') {
-      return r.status === 'Processed';
-    }
-    if (extReqFilter === 'REJECTED') {
-      return r.status === 'Rejected';
-    }
-    if (extReqFilter === 'CONVERT_PENDING') {
-      return (r.status === 'Pending' || r.status === 'Under Process' || !r.status || r.status === 'New') && !r.convertedTaskId;
-    }
-
     // New Request Source Filter (Original vs Transferred)
     if (requestTypeFilter.length > 0) {
       if (requestTypeFilter.includes('ORIGINAL') && !requestTypeFilter.includes('TRANSFERRED') && r.transferStatus === 'T') return false;
@@ -2796,7 +2832,30 @@ const handleResourceUpload = async (e: React.FormEvent) => {
     return true;
   });
 
-  const sortedExternalRequests = [...filteredExternalRequests].sort((a, b) => {
+  // Base filtered requests for Inter-Dept Metrics (ignores extReqFilter only)
+  const baseFilteredExternalRequests = filteredExternalRequests;
+
+  // Apply metric tab selection filter
+  const finalFilteredExternalRequests = baseFilteredExternalRequests.filter(r => {
+    if (extReqFilter === 'ALLOCATION') {
+      return r.status === 'Pending' || !r.status || r.status === 'New';
+    }
+    if (extReqFilter === 'PROCESS') {
+      return r.status === 'Under Process';
+    }
+    if (extReqFilter === 'PROCESSED') {
+      return r.status === 'Processed';
+    }
+    if (extReqFilter === 'REJECTED') {
+      return r.status === 'Rejected';
+    }
+    if (extReqFilter === 'CONVERT_PENDING') {
+      return (r.status === 'Pending' || r.status === 'Under Process' || !r.status || r.status === 'New') && !r.convertedTaskId;
+    }
+    return true;
+  });
+
+  const sortedExternalRequests = [...finalFilteredExternalRequests].sort((a, b) => {
     if (!extReqSortConfig) return 0;
     const { key, direction } = extReqSortConfig;
     let valA = (key === 'remarks' ? (a as any).rejectReason : a[key]);
@@ -4254,7 +4313,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         ) : activeView === 'TASKS' ? (
           activeSubView === 'MAIN' ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "32px" }}>
-              <MetricCard t={t} title="Total Tasks" value={tasks.length} icon={<LayoutDashboard size={20} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
+              <MetricCard t={t} title="Total Tasks" value={baseFilteredTasks.length} icon={<LayoutDashboard size={20} color="#ffffff" />} bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" isActive={activeFilter === 'ALL'} onClick={() => setActiveFilter('ALL')} />
               <MetricCard t={t} title="Pending Owner Tasks" value={pendingActionCount} icon={<Clock size={20} color="#ffffff" />} bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" isActive={activeFilter === 'PENDING_ACTION'} onClick={() => setActiveFilter('PENDING_ACTION')} />
               <MetricCard t={t} title="Pending Review" value={pendingReviewCount} icon={<AlertCircle size={20} color="#ffffff" />} bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" isActive={activeFilter === 'PENDING_REVIEW'} onClick={() => setActiveFilter('PENDING_REVIEW')} />
               <MetricCard t={t} title="Pending Status Update" value={pendingStatusUpdateCount} icon={<Share2 size={20} color="#ffffff" />} bg="linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)" isActive={activeFilter === 'PENDING_STATUS_UPDATE'} onClick={() => setActiveFilter('PENDING_STATUS_UPDATE')} />
@@ -5414,7 +5473,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", padding: "24px 32px", background: t.card }}>
                 <MetricCard t={t} 
                   title="All Requests" 
-                  value={visibleExternalRequests.length} 
+                  value={baseFilteredExternalRequests.length} 
                   icon={<FileText size={20} color="#ffffff" />} 
                   bg="linear-gradient(135deg, #475569 0%, #1e293b 100%)" 
                   isActive={extReqFilter === 'ALL'} 
@@ -5422,7 +5481,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 />
                 <MetricCard t={t} 
                   title="Pending for Acceptance" 
-                  value={visibleExternalRequests.filter(r => r.status === 'Pending' || !r.status || r.status === 'New' || r.status === '').length} 
+                  value={baseFilteredExternalRequests.filter(r => r.status === 'Pending' || !r.status || r.status === 'New' || r.status === '').length} 
                   icon={<Clock size={20} color="#ffffff" />} 
                   bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" 
                   isActive={extReqFilter === 'ALLOCATION'} 
@@ -5430,7 +5489,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 />
                 <MetricCard t={t} 
                   title="Request Accepted" 
-                  value={visibleExternalRequests.filter(r => r.status === 'Under Process').length} 
+                  value={baseFilteredExternalRequests.filter(r => r.status === 'Under Process').length} 
                   icon={<AlertCircle size={20} color="#ffffff" />} 
                   bg="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" 
                   isActive={extReqFilter === 'PROCESS'} 
@@ -5438,7 +5497,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 />
                 <MetricCard t={t} 
                   title="Processed" 
-                  value={visibleExternalRequests.filter(r => r.status === 'Processed').length} 
+                  value={baseFilteredExternalRequests.filter(r => r.status === 'Processed').length} 
                   icon={<CheckCircle2 size={20} color="#ffffff" />} 
                   bg="linear-gradient(135deg, #10b981 0%, #059669 100%)" 
                   isActive={extReqFilter === 'PROCESSED'} 
@@ -5446,7 +5505,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 />
                 <MetricCard t={t} 
                   title="Rejected" 
-                  value={visibleExternalRequests.filter(r => r.status === 'Rejected').length} 
+                  value={baseFilteredExternalRequests.filter(r => r.status === 'Rejected').length} 
                   icon={<Trash2 size={20} color="#ffffff" />} 
                   bg="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" 
                   isActive={extReqFilter === 'REJECTED'} 
