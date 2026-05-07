@@ -5733,7 +5733,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Reason for Request {extReqSortConfig?.key === 'reasonForRequest' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('mailSubject' as any)}>
+                      <th style={{ ...getThStyle(t), cursor: "pointer", minWidth: "5.5cm", maxWidth: "5.5cm" }} onClick={() => handleExtReqSort('mailSubject' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Mail Subject {extReqSortConfig?.key === 'mailSubject' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
@@ -5810,7 +5810,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             </td>
                             <td style={{ ...getTdStyle(t), minWidth: "10cm", maxWidth: "10cm", whiteSpace: "normal" }}>{req.natureOfRequest}</td>
                             <td style={{ ...getTdStyle(t), minWidth: "10cm", maxWidth: "10cm", whiteSpace: "normal" }}>{req.reasonForRequest || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
-                            <td style={{ ...getTdStyle(t), minWidth: "200px", whiteSpace: "normal" }}>{(req as any).mailSubject || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
+                            <td style={{ ...getTdStyle(t), minWidth: "5.5cm", maxWidth: "5.5cm", whiteSpace: "normal" }}>{(req as any).mailSubject || <span style={{color: t.textMuted, fontStyle: 'italic'}}>N/A</span>}</td>
                             <td style={{ ...getTdStyle(t), minWidth: "160px" }}>
                                 {(!req.status || req.status === 'Pending') && (
                                   <span style={{ padding: "4px 10px", borderRadius: "100px", background: "#fff7ed", fontSize: "0.75rem", fontWeight: 700, color: "#9a3412", border: "1px solid #ffedd5", whiteSpace: "nowrap" }}>
@@ -5979,15 +5979,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                       </button>
                                     )}
                                   </div>
-                                  
                                   {req.convertedTaskId && (
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd", whiteSpace: "nowrap" }}>
-                                        TASK CREATED
-                                      </span>
-                                      <span style={{ fontSize: "0.75rem", color: t.text, fontWeight: 700, whiteSpace: "nowrap" }}>
-                                        ID: { (req as any).taskDisplayId || req.convertedTaskId }
-                                      </span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd", whiteSpace: "nowrap" }}>
+                                          TASK CREATED
+                                        </span>
+                                        <span style={{ fontSize: "0.75rem", color: t.text, fontWeight: 700, marginLeft: "4px" }}>
+                                          ID: { (req as any).taskDisplayId || req.convertedTaskId }
+                                        </span>
+                                      </div>
                                       {isAdmin && (
                                         <button 
                                           onClick={() => handleDeleteExtRequest(req.id)}
@@ -6001,6 +6002,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                       )}
                                     </div>
                                   )}
+            )}
 
                                   {req.status === 'Rejected' && (
                                     <div style={{ fontSize: "0.7rem", color: "#ef4444", maxWidth: "200px", padding: "8px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fee2e2" }}>
