@@ -79,10 +79,22 @@ export default function ExternalRequestForm({ onClose, onSuccess, settings, user
     setError("");
 
     try {
+      // Calculate assigned allocator
+      const matrix = JSON.parse(settings.allocationMatrix || '{}');
+      const allocData = matrix[formData.requestType];
+      let assignedAllocatorEmail = null;
+      if (allocData && typeof allocData === 'object' && !Array.isArray(allocData)) {
+        assignedAllocatorEmail = allocData.primary || null;
+      } else if (Array.isArray(allocData)) {
+        assignedAllocatorEmail = allocData[0] || null;
+      } else if (typeof allocData === 'string') {
+        assignedAllocatorEmail = allocData || null;
+      }
+
       const res = await fetch("/api/external-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, assignedAllocatorEmail }),
       });
 
       if (!res.ok) {

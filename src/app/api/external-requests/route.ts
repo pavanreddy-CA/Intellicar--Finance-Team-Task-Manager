@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     if (role === 'ADMIN' || department === 'Finance') {
       // Admin and Finance team sees everything
       requests = await sql`
-        SELECT er.*, t."displayId" as "taskDisplayId"
+        SELECT er.*, t."displayId" as "taskDisplayId", t."dueDate" as "taskDueDate", t."ownerName" as "taskOwnerName", t."createdAt" as "taskCreatedAt"
         FROM "ExternalRequest" er
         LEFT JOIN "Task" t ON er."convertedTaskId" = t.id
         ORDER BY er."createdAt" DESC
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     } else if (email) {
       // External users only see their own requests
       requests = await sql`
-        SELECT er.*, t."displayId" as "taskDisplayId"
+        SELECT er.*, t."displayId" as "taskDisplayId", t."dueDate" as "taskDueDate", t."ownerName" as "taskOwnerName", t."createdAt" as "taskCreatedAt"
         FROM "ExternalRequest" er
         LEFT JOIN "Task" t ON er."convertedTaskId" = t.id
         WHERE er."requesterEmail" = ${email}
@@ -75,11 +75,11 @@ export async function POST(request: Request) {
       const result = await sql`
         INSERT INTO "ExternalRequest" (
           "requestFrom", "requesterEmail", "natureOfRequest", "reasonForRequest", "departmentName", 
-          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "frequency", "mailSubject", "createdAt", "updatedAt"
+          "requestType", "originalRequestType", "transferStatus", "status", "entityName", "frequency", "mailSubject", "assignedAllocatorEmail", "createdAt", "updatedAt"
         )
         VALUES (
           ${requestFrom}, ${requesterEmail}, ${natureOfRequest}, ${reasonForRequest || null}, ${departmentName},
-          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, ${frequency || null}, ${body.mailSubject || null}, NOW(), NOW()
+          ${requestType}, ${requestType}, 'O', 'Pending', ${entityName}, ${frequency || null}, ${body.mailSubject || null}, ${body.assignedAllocatorEmail || null}, NOW(), NOW()
         )
         RETURNING *
       `;

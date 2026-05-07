@@ -111,6 +111,9 @@ type ExternalRequest = {
   mailSubject?: string | null;
   transferredAt?: string | null;
   taskDisplayId?: string | null;
+  taskDueDate?: string | null;
+  taskOwnerName?: string | null;
+  taskCreatedAt?: string | null;
 };
 
 type LearningOpportunity = {
@@ -5740,6 +5743,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request Status {extReqSortConfig?.key === 'status' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={getThStyle(t)}>Due Date</th>
                       <th style={getThStyle(t)}>Comm. Mode</th>
                       <th style={getThStyle(t)}>Reports/Docs</th>
                       {canAllocateAnything && <th style={getThStyle(t)}>Action</th>}
@@ -5748,14 +5752,15 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Remarks {extReqSortConfig?.key === 'remarks' && (extReqSortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
-                      <th style={{ ...getThStyle(t) }}>Finance POC</th>
+                      <th style={{ ...getThStyle(t) }}>Allocator</th>
+                      <th style={{ ...getThStyle(t) }}>Task Owner</th>
                     </tr>
                   </thead>
                   <tbody>
                     {extReqLoading ? (
-                      <tr><td colSpan={canAllocateAnything ? 12 : 10} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading requests...</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 16 : 14} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>Loading requests...</td></tr>
                     ) : sortedExternalRequests.length === 0 ? (
-                      <tr><td colSpan={canAllocateAnything ? 12 : 10} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No requests found.</td></tr>
+                      <tr><td colSpan={canAllocateAnything ? 16 : 14} style={{ padding: "40px", textAlign: "center", color: t.textMuted }}>No requests found.</td></tr>
                     ) : (
                       sortedExternalRequests.map((req, idx) => {
                         const matrix = JSON.parse(settings.allocationMatrix || '{}');
@@ -5889,6 +5894,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   </div>
                                 )}
                             </td>
+                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap", fontWeight: 600 }}>
+                              {req.taskDueDate ? formatDate(req.taskDueDate) : <span style={{ color: "#cbd5e1" }}>--</span>}
+                            </td>
                             <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ fontSize: "0.75rem", color: req.processedMode ? "#0f172a" : "#94a3b8" }}>
@@ -6011,44 +6019,52 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                 <span style={{ color: "#cbd5e1" }}>-</span>
                               )}
                             </td>
-                             <td style={{ ...getTdStyle(t), minWidth: "220px" }}>
+                             <td style={{ ...getTdStyle(t), minWidth: "180px" }}>
                                 {(() => {
-                                  const rawMatrix = JSON.parse(settings.allocationMatrix || '{}');
-                                  const allocData = rawMatrix[req.requestType];
-                                  let primaryEmail = "";
-                                  if (allocData && typeof allocData === 'object' && !Array.isArray(allocData)) {
-                                    primaryEmail = allocData.primary || "";
-                                  } else if (Array.isArray(allocData)) {
-                                    primaryEmail = allocData[0] || "";
-                                  } else if (typeof allocData === 'string') {
-                                    primaryEmail = allocData;
+                                  const allocatorEmail = req.assignedAllocatorEmail;
+                                  let pName = "Unassigned";
+                                  
+                                  if (allocatorEmail) {
+                                    const allocator = usersList.find(u => u.email === allocatorEmail);
+                                    pName = allocator ? allocator.name : allocatorEmail;
+                                  } else {
+                                    // Fallback for legacy requests without assignedAllocatorEmail
+                                    const rawMatrix = JSON.parse(settings.allocationMatrix || '{}');
+                                    const allocData = rawMatrix[req.requestType];
+                                    let primaryEmail = "";
+                                    if (allocData && typeof allocData === 'object' && !Array.isArray(allocData)) {
+                                      primaryEmail = allocData.primary || "";
+                                    } else if (Array.isArray(allocData)) {
+                                      primaryEmail = allocData[0] || "";
+                                    } else if (typeof allocData === 'string') {
+                                      primaryEmail = allocData;
+                                    }
+                                    const pAllocator = usersList.find(u => u.email === primaryEmail);
+                                    pName = pAllocator ? pAllocator.name : (primaryEmail || "Unassigned");
                                   }
                                   
-                                  const pAllocator = usersList.find(u => u.email === primaryEmail);
-                                  const pName = pAllocator ? pAllocator.name : (primaryEmail || "Unassigned");
-                                  
-                                  const linkedTask = req.convertedTaskId ? tasks.find(t_ => t_.id === req.convertedTaskId) : null;
-                                  
                                   return (
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8125rem" }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                        <User size={12} color="#6366f1" />
-                                        <span>{pName} - <span style={{ fontWeight: 600, color: "#6366f1" }}>Request Allocator</span></span>
-                                      </div>
-                                      {linkedTask && (
-                                        <>
-                                          <div style={{ borderTop: `1px dashed ${t.border}`, marginTop: "4px", paddingTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                            <ShieldCheck size={12} color="#10b981" />
-                                            <span>{linkedTask.ownerName} - <span style={{ fontWeight: 600, color: "#10b981" }}>Task Owner</span></span>
-                                          </div>
-                                          <div style={{ fontSize: "0.7rem", color: t.textMuted, marginLeft: "18px" }}>
-                                            ({new Date(linkedTask.createdAt).toLocaleString()})
-                                          </div>
-                                        </>
-                                      )}
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem" }}>
+                                      <User size={12} color="#6366f1" />
+                                      <span>{pName}</span>
                                     </div>
                                   );
                                 })()}
+                             </td>
+                             <td style={{ ...getTdStyle(t), minWidth: "220px" }}>
+                                {req.taskOwnerName ? (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.8125rem" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <ShieldCheck size={12} color="#10b981" />
+                                      <span style={{ fontWeight: 600, color: t.text }}>{req.taskOwnerName}</span>
+                                    </div>
+                                    <div style={{ fontSize: "0.7rem", color: t.textMuted, marginLeft: "18px" }}>
+                                      {req.taskCreatedAt ? `(${new Date(req.taskCreatedAt).toLocaleString()})` : ""}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span style={{ color: "#cbd5e1", fontSize: "0.8rem" }}>-</span>
+                                )}
                              </td>
                           </tr>
                         );
