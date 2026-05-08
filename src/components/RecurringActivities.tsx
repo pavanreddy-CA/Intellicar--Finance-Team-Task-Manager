@@ -2142,7 +2142,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                     </th>
                     <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('taskNamePattern')}>
                       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        TASK NAME PATTERN {dailySortConfig?.key === 'taskNamePattern' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        TASK NAME {dailySortConfig?.key === 'taskNamePattern' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                       </div>
                     </th>
                     <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('financeFunction')}>
@@ -2152,7 +2152,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                     </th>
                     <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('defaultOwner')}>
                       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        CURRENT OWNER {dailySortConfig?.key === 'defaultOwner' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        OWNER {dailySortConfig?.key === 'defaultOwner' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                       </div>
                     </th>
                     <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('defaultReviewer')}>
