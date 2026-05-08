@@ -101,6 +101,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   const [shareMode, setShareMode] = useState<'STAGING' | 'MASTER'>('STAGING');
   const [stagingCurrentPage, setStagingCurrentPage] = useState(1);
   const [stagingItemsPerPage, setStagingItemsPerPage] = useState(10);
+  const [masterCurrentPage, setMasterCurrentPage] = useState(1);
+  const [masterItemsPerPage, setMasterItemsPerPage] = useState(10);
+  const [masterFreqFilter, setMasterFreqFilter] = useState("ALL");
 
   // Daily Tasks State
   const [dailyDateFilter, setDailyDateFilter] = useState({ 
@@ -154,10 +157,13 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     setMasterSortConfig({ key, direction });
   };
 
-  const filteredAndSortedMaster = (templates || []).filter(t => 
-    t.taskNamePattern.toLowerCase().includes(searchMaster.toLowerCase()) || 
-    t.entityName.toLowerCase().includes(searchMaster.toLowerCase())
-  ).sort((a, b) => {
+  const filteredAndSortedMaster = (templates || []).filter(t => {
+    const search = searchMaster.toLowerCase();
+    const matchesSearch = t.taskNamePattern.toLowerCase().includes(search) || 
+                         t.entityName.toLowerCase().includes(search);
+    const matchesFreq = masterFreqFilter === "ALL" || t.frequency === masterFreqFilter;
+    return matchesSearch && matchesFreq;
+  }).sort((a, b) => {
     if (!masterSortConfig) return 0;
     const { key, direction } = masterSortConfig;
     const valA = (a as any)[key] || "";
@@ -166,6 +172,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     if (valA > valB) return direction === 'asc' ? 1 : -1;
     return 0;
   });
+
+  const totalMasterPages = Math.ceil(filteredAndSortedMaster.length / masterItemsPerPage);
+  const paginatedMaster = filteredAndSortedMaster.slice((masterCurrentPage - 1) * masterItemsPerPage, masterCurrentPage * masterItemsPerPage);
 
   const [templateForm, setTemplateForm] = useState<Partial<RecurringTemplate>>({
     taskNamePattern: "",
@@ -1746,16 +1755,53 @@ export default function RecurringActivities({   settings, usersList = [] , showN
 
                 {activeSubTab === 'MASTER' && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center" }}>
-            <div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "nowrap", gap: "12px" }}>
+            <div style={{ minWidth: "fit-content" }}>
               <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#0f172a" }}>Recurring Template Master Registry</h3>
               <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", color: "#64748b" }}>Define the rules for automatic task generation.</p>
             </div>
-            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingRight: "8px", borderRight: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Freq:</span>
+                <select 
+                  value={masterFreqFilter} 
+                  onChange={e => { setMasterFreqFilter(e.target.value); setMasterCurrentPage(1); }}
+                  style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer", fontSize: "0.8125rem" }}
+                >
+                  <option value="ALL">ALL</option>
+                  {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingRight: "8px", borderRight: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Rows:</span>
+                <select 
+                  value={masterItemsPerPage} 
+                  onChange={e => { setMasterItemsPerPage(Number(e.target.value)); setMasterCurrentPage(1); }}
+                  style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer", fontSize: "0.8125rem" }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "4px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "200px" }}>
+                <Search size={16} color="#64748b" />
+                <input 
+                  type="text" 
+                  placeholder="Search master..." 
+                  value={searchMaster}
+                  onChange={e => { setSearchMaster(e.target.value); setMasterCurrentPage(1); }}
+                  style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", width: "100%", color: "#334155" }}
+                />
+              </div>
+
               <div style={{ position: "relative" }}>
                 <button 
                   onClick={() => setShowMasterDownloadDropdown(!showMasterDownloadDropdown)}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#334155", fontSize: "0.875rem", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#334155", fontSize: "0.875rem", fontWeight: 700, cursor: "pointer", transition: "all 0.2s", whiteSpace: "nowrap" }}
                 >
                   <Download size={18} /> Download <ChevronDown size={16} />
                 </button>
@@ -1782,42 +1828,33 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                   </div>
                 )}
               </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "4px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "240px" }}>
-              <Search size={16} color="#64748b" />
-              <input 
-                type="text" 
-                placeholder="Search master..." 
-                value={searchMaster}
-                onChange={e => setSearchMaster(e.target.value)}
-                style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", width: "100%", color: "#334155" }}
-              />
+
+              <button 
+                onClick={() => { 
+                  setEditingTemplate(null); 
+                  setTemplateForm({
+                    taskNamePattern: "",
+                    entityName: "",
+                    taskType: "External",
+                    departmentName: "Finance",
+                    financeFunction: "",
+                    frequency: "M",
+                    dayOffset: 15,
+                    monthOffset: 0,
+                    defaultOwner: "",
+                    defaultReviewer: "",
+                    isActive: true,
+                    startDate: new Date().toISOString().split('T')[0],
+                    endDate: ""
+                  });
+                  setShowTemplateForm(true); 
+                }}
+                style={{ padding: "8px 16px", background: "#2563eb", color: "white", borderRadius: "10px", border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)", whiteSpace: "nowrap" }}
+              >
+                <Plus size={18} /> Add Recurring Task
+              </button>
             </div>
-            <button 
-              onClick={() => { 
-                setEditingTemplate(null); 
-                setTemplateForm({
-                  taskNamePattern: "",
-                  entityName: "",
-                  taskType: "External",
-                  departmentName: "Finance",
-                  financeFunction: "",
-                  frequency: "M",
-                  dayOffset: 15,
-                  monthOffset: 0,
-                  defaultOwner: "",
-                  defaultReviewer: "",
-                  isActive: true,
-                  startDate: new Date().toISOString().split('T')[0],
-                  endDate: ""
-                });
-                setShowTemplateForm(true); 
-              }}
-              style={{ padding: "10px 20px", background: "#2563eb", color: "white", borderRadius: "10px", border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
-            >
-              <Plus size={18} /> Add Recurring Task
-            </button>
           </div>
-        </div>
 
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflowX: "auto", overflowY: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }} className="custom-scrollbar">
             <table style={{ width: "100%", minWidth: "1200px", borderCollapse: "collapse" }}>
@@ -1857,7 +1894,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedMaster.map(t => (
+                {paginatedMaster.map(t => (
                   <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9" }} className="table-row">
                     <td style={{...tdStyle, fontWeight: 600, color: "#0f172a"}}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1956,6 +1993,34 @@ export default function RecurringActivities({   settings, usersList = [] , showN
               </tbody>
             </table>
           </div>
+
+          {/* Master Pagination Controls */}
+          {filteredAndSortedMaster.length > 0 && (
+            <div style={{ display: \"flex\", justifyContent: \"space-between\", alignItems: \"center\", padding: \"16px 24px\", borderTop: \"1px solid #e2e8f0\", background: \"white\", borderBottomLeftRadius: \"16px\", borderBottomRightRadius: \"16px\", marginTop: \"-1px\" }}>
+              <div style={{ fontSize: \"0.875rem\", color: \"#64748b\" }}>
+                Showing {(masterCurrentPage - 1) * masterItemsPerPage + 1} to {Math.min(masterCurrentPage * masterItemsPerPage, filteredAndSortedMaster.length)} of {filteredAndSortedMaster.length} templates
+              </div>
+              <div style={{ display: \"flex\", gap: \"8px\", alignItems: \"center\" }}>
+                <button 
+                  onClick={() => setMasterCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={masterCurrentPage === 1}
+                  style={{ display: \"flex\", alignItems: \"center\", padding: \"6px 12px\", background: \"white\", border: \"1px solid #e2e8f0\", borderRadius: \"6px\", color: masterCurrentPage === 1 ? \"#94a3b8\" : \"#334155\", cursor: masterCurrentPage === 1 ? \"not-allowed\" : \"pointer\", fontSize: \"0.875rem\", fontWeight: 500 }}
+                >
+                  <ChevronDown size={16} style={{ transform: \"rotate(90deg)\" }} /> Prev
+                </button>
+                <div style={{ fontSize: \"0.875rem\", fontWeight: 600, padding: \"0 12px\", color: \"#334155\" }}>
+                  Page {masterCurrentPage} of {totalMasterPages || 1}
+                </div>
+                <button 
+                  onClick={() => setMasterCurrentPage(prev => Math.min(prev + 1, totalMasterPages))}
+                  disabled={masterCurrentPage === (totalMasterPages || 1)}
+                  style={{ display: \"flex\", alignItems: \"center\", padding: \"6px 12px\", background: \"white\", border: \"1px solid #e2e8f0\", borderRadius: \"6px\", color: masterCurrentPage === (totalMasterPages || 1) ? \"#94a3b8\" : \"#334155\", cursor: masterCurrentPage === (totalMasterPages || 1) ? \"not-allowed\" : \"pointer\", fontSize: \"0.875rem\", fontWeight: 500 }}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
