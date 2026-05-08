@@ -4343,7 +4343,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             display: "flex", 
                             alignItems: "center", 
                             gap: "8px", 
-                            background: "#f59e0b", 
+                            background: "#2563eb", 
                             color: "white", 
                             padding: "10px 24px", 
                             borderRadius: "14px", 
@@ -4351,21 +4351,21 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             cursor: "pointer", 
                             fontWeight: 700, 
                             fontSize: "0.875rem", 
-                            boxShadow: "0 10px 15px -3px rgba(245, 158, 11, 0.3)", 
+                            boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.3)", 
                             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)" 
                           }} 
                           onMouseOver={e => {
                             e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
-                            e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(245, 158, 11, 0.4)";
-                            e.currentTarget.style.background = "#d97706";
+                            e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(37, 99, 235, 0.4)";
+                            e.currentTarget.style.background = "#1d4ed8";
                           }} 
                           onMouseOut={e => {
                             e.currentTarget.style.transform = "translateY(0) scale(1)";
-                            e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(245, 158, 11, 0.3)";
-                            e.currentTarget.style.background = "#f59e0b";
+                            e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(37, 99, 235, 0.3)";
+                            e.currentTarget.style.background = "#2563eb";
                           }}
                         >
-                          <Zap size={18} fill="white" /> Update LO
+                          <Plus size={18} /> Update LO
                         </button>
                       )
                     ) : null}
