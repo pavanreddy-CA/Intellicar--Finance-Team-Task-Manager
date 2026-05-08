@@ -99,6 +99,8 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   });
   const [showMasterDownloadDropdown, setShowMasterDownloadDropdown] = useState(false);
   const [shareMode, setShareMode] = useState<'STAGING' | 'MASTER'>('STAGING');
+  const [stagingCurrentPage, setStagingCurrentPage] = useState(1);
+  const [stagingItemsPerPage, setStagingItemsPerPage] = useState(10);
 
   // Daily Tasks State
   const [dailyDateFilter, setDailyDateFilter] = useState({ 
@@ -1127,6 +1129,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
       return 0;
     });
 
+  const totalStagingPages = Math.ceil(filteredAndSortedStaging.length / stagingItemsPerPage);
+  const paginatedStaging = filteredAndSortedStaging.slice((stagingCurrentPage - 1) * stagingItemsPerPage, stagingCurrentPage * stagingItemsPerPage);
+
   return (
     <div style={{ padding: "24px" }}>
       {/* Sub-Tabs */}
@@ -1244,7 +1249,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                   type="text" 
                   placeholder="Search staging..." 
                   value={searchStaging}
-                  onChange={e => setSearchStaging(e.target.value)}
+                  onChange={e => { setSearchStaging(e.target.value); setStagingCurrentPage(1); }}
                   style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", width: "100%", color: "#334155" }}
                 />
               </div>
@@ -1252,13 +1257,29 @@ export default function RecurringActivities({   settings, usersList = [] , showN
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <select 
                   value={entityFilterStaging} 
-                  onChange={e => setEntityFilterStaging(e.target.value)} 
+                  onChange={e => { setEntityFilterStaging(e.target.value); setStagingCurrentPage(1); }} 
                   style={{ ...inputStyle, width: "130px" }}
                 >
                   <option value="ALL">All Entities</option>
                   {Array.from(new Set(stagingTasks.map(t => t.entityName))).sort().map(entity => (
                     <option key={entity} value={entity}>{entity}</option>
                   ))}
+                </select>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "8px", borderLeft: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Rows:</span>
+                <select 
+                  value={stagingItemsPerPage} 
+                  onChange={e => {
+                    setStagingItemsPerPage(Number(e.target.value));
+                    setStagingCurrentPage(1);
+                  }}
+                  style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer", fontSize: "0.8125rem" }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
                 </select>
               </div>
 
@@ -1389,7 +1410,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedStaging.map((task, idx) => (
+                {paginatedStaging.map((task, idx) => (
                   <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9", background: task.isConverted ? "#f9fafb" : "white", opacity: task.isConverted ? 0.8 : 1 }}>
                     <td style={{ padding: "12px 16px" }}>
                       {!task.isConverted && (
@@ -1563,6 +1584,34 @@ export default function RecurringActivities({   settings, usersList = [] , showN
               </tbody>
             </table>
           </div>
+
+          {/* Staging Pagination Controls */}
+          {filteredAndSortedStaging.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid #e2e8f0", background: "white", borderBottomLeftRadius: "16px", borderBottomRightRadius: "16px", marginTop: "-1px" }}>
+              <div style={{ fontSize: "0.875rem", color: "#64748b" }}>
+                Showing {(stagingCurrentPage - 1) * stagingItemsPerPage + 1} to {Math.min(stagingCurrentPage * stagingItemsPerPage, filteredAndSortedStaging.length)} of {filteredAndSortedStaging.length} activities
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <button 
+                  onClick={() => setStagingCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={stagingCurrentPage === 1}
+                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", color: stagingCurrentPage === 1 ? "#94a3b8" : "#334155", cursor: stagingCurrentPage === 1 ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: 500 }}
+                >
+                  <ChevronDown size={16} style={{ transform: "rotate(90deg)" }} /> Prev
+                </button>
+                <div style={{ fontSize: "0.875rem", fontWeight: 600, padding: "0 12px", color: "#334155" }}>
+                  Page {stagingCurrentPage} of {totalStagingPages || 1}
+                </div>
+                <button 
+                  onClick={() => setStagingCurrentPage(prev => Math.min(prev + 1, totalStagingPages))}
+                  disabled={stagingCurrentPage === (totalStagingPages || 1)}
+                  style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", color: stagingCurrentPage === (totalStagingPages || 1) ? "#94a3b8" : "#334155", cursor: stagingCurrentPage === (totalStagingPages || 1) ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: 500 }}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
