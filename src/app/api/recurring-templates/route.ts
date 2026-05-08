@@ -68,7 +68,18 @@ export async function GET() {
       SELECT * FROM "RecurringTemplate"
       ORDER BY "createdAt" DESC
     `;
-    return NextResponse.json(templates);
+
+    const history = await sql`
+      SELECT * FROM "AssignmentHistory"
+      ORDER BY "effectiveFrom" DESC, "createdAt" DESC
+    `;
+
+    const templatesWithHistory = templates.map(t => ({
+      ...t,
+      assignmentHistory: history.filter((h: any) => h.templateId === t.id)
+    }));
+
+    return NextResponse.json(templatesWithHistory);
   } catch (error: any) {
     console.error("Fetch recurring templates error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -29,6 +29,7 @@ type RecurringTemplate = {
   excludedDates: string[] | null;
   startDate: string | null;
   freqLabel: string | null;
+  assignmentHistory?: any[];
 };
 
 type StagingTask = {
@@ -271,6 +272,26 @@ export default function RecurringActivities({   settings, usersList = [] , showN
             dueDate.setDate(t.dayOffset || 1);
           }
 
+          // Find correct assignments based on effective dates
+          let ownerName = t.defaultOwner || "";
+          let reviewerName = t.defaultReviewer || "";
+          
+          if (t.assignmentHistory && t.assignmentHistory.length > 0) {
+            const occDateStr = dueDate.toISOString().split('T')[0];
+            // Find the most recent assignment where effectiveFrom <= occurrence date
+            const activeAssignment = [...t.assignmentHistory]
+              .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime() || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .find(h => {
+                const effectiveDateStr = new Date(h.effectiveFrom).toISOString().split('T')[0];
+                return effectiveDateStr <= occDateStr;
+              });
+            
+            if (activeAssignment) {
+              ownerName = activeAssignment.ownerName;
+              reviewerName = activeAssignment.reviewerName;
+            }
+          }
+
           staging.push({
             templateId: t.id,
             taskName: resolveTaskName(t.taskNamePattern, occ.date),
@@ -281,9 +302,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
             frequency: t.frequency,
             periodKey: occ.periodKey,
             dueDate: dueDate.toISOString().split('T')[0],
-            ownerName: t.defaultOwner || "",
-            reviewerName: t.defaultReviewer || "",
-            isReady: !!t.defaultOwner,
+            ownerName: ownerName,
+            reviewerName: reviewerName,
+            isReady: !!ownerName,
             isConverted: false,
             freqLabel: t.freqLabel
           });

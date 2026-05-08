@@ -50,7 +50,22 @@ export async function POST(
     const templateId = parseInt(id);
     const effectiveDate = new Date(effectiveFrom);
 
-    // 1. Record in AssignmentHistory
+    // --- Pre-check: If no history exists, capture the CURRENT values as the initial baseline ---
+    const existingHistory = await sql`SELECT id FROM "AssignmentHistory" WHERE "templateId" = ${templateId} LIMIT 1`;
+    
+    if (existingHistory.length === 0) {
+      const template = await sql`SELECT "defaultOwner", "defaultReviewer", "startDate" FROM "RecurringTemplate" WHERE id = ${templateId}`;
+      if (template.length > 0) {
+        const t = template[0];
+        // Create an initial record starting from template start date
+        await sql`
+          INSERT INTO "AssignmentHistory" ("templateId", "ownerName", "reviewerName", "effectiveFrom", "createdAt")
+          VALUES (${templateId}, ${t.defaultOwner}, ${t.defaultReviewer}, ${t.startDate || new Date('2024-01-01')}, NOW())
+        `;
+      }
+    }
+
+    // 1. Record the NEW assignment in AssignmentHistory
     await sql`
       INSERT INTO "AssignmentHistory" ("templateId", "ownerName", "reviewerName", "effectiveFrom", "createdAt")
       VALUES (${templateId}, ${ownerName}, ${reviewerName}, ${effectiveDate}, NOW())
@@ -63,11 +78,7 @@ export async function POST(
       WHERE id = ${templateId}
     `;
 
-    // 3. Update existing tasks that are scheduled after effective date and not completed
-    // We update Task table records that match this template and have a due date >= effective date
-    // AND taskStatus is not in 'Completed', 'Processed', etc. (if applicable)
-    // For safety, we focus on tasks that are still 'Pending' or 'In Progress'
-    
+    // 3. Update existing live tasks in Task table
     await sql`
       UPDATE "Task"
       SET "ownerName" = ${ownerName}, "reviewerName" = ${reviewerName}, "updatedAt" = NOW()
