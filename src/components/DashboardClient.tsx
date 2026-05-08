@@ -1916,7 +1916,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   const handleUpdate = async (taskId: number, field: string, value: string) => {
     const currentTask = tasks.find(t => t.id === taskId);
-    if (field === 'reviewCompletionDate' && currentTask?.reviewStatus === "Review Not Required") {
+    const isReviewNotReq = (s: string | null | undefined) => {
+      if (!s) return false;
+      const normalized = s.trim().toLowerCase();
+      return normalized === 'review not required' || normalized === 'n/a' || normalized === 'not applicable';
+    };
+
+    if (field === 'reviewCompletionDate' && isReviewNotReq(currentTask?.reviewStatus)) {
       showNotification("Cannot set review date for tasks where review is not required.", "error");
       setEditingCell(null);
       return;
@@ -5204,8 +5210,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         todayDate.setHours(0, 0, 0, 0);
                         const isOverdue = task.taskStatus !== "Completed" && task.dueDate && new Date(task.dueDate) < todayDate;
 
+                        const isReviewNotReq = (s: string | null | undefined) => {
+                          if (!s) return false;
+                          const normalized = s.trim().toLowerCase();
+                          return normalized === 'review not required' || normalized === 'n/a' || normalized === 'not applicable';
+                        };
                         const isOwnerRestricted = (COMPLETION_STATUSES.includes(task.taskStatus) && !isAdmin) || (!isCurrentUserOwner && !isAdmin) || (!!task.reviewCompletionDate && !isAdmin);
-                        const isReviewerRestricted = (task.reviewStatus === "Review Not Required") || (task.reviewStatus === "Completed" && !isAdmin) || (!isCurrentUserReviewer && !isAdmin);
+                        const isReviewerRestricted = isReviewNotReq(task.reviewStatus) || (task.reviewStatus === "Completed" && !isAdmin) || (!isCurrentUserReviewer && !isAdmin);
                         
                         return (
                           <tr key={task.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "all 0.2s", color: isOverdue ? "#ef4444" : "#334155", fontWeight: isOverdue ? 700 : 400 }} className="table-row">
@@ -5353,17 +5364,17 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               />
                             </td>
                              <td 
-                               style={{ ...getTdStyle(t), whiteSpace: "nowrap", fontSize: "0.75rem", cursor: (task.reviewStatus !== "Review Not Required" && (isAdmin || (isCurrentUserReviewer && task.requestStatus !== "Processed"))) ? "pointer" : "default", fontWeight: 600, color: "#64748b" }} 
+                               style={{ ...getTdStyle(t), whiteSpace: "nowrap", fontSize: "0.75rem", cursor: (!isReviewNotReq(task.reviewStatus) && (isAdmin || (isCurrentUserReviewer && task.requestStatus !== "Processed"))) ? "pointer" : "default", fontWeight: 600, color: "#64748b" }} 
                               title={task.reviewedSubmissionAt ? `[Audit Log]\nReviewed: ${formatDateTime(task.reviewedSubmissionAt)}\nBy: ${task.reviewedBy || "Unknown"}` : ""}
                               onClick={() => {
-                                if (task.reviewStatus === "Review Not Required") return;
+                                if (isReviewNotReq(task.reviewStatus)) return;
                                 if (task.requestStatus === "Processed" && !isAdmin) return;
                                 if (!isAdmin && !isCurrentUserReviewer) return;
                                 setEditingCell({ id: task.id, field: 'reviewCompletionDate' });
                                 setEditValue(task.reviewCompletionDate ? task.reviewCompletionDate.split('T')[0] : '');
                               }}
                             >
-                              {editingCell?.id === task.id && editingCell.field === 'reviewCompletionDate' && task.reviewStatus !== "Review Not Required" ? (
+                              {editingCell?.id === task.id && editingCell.field === 'reviewCompletionDate' && !isReviewNotReq(task.reviewStatus) ? (
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
                                   <input 
                                     type="date"
