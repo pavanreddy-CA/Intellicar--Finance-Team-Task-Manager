@@ -492,6 +492,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [extReqCurrentPage, setExtReqCurrentPage] = useState(1);
   const [extReqItemsPerPage, setExtReqItemsPerPage] = useState(10);
+  const [loCurrentPage, setLoCurrentPage] = useState(1);
+  const [loItemsPerPage, setLoItemsPerPage] = useState(10);
   const [dateFilterPreset, setDateFilterPreset] = useState("ALL_TIME");
   const [loActiveFilter, setLoActiveFilter] = useState<'ALL' | 'REPORTS' | 'LEARNINGS' | 'RESOURCES' | 'ANALYTICS'>('ALL');
   const [loDateFrom, setLoDateFrom] = useState(() => {
@@ -2522,6 +2524,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     return 0;
   });
 
+  const totalLOPages = Math.ceil(sortedLOs.length / loItemsPerPage);
+  const paginatedLOs = sortedLOs.slice((loCurrentPage - 1) * loItemsPerPage, loCurrentPage * loItemsPerPage);
+
 
 
   useEffect(() => {
@@ -4263,11 +4268,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                      activeView === 'PAYMENTS' ? "Payments Calendar" : "Learning Opportunities"}
                   </h2>
                   {activeView === 'TASKS' && activeSubView === 'OTHER_DEPT' ? null : (
-                    <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.95rem", fontWeight: 500 }}>
+                    <p style={{ margin: "4px 0 0 0", color: activeView === 'LOS' ? "#3b82f6" : t.textMuted, fontSize: "0.95rem", fontWeight: 600 }}>
                       {activeView === 'TASKS' ? 
                         (activeSubView === 'MAIN' ? "" : "") :
                        activeView === 'PAYMENTS' ? "Manage and track recurring vendor payments and Treasury obligations." :
-                       "Turning challenges into structured growth opportunities."}
+                       "We don't track mistakes, we track learning and improvement"}
                     </p>
                   )}
                 </div>
@@ -4785,39 +4790,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   );
                 })()}
               </div>
-            </div>
-          </div>
-        ) : activeView === 'LOS' && loActiveFilter !== 'RESOURCES' ? (
-          <div style={{ 
-            marginBottom: "32px", 
-            padding: "40px", 
-            borderRadius: "24px", 
-            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", 
-            color: "white", 
-            boxShadow: "0 20px 25px -5px rgba(79, 70, 229, 0.2)",
-            position: "relative",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center"
-          }}>
-            <div style={{ position: "absolute", top: -20, left: -20, opacity: 0.1 }}>
-              <Quote size={120} />
-            </div>
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <h2 style={{ 
-                margin: 0, 
-                fontSize: "2rem", 
-                fontWeight: 700, 
-                letterSpacing: "-0.025em",
-                lineHeight: 1.2,
-                maxWidth: "800px",
-                fontFamily: "'Outfit', 'Inter', sans-serif"
-              }}>
-                "We don’t track mistakes, we track learning and improvement"
-              </h2>
-              <div style={{ marginTop: "16px", height: "4px", width: "60px", background: "rgba(255,255,255,0.3)", borderRadius: "2px", margin: "16px auto 0" }}></div>
             </div>
           </div>
         ) : null}
@@ -6474,15 +6446,15 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                       <div style={{ display: "flex", gap: "12px" }}>
                         <button 
-                          onClick={() => setLoActiveFilter('ALL')}
+                          onClick={() => { setLoActiveFilter('ALL'); setLoCurrentPage(1); }}
                           style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'ALL' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'ALL' ? "#4f46e5" : "transparent", color: loActiveFilter === 'ALL' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
                         >All Findings</button>
                         <button 
-                          onClick={() => setLoActiveFilter('REPORTS')}
+                          onClick={() => { setLoActiveFilter('REPORTS'); setLoCurrentPage(1); }}
                           style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'REPORTS' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'REPORTS' ? "#4f46e5" : "transparent", color: loActiveFilter === 'REPORTS' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
                         >My Findings</button>
                         <button 
-                          onClick={() => setLoActiveFilter('LEARNINGS')}
+                          onClick={() => { setLoActiveFilter('LEARNINGS'); setLoCurrentPage(1); }}
                           style={{ padding: "8px 20px", borderRadius: "100px", border: `1px solid ${loActiveFilter === 'LEARNINGS' ? "#4f46e5" : t.border}`, background: loActiveFilter === 'LEARNINGS' ? "#4f46e5" : "transparent", color: loActiveFilter === 'LEARNINGS' ? "white" : t.textMuted, fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" }}
                         >My Learnings</button>
                       </div>
@@ -6541,7 +6513,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           type="text" 
                           placeholder="Search opportunities..." 
                           value={loSearchQuery} 
-                          onChange={e => setLoSearchQuery(e.target.value)} 
+                          onChange={e => { setLoSearchQuery(e.target.value); setLoCurrentPage(1); }} 
                           style={{ width: "100%", padding: "10px 12px 10px 40px", borderRadius: "10px", border: `1px solid ${t.border}`, background: t.bg, outline: "none", fontSize: "0.875rem" }} 
                         />
                       </div>
@@ -6551,7 +6523,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         <input 
                           type="date" 
                           value={loDateFrom} 
-                          onChange={e => setLoDateFrom(e.target.value)}
+                          onChange={e => { setLoDateFrom(e.target.value); setLoCurrentPage(1); }}
                           style={{ padding: "8px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.text }}
                         />
                       </div>
@@ -6561,7 +6533,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         <input 
                           type="date" 
                           value={loDateTo} 
-                          onChange={e => setLoDateTo(e.target.value)}
+                          onChange={e => { setLoDateTo(e.target.value); setLoCurrentPage(1); }}
                           style={{ padding: "8px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.875rem", background: t.bg, color: t.text }}
                         />
                       </div>
@@ -6569,7 +6541,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                        <MultiSelectFilter
                         options={Array.from(new Set(los.map(l => l.entity))).sort()}
                         selected={loEntityFilter}
-                        onChange={setLoEntityFilter}
+                        onChange={(v) => { setLoEntityFilter(v); setLoCurrentPage(1); }}
                         placeholder="All Entities"
                         theme={theme}
                         t={t}
@@ -6578,7 +6550,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       <MultiSelectFilter
                         options={uniqueLOIdentifiedBy}
                         selected={loIdentifiedByFilter}
-                        onChange={setLoIdentifiedByFilter}
+                        onChange={(v) => { setLoIdentifiedByFilter(v); setLoCurrentPage(1); }}
                         placeholder="All Identified By"
                         theme={theme}
                         t={t}
@@ -6587,11 +6559,27 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       <MultiSelectFilter
                         options={Array.from(new Set(los.map(l => l.committedBy))).sort()}
                         selected={loCommittedByFilter}
-                        onChange={setLoCommittedByFilter}
+                        onChange={(v) => { setLoCommittedByFilter(v); setLoCurrentPage(1); }}
                         placeholder="All Committed By"
                         theme={theme}
                         t={t}
                       />
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto", paddingLeft: "8px", borderLeft: `1px solid ${t.border}` }}>
+                        <span style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
+                        <select 
+                          value={loItemsPerPage} 
+                          onChange={e => {
+                            setLoItemsPerPage(Number(e.target.value));
+                            setLoCurrentPage(1);
+                          }}
+                          style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer", fontSize: "0.8125rem" }}
+                        >
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={30}>30</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div style={{ overflowX: "auto", overflowY: "hidden", background: t.card, borderRadius: "16px", border: `1px solid ${t.border}` }} className="custom-scrollbar">
@@ -6665,14 +6653,14 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         <tbody>
                           {loLoading ? (
                             <tr><td colSpan={10} style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>Loading opportunities...</td></tr>
-                          ) : sortedLOs.length === 0 ? (
+                          ) : paginatedLOs.length === 0 ? (
                             <tr><td colSpan={10} style={{ textAlign: "center", padding: "80px", color: t.textMuted }}>
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                                 <AlertCircle size={40} style={{ opacity: 0.3 }} />
                                 <span style={{ fontSize: "1rem", fontWeight: 500 }}>No learning opportunities recorded.</span>
                               </div>
                             </td></tr>
-                          ) : sortedLOs.map((lo: any, idx) => (
+                          ) : paginatedLOs.map((lo: any, idx) => (
                             <tr key={lo.id} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} className="table-row">
                               <td style={{ ...getTdStyle(t), padding: "16px 20px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -6694,7 +6682,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   >
                                     <Eye size={14} />
                                   </button>
-                                  {idx + 1}
+                                  {(loCurrentPage - 1) * loItemsPerPage + idx + 1}
                                 </div>
                               </td>
                               <td style={{ ...getTdStyle(t), fontSize: "0.8125rem", whiteSpace: "nowrap" }}>{lo.createdAt ? formatDateTime(lo.createdAt) : "--"}</td>
@@ -6766,6 +6754,32 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+
+                  {/* LO Pagination Controls */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${t.border}`, background: t.bg, borderBottomLeftRadius: "24px", borderBottomRightRadius: "24px" }}>
+                    <div style={{ fontSize: "0.875rem", color: t.textMuted }}>
+                      Showing {(loCurrentPage - 1) * loItemsPerPage + 1} to {Math.min(loCurrentPage * loItemsPerPage, sortedLOs.length)} of {sortedLOs.length} opportunities
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <button 
+                        onClick={() => setLoCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={loCurrentPage === 1}
+                        style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: loCurrentPage === 1 ? "#94a3b8" : t.text, cursor: loCurrentPage === 1 ? "not-allowed" : "pointer" }}
+                      >
+                        <ChevronLeft size={16} /> Prev
+                      </button>
+                      <div style={{ fontSize: "0.875rem", fontWeight: 500, padding: "0 12px", color: t.text }}>
+                        Page {loCurrentPage} of {totalLOPages || 1}
+                      </div>
+                      <button 
+                        onClick={() => setLoCurrentPage(prev => Math.min(prev + 1, totalLOPages))}
+                        disabled={loCurrentPage === (totalLOPages || 1)}
+                        style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: t.card, border: `1px solid ${t.border}`, borderRadius: "6px", color: loCurrentPage === (totalLOPages || 1) ? "#94a3b8" : t.text, cursor: loCurrentPage === (totalLOPages || 1) ? "not-allowed" : "pointer" }}
+                      >
+                        Next <ChevronRight size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>
