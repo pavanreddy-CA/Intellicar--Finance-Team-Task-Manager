@@ -46,6 +46,9 @@ type StagingTask = {
   isReady: boolean;
   isConverted?: boolean;
   convertedTaskId?: number;
+  convertedByEmail?: string;
+  convertedAt?: string;
+  displayId?: string;
   freqLabel?: string | null;
 };
 
@@ -240,6 +243,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
             isReady: true,
             isConverted: true,
             convertedTaskId: converted.id,
+            convertedByEmail: converted.createdByEmail,
+            convertedAt: converted.createdAt,
+            displayId: converted.displayId,
             freqLabel: converted.frequency || t.freqLabel
           });
         } else {
@@ -450,6 +456,26 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     } finally {
       setLoading(false);
     }
+  };
+
+  const getUserNameFromEmail = (email: string | null) => {
+    if (!email) return "System";
+    const user = usersList.find(u => u.email?.toLowerCase().trim() === email.toLowerCase().trim());
+    return user ? user.name : email;
+  };
+
+  const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return "--";
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   const openEditTemplate = (t: RecurringTemplate) => {
@@ -1321,7 +1347,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                     </td>
                     <td style={tdStyle}>
                       {task.isConverted ? (
-                        <span>{task.dueDate}</span>
+                        <span>{formatDateDisplay(task.dueDate)}</span>
                       ) : (
                         <input 
                             type="date" 
@@ -1339,13 +1365,31 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                       )}
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ 
-                        padding: "4px 8px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap",
-                        background: task.isConverted ? "#dcfce7" : "#fef3c7",
-                        color: task.isConverted ? "#15803d" : "#b45309"
-                      }}>
-                        {task.isConverted ? "CONVERTED" : "PENDING"}
-                      </span>
+                      {task.isConverted ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <span style={{ 
+                            padding: "4px 8px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap",
+                            background: "#dcfce7",
+                            color: "#15803d",
+                            width: "fit-content"
+                          }}
+                          title={task.convertedAt ? `Converted by ${getUserNameFromEmail(task.convertedByEmail || null)}\nOn ${formatDateTime(task.convertedAt)}` : "Converted"}
+                          >
+                            CONVERTED
+                          </span>
+                          <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 700, marginLeft: "4px" }}>
+                            ID: {task.displayId || `#${task.convertedTaskId}`}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ 
+                          padding: "4px 8px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap",
+                          background: "#fef3c7",
+                          color: "#b45309"
+                        }}>
+                          PENDING
+                        </span>
+                      )}
                     </td>
                     <td style={{...tdStyle, textAlign: "right"}}>
                         {!task.isConverted && (
