@@ -768,7 +768,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [taskDeptFilter, setTaskDeptFilter] = useState<string[]>([]);
   const [requestTypeFilter, setRequestTypeFilter] = useState<string[]>([]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/tasks");
       if (res.ok) {
@@ -782,7 +783,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const fetchPaymentRequests = async () => {
+  const fetchPaymentRequests = async (silent = false) => {
+    if (!silent) setPaymentLoading(true);
     try {
       const trackerRes = await fetch("/api/payments/tracker");
       const masterRes = await fetch("/api/payments/master");
@@ -917,8 +919,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const fetchExternalRequests = async () => {
-    setExtReqLoading(true);
+  const fetchExternalRequests = async (silent = false) => {
+    if (!silent) setExtReqLoading(true);
     try {
       const params = new URLSearchParams({
         email: user?.email || '',
@@ -963,9 +965,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   // LIVE SYNC: 10-Second Auto-Refresh & Window Focus Revalidation
   useEffect(() => {
     const refreshAll = () => {
-      fetchTasks();
-      fetchExternalRequests();
-      fetchPaymentRequests();
+      fetchTasks(true);
+      fetchExternalRequests(true);
+      fetchPaymentRequests(true);
     };
 
     // 1. Auto-refresh every 10 seconds
@@ -6274,13 +6276,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                       <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                                         <span style={{ padding: "4px 10px", borderRadius: "6px", background: "#f0f9ff", fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", border: "1px solid #bae6fd", whiteSpace: "nowrap" }}>
                                           TASK CREATED
-                                        </span>
-                                        <span style={{ fontSize: "0.75rem", color: t.text, fontWeight: 700, marginLeft: "4px" }}>
-                                          ID: { (() => {
-                                            const dispId = (req as any).taskDisplayId || req.convertedTaskId?.toString();
-                                            if (!dispId) return "N/A";
-                                            return dispId.startsWith('T-') ? dispId : `T-${dispId}`;
-                                          })() }
                                         </span>
                                       </div>
                                       {isAdmin && (
