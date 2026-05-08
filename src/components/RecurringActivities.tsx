@@ -105,18 +105,26 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   const [masterItemsPerPage, setMasterItemsPerPage] = useState(10);
   const [masterFreqFilter, setMasterFreqFilter] = useState("ALL");
 
+  // Daily Tasks Enhanced State
+  const [dailyCurrentPage, setDailyCurrentPage] = useState(1);
+  const [dailyItemsPerPage, setDailyItemsPerPage] = useState(10);
+  const [dailySearch, setDailySearch] = useState("");
+  const [dailyEntityFilter, setDailyEntityFilter] = useState("ALL");
+  const [dailyDeptFilter, setDailyDeptFilter] = useState("ALL");
+  const [dailyFunctionFilter, setDailyFunctionFilter] = useState("ALL");
+  const [dailyOwnerFilter, setDailyOwnerFilter] = useState("ALL");
+  const [dailyReviewerFilter, setDailyReviewerFilter] = useState("ALL");
+  const [dailySortConfig, setDailySortConfig] = useState<{ key: keyof RecurringTemplate; direction: 'asc' | 'desc' } | null>(null);
+
   // Daily Tasks State
   const [dailyDateFilter, setDailyDateFilter] = useState({ 
     from: formatDate(firstDay), 
     to: formatDate(lastDay) 
   });
-  const [dailySearch, setDailySearch] = useState("");
-  const [dailyOwnerFilter, setDailyOwnerFilter] = useState("ALL");
   const [dailyCompletionData, setDailyCompletionData] = useState<any[]>([]);
   const [selectedDailyOccs, setSelectedDailyOccs] = useState<string[]>([]);
   const [dailyDownloadMenu, setDailyDownloadMenu] = useState(false);
   const [dailyShareModal, setDailyShareModal] = useState(false);
-  const [dailySortConfig, setDailySortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'targetDate', direction: 'desc' });
   const [masterSortConfig, setMasterSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [stopModal, setStopModal] = useState<{ isOpen: boolean; templateId: number | null; templateName: string }>({ isOpen: false, templateId: null, templateName: '' });
   
@@ -141,9 +149,9 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   const [selectedTemplateForView, setSelectedTemplateForView] = useState<RecurringTemplate | null>(null);
   const [selectedStagingForView, setSelectedStagingForView] = useState<StagingTask | null>(null);
 
-  const handleDailySort = (key: string) => {
+  const handleDailySort = (key: keyof RecurringTemplate) => {
     let direction: 'asc' | 'desc' = 'asc';
-    if (dailySortConfig.key === key && dailySortConfig.direction === 'asc') {
+    if (dailySortConfig && dailySortConfig.key === key && dailySortConfig.direction === 'asc') {
       direction = 'desc';
     }
     setDailySortConfig({ key, direction });
@@ -172,6 +180,34 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     if (valA > valB) return direction === 'asc' ? 1 : -1;
     return 0;
   });
+
+  const filteredAndSortedDaily = templates.filter(t => {
+    if (t.frequency !== 'D' || t.isStopped || !t.isActive) return false;
+    
+    const search = dailySearch.toLowerCase();
+    const matchesSearch = t.taskNamePattern.toLowerCase().includes(search) || 
+                         t.entityName.toLowerCase().includes(search) ||
+                         (t.financeFunction || "").toLowerCase().includes(search);
+    
+    const matchesEntity = dailyEntityFilter === "ALL" || t.entityName === dailyEntityFilter;
+    const matchesDept = dailyDeptFilter === "ALL" || t.departmentName === dailyDeptFilter;
+    const matchesFunction = dailyFunctionFilter === "ALL" || (t.financeFunction || "GENERAL") === (dailyFunctionFilter === "" ? "GENERAL" : dailyFunctionFilter);
+    const matchesOwner = dailyOwnerFilter === "ALL" || t.defaultOwner === dailyOwnerFilter;
+    const matchesReviewer = dailyReviewerFilter === "ALL" || t.defaultReviewer === dailyReviewerFilter;
+
+    return matchesSearch && matchesEntity && matchesDept && matchesFunction && matchesOwner && matchesReviewer;
+  }).sort((a, b) => {
+    if (!dailySortConfig) return 0;
+    const { key, direction } = dailySortConfig;
+    const valA = (a as any)[key] || "";
+    const valB = (b as any)[key] || "";
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalDailyPages = Math.ceil(filteredAndSortedDaily.length / dailyItemsPerPage);
+  const paginatedDaily = filteredAndSortedDaily.slice((dailyCurrentPage - 1) * dailyItemsPerPage, dailyCurrentPage * dailyItemsPerPage);
 
   const totalMasterPages = Math.ceil(filteredAndSortedMaster.length / masterItemsPerPage);
   const paginatedMaster = filteredAndSortedMaster.slice((masterCurrentPage - 1) * masterItemsPerPage, masterCurrentPage * masterItemsPerPage);
@@ -912,187 +948,6 @@ export default function RecurringActivities({   settings, usersList = [] , showN
     });
   };
 
-  const handleUpdateDailyStatus = async (templateId: number, date: string, status: 'Completed' | 'Not Completed') => {
-    try {
-      const res = await fetch("/api/daily-tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tasks: [{ templateId, taskDate: date, status }] })
-      });
-      if (res.ok) {
-        fetchDailyData();
-      }
-    } catch (err) {
-      console.error("Update daily status error:", err);
-    }
-  };
-
-  const handleBulkDailyStatus = async (status: 'Completed' | 'Not Completed') => {
-    const tasks = selectedDailyOccs.map(idDate => {
-      const [tId, date] = idDate.split('_');
-      return { templateId: parseInt(tId), taskDate: date, status };
-    });
-
-    if (tasks.length === 0) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/daily-tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tasks })
-      });
-      if (res.ok) {
-        setSelectedDailyOccs([]);
-        fetchDailyData();
-      }
-    } catch (err) {
-      console.error("Bulk daily status error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getDailyOccurrences = () => {
-    const occs: any[] = [];
-    const fromDate = new Date(dailyDateFilter.from);
-    const toDate = new Date(dailyDateFilter.to);
-    const dailyTemplates = templates.filter(t => t.frequency === 'D' && t.isActive);
-
-    for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
-      const dateStr = formatDate(d);
-      dailyTemplates.forEach(t => {
-        // Simple date check: must be >= start date and <= end date (if exists)
-        const tStart = t.startDate ? new Date(t.startDate) : null;
-        const tEnd = t.endDate ? new Date(t.endDate) : null;
-        const tStop = t.stopDate ? new Date(t.stopDate) : null;
-
-        if (tStart && d < tStart) return;
-        if (tEnd && d > tEnd) return;
-        if (tStop && d >= tStop) return;
-
-        const completion = dailyCompletionData.find(c => c.templateId === t.id && formatDate(new Date(c.taskDate)) === dateStr);
-        
-        occs.push({
-          id: `${t.id}_${dateStr}`,
-          templateId: t.id,
-          taskName: t.taskNamePattern,
-          entityName: t.entityName,
-          taskType: t.taskType,
-          ownerName: t.defaultOwner,
-          reviewerName: t.defaultReviewer,
-          targetDate: dateStr,
-          status: completion ? completion.status : 'Not Completed',
-          completedAt: completion?.completedAt,
-          completedBy: completion?.completedBy
-        });
-      });
-    }
-    return occs;
-  };
-
-  const exportDailyExcel = async (data: any[]) => {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Daily Tasks Report');
-    worksheet.columns = [
-      { header: 'Sl No', key: 'sl', width: 8 },
-      { header: 'Task Details', key: 'taskName', width: 35 },
-      { header: 'Entity', key: 'entityName', width: 25 },
-      { header: 'Task Type', key: 'taskType', width: 15 },
-      { header: 'Owner', key: 'ownerName', width: 20 },
-      { header: 'Reviewer', key: 'reviewerName', width: 20 },
-      { header: 'Target Date', key: 'targetDate', width: 15 },
-      { header: 'Status', key: 'status', width: 15 }
-    ];
-    data.forEach((row, i) => worksheet.addRow({ ...row, sl: i + 1 }));
-    worksheet.getRow(1).font = { bold: true };
-    const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Daily_Tasks_Report_${dailyDateFilter.from}.xlsx`);
-  };
-
-  const exportDailyPDF = (data: any[]) => {
-    const doc = new jsPDF('l', 'mm', 'a4');
-    doc.text(`Daily Tasks Report (${dailyDateFilter.from} to ${dailyDateFilter.to})`, 14, 15);
-    autoTable(doc, {
-      head: [['Sl No', 'Task Details', 'Entity', 'Type', 'Owner', 'Reviewer', 'Target Date', 'Status']],
-      body: data.map((r, i) => [i+1, r.taskName, r.entityName, r.taskType, r.ownerName, r.reviewerName, r.targetDate, r.status]),
-      startY: 20
-    });
-    doc.save(`Daily_Tasks_Report_${dailyDateFilter.from}.pdf`);
-  };
-
-  const handleDailyShareViaEmail = async () => {
-    if (shareData.recipients.length === 0) {
-      showNotification("Please add at least one recipient email.");
-      return;
-    }
-    setShareLoading(true);
-    try {
-      let buffer: ArrayBuffer | Uint8Array;
-      let contentType = "";
-      let attachmentName = "";
-      const data = getDailyOccurrences();
-
-      if (shareData.format === 'excel') {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Daily Tasks Report');
-        worksheet.columns = [
-          { header: 'Sl No', key: 'sl', width: 8 },
-          { header: 'Task Details', key: 'taskName', width: 35 },
-          { header: 'Entity', key: 'entityName', width: 25 },
-          { header: 'Task Type', key: 'taskType', width: 15 },
-          { header: 'Owner', key: 'ownerName', width: 20 },
-          { header: 'Reviewer', key: 'reviewerName', width: 20 },
-          { header: 'Target Date', key: 'targetDate', width: 15 },
-          { header: 'Status', key: 'status', width: 15 }
-        ];
-        data.forEach((row, i) => worksheet.addRow({ ...row, sl: i + 1 }));
-        buffer = await workbook.xlsx.writeBuffer();
-        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        attachmentName = `Daily_Tasks_Report_${dailyDateFilter.from}.xlsx`;
-      } else {
-        const doc = new jsPDF('l', 'mm', 'a4');
-        autoTable(doc, {
-          head: [['Sl No', 'Task Details', 'Entity', 'Type', 'Owner', 'Reviewer', 'Target Date', 'Status']],
-          body: data.map((r, i) => [i+1, r.taskName, r.entityName, r.taskType, r.ownerName, r.reviewerName, r.targetDate, r.status]),
-        });
-        buffer = doc.output('arraybuffer');
-        contentType = 'application/pdf';
-        attachmentName = `Daily_Tasks_Report_${dailyDateFilter.from}.pdf`;
-      }
-
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(new Blob([buffer as any]));
-      });
-
-      const res = await fetch("/api/reports/share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientEmail: shareData.recipients.join(','),
-          ccEmail: shareData.cc.join(','),
-          subject: shareData.subject || `Daily Tasks Report (${dailyDateFilter.from} to ${dailyDateFilter.to})`,
-          attachmentName,
-          attachmentBuffer: base64,
-          contentType
-        })
-      });
-
-      if (res.ok) {
-        showNotification("Report shared successfully via email!");
-        setDailyShareModal(false);
-      } else {
-        showNotification("Failed to share report.");
-      }
-    } catch (error) {
-      console.error("Daily Share error", error);
-    } finally {
-      setShareLoading(false);
-    }
-  };
-
   const thStyle = { 
     background: "#1e293b",
     color: "#ffffff",
@@ -1106,6 +961,17 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   };
   const tdStyle = { padding: "12px 16px", fontSize: "0.875rem", color: "#334155" };
   const inputStyle = { padding: "6px 10px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.8125rem", outline: "none", width: "100%" };
+  const labelStyle = { display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase" as const };
+  const viewLabelStyle = { fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", marginBottom: "6px", textTransform: "uppercase" as const };
+  const viewValueBoxStyle = { background: "#f8fafc", padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9375rem", fontWeight: 600, color: "#1e293b" };
+  const doneButtonStyle = { padding: "10px 24px", background: "#2563eb", color: "white", borderRadius: "10px", border: "none", fontWeight: 600, cursor: "pointer" };
+  
+  const DetailViewItem = ({ label, value }: { label: string, value: string }) => (
+    <div>
+        <label style={viewLabelStyle}>{label}</label>
+        <div style={viewValueBoxStyle}>{value}</div>
+    </div>
+  );
   
   const handleStagingSort = (key: keyof StagingTask) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -2192,23 +2058,125 @@ export default function RecurringActivities({   settings, usersList = [] , showN
             </div>
           </div>
 
+          {/* High-Density Filter Bar */}
+          <div style={{ background: "white", padding: "12px 16px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", flexWrap: "nowrap" }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.65rem", fontWeight: 800, color: "#64748b" }}>ENTITY:</label>
+               <select 
+                 value={dailyEntityFilter} 
+                 onChange={e => { setDailyEntityFilter(e.target.value); setDailyCurrentPage(1); }} 
+                 style={{ ...inputStyle, width: "110px", padding: "6px 8px" }}
+               >
+                 <option value="ALL">ALL</option>
+                 {Array.from(new Set(templates.filter(t => t.frequency === 'D').map(t => t.entityName))).sort().map(e => <option key={e} value={e}>{e}</option>)}
+               </select>
+             </div>
+
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.65rem", fontWeight: 800, color: "#64748b" }}>DEPT:</label>
+               <select 
+                 value={dailyDeptFilter} 
+                 onChange={e => { setDailyDeptFilter(e.target.value); setDailyCurrentPage(1); }} 
+                 style={{ ...inputStyle, width: "110px", padding: "6px 8px" }}
+               >
+                 <option value="ALL">ALL</option>
+                 {Array.from(new Set(templates.filter(t => t.frequency === 'D').map(t => t.departmentName))).sort().map(d => <option key={d} value={d}>{d}</option>)}
+               </select>
+             </div>
+
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.65rem", fontWeight: 800, color: "#64748b" }}>FUNC:</label>
+               <select 
+                 value={dailyFunctionFilter} 
+                 onChange={e => { setDailyFunctionFilter(e.target.value); setDailyCurrentPage(1); }} 
+                 style={{ ...inputStyle, width: "110px", padding: "6px 8px" }}
+               >
+                 <option value="ALL">ALL</option>
+                 {Array.from(new Set(templates.filter(t => t.frequency === 'D').map(t => t.financeFunction || "GENERAL"))).sort().map(f => <option key={f} value={f === "GENERAL" ? "" : f}>{f}</option>)}
+               </select>
+             </div>
+
+             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <label style={{ fontSize: "0.65rem", fontWeight: 800, color: "#64748b" }}>OWNER:</label>
+               <select 
+                 value={dailyOwnerFilter} 
+                 onChange={e => { setDailyOwnerFilter(e.target.value); setDailyCurrentPage(1); }} 
+                 style={{ ...inputStyle, width: "110px", padding: "6px 8px" }}
+               >
+                 <option value="ALL">ALL</option>
+                 {Array.from(new Set(templates.filter(t => t.frequency === 'D').map(t => t.defaultOwner || ""))).sort().filter(o => o).map(o => <option key={o} value={o}>{o}</option>)}
+               </select>
+             </div>
+
+             <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "4px 10px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "180px" }}>
+                <Search size={15} color="#64748b" />
+                <input 
+                  type="text" 
+                  placeholder="Search daily..." 
+                  value={dailySearch}
+                  onChange={e => { setDailySearch(e.target.value); setDailyCurrentPage(1); }}
+                  style={{ border: "none", background: "none", outline: "none", fontSize: "0.8125rem", width: "100%", color: "#334155" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", paddingLeft: "8px", borderLeft: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Rows:</span>
+                <select 
+                  value={dailyItemsPerPage} 
+                  onChange={e => { setDailyItemsPerPage(Number(e.target.value)); setDailyCurrentPage(1); }}
+                  style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer", fontSize: "0.8125rem" }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+             <div style={{ flex: 1 }}></div>
+          </div>
+
           <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.05)" }}>
             <div style={{ overflowX: "auto" }}>
               <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.9375rem", textAlign: "left" }}>
                 <thead>
                   <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                    <th style={{ ...thStyle, width: "70px", background: "transparent", color: "#64748b", padding: "20px 24px" }}>SI</th>
-                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "20px" }}>Entity & Department</th>
-                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "20px" }}>Task Name Pattern</th>
-                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "20px" }}>Function</th>
-                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "20px" }}>Current Owner</th>
-                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "20px" }}>Reviewer</th>
+                    <th style={{ ...thStyle, width: "60px", background: "transparent", color: "#64748b", padding: "16px 20px" }}>SI</th>
+                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('entityName')}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        ENTITY {dailySortConfig?.key === 'entityName' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      </div>
+                    </th>
+                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('departmentName')}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        DEPT {dailySortConfig?.key === 'departmentName' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      </div>
+                    </th>
+                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('taskNamePattern')}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        TASK NAME PATTERN {dailySortConfig?.key === 'taskNamePattern' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      </div>
+                    </th>
+                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('financeFunction')}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        FUNCTION {dailySortConfig?.key === 'financeFunction' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      </div>
+                    </th>
+                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('defaultOwner')}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        CURRENT OWNER {dailySortConfig?.key === 'defaultOwner' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      </div>
+                    </th>
+                    <th style={{ ...thStyle, background: "transparent", color: "#64748b", padding: "16px", cursor: "pointer" }} onClick={() => handleDailySort('defaultReviewer')}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        REVIEWER {dailySortConfig?.key === 'defaultReviewer' && (dailySortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {templates.filter(t => t.frequency === 'D' && !t.isStopped && t.isActive).length === 0 ? (
+                  {filteredAndSortedDaily.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: "80px", textAlign: "center" }}>
+                      <td colSpan={7} style={{ padding: "80px", textAlign: "center" }}>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", color: "#94a3b8" }}>
                           <Search size={40} style={{ opacity: 0.2 }} />
                           <p style={{ margin: 0, fontStyle: "italic" }}>No active daily task rules found.</p>
@@ -2216,33 +2184,60 @@ export default function RecurringActivities({   settings, usersList = [] , showN
                       </td>
                     </tr>
                   ) : (
-                    templates.filter(t => t.frequency === 'D' && !t.isStopped && t.isActive).map((t, idx) => (
+                    paginatedDaily.map((t, idx) => (
                       <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>
-                        <td style={{ ...tdStyle, padding: "20px 24px", color: "#94a3b8", fontWeight: 600 }}>{String(idx + 1).padStart(2, '0')}</td>
-                        <td style={{ ...tdStyle, padding: "20px" }}>
-                          <div style={{ fontWeight: 700, color: "#0f172a" }}>{t.entityName}</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{t.departmentName}</div>
+                        <td style={{ ...tdStyle, padding: "16px 20px", color: "#94a3b8", fontWeight: 600 }}>{String((dailyCurrentPage - 1) * dailyItemsPerPage + idx + 1).padStart(2, '0')}</td>
+                        <td style={{ ...tdStyle, padding: "16px", fontWeight: 700, color: "#0f172a" }}>{t.entityName}</td>
+                        <td style={{ ...tdStyle, padding: "16px", color: "#64748b", fontSize: "0.8125rem", fontWeight: 600 }}>{t.departmentName}</td>
+                        <td style={{ ...tdStyle, padding: "16px", color: "#334155", fontWeight: 500 }}>{t.taskNamePattern}</td>
+                        <td style={{ ...tdStyle, padding: "16px" }}>
+                          <span style={{ padding: "4px 10px", background: "#f1f5f9", borderRadius: "6px", fontSize: "0.7rem", fontWeight: 700, color: "#475569", whiteSpace: "nowrap" }}>{t.financeFunction || "GENERAL" }</span>
                         </td>
-                        <td style={{ ...tdStyle, padding: "20px", color: "#334155", fontWeight: 500 }}>{t.taskNamePattern}</td>
-                        <td style={{ ...tdStyle, padding: "20px" }}>
-                          <span style={{ padding: "6px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 700, color: "#475569" }}>{t.financeFunction || "GENERAL"}</span>
-                        </td>
-                        <td style={{ ...tdStyle, padding: "20px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "#e0f2fe", color: "#0369a1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 800 }}>
+                        <td style={{ ...tdStyle, padding: "16px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#e0f2fe", color: "#0369a1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800 }}>
                               {t.defaultOwner?.charAt(0)}
                             </div>
-                            <span style={{ fontWeight: 600, color: "#334155" }}>{t.defaultOwner}</span>
+                            <span style={{ fontWeight: 600, color: "#334155", fontSize: "0.8125rem" }}>{t.defaultOwner}</span>
                           </div>
                         </td>
-                        <td style={{ ...tdStyle, padding: "20px", color: "#64748b" }}>{t.defaultReviewer || "Not Applicable"}</td>
+                        <td style={{ ...tdStyle, padding: "16px", color: "#64748b", fontSize: "0.8125rem" }}>{t.defaultReviewer || "Not Applicable"}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Daily Pagination Controls */}
+            {filteredAndSortedDaily.length > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid #e2e8f0", background: "white" }}>
+                <div style={{ fontSize: "0.875rem", color: "#64748b" }}>
+                  Showing {(dailyCurrentPage - 1) * dailyItemsPerPage + 1} to {Math.min(dailyCurrentPage * dailyItemsPerPage, filteredAndSortedDaily.length)} of {filteredAndSortedDaily.length} activities
+                </div>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button 
+                    onClick={() => setDailyCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={dailyCurrentPage === 1}
+                    style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", color: dailyCurrentPage === 1 ? "#94a3b8" : "#334155", cursor: dailyCurrentPage === 1 ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: 500 }}
+                  >
+                    <ChevronDown size={16} style={{ transform: "rotate(90deg)" }} /> Prev
+                  </button>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 600, padding: "0 12px", color: "#334155" }}>
+                    Page {dailyCurrentPage} of {totalDailyPages || 1}
+                  </div>
+                  <button 
+                    onClick={() => setDailyCurrentPage(prev => Math.min(prev + 1, totalDailyPages))}
+                    disabled={dailyCurrentPage === (totalDailyPages || 1)}
+                    style={{ display: "flex", alignItems: "center", padding: "6px 12px", background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", color: dailyCurrentPage === (totalDailyPages || 1) ? "#94a3b8" : "#334155", cursor: dailyCurrentPage === (totalDailyPages || 1) ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: 500 }}
+                  >
+                    Next <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
         </div>
       )}
 
