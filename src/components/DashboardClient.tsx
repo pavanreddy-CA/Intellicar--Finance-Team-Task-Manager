@@ -4458,33 +4458,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     </div>
                   </div>
 
-                  {/* 5. Strategic Advantages - Departmental Growth */}
-                  <div style={{ position: "relative", zIndex: 1, marginTop: "40px" }}>
-                    <div style={{ textAlign: "center", marginBottom: "40px" }}>
-                      <div style={{ display: "inline-block", background: "rgba(99, 102, 241, 0.1)", color: "#6366f1", padding: "6px 16px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.1em", marginBottom: "12px" }}>OPERATIONAL IMPACT</div>
-                      <h3 style={{ margin: 0, fontSize: "2.25rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em" }}>Departmental Advantages</h3>
-                      <p style={{ margin: "8px 0 0 0", color: "#64748b", fontWeight: 600, fontSize: "1rem" }}>HOW FINPULSE EMPOWERS EVERY TEAM</p>
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-                      {[
-                        { title: "Finance", icon: <Building2 />, desc: "10s Live Sync for absolute data integrity. LO tracking turns mistakes into structural growth." },
-                        { title: "Operations", icon: <Briefcase />, desc: "Instant Inter-Dept requests. Real-time status visibility eliminates status-check meetings." },
-                        { title: "HR & Admin", icon: <Users />, desc: "Effortless resource management and role-based data security for every employee." },
-                        { title: "Management", icon: <ShieldCheck />, desc: "Bird's-eye view of organizational health with automated LO Analytics and trends." }
-                      ].map((adv, i) => (
-                        <div key={i} style={{ padding: "32px", borderRadius: "28px", background: "white", border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)", transition: "all 0.3s ease" }} className="hover-card">
-                          <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
-                            <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "12px", borderRadius: "16px", color: "#2563eb" }}>
-                              {adv.icon}
-                            </div>
-                            <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#1e293b" }}>{adv.title}</h4>
-                          </div>
-                          <p style={{ margin: 0, fontSize: "0.9375rem", color: "#475569", lineHeight: 1.6, fontWeight: 500 }}>{adv.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                 </div>
               );
