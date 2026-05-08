@@ -293,6 +293,7 @@ export default function PaymentsAnalytics({
     paidRecords.forEach(d => { entityMap[d.entity_name] = (entityMap[d.entity_name] || 0) + Number(d.amount); });
     const barData = Object.entries(entityMap).map(([name, amount]) => ({ name, amount })).sort((a,b) => b.amount - a.amount).slice(0, 8);
 
+    const trendMap: Record<string, number> = {};
     paidRecords.forEach(d => { const key = d.payment_date.substring(0, 7); trendMap[key] = (trendMap[key] || 0) + Number(d.amount); });
     const trendData = Object.entries(trendMap).map(([date, amount]) => {
       const [y, m] = date.split('-');
