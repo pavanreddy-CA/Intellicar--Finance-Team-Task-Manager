@@ -5874,6 +5874,11 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           Request From {extReqSortConfig?.key === 'requestFrom' && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
                         </div>
                       </th>
+                      <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('convertedTaskId' as any)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          Task ID {extReqSortConfig?.key === ('convertedTaskId' as any) && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                        </div>
+                      </th>
                       <th style={{ ...getThStyle(t), cursor: "pointer" }} onClick={() => handleExtReqSort('assignedAllocatorEmail' as any)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                           Allocator {extReqSortConfig?.key === ('assignedAllocatorEmail' as any) && (extReqSortConfig?.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
@@ -5977,6 +5982,25 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                <div style={{ fontWeight: 600, color: t.text }}>{req.requestFrom}</div>
                                <div style={{ fontSize: "0.75rem", color: t.textMuted }}>{req.departmentName}</div>
                              </td>
+                             <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>
+                                {(() => {
+                                  const dispId = (req as any).taskDisplayId || req.convertedTaskId?.toString();
+                                  if (!dispId) return <span style={{ color: "#cbd5e1" }}>--</span>;
+                                  return (
+                                    <span style={{ 
+                                      padding: "4px 8px", 
+                                      background: "#f0f9ff", 
+                                      borderRadius: "6px", 
+                                      fontSize: "0.75rem", 
+                                      fontWeight: 700, 
+                                      color: "#0369a1", 
+                                      border: "1px solid #bae6fd" 
+                                    }}>
+                                      {dispId.startsWith('T-') ? dispId : `T-${dispId}`}
+                                    </span>
+                                  );
+                                })()}
+                              </td>
                              <td style={{ ...getTdStyle(t), minWidth: "180px" }}>
                                 {(() => {
                                   const allocatorEmail = req.assignedAllocatorEmail;
@@ -11008,9 +11032,9 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 <input 
                   type="text" required
                   value={newEmployeeData.employeeId}
-                  onChange={e => setNewEmployeeData({...newEmployeeData, employeeId: e.target.value})}
+                  onChange={e => setNewEmployeeData({...newEmployeeData, employeeId: e.target.value.replace(/\D/g, '')})}
                   style={getInputStyle(t)} 
-                  placeholder="e.g. EMP001"
+                  placeholder="e.g. 123456"
                 />
               </div>
 
@@ -11061,6 +11085,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   >
                     <option value="USER">USER</option>
                     <option value="ADMIN">ADMIN</option>
+                    <option value="VIEWER">VIEWER</option>
                   </select>
                 </div>
               </div>
