@@ -6059,7 +6059,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                  {renderOriginBadge(req)}
                                </td>
                              )}
-                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap" }}>{formatDate(req.createdAt)}</td>
+                            <td style={{ ...getTdStyle(t), whiteSpace: "nowrap", fontSize: "0.75rem" }}>{formatDate(req.createdAt)}</td>
                             <td style={getTdStyle(t)}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <span style={{ padding: "4px 10px", borderRadius: "6px", background: t.bg, fontSize: "0.75rem", fontWeight: 600, color: t.textMuted }}>
