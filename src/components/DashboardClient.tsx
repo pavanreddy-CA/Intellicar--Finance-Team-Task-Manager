@@ -4335,13 +4335,40 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </button>
                       )}
                     </Fragment>
-                  ) : (activeView as string) === 'LOS' ? (
-                    !isViewer && (
-                      <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.text, padding: "10px 20px", borderRadius: "14px", border: `1px solid ${t.border}`, cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
-                        <Lightbulb size={18} color="#f59e0b" /> Update LO
-                      </button>
-                    )
-                  ) : null}
+                    ) : (activeView as string) === 'LOS' ? (
+                      !isViewer && (
+                        <button 
+                          onClick={() => setShowLOForm(true)} 
+                          style={{ 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "8px", 
+                            background: "#f59e0b", 
+                            color: "white", 
+                            padding: "10px 24px", 
+                            borderRadius: "14px", 
+                            border: "none", 
+                            cursor: "pointer", 
+                            fontWeight: 700, 
+                            fontSize: "0.875rem", 
+                            boxShadow: "0 10px 15px -3px rgba(245, 158, 11, 0.3)", 
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)" 
+                          }} 
+                          onMouseOver={e => {
+                            e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+                            e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(245, 158, 11, 0.4)";
+                            e.currentTarget.style.background = "#d97706";
+                          }} 
+                          onMouseOut={e => {
+                            e.currentTarget.style.transform = "translateY(0) scale(1)";
+                            e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(245, 158, 11, 0.3)";
+                            e.currentTarget.style.background = "#f59e0b";
+                          }}
+                        >
+                          <Zap size={18} fill="white" /> Update LO
+                        </button>
+                      )
+                    ) : null}
                 </div>
               </div>
             )}
