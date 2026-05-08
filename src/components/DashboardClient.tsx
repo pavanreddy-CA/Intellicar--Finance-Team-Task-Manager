@@ -527,7 +527,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [resourceFile, setResourceFile] = useState<File | null>(null);
   const [resourceCategory, setResourceCategory] = useState("Miscellaneous");
   const [resourceDepartment, setResourceDepartment] = useState("");
-  const [libraryViewMode, setLibraryViewMode] = useState<'tiles' | 'list'>('tiles');
+  const [libraryViewMode, setLibraryViewMode] = useState<'tiles' | 'list' | 'extra-large' | 'large' | 'details'>('tiles');
+  const [showLibraryViewMenu, setShowLibraryViewMenu] = useState(false);
   const [currentLibraryPath, setCurrentLibraryPath] = useState<string | null>(null);
   const [librarySearchQuery, setLibrarySearchQuery] = useState("");
   
@@ -6475,16 +6476,38 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                          </>
                        )}
                        {librarySearchQuery && (
-                         <>
-                           <ChevronRight size={14} color="#94a3b8" />
-                           <span style={{ fontWeight: 600, color: t.text }}>Search Results: "{librarySearchQuery}"</span>
-                         </>
+                          <>
+                            <ChevronRight size={14} color="#94a3b8" />
+                            <span style={{ fontWeight: 600, color: t.text }}>Search Results: "{librarySearchQuery}"</span>
+                          </>
                        )}
                      </div>
-                     <div style={{ display: "flex", background: "white", padding: "4px", borderRadius: "8px", border: `1px solid ${t.border}`, gap: "4px" }}>
-                       <button onClick={() => setLibraryViewMode('tiles')} style={{ padding: "6px", borderRadius: "6px", border: "none", background: libraryViewMode === 'tiles' ? "#f1f5f9" : "transparent", color: libraryViewMode === 'tiles' ? "#4f46e5" : "#64748b", cursor: "pointer" }} title="Tiles View"><LayoutGrid size={18} /></button>
-                       <button onClick={() => setLibraryViewMode('list')} style={{ padding: "6px", borderRadius: "6px", border: "none", background: libraryViewMode === 'list' ? "#f1f5f9" : "transparent", color: libraryViewMode === 'list' ? "#4f46e5" : "#64748b", cursor: "pointer" }} title="List View"><List size={18} /></button>
-                     </div>
+                     <div style={{ position: "relative" }}>
+                        <div style={{ display: "flex", background: "white", padding: "4px", borderRadius: "8px", border: `1px solid ${t.border}`, gap: "4px" }}>
+                          <button onClick={() => setLibraryViewMode('tiles')} style={{ padding: "6px", borderRadius: "6px", border: "none", background: libraryViewMode === 'tiles' ? "#f1f5f9" : "transparent", color: libraryViewMode === 'tiles' ? "#4f46e5" : "#64748b", cursor: "pointer" }} title="Tiles View"><LayoutGrid size={18} /></button>
+                          <button onClick={() => setLibraryViewMode('list')} style={{ padding: "6px", borderRadius: "6px", border: "none", background: libraryViewMode === 'list' ? "#f1f5f9" : "transparent", color: libraryViewMode === 'list' ? "#4f46e5" : "#64748b", cursor: "pointer" }} title="List View"><List size={18} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setShowLibraryViewMenu(!showLibraryViewMenu); }} style={{ padding: "6px", borderRadius: "6px", border: "none", background: showLibraryViewMenu ? "#f1f5f9" : "transparent", color: showLibraryViewMenu ? "#4f46e5" : "#64748b", cursor: "pointer" }} title="More Options"><ChevronDown size={18} /></button>
+                        </div>
+                        {showLibraryViewMenu && (
+                          <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", background: "white", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100, width: "180px", padding: "8px", overflow: "hidden" }}>
+                            {[
+                              { id: 'extra-large', label: 'Extra large icons', icon: <LayoutGrid size={16} /> },
+                              { id: 'large', label: 'Large icons', icon: <LayoutGrid size={16} /> },
+                              { id: 'tiles', label: 'Medium icons (Tiles)', icon: <LayoutGrid size={16} /> },
+                              { id: 'list', label: 'List', icon: <List size={16} /> },
+                              { id: 'details', label: 'Details', icon: <ListFilter size={16} /> }
+                            ].map(opt => (
+                              <button 
+                                key={opt.id}
+                                onClick={() => { setLibraryViewMode(opt.id as any); setShowLibraryViewMenu(false); }}
+                                style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px", border: "none", background: libraryViewMode === opt.id ? "#f1f5f9" : "transparent", color: libraryViewMode === opt.id ? "#4f46e5" : t.text, borderRadius: "8px", cursor: "pointer", fontSize: "0.8125rem", textAlign: "left" }}
+                              >
+                                {opt.icon} {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                    </div>
 
                    <div style={{ padding: "40px", flex: 1 }}>
@@ -6496,32 +6519,67 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                      ) : (
                        <>
                          {!librarySearchQuery && !currentLibraryPath ? (
-                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "24px" }}>
-                             {Array.from(new Set(resources.map(r => r.category || "General"))).sort().map(cat => {
-                               const count = resources.filter(r => (r.category || "General") === cat).length;
-                               return (
-                                 <div 
-                                   key={cat}
-                                   onClick={() => setCurrentLibraryPath(cat)}
-                                   style={{ 
-                                     background: "white", padding: "24px", borderRadius: "20px", border: `1px solid ${t.border}`, 
-                                     cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", 
-                                     alignItems: "center", gap: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
-                                   }}
-                                   onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                                   onMouseOut={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.transform = "translateY(0)"; }}
-                                 >
-                                   <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5" }}>
-                                     <Folder size={32} />
-                                   </div>
-                                   <div style={{ textAlign: "center" }}>
-                                     <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: "1rem" }}>{cat}</h4>
-                                     <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.75rem", fontWeight: 600 }}>{count} Resources</p>
-                                   </div>
-                                 </div>
-                               );
-                             })}
-                           </div>
+                            <div style={{ display: libraryViewMode === 'list' || libraryViewMode === 'details' ? "block" : "grid", gridTemplateColumns: libraryViewMode === 'extra-large' ? "repeat(auto-fill, minmax(300px, 1fr))" : libraryViewMode === 'large' ? "repeat(auto-fill, minmax(260px, 1fr))" : "repeat(auto-fill, minmax(220px, 1fr))", gap: "24px" }}>
+                              {libraryViewMode === 'list' || libraryViewMode === 'details' ? (
+                                <div style={{ background: "white", borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+                                    <thead>
+                                      <tr style={{ background: "#f8fafc", borderBottom: `1px solid ${t.border}`, textAlign: "left" }}>
+                                        <th style={{ padding: "12px 20px", fontWeight: 700, color: "#64748b" }}>Folder Name</th>
+                                        <th style={{ padding: "12px 20px", fontWeight: 700, color: "#64748b" }}>Resources</th>
+                                        <th style={{ padding: "12px 20px", fontWeight: 700, color: "#64748b", textAlign: "right" }}>Action</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.from(new Set(resources.map(r => r.category || "General"))).sort().map(cat => {
+                                        const count = resources.filter(r => (r.category || "General") === cat).length;
+                                        return (
+                                          <tr key={cat} style={{ borderBottom: `1px solid ${t.border}`, cursor: "pointer" }} className="hover-bg-slate-50" onClick={() => setCurrentLibraryPath(cat)}>
+                                            <td style={{ padding: "12px 20px" }}>
+                                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                <Folder size={20} color="#4f46e5" />
+                                                <span style={{ fontWeight: 600, color: t.text }}>{cat}</span>
+                                              </div>
+                                            </td>
+                                            <td style={{ padding: "12px 20px", color: t.textMuted }}>{count} items</td>
+                                            <td style={{ padding: "12px 20px", textAlign: "right" }}>
+                                              <ChevronRight size={16} color="#94a3b8" />
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                Array.from(new Set(resources.map(r => r.category || "General"))).sort().map(cat => {
+                                  const count = resources.filter(r => (r.category || "General") === cat).length;
+                                  const size = libraryViewMode === 'extra-large' ? 80 : libraryViewMode === 'large' ? 72 : 64;
+                                  const iconSize = libraryViewMode === 'extra-large' ? 40 : libraryViewMode === 'large' ? 36 : 32;
+                                  return (
+                                    <div 
+                                      key={cat}
+                                      onClick={() => setCurrentLibraryPath(cat)}
+                                      style={{ 
+                                        background: "white", padding: libraryViewMode === 'extra-large' ? "32px" : "24px", borderRadius: "20px", border: `1px solid ${t.border}`, 
+                                        cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", 
+                                        alignItems: "center", gap: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
+                                      }}
+                                      onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                                      onMouseOut={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.transform = "translateY(0)"; }}
+                                    >
+                                      <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: "16px", background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5" }}>
+                                        <Folder size={iconSize} />
+                                      </div>
+                                      <div style={{ textAlign: "center" }}>
+                                        <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: libraryViewMode === 'extra-large' ? "1.125rem" : "1rem" }}>{cat}</h4>
+                                        <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.75rem", fontWeight: 600 }}>{count} Resources</p>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
                          ) : (
                            <div>
                              {(() => {
@@ -6538,7 +6596,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                  );
                                }
 
-                               if (libraryViewMode === 'list') {
+                               if (libraryViewMode === 'list' || libraryViewMode === 'details') {
                                  return (
                                    <div style={{ background: "white", borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
                                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
@@ -6588,38 +6646,41 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                }
 
                                return (
-                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
-                                   {filtered.map(res => (
-                                     <div key={res.id} style={{ background: "white", border: `1px solid ${t.border}`, borderRadius: "20px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#4f46e5"} onMouseOut={e => e.currentTarget.style.borderColor = t.border}>
-                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                         <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: res.type === 'LINK' ? "#eff6ff" : "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                           {res.type === 'LINK' ? <Link size={20} color="#3b82f6" /> : <FileText size={20} color="#ef4444" />}
+                                 <div style={{ display: "grid", gridTemplateColumns: libraryViewMode === 'extra-large' ? "repeat(auto-fill, minmax(320px, 1fr))" : libraryViewMode === 'large' ? "repeat(auto-fill, minmax(280px, 1fr))" : "repeat(auto-fill, minmax(240px, 1fr))", gap: "24px" }}>
+                                   {filtered.map(res => {
+                                     const iconSize = libraryViewMode === 'extra-large' ? 32 : libraryViewMode === 'large' ? 24 : 20;
+                                     const boxSize = libraryViewMode === 'extra-large' ? 64 : libraryViewMode === 'large' ? 56 : 48;
+                                     return (
+                                       <div key={res.id} style={{ background: "white", border: `1px solid ${t.border}`, borderRadius: "20px", padding: libraryViewMode === 'extra-large' ? "32px" : "24px", display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#4f46e5"} onMouseOut={e => e.currentTarget.style.borderColor = t.border}>
+                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                           <div style={{ width: `${boxSize}px`, height: `${boxSize}px`, borderRadius: "12px", background: res.type === 'LINK' ? "#eff6ff" : "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                             {res.type === 'LINK' ? <Link size={iconSize} color="#3b82f6" /> : <FileText size={iconSize} color="#ef4444" />}
+                                           </div>
+                                           {isAdmin && (
+                                             <button onClick={() => handleDeleteResource(res.id)} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", opacity: 0.6 }}><Trash2 size={16} /></button>
+                                           )}
                                          </div>
-                                         {isAdmin && (
-                                           <button onClick={() => handleDeleteResource(res.id)} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", opacity: 0.6 }}><Trash2 size={16} /></button>
-                                         )}
-                                       </div>
-                                       <div>
-                                         <h5 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700, color: t.text, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{res.name}</h5>
-                                         <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "8px" }}>
-                                           <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "#f1f5f9", borderRadius: "4px", fontWeight: 700, color: "#64748b" }}>{res.category}</span>
-                                           {librarySearchQuery && <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "#f5f3ff", borderRadius: "4px", fontWeight: 700, color: "#4f46e5" }}>{res.department}</span>}
+                                         <div>
+                                           <h5 style={{ margin: "0 0 8px 0", fontSize: libraryViewMode === 'extra-large' ? "1.125rem" : "1rem", fontWeight: 700, color: t.text, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{res.name}</h5>
+                                           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                             <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#f1f5f9", fontSize: "0.7rem", fontWeight: 700, color: "#475569" }}>{res.category}</span>
+                                             <span style={{ color: t.textMuted, fontSize: "0.7rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                                               <Clock size={12} /> {formatDate(res.createdAt)}
+                                             </span>
+                                           </div>
                                          </div>
-                                         <p style={{ margin: 0, fontSize: "0.75rem", color: t.textMuted, display: "flex", alignItems: "center", gap: "4px" }}>
-                                           <Clock size={12} /> {formatDate(res.createdAt)} • {res.uploadedBy}
-                                         </p>
+                                         <button onClick={() => {
+                                           if (res.type === 'LINK') window.open(res.url, '_blank');
+                                           else {
+                                             const win = window.open();
+                                             if (win) win.document.write(`<iframe src="${res.data}" style="width:100%;height:100%;border:0;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe>`);
+                                           }
+                                         }} style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "none", background: "#4f46e5", color: "white", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "auto" }}>
+                                           <Eye size={18} /> View Resource
+                                         </button>
                                        </div>
-                                       <button onClick={() => {
-                                         if (res.type === 'LINK') window.open(res.url, '_blank');
-                                         else {
-                                           const win = window.open();
-                                           if (win) win.document.write(`<iframe src="${res.data}" style="width:100%;height:100%;border:0;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe>`);
-                                         }
-                                       }} style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "none", background: "#4f46e5", color: "white", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                                         <Eye size={18} /> View Resource
-                                       </button>
-                                     </div>
-                                   ))}
+                                     );
+                                   })}
                                  </div>
                                );
                              })()}
