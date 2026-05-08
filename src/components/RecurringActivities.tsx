@@ -2038,26 +2038,8 @@ export default function RecurringActivities({   settings, usersList = [] , showN
         </div>
       )}
 
-      {activeSubTab === 'D' && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }} className="animate-in slide-in-from-bottom-4 duration-500">
-          {/* Unique Daily Directory Header */}
-          <div style={{ background: "white", padding: "28px", borderRadius: "24px", border: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                <Zap size={20} color="#2563eb" />
-                <h3 style={{ margin: 0, color: "#0f172a", fontSize: "1.5rem", fontWeight: 700 }}>Unique Daily Responsibilities</h3>
-              </div>
-              <p style={{ margin: 0, color: "#64748b", fontSize: "0.9375rem" }}>A central directory of all automated daily operational tasks being handled by the team.</p>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#f0fdf4", padding: "8px 16px", borderRadius: "12px", border: "1px solid #bbf7d0" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 0 4px rgba(34, 197, 94, 0.1)" }}></div>
-                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>Engine Online</span>
-              </div>
-              <span style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 500 }}>Tasks flow directly to Dashboard at {settings?.dailyTaskGenerationTime || "06:00"} AM</span>
-            </div>
-          </div>
-
+       {activeSubTab === 'D' && (
+         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }} className="animate-in slide-in-from-bottom-4 duration-500">
           {/* High-Density Filter Bar */}
           <div style={{ background: "white", padding: "12px 16px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", flexWrap: "nowrap" }}>
              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -2133,8 +2115,15 @@ export default function RecurringActivities({   settings, usersList = [] , showN
               </div>
 
              <div style={{ flex: 1 }}></div>
-          </div>
 
+             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#f0fdf4", padding: "4px 10px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
+                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e" }}></div>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#166534", textTransform: "uppercase" }}>Engine Online</span>
+                </div>
+                <span style={{ fontSize: "0.6rem", color: "#94a3b8", fontWeight: 500, marginTop: "2px" }}>Daily Sync at {settings?.dailyTaskGenerationTime || "06:00"} AM</span>
+             </div>
+          </div>
           <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.05)" }}>
             <div style={{ overflowX: "auto" }}>
               <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.9375rem", textAlign: "left" }}>
