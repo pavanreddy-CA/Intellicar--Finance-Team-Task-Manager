@@ -87,6 +87,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CONVERTED'>('PENDING');
   const [stagingSortConfig, setStagingSortConfig] = useState<{ key: keyof StagingTask; direction: 'asc' | 'desc' } | null>(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showDailyDownloadMenu, setShowDailyDownloadMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareData, setShareData] = useState({
@@ -709,6 +710,64 @@ export default function RecurringActivities({   settings, usersList = [] , showN
         ...shareData,
         subject: `Recurring Task Conversion Report (${dateFilter.from} to ${dateFilter.to})`,
         format: "excel"
+    });
+    setShowShareModal(true);
+  };
+
+  const exportDailyToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Daily Tasks Directory');
+    
+    worksheet.columns = [
+      { header: 'Entity', key: 'entityName', width: 25 },
+      { header: 'Dept', key: 'departmentName', width: 25 },
+      { header: 'Task Name', key: 'taskNamePattern', width: 40 },
+      { header: 'Function', key: 'financeFunction', width: 20 },
+      { header: 'Owner', key: 'defaultOwner', width: 20 },
+      { header: 'Reviewer', key: 'defaultReviewer', width: 20 }
+    ];
+
+    filteredAndSortedDaily.forEach(task => {
+      worksheet.addRow({
+        ...task,
+        financeFunction: task.financeFunction || 'GENERAL'
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Daily_Tasks_Directory_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportDailyToPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4');
+    doc.text(`Daily Tasks Directory Report - ${new Date().toLocaleDateString()}`, 14, 15);
+    
+    const tableData = filteredAndSortedDaily.map(t => [
+      t.entityName,
+      t.departmentName,
+      t.taskNamePattern,
+      t.financeFunction || 'GENERAL',
+      t.defaultOwner || '--',
+      t.defaultReviewer || '--'
+    ]);
+
+    autoTable(doc, {
+      head: [['Entity', 'Dept', 'Task Name', 'Function', 'Owner', 'Reviewer']],
+      body: tableData,
+      startY: 20,
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' }
+    });
+
+    doc.save(`Daily_Tasks_Directory_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const handleDailyShare = () => {
+    setShareData({
+        ...shareData,
+        subject: `Daily Tasks Directory Report - ${new Date().toLocaleDateString()}`,
+        type: 'daily',
+        attachmentName: 'Daily_Tasks_Report'
     });
     setShowShareModal(true);
   };
@@ -2116,12 +2175,79 @@ export default function RecurringActivities({   settings, usersList = [] , showN
 
              <div style={{ flex: 1 }}></div>
 
-             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#f0fdf4", padding: "4px 10px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e" }}></div>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#166534", textTransform: "uppercase" }}>Engine Online</span>
+             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ position: "relative" }}>
+                   <button 
+                     onClick={() => setShowDailyDownloadMenu(!showDailyDownloadMenu)}
+                     style={{ 
+                       display: "flex", alignItems: "center", gap: "6px", background: "#f8fafc", color: "#64748b", 
+                       padding: "6px 12px", borderRadius: "10px", border: "1px solid #e2e8f0", 
+                       cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, transition: "all 0.2s" 
+                     }} 
+                     onMouseOver={e => e.currentTarget.style.borderColor = "#2563eb"}
+                     onMouseOut={e => e.currentTarget.style.borderColor = "#e2e8f0"}
+                   >
+                     <Download size={15} color="#2563eb" /> Download
+                   </button>
+                   
+                   {showDailyDownloadMenu && (
+                     <div style={{ 
+                       position: "absolute", top: "100%", right: 0, marginTop: "8px", 
+                       background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", 
+                       boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", zIndex: 1000, 
+                       minWidth: "160px", overflow: "hidden" 
+                     }}>
+                       <button 
+                         onClick={() => { exportDailyToExcel(); setShowDailyDownloadMenu(false); }}
+                         style={{ 
+                           width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                           padding: "10px 16px", border: "none", background: "white", 
+                           color: "#64748b", cursor: "pointer", fontSize: "0.75rem", 
+                           textAlign: "left", transition: "background 0.2s" 
+                         }}
+                         onMouseOver={e => e.currentTarget.style.background = "#f8fafc"}
+                         onMouseOut={e => e.currentTarget.style.background = "white"}
+                       >
+                         <FileSpreadsheet size={14} color="#166534" /> Excel Format
+                       </button>
+                       <button 
+                         onClick={() => { exportDailyToPDF(); setShowDailyDownloadMenu(false); }}
+                         style={{ 
+                           width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                           padding: "10px 16px", border: "none", background: "white", 
+                           color: "#64748b", cursor: "pointer", fontSize: "0.75rem", 
+                           textAlign: "left", transition: "background 0.2s" 
+                         }}
+                         onMouseOver={e => e.currentTarget.style.background = "#f8fafc"}
+                         onMouseOut={e => e.currentTarget.style.background = "white"}
+                       >
+                         <FileText size={14} color="#991b1b" /> PDF Document
+                       </button>
+                       <div style={{ height: "1px", background: "#f1f5f9", margin: "4px 0" }}></div>
+                       <button 
+                         onClick={() => { handleDailyShare(); setShowDailyDownloadMenu(false); }}
+                         style={{ 
+                           width: "100%", display: "flex", alignItems: "center", gap: "10px", 
+                           padding: "10px 16px", border: "none", background: "white", 
+                           color: "#2563eb", cursor: "pointer", fontSize: "0.75rem", 
+                           textAlign: "left", transition: "background 0.2s", fontWeight: 700
+                         }}
+                         onMouseOver={e => e.currentTarget.style.background = "#eff6ff"}
+                         onMouseOut={e => e.currentTarget.style.background = "white"}
+                       >
+                         <Share2 size={14} color="#2563eb" /> Share via Email
+                       </button>
+                     </div>
+                   )}
                 </div>
-                <span style={{ fontSize: "0.6rem", color: "#94a3b8", fontWeight: 500, marginTop: "2px" }}>Daily Sync at {settings?.dailyTaskGenerationTime || "06:00"} AM</span>
+
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                   <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#f0fdf4", padding: "4px 10px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
+                     <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e" }}></div>
+                     <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#166534", textTransform: "uppercase" }}>Engine Online</span>
+                   </div>
+                   <span style={{ fontSize: "0.6rem", color: "#94a3b8", fontWeight: 500, marginTop: "2px" }}>Daily Sync at {settings?.dailyTaskGenerationTime || "06:00"} AM</span>
+                </div>
              </div>
           </div>
           <div style={{ background: "white", borderRadius: "24px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.05)" }}>
