@@ -5773,12 +5773,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               </div>
 
               {/* Enhanced Filter Bar */}
-              <div style={{ padding: "12px 24px", background: t.bg, borderBottom: `1px solid ${t.border}`, display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ position: "relative", flex: 1, minWidth: "200px" }}>
+              <div style={{ padding: "8px 16px", background: t.bg, borderBottom: `1px solid ${t.border}`, display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ position: "relative", width: "280px" }}>
                   <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: t.textMuted }} size={16} />
                   <input 
                     type="text" 
-                    placeholder="Search by name, email or request nature..." 
+                    placeholder="Search requests..." 
                     value={extReqSearch}
                     onChange={e => setExtReqSearch(e.target.value)}
                     style={{ padding: "8px 8px 8px 32px", borderRadius: "10px", border: `1px solid ${t.border}`, outline: "none", fontSize: "0.8125rem", width: "100%", background: t.card }} 
@@ -5786,30 +5786,30 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 </div>
 
                 {/* Date Filters */}
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", background: t.card, padding: "6px 14px", borderRadius: "12px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                     <Calendar size={14} color={t.textMuted} />
-                    <span style={{ fontSize: "0.7rem", fontWeight: 800, color: t.textMuted }}>FROM:</span>
+                    <span style={{ fontSize: "0.65rem", fontWeight: 800, color: t.textMuted }}>FROM:</span>
                     <input 
                       type="date" 
                       value={extReqDateFrom} 
                       onChange={e => setExtReqDateFrom(e.target.value)} 
-                      style={{ border: "none", background: "transparent", fontSize: "0.8125rem", color: t.text, outline: "none", width: "115px", fontWeight: 500 }} 
+                      style={{ border: "none", background: "transparent", fontSize: "0.75rem", color: t.text, outline: "none", width: "110px", fontWeight: 500 }} 
                     />
                   </div>
-                  <div style={{ width: "1px", height: "16px", background: t.border, margin: "0 4px" }}></div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontSize: "0.7rem", fontWeight: 800, color: t.textMuted }}>TO:</span>
+                  <div style={{ width: "1px", height: "14px", background: t.border, margin: "0 2px" }}></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ fontSize: "0.65rem", fontWeight: 800, color: t.textMuted }}>TO:</span>
                     <input 
                       type="date" 
                       value={extReqDateTo} 
                       onChange={e => setExtReqDateTo(e.target.value)} 
-                      style={{ border: "none", background: "transparent", fontSize: "0.8125rem", color: t.text, outline: "none", width: "115px", fontWeight: 500 }} 
+                      style={{ border: "none", background: "transparent", fontSize: "0.75rem", color: t.text, outline: "none", width: "110px", fontWeight: 500 }} 
                     />
                     {(extReqDateFrom || extReqDateTo) && (
                       <X 
                         size={14} 
-                        style={{ cursor: "pointer", color: "#ef4444", marginLeft: "4px" }} 
+                        style={{ cursor: "pointer", color: "#ef4444", marginLeft: "2px" }} 
                         onClick={() => { setExtReqDateFrom(""); setExtReqDateTo(""); }} 
                       />
                     )}
@@ -5840,26 +5840,26 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   style={{ 
                     display: "flex", 
                     alignItems: "center", 
-                    gap: "8px", 
+                    gap: "6px", 
                     background: extReqFilter === 'CONVERT_PENDING' ? "rgba(79, 70, 229, 0.1)" : "white", 
                     color: extReqFilter === 'CONVERT_PENDING' ? "#4f46e5" : "#64748b", 
                     border: extReqFilter === 'CONVERT_PENDING' ? "2px solid #4f46e5" : "1px solid #e2e8f0", 
-                    padding: "8px 16px", 
+                    padding: "6px 12px", 
                     borderRadius: "10px", 
-                    fontSize: "0.875rem", 
+                    fontSize: "0.8125rem", 
                     fontWeight: 600, 
                     cursor: "pointer", 
                     transition: "all 0.2s" 
                   }}
                 >
-                  <ListFilter size={18} />
-                  Pending Conversion
+                  <ListFilter size={16} />
+                  Pending
                   <span style={{ 
                     background: extReqFilter === 'CONVERT_PENDING' ? "#4f46e5" : "#f1f5f9", 
                     color: extReqFilter === 'CONVERT_PENDING' ? "white" : "#64748b", 
-                    padding: "2px 8px", 
+                    padding: "1px 6px", 
                     borderRadius: "999px", 
-                    fontSize: "0.75rem" 
+                    fontSize: "0.7rem" 
                   }}>
                     {visibleExternalRequests.filter(r => (r.status === 'Pending' || r.status === 'Under Process' || !r.status || r.status === 'New') && !r.convertedTaskId).length}
                   </span>
@@ -5875,12 +5875,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     t={t}
                   />
                 )}
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "auto", paddingLeft: "12px", borderLeft: `1px solid ${t.border}` }}>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
+                
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto", paddingLeft: "8px", borderLeft: `1px solid ${t.border}` }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
                   <select 
                     value={extReqItemsPerPage} 
                     onChange={e => setExtReqItemsPerPage(Number(e.target.value))}
-                    style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer" }}
+                    style={{ border: "none", background: "transparent", fontWeight: 700, color: "#2563eb", outline: "none", cursor: "pointer", fontSize: "0.8125rem" }}
                   >
                     <option value={10}>10</option>
                     <option value={20}>20</option>
