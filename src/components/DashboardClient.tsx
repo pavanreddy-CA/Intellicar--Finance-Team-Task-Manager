@@ -4279,7 +4279,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       </button>
                     )
                   ) : (activeView === 'TASKS' && activeSubView === 'OTHER_DEPT') ? (
-                    <>
+                    <React.Fragment>
                       <div style={{ position: "relative" }}>
                         <button 
                           onClick={() => setShowExtReqDownloadDropdown(!showExtReqDownloadDropdown)}
@@ -4320,15 +4320,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         )}
                       </div>
                       {!isViewer && (
-                      <button 
-                        onClick={() => setShowExtReqForm(true)} 
-                        style={{ display: "flex", alignItems: "center", gap: "8px", background: "#4f46e5", color: "white", padding: "10px 20px", borderRadius: "14px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)", transition: "all 0.2s" }} 
-                        onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} 
-                        onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
-                      >
-                        <Plus size={18} /> Submit New Request
-                      </button>
-                    </>
+                        <button 
+                          onClick={() => setShowExtReqForm(true)} 
+                          style={{ display: "flex", alignItems: "center", gap: "8px", background: "#4f46e5", color: "white", padding: "10px 20px", borderRadius: "14px", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 10px -2px rgba(79, 70, 229, 0.3)", transition: "all 0.2s" }} 
+                          onMouseOver={e => e.currentTarget.style.transform = "translateY(-1px)"} 
+                          onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
+                        >
+                          <Plus size={18} /> Submit New Request
+                        </button>
+                      )}
+                    </React.Fragment>
                   ) : (activeView as string) === 'LOS' ? (
                     !isViewer && (
                       <button onClick={() => setShowLOForm(true)} style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, color: t.text, padding: "10px 20px", borderRadius: "14px", border: `1px solid ${t.border}`, cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f8fafc"} onMouseOut={e => e.currentTarget.style.background = "#ffffff"}>
