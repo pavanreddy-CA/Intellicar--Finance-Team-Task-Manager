@@ -260,6 +260,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     departmentHeadMatrix: '{}',
     masterLOClassifications: 'Process Error,Calculation Error,Communication Gap,Documentation Miss,System Issue,Miscellaneous'
   });
+  const [isAdminViewMode, setIsAdminViewMode] = useState(true);
+
+  // Reset sub-views and filters when Admin View Mode is toggled
+  useEffect(() => {
+    if (isAdmin && !isAdminViewMode) {
+      if (activeSubView === 'ANALYTICS') setActiveSubView('MAIN');
+      if (loActiveFilter === 'ANALYTICS') setLoActiveFilter('ALL');
+      try {
+        const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
+        const canSeeModule = matrix[activeView === 'LOS' ? 'Learning' : activeView === 'EXTERNAL_REQUESTS' ? 'Requests' : activeView]?.includes(user?.department);
+        if (!canSeeModule && activeView !== 'TASKS' && activeView !== 'HOME') {
+          setActiveView('TASKS');
+        }
+      } catch (e) {}
+    }
+  }, [isAdminViewMode, isAdmin]);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [originalSettings, setOriginalSettings] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -1002,7 +1018,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   }, []);
 
   const isModuleAllowed = (moduleName: string) => {
-    if (isAdmin) return true;
+    if (isAdmin && isAdminViewMode) return true;
     if (!user?.department || !user?.email) return false;
     try {
       const accessMatrix = JSON.parse(settings.moduleAccessMatrix || '{}');
@@ -2265,6 +2281,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   // New Base Filtered Tasks for Metrics (ignores activeFilter only)
   const baseFilteredTasks = tasks.filter(t => {
+    // 0. Admin View Mode Filter
+    if (isAdmin && !isAdminViewMode) {
+      const isOwner = t.ownerEmail?.toLowerCase() === currentUser.email?.toLowerCase();
+      const isReviewer = (t.reviewerEmail || "").toLowerCase() === currentUser.email?.toLowerCase();
+      const isCreator = (t.createdByEmail || "").toLowerCase() === currentUser.email?.toLowerCase();
+      if (!isOwner && !isReviewer && !isCreator) return false;
+    }
+
     if (t.isApproved === false) return false;
 
     // Date Match
@@ -2460,7 +2484,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       userPerformance,
       deptWorkload,
       trends: last6Months,
-      sources
+      sources,
+      filteredTasks,
+      filteredIDR
     };
   }, [tasks, externalRequests, anaTaskEntityFilter, anaTaskDeptFilter, anaTaskUserFilter]);
 
@@ -2492,6 +2518,14 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const filteredTasksToDisplay = tasks.filter(t => {
+    // 0. Admin View Mode Filter
+    if (isAdmin && !isAdminViewMode) {
+      const isOwner = t.ownerEmail?.toLowerCase() === currentUser.email?.toLowerCase();
+      const isReviewer = (t.reviewerEmail || "").toLowerCase() === currentUser.email?.toLowerCase();
+      const isCreator = (t.createdByEmail || "").toLowerCase() === currentUser.email?.toLowerCase();
+      if (!isOwner && !isReviewer && !isCreator) return false;
+    }
+
     // Basic Approval Filter
     if (t.isApproved === false) return false;
 
@@ -2601,6 +2635,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
   // Learning Opportunity Filtering and Sorting
   const filteredLOsToDisplay = los.filter(lo => {
+    // 0. Admin View Mode Filter
+    if (isAdmin && !isAdminViewMode) {
+      const isIdentifiedByMe = lo.identifiedByEmail?.toLowerCase() === currentUser.email?.toLowerCase();
+      const isCommittedByMe = lo.committedByEmail?.toLowerCase() === currentUser.email?.toLowerCase();
+      if (!isIdentifiedByMe && !isCommittedByMe) return false;
+    }
+
     // 1. Metric Filter (My Reports / My Learnings)
     let typeMatch = true;
     if (loActiveFilter === 'REPORTS') {
@@ -2964,6 +3005,123 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  const handleTaskAnaExportExcel = async () => {
+    const { filteredTasks, filteredIDR, userPerformance, deptWorkload, totalTasks, onTimeTasks, overdueTasks, lateTasks } = taskAnalyticsData;
+    const workbook = new ExcelJS.Workbook();
+    
+    // Sheet 1: Dashboard Overview
+    const summarySheet = workbook.addWorksheet('Dashboard Overview');
+    summarySheet.columns = [{ header: 'Metric', key: 'm', width: 30 }, { header: 'Value', key: 'v', width: 20 }];
+    summarySheet.addRow({ m: 'TOTAL TASKS', v: totalTasks });
+    summarySheet.addRow({ m: 'ON-TIME COMPLETION', v: totalTasks > 0 ? Math.round((onTimeTasks / totalTasks) * 100) + '%' : '0%' });
+    summarySheet.addRow({ m: 'OVERDUE TASKS', v: overdueTasks });
+    summarySheet.addRow({ m: 'LATE COMPLETIONS', v: lateTasks });
+    summarySheet.addRow({});
+    
+    summarySheet.addRow({ m: 'USER PERFORMANCE (Top 10)' });
+    userPerformance.slice(0, 10).forEach(u => summarySheet.addRow({ m: u.name, v: `${u.onTime}/${u.total} On-Time` }));
+    summarySheet.addRow({});
+    
+    summarySheet.addRow({ m: 'DEPARTMENT WORKLOAD' });
+    deptWorkload.forEach(d => summarySheet.addRow({ m: d.name, v: d.count }));
+
+    // Sheet 2: Detailed Task Log
+    const taskSheet = workbook.addWorksheet('Detailed Task Log');
+    taskSheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Task Name', key: 'name', width: 40 },
+      { header: 'Entity', key: 'entity', width: 20 },
+      { header: 'Department', key: 'dept', width: 20 },
+      { header: 'Owner', key: 'owner', width: 20 },
+      { header: 'Due Date', key: 'due', width: 15 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Review Status', key: 'review', width: 20 }
+    ];
+    filteredTasks.forEach(t => taskSheet.addRow({
+      id: t.id,
+      name: t.taskName,
+      entity: t.entityName,
+      dept: t.departmentName,
+      owner: t.ownerName,
+      due: t.dueDate ? formatDate(t.dueDate) : 'N/A',
+      status: t.taskStatus,
+      review: t.reviewStatus
+    }));
+
+    // Sheet 3: IDR Pipeline
+    const idrSheet = workbook.addWorksheet('IDR Pipeline');
+    idrSheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Requester', key: 'req', width: 30 },
+      { header: 'Subject', key: 'sub', width: 40 },
+      { header: 'Status', key: 'status', width: 20 },
+      { header: 'Converted Task ID', key: 'tid', width: 20 }
+    ];
+    filteredIDR.forEach(r => idrSheet.addRow({
+      id: r.id,
+      req: r.requesterName,
+      sub: r.subject,
+      status: r.status,
+      tid: r.convertedTaskId || 'Pending'
+    }));
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Task_Analytics_Report_${formatDate(new Date())}.xlsx`);
+  };
+
+  const handleTaskAnaExportPDF = async () => {
+    const { userPerformance, deptWorkload, totalTasks, onTimeTasks, overdueTasks, lateTasks } = taskAnalyticsData;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(79, 70, 229);
+    doc.text('Task Analytics & Performance', 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${formatDateTime(new Date().toISOString())}`, 14, 30);
+    doc.text(`Filters: Entity: ${anaTaskEntityFilter} | Dept: ${anaTaskDeptFilter} | User: ${anaTaskUserFilter}`, 14, 35);
+
+    // KPI Summary
+    autoTable(doc, {
+      startY: 45,
+      head: [['Key Performance Indicator', 'Value']],
+      body: [
+        ['Total Tasks Analyzed', totalTasks],
+        ['Overall On-Time Rate', totalTasks > 0 ? Math.round((onTimeTasks / totalTasks) * 100) + '%' : '0%'],
+        ['Total Overdue', overdueTasks],
+        ['Total Late Completions', lateTasks]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], fontStyle: 'bold' }
+    });
+
+    // User Performance
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    doc.text('User Performance Analysis', 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [['User', 'Total Tasks', 'On-Time', 'Overdue', 'Success %']],
+      body: userPerformance.slice(0, 15).map(u => [u.name, u.total, u.onTime, u.overdue, u.rate + '%']),
+      headStyles: { fillColor: [16, 185, 129] }
+    });
+
+    // Department Workload
+    doc.setFontSize(14);
+    doc.text('Department Workload', 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [['Department', 'Active Tasks', 'Completed']],
+      body: deptWorkload.map(d => [d.name, d.count, d.completed]),
+      headStyles: { fillColor: [245, 158, 11] }
+    });
+
+    doc.save(`Task_Analytics_Report_${formatDate(new Date())}.pdf`);
+  };
+
+
 const handleResourceUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resourceName.trim()) {
@@ -3079,7 +3237,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
   // Base visibility filter for External Requests
   const visibleExternalRequests = externalRequests.filter(r => {
     // Admins and Super Admins see everything
-    if (isAdmin || user?.role === 'SUPER_ADMIN') return true;
+    if ((isAdmin && isAdminViewMode) || user?.role === 'SUPER_ADMIN') return true;
     
     // Show if user is the requester
     const isRequester = r.requesterEmail?.toLowerCase().trim() === user?.email?.toLowerCase().trim();
@@ -3976,20 +4134,46 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           
           <div style={{ height: "30px", width: "1px", background: t.border, opacity: 0.5 }}></div>
 
-          <button 
-            onClick={() => { 
-              setOriginalSettings(JSON.parse(JSON.stringify(settings)));
-              if (isAdmin) {
-                fetchUsersList(); 
-                fetchSettings(); 
-                setActiveOptionsTab('ACCOUNT');
-              } else if (canImport) {
-                setActiveOptionsTab('DATA');
-              } else {
-                setActiveOptionsTab('ACCOUNT');
-              }
-              setShowOptionsModal(true); 
-            }} 
+          {isAdmin && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#f8fafc", padding: "4px 8px 4px 12px", borderRadius: "14px", border: "1px solid #e2e8f0", marginRight: "8px" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: isAdminViewMode ? "#64748b" : "#4f46e5", transition: "all 0.3s" }}>User View</span>
+              <button 
+                onClick={() => setIsAdminViewMode(!isAdminViewMode)}
+                style={{ 
+                  width: "44px", height: "24px", background: isAdminViewMode ? "#10b981" : "#e2e8f0", 
+                  borderRadius: "20px", border: "none", cursor: "pointer", position: "relative",
+                  transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                  boxShadow: isAdminViewMode ? "0 4px 12px rgba(16,185,129,0.2)" : "inset 0 2px 4px rgba(0,0,0,0.05)"
+                }}
+              >
+                <div style={{ 
+                  position: "absolute", top: "3px", left: isAdminViewMode ? "23px" : "3px",
+                  width: "18px", height: "18px", background: "white", borderRadius: "50%",
+                  transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {isAdminViewMode ? <ShieldCheck size={10} color="#10b981" /> : <User size={10} color="#94a3b8" />}
+                </div>
+              </button>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: isAdminViewMode ? "#10b981" : "#64748b", transition: "all 0.3s" }}>Admin View</span>
+            </div>
+           )}
+
+           <button 
+             onClick={() => { 
+               setOriginalSettings(JSON.parse(JSON.stringify(settings)));
+               if (isAdmin) {
+                 fetchUsersList(); 
+                 fetchSettings(); 
+                 setActiveOptionsTab('ACCOUNT');
+               } else if (canImport) {
+                 setActiveOptionsTab('DATA');
+               } else {
+                 setActiveOptionsTab('ACCOUNT');
+               }
+               setShowOptionsModal(true); 
+             }} 
             className="btn-polish"
             style={{ 
               padding: "10px 18px", background: "#f8fafc", color: "#475569", 
@@ -4027,23 +4211,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         <nav style={{ 
           width: "110px", background: t.sidebar, display: "flex", 
           flexDirection: "column", alignItems: "center", paddingTop: "32px", 
-          flexShrink: 0, zIndex: 90, borderRight: "1px solid rgba(255,255,255,0.05)", transition: "all 0.3s ease"
+        flexShrink: 0, zIndex: 90, borderRight: "1px solid rgba(255,255,255,0.05)", transition: "all 0.3s ease"
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", padding: "0 12px" }}>
             {/* Logic: Check if module is allowed for user's department */}
             {(() => {
-              const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-              const canSeeTasks = isAdmin || matrix['Tasks']?.includes(user?.department);
-              const canSeeRequests = isAdmin || matrix['Requests']?.includes(user?.department);
-              const canSeeLearning = isAdmin || matrix['Learning']?.includes(user?.department);
-              const canSeePayments = isAdmin || matrix['Payments']?.includes(user?.department);
-
-              return (
+               return (
                 <>
                   {/* Home Module */}
                   {(() => {
-                    const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-                    const canSeeHome = isAdmin || (matrix['Home'] && matrix['Home'].includes(user?.department));
+                    const canSeeHome = isModuleAllowed('Home');
                     if (!canSeeHome) return null;
                     return (
                       <button 
@@ -4409,7 +4586,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                        "We don't track mistakes, we track learning and improvement"}
                     </p>
                   )}
-                  {activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && isAdmin && (
+                  {activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && (isAdmin && isAdminViewMode) && (
                     <div style={{ display: "flex", background: theme === 'DARK' ? "rgba(255,255,255,0.05)" : "rgba(15, 23, 42, 0.05)", padding: "4px", borderRadius: "12px", border: `1px solid ${t.border}`, width: "fit-content", marginTop: "16px" }}>
                       <button 
                         onClick={() => setLoActiveFilter('ALL')}
@@ -4431,7 +4608,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       >LO Analytics</button>
                     </div>
                   )}
-                  {activeView === 'TASKS' && activeSubView !== 'OTHER_DEPT' && isAdmin && (
+                  {activeView === 'TASKS' && activeSubView !== 'OTHER_DEPT' && (isAdmin && isAdminViewMode) && (
                     <div style={{ display: "flex", background: theme === 'DARK' ? "rgba(255,255,255,0.05)" : "rgba(15, 23, 42, 0.05)", padding: "4px", borderRadius: "12px", border: `1px solid ${t.border}`, width: "fit-content", marginTop: "16px" }}>
                       <button 
                         onClick={() => setActiveSubView('MAIN')}
@@ -5988,13 +6165,13 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   {showTaskAnaDownloadDropdown && (
                     <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: t.card, border: `1px solid ${t.border}`, borderRadius: "14px", overflow: "hidden", minWidth: "210px", boxShadow: isDarkMode ? "0 16px 40px rgba(0,0,0,0.4)" : "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100 }}>
                       <button
-                        onClick={() => { /* Implementation for Excel Export */ setShowTaskAnaDownloadDropdown(false); }}
+                        onClick={() => { handleTaskAnaExportExcel(); setShowTaskAnaDownloadDropdown(false); }}
                         style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#10b981", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: `1px solid ${t.border}` }}
                       >
                         <FileSpreadsheet size={18} /> Export as Excel
                       </button>
                       <button
-                        onClick={() => { /* Implementation for PDF Export */ setShowTaskAnaDownloadDropdown(false); }}
+                        onClick={() => { handleTaskAnaExportPDF(); setShowTaskAnaDownloadDropdown(false); }}
                         style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}
                       >
                         <FileText size={18} /> Export as PDF
