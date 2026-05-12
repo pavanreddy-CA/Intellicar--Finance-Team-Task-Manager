@@ -4373,7 +4373,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       )}
                     </Fragment>
                     ) : (activeView as string) === 'LOS' ? (
-                      !isViewer && (
+                      !isViewer && loActiveFilter !== 'ANALYTICS' && (
                         <button 
                           onClick={() => setShowLOForm(true)} 
                           style={{ 
