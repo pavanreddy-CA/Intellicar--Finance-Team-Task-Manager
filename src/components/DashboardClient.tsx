@@ -334,7 +334,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     return { count, usedBy: usedBy.join(", ") };
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (processingAttachments.length + files.length > 5) {
       showNotification("Maximum 5 files allowed", "error");
