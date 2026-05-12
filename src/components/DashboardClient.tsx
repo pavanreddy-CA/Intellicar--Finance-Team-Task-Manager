@@ -6894,35 +6894,35 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                       <div style={{ display: "flex", gap: "16px", alignItems: "center", zIndex: 1 }}>
                         <div style={{ position: "relative" }}>
-                          <Search style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)", transition: "color 0.2s" }} size={16} />
+                          <Search style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.6)", transition: "color 0.2s" }} size={16} />
                           <input 
                             type="text" 
                             placeholder="Search library..." 
                             value={librarySearchQuery} 
                             onChange={e => setLibrarySearchQuery(e.target.value)} 
                             style={{ 
-                              background: "rgba(255,255,255,0.05)", 
-                              border: "1px solid rgba(255,255,255,0.1)", 
+                              background: "rgba(255,255,255,0.15)", 
+                              border: "1px solid rgba(255,255,255,0.25)", 
                               borderRadius: "14px", 
                               padding: "10px 14px 10px 40px", 
                               color: "white", 
                               width: "260px", 
                               outline: "none", 
-                              backdropFilter: "blur(8px)",
+                              backdropFilter: "blur(12px)",
                               fontSize: "0.875rem",
                               transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)"
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.2)"
                             }}
                             onFocus={e => {
-                              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                              e.currentTarget.style.background = "rgba(255,255,255,0.25)";
                               e.currentTarget.style.borderColor = "#10b981";
-                              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(16, 185, 129, 0.1), inset 0 2px 4px rgba(0,0,0,0.1)";
+                              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(16, 185, 129, 0.15), 0 8px 16px rgba(0,0,0,0.15)";
                               e.currentTarget.style.width = "320px";
                             }}
                             onBlur={e => {
-                              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                              e.currentTarget.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,0.1)";
+                              e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.2)";
                               e.currentTarget.style.width = "260px";
                             }}
                           />
