@@ -3075,8 +3075,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     ];
     filteredIDR.forEach(r => idrSheet.addRow({
       id: r.id,
-      req: r.requesterName,
-      sub: r.subject,
+      req: r.requestFrom,
+      sub: r.natureOfRequest,
       status: r.status,
       tid: r.convertedTaskId || 'Pending'
     }));
