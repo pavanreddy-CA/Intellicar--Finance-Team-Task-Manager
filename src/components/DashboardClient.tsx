@@ -269,9 +269,19 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       if (loActiveFilter === 'ANALYTICS') setLoActiveFilter('ALL');
       try {
         const matrix = JSON.parse(settings.moduleAccessMatrix || '{}');
-        const canSeeModule = matrix[activeView === 'LOS' ? 'Learning' : activeView === 'EXTERNAL_REQUESTS' ? 'Requests' : activeView]?.includes(user?.department);
+        let moduleName = '';
+        if (activeView === 'HOME') moduleName = 'Home';
+        else if (activeView === 'LOS') moduleName = 'Learning';
+        else if (activeView === 'PAYMENTS' || activeView === 'PAYMENT_REQUESTS') moduleName = 'Payments';
+        else if (activeView === 'RECURRING') moduleName = 'Recurring Activities';
+        else if (activeView === 'TASKS') {
+          moduleName = activeSubView === 'OTHER_DEPT' ? 'Requests' : 'Tasks';
+        }
+
+        const canSeeModule = moduleName ? matrix[moduleName]?.includes(user?.department) : true;
         if (!canSeeModule && activeView !== 'TASKS' && activeView !== 'HOME') {
           setActiveView('TASKS');
+          setActiveSubView('MAIN');
         }
       } catch (e) {}
     }
