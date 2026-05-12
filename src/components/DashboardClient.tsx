@@ -4143,21 +4143,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                   >
                                     <BookOpen size={16} /> Library
                                   </button>
-                                  {isAdmin && (
-                                    <button 
-                                      onClick={() => { setActiveView('LOS'); setLoActiveFilter('ANALYTICS'); setActiveMainView('DASHBOARD'); setShowLearningFlyout(false); }}
-                                      style={{ 
-                                        padding: "12px", borderRadius: "10px", border: "none", textAlign: "left", fontSize: "0.8125rem", fontWeight: 600,
-                                        background: activeView === 'LOS' && loActiveFilter === 'ANALYTICS' ? "rgba(99, 102, 241, 0.15)" : "transparent",
-                                        color: activeView === 'LOS' && loActiveFilter === 'ANALYTICS' ? "#6366f1" : "#e2e8f0",
-                                        cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "10px"
-                                      }}
-                                      onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#6366f1"; }}
-                                      onMouseOut={e => { e.currentTarget.style.background = activeView === 'LOS' && loActiveFilter === 'ANALYTICS' ? "rgba(99, 102, 241, 0.15)" : "transparent"; e.currentTarget.style.color = activeView === 'LOS' && loActiveFilter === 'ANALYTICS' ? "#6366f1" : "#e2e8f0"; }}
-                                    >
-                                      <Rocket size={16} /> LO Analytics
-                                    </button>
-                                  )}
                                 </div>
                               </div>
                             )}
@@ -4253,7 +4238,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         </nav>
 
         {/* Content Area */}
-        <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: (activeView === 'RECURRING' || (activeView === 'LOS' && loActiveFilter === 'ANALYTICS')) ? "0" : ((activeView as any) === 'HOME' ? "20px 32px 32px 32px" : "32px"), background: t.bg, transition: "all 0.3s ease" }}>
+        <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: (activeView === 'RECURRING') ? "0" : ((activeView as any) === 'HOME' ? "20px 32px 32px 32px" : "32px"), background: t.bg, transition: "all 0.3s ease" }}>
           {activeView === 'RECURRING' && (
             <RecurringActivities settings={settings} usersList={usersList} showNotification={showNotification} showConfirm={showConfirm} showPrompt={showPrompt} />
           )}
@@ -4272,7 +4257,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           {activeView !== 'RECURRING' && activeView !== 'PAYMENT_REQUESTS' && (
             <>
           {/* Active View Title/Context Area */}
-          {(activeView as any) !== 'HOME' && !(activeView === 'LOS' && loActiveFilter === 'ANALYTICS') && (
+          {(activeView as any) !== 'HOME' && (
           <div style={{ 
             padding: (activeView === 'LOS' && loActiveFilter === 'RESOURCES') ? "0" : "16px 32px 16px 32px",
             marginBottom: ((activeView as any) === 'HOME' || (activeView === 'LOS' && loActiveFilter === 'RESOURCES')) ? "0" : "16px", 
@@ -4282,7 +4267,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             alignItems: "flex-end",
             transition: "all 0.3s ease"
           }}>
-            {(activeView === 'HOME' || (activeView === 'LOS' && loActiveFilter === 'RESOURCES') || (activeView === 'LOS' && (loActiveFilter as string) === 'ANALYTICS')) ? null : (
+            {(activeView === 'HOME' || (activeView === 'LOS' && loActiveFilter === 'RESOURCES')) ? null : (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -4304,6 +4289,28 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                        activeView === 'PAYMENTS' ? "Manage and track recurring vendor payments and Treasury obligations." :
                        "We don't track mistakes, we track learning and improvement"}
                     </p>
+                  )}
+                  {activeView === 'LOS' && loActiveFilter !== 'RESOURCES' && isAdmin && (
+                    <div style={{ display: "flex", background: theme === 'DARK' ? "rgba(255,255,255,0.05)" : "rgba(15, 23, 42, 0.05)", padding: "4px", borderRadius: "12px", border: `1px solid ${t.border}`, width: "fit-content", marginTop: "16px" }}>
+                      <button 
+                        onClick={() => setLoActiveFilter('ALL')}
+                        style={{ 
+                          padding: "8px 16px", borderRadius: "8px", border: "none", 
+                          background: loActiveFilter !== 'ANALYTICS' ? "#4f46e5" : "transparent", 
+                          color: loActiveFilter !== 'ANALYTICS' ? "white" : t.textMuted,
+                          fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" 
+                        }}
+                      >Learning Opportunities</button>
+                      <button 
+                        onClick={() => setLoActiveFilter('ANALYTICS')}
+                        style={{ 
+                          padding: "8px 16px", borderRadius: "8px", border: "none", 
+                          background: loActiveFilter === 'ANALYTICS' ? "#4f46e5" : "transparent", 
+                          color: loActiveFilter === 'ANALYTICS' ? "white" : t.textMuted,
+                          fontWeight: 700, cursor: "pointer", fontSize: "0.8125rem", transition: "all 0.2s" 
+                        }}
+                      >LO Analytics</button>
+                    </div>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -4608,14 +4615,10 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             </div>
           ) : null
         ) : activeView === 'LOS' && loActiveFilter === 'ANALYTICS' ? (
-          <div style={{ background: t.bg, borderRadius: activeView === 'LOS' && loActiveFilter === 'ANALYTICS' ? "0" : "24px", minHeight: "calc(100vh - 80px)", padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", animation: "fadeIn 0.4s ease-out" }}>
-            {/* Header & Command Bar */}
-            <div style={{ background: t.card, borderBottom: `1px solid ${t.border}`, padding: "20px 32px" }}>
-              <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800, color: t.text, letterSpacing: "-0.02em" }}>LO Analytics & Reporting</h2>
-                  <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.8125rem" }}>Detailed insights and performance tracking for Learning Opportunities.</p>
-                </div>
+          <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, minHeight: "calc(100vh - 200px)", padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", animation: "fadeIn 0.4s ease-out", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
+            {/* Command Bar (Filters Only) */}
+            <div style={{ background: t.bg, borderBottom: `1px solid ${t.border}`, padding: "16px 24px" }}>
+              <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
                 
                 {/* Filters Area */}
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
