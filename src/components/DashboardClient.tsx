@@ -3129,7 +3129,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
       'SI No', 'Task ID', 'Timestamp', 'Created By', 'Task Name', 'Entity', 'Type', 
       'Department', 'Requested By', 'Owner', 'Due Date', 
       'Completion Date', 'Completed By', 'Status', 'Reviewer', 'Review Status', 
-      'Review Date', 'Reviewed By', 'Owner Comments', 'Reviewer Comments', 'Mail Link',
+      'Review Date', 'Reviewed By', 'Owner Comments', 'Reviewer Comments', 'Mail Sub',
       'Origin', 'Original Category', 'Transferred By', 'Transferred At', 'Processed By', 'Processed At', 'Comm. Mode', 'Processed Mail Link'
     ];
     
@@ -6286,7 +6286,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                     href={req.processedMailLink} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    title="View Mail Link"
+                                    title="View Mail Sub"
                                     style={{ color: "#4f46e5", display: "flex", alignItems: "center" }}
                                   >
                                     <ExternalLink size={14} />
@@ -11432,6 +11432,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                 <DetailItemView label="Owner" value={selectedTaskForView.ownerName} />
                 <DetailItemView label="Reviewer" value={selectedTaskForView.reviewerName || "N/A"} />
                 <DetailItemView label="Due Date" value={selectedTaskForView.dueDate ? formatDate(selectedTaskForView.dueDate) : "N/A"} />
+                <DetailItemView label="Mail Sub" value={selectedTaskForView.mailLink || "N/A"} />
                 <DetailItemView label="Created At" value={formatDateTime(selectedTaskForView.createdAt)} />
                 
                 <div style={{ gridColumn: "span 1" }}>

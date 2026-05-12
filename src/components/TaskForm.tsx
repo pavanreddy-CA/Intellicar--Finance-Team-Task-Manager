@@ -548,8 +548,8 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                   <input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} style={dynamicInputStyle} />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Mail Link</label>
-                  <input name="mailLink" value={formData.mailLink} onChange={handleChange} style={dynamicInputStyle} placeholder="Optional email link" />
+                  <label style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem", fontWeight: 500, color: t.text }}>Mail Sub</label>
+                  <input name="mailLink" value={formData.mailLink} onChange={handleChange} style={dynamicInputStyle} placeholder="Optional email subject" />
                 </div>
               </div>
 
