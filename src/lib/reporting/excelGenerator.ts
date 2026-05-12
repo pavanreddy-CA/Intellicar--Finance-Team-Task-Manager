@@ -37,8 +37,7 @@ export async function generateProfessionalExcelReport(data: {
 
   // Report Info
   dashSheet.addRow([]);
-  dashSheet.addRow(['REPORT METADATA']);
-  const metaHeader = dashSheet.lastRow;
+  const metaHeader = dashSheet.addRow(['REPORT METADATA']);
   metaHeader.font = { bold: true };
   
   dashSheet.addRow(['Generated On', new Date().toLocaleString()]);
@@ -48,8 +47,8 @@ export async function generateProfessionalExcelReport(data: {
   dashSheet.addRow([]);
   
   // KPI Cards Section
-  dashSheet.addRow(['KEY PERFORMANCE INDICATORS']);
-  dashSheet.lastRow.font = { bold: true, size: 14, color: { argb: BRAND_COLORS.DARK.replace('#', '') } };
+  const kpiTitleRow = dashSheet.addRow(['KEY PERFORMANCE INDICATORS']);
+  kpiTitleRow.font = { bold: true, size: 14, color: { argb: BRAND_COLORS.DARK.replace('#', '') } };
   
   const kpiRow = dashSheet.addRow(['Total Tasks', 'On-Time Rate', 'Overdue', 'Late Completions', 'LO Count']);
   kpiRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
