@@ -10,7 +10,7 @@ export async function generateProfessionalPDFReport(data: {
   analytics: any;
   filters: { entity: string; dept: string; user: string };
   generatedBy: string;
-}) {
+}, mode: 'download' | 'buffer' = 'download') {
   const doc = new jsPDF();
   const pageHeight = doc.internal.pageSize.height;
   const pageWidth = doc.internal.pageSize.width;
@@ -96,5 +96,8 @@ export async function generateProfessionalPDFReport(data: {
   });
 
   addFooter(doc);
-  doc.save(`FinPulse_Analytics_Report_${new Date().getTime()}.pdf`);
+  if (mode === 'download') {
+    doc.save(`FinPulse_Analytics_Report_${new Date().getTime()}.pdf`);
+  }
+  return doc.output('arraybuffer');
 }

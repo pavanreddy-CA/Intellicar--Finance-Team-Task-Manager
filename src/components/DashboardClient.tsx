@@ -19,6 +19,9 @@ import MultiSelectFilter from "@/components/MultiSelectFilter";
 import PaymentRequestPortal from "@/components/PaymentRequestPortal";
 import { generateProfessionalExcelReport } from "@/lib/reporting/excelGenerator";
 import { generateProfessionalPDFReport } from "@/lib/reporting/pdfGenerator";
+import { generateProfessionalReportEmail } from "@/lib/reporting/emailGenerator";
+import { generateProfessionalLOExcel, generateProfessionalLOPDF } from "@/lib/reporting/loGenerator";
+import { BRAND_COLORS } from "@/lib/reporting/reportAssets";
 
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -2919,86 +2922,39 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       const attachments: any[] = [];
 
       if (anaShareConfig.format === 'excel' || anaShareConfig.format === 'both') {
-        const workbook = new ExcelJS.Workbook();
-        const summarySheet = workbook.addWorksheet('Executive Summary');
-        summarySheet.columns = [{ header: 'Category', key: 'cat', width: 30 }, { header: 'Value', key: 'val', width: 20 }];
-        summarySheet.addRow({ cat: 'TOTAL FINDINGS', val: stats.total });
-        summarySheet.addRow({ cat: 'ACKNOWLEDGED', val: stats.ack });
-        summarySheet.addRow({ cat: 'PENDING REVIEW', val: stats.pending });
-        summarySheet.addRow({});
-        summarySheet.addRow({ cat: 'USER PERFORMANCE' });
-        userSummary.forEach((u: any) => summarySheet.addRow({ cat: u.name, val: u.resolved + '/' + u.reported + ' Resolved' }));
-        const logSheet = workbook.addWorksheet('Detailed LO Log');
-        logSheet.columns = [
-          { header: 'Date', key: 'date', width: 15 },
-          { header: 'Entity', key: 'entity', width: 20 },
-          { header: 'Finding', key: 'finding', width: 50 },
-          { header: 'Identified By', key: 'by', width: 20 },
-          { header: 'Status', key: 'status', width: 15 }
-        ];
-        filtered.forEach((lo: any) => logSheet.addRow({
-          date: formatDate(lo.dateOfIdentification),
-          entity: lo.entity,
-          finding: lo.learningOpportunity,
-          by: lo.identifiedBy,
-          status: lo.isAcknowledged ? 'Acknowledged' : 'Pending'
-        }));
-        const buffer = await workbook.xlsx.writeBuffer();
-        attachments.push({ filename: 'LO_Analytics_Report.xlsx', content: Buffer.from(buffer).toString('base64'), encoding: 'base64' });
+        const buffer = await generateProfessionalLOExcel({
+          los: filtered,
+          stats,
+          userSummary,
+          entitySummary,
+          filters: { entity: anaEntityFilter, user: anaUserFilter },
+          generatedBy: user?.name || user?.email || 'Admin'
+        }, 'buffer');
+        attachments.push({ filename: 'LO_Analytics_Report.xlsx', content: Buffer.from(buffer as any).toString('base64'), encoding: 'base64' });
       }
 
       if (anaShareConfig.format === 'pdf' || anaShareConfig.format === 'both') {
-        const doc = new jsPDF();
-        doc.setFontSize(20);
-        doc.setTextColor(79, 70, 229);
-        doc.text('LO Analytics & Reporting', 14, 20);
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text('Generated: ' + formatDateTime(new Date().toISOString()), 14, 28);
-        autoTable(doc, {
-          startY: 36,
-          head: [['Metric', 'Count']],
-          body: [['Total Findings', stats.total], ['Acknowledged', stats.ack], ['Pending Review', stats.pending]],
-          headStyles: { fillColor: [79, 70, 229] }
-        });
-        doc.text('User Performance', 14, (doc as any).lastAutoTable.finalY + 12);
-        autoTable(doc, {
-          startY: (doc as any).lastAutoTable.finalY + 16,
-          head: [['User', 'Found', 'Resolved']],
-          body: userSummary.map((u: any) => [u.name, u.reported, u.resolved]),
-          headStyles: { fillColor: [16, 185, 129] }
-        });
-        doc.text('Entity Summary', 14, (doc as any).lastAutoTable.finalY + 12);
-        autoTable(doc, {
-          startY: (doc as any).lastAutoTable.finalY + 16,
-          head: [['Entity', 'Total LOs', '% Resolved']],
-          body: entitySummary.map((e: any) => [e.name, e.total, e.total > 0 ? Math.round((e.resolved / e.total) * 100) + '%' : '0%']),
-          headStyles: { fillColor: [245, 158, 11] }
-        });
-        const pdfBlob = doc.output('arraybuffer');
-        attachments.push({ filename: 'LO_Analytics_Report.pdf', content: Buffer.from(pdfBlob).toString('base64'), encoding: 'base64' });
+        const buffer = await generateProfessionalLOPDF({
+          stats,
+          userSummary,
+          entitySummary,
+          filters: { entity: anaEntityFilter, user: anaUserFilter },
+          generatedBy: user?.name || user?.email || 'Admin'
+        }, 'buffer');
+        attachments.push({ filename: 'LO_Analytics_Report.pdf', content: Buffer.from(buffer as any).toString('base64'), encoding: 'base64' });
       }
 
-      const emailHtml = '<div style="font-family:Arial,sans-serif;background:#0f172a;padding:32px;border-radius:16px;color:#fff">' +
-        '<h2 style="color:#6366f1;margin:0 0 8px 0">LO Analytics & Reporting</h2>' +
-        '<p style="color:#94a3b8;margin:0 0 28px 0;font-size:14px">Report generated on ' + formatDateTime(new Date().toISOString()) + ' | Filters: Entity: ' + anaEntityFilter + ' | User: ' + anaUserFilter + '</p>' +
-        '<table style="width:100%;border-collapse:separate;border-spacing:12px;margin-bottom:24px"><tr>' +
-        '<td style="background:#1e293b;padding:20px;border-radius:12px;border:1px solid #334155;text-align:center"><div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:8px">Total Findings</div><div style="font-size:28px;font-weight:800;color:#fff">' + stats.total + '</div></td>' +
-        '<td style="background:#1e293b;padding:20px;border-radius:12px;border:1px solid #334155;text-align:center"><div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:8px">Acknowledged</div><div style="font-size:28px;font-weight:800;color:#10b981">' + stats.ack + '</div></td>' +
-        '<td style="background:#1e293b;padding:20px;border-radius:12px;border:1px solid #334155;text-align:center"><div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:8px">Pending Review</div><div style="font-size:28px;font-weight:800;color:#f59e0b">' + stats.pending + '</div></td>' +
-        '</tr></table>' +
-        '<h3 style="color:#fff;border-bottom:1px solid #334155;padding-bottom:10px;font-size:15px">Performance by User</h3>' +
-        '<table style="width:100%;border-collapse:collapse;margin-top:12px">' +
-        '<tr style="background:#1e293b"><th style="padding:12px;text-align:left;font-size:11px;color:#94a3b8;text-transform:uppercase">User</th><th style="padding:12px;text-align:center;font-size:11px;color:#94a3b8;text-transform:uppercase">Found</th><th style="padding:12px;text-align:center;font-size:11px;color:#94a3b8;text-transform:uppercase">Resolved</th></tr>' +
-        userSummary.map((u: any) => '<tr style="border-bottom:1px solid #1e293b"><td style="padding:12px;color:#e2e8f0">' + u.name + '</td><td style="padding:12px;text-align:center;color:#6366f1;font-weight:700">' + u.reported + '</td><td style="padding:12px;text-align:center;color:#10b981;font-weight:700">' + u.resolved + '</td></tr>').join('') +
-        '</table>' +
-        '<h3 style="color:#fff;border-bottom:1px solid #334155;padding-bottom:10px;font-size:15px;margin-top:24px">Entity Tracker Summary</h3>' +
-        '<table style="width:100%;border-collapse:collapse;margin-top:12px">' +
-        '<tr style="background:#1e293b"><th style="padding:12px;text-align:left;font-size:11px;color:#94a3b8;text-transform:uppercase">Entity</th><th style="padding:12px;text-align:center;font-size:11px;color:#94a3b8;text-transform:uppercase">Total LOs</th><th style="padding:12px;text-align:center;font-size:11px;color:#94a3b8;text-transform:uppercase">% Resolved</th></tr>' +
-        entitySummary.map((e: any) => '<tr style="border-bottom:1px solid #1e293b"><td style="padding:12px;color:#e2e8f0">' + e.name + '</td><td style="padding:12px;text-align:center;color:#fff;font-weight:700">' + e.total + '</td><td style="padding:12px;text-align:center;color:#f59e0b;font-weight:700">' + (e.total > 0 ? Math.round((e.resolved / e.total) * 100) : 0) + '%</td></tr>').join('') +
-        '</table>' +
-        '<div style="margin-top:32px;text-align:center"><a href="https://v0-finpulse.vercel.app" style="background:#6366f1;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">View Live Dashboard →</a></div>' +
-        '</div>';
+      const emailHtml = generateProfessionalReportEmail({
+        title: 'LO Analytics & Reporting',
+        subtitle: `Report generated for Entity: ${anaEntityFilter} | Scope: ${anaUserFilter}`,
+        metrics: [
+          { label: 'Total Findings', value: stats.total },
+          { label: 'Acknowledged', value: stats.ack, color: BRAND_COLORS.SUCCESS },
+          { label: 'Pending Review', value: stats.pending, color: BRAND_COLORS.WARNING }
+        ],
+        summaryText: `The current LO pipeline shows ${stats.total} total findings, with ${Math.round((stats.ack/stats.total)*100)}% acknowledged. Please review the attached detailed logs for user-specific performance.`,
+        ctaLink: 'https://v0-finpulse.vercel.app'
+      });
 
       const res = await fetch('/api/lo-analytics/share-report', {
         method: 'POST',

@@ -13,7 +13,7 @@ export async function generateProfessionalExcelReport(data: {
   analytics: any;
   filters: { entity: string; dept: string; user: string };
   generatedBy: string;
-}) {
+}, mode: 'download' | 'buffer' = 'download') {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = BRAND_TEXT.PRODUCT_NAME;
   workbook.lastModifiedBy = data.generatedBy;
@@ -135,5 +135,9 @@ export async function generateProfessionalExcelReport(data: {
 
   // Finalize
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), `FinPulse_Analytics_Report_${new Date().getTime()}.xlsx`);
+  if (mode === 'download') {
+    saveAs(new Blob([buffer]), `FinPulse_Analytics_Report_${new Date().getTime()}.xlsx`);
+  }
+  return buffer;
 }
+
