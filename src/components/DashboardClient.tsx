@@ -6869,20 +6869,62 @@ const handleResourceUpload = async (e: React.FormEvent) => {
           <div className="lo-view" style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)", overflow: "hidden", animation: "fadeIn 0.5s ease-out" }}>
             {loActiveFilter === 'RESOURCES' ? (
                 <div style={{ minHeight: "600px", display: "flex", flexDirection: "column" }}>
-                   <div style={{ height: "180px", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", padding: "40px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-                      <div>
-                         <h2 style={{ color: "white", margin: 0, fontSize: "2.25rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Knowledge Library</h2>
-                         <p style={{ color: "rgba(255,255,255,0.7)", margin: "8px 0 0 0", fontSize: "1rem" }}>Centralized reference materials, acts, and professional publications.</p>
+                   <div style={{ 
+                      height: "120px", 
+                      background: isDarkMode ? "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" : "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", 
+                      padding: "0 40px", 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center", 
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                      position: "relative",
+                      overflow: "hidden"
+                    }}>
+                      {/* Decorative Background Elements (NDL Inspiration) */}
+                      <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "200px", height: "200px", background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+                      <div style={{ position: "absolute", bottom: "-50px", left: "20%", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+                      
+                      <div style={{ zIndex: 1 }}>
+                         <h2 style={{ color: "white", margin: 0, fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "12px" }}>
+                           <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px", borderRadius: "10px" }}><BookOpen size={24} color="#10b981" /></div>
+                           Knowledge Library
+                         </h2>
+                         <p style={{ color: "rgba(255,255,255,0.5)", margin: "4px 0 0 0", fontSize: "0.875rem", fontWeight: 500 }}>Centralized reference & professional publications</p>
                       </div>
-                      <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+
+                      <div style={{ display: "flex", gap: "16px", alignItems: "center", zIndex: 1 }}>
                         <div style={{ position: "relative" }}>
-                          <Search style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.5)" }} size={18} />
+                          <Search style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)", transition: "color 0.2s" }} size={16} />
                           <input 
                             type="text" 
                             placeholder="Search library..." 
                             value={librarySearchQuery} 
                             onChange={e => setLibrarySearchQuery(e.target.value)} 
-                            style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", padding: "12px 12px 12px 40px", color: "white", width: "300px", outline: "none", backdropFilter: "blur(4px)" }}
+                            style={{ 
+                              background: "rgba(255,255,255,0.05)", 
+                              border: "1px solid rgba(255,255,255,0.1)", 
+                              borderRadius: "14px", 
+                              padding: "10px 14px 10px 40px", 
+                              color: "white", 
+                              width: "260px", 
+                              outline: "none", 
+                              backdropFilter: "blur(8px)",
+                              fontSize: "0.875rem",
+                              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)"
+                            }}
+                            onFocus={e => {
+                              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                              e.currentTarget.style.borderColor = "#10b981";
+                              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(16, 185, 129, 0.1), inset 0 2px 4px rgba(0,0,0,0.1)";
+                              e.currentTarget.style.width = "320px";
+                            }}
+                            onBlur={e => {
+                              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                              e.currentTarget.style.boxShadow = "inset 0 2px 4px rgba(0,0,0,0.1)";
+                              e.currentTarget.style.width = "260px";
+                            }}
                           />
                         </div>
                         {!isViewer && (
@@ -6892,7 +6934,22 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               if (cats.length > 0) setResourceCategory(cats[0]);
                               setShowResourceModal(true);
                             }} 
-                            style={{ background: "#10b981", color: "white", padding: "14px 28px", borderRadius: "12px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.3)", display: "flex", alignItems: "center", gap: "8px" }}
+                            className="btn-polish"
+                            style={{ 
+                              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
+                              color: "white", 
+                              padding: "10px 22px", 
+                              borderRadius: "14px", 
+                              border: "none", 
+                              cursor: "pointer", 
+                              fontWeight: 700, 
+                              fontSize: "0.8125rem", 
+                              boxShadow: "0 8px 20px -6px rgba(16, 185, 129, 0.4)", 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: "8px",
+                              transition: "all 0.3s ease"
+                            }}
                           >
                             <Plus size={18} /> Add Resource
                           </button>
