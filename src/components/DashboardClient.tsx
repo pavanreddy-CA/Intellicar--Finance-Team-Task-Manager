@@ -17,6 +17,8 @@ import ExternalRequestForm from "@/components/ExternalRequestForm";
 import { getTrackingStatus, COMPLETION_STATUSES, getEmailFromName } from "@/lib/taskUtils";
 import MultiSelectFilter from "@/components/MultiSelectFilter";
 import PaymentRequestPortal from "@/components/PaymentRequestPortal";
+import { generateProfessionalExcelReport } from "@/lib/reporting/excelGenerator";
+import { generateProfessionalPDFReport } from "@/lib/reporting/pdfGenerator";
 
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -3022,119 +3024,33 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const handleTaskAnaExportExcel = async () => {
-    const { filteredTasks, filteredIDR, userPerformance, deptWorkload, totalTasks, onTimeTasks, overdueTasks, lateTasks } = taskAnalyticsData;
-    const workbook = new ExcelJS.Workbook();
-    
-    // Sheet 1: Dashboard Overview
-    const summarySheet = workbook.addWorksheet('Dashboard Overview');
-    summarySheet.columns = [{ header: 'Metric', key: 'm', width: 30 }, { header: 'Value', key: 'v', width: 20 }];
-    summarySheet.addRow({ m: 'TOTAL TASKS', v: totalTasks });
-    summarySheet.addRow({ m: 'ON-TIME COMPLETION', v: totalTasks > 0 ? Math.round((onTimeTasks / totalTasks) * 100) + '%' : '0%' });
-    summarySheet.addRow({ m: 'OVERDUE TASKS', v: overdueTasks });
-    summarySheet.addRow({ m: 'LATE COMPLETIONS', v: lateTasks });
-    summarySheet.addRow({});
-    
-    summarySheet.addRow({ m: 'USER PERFORMANCE (Top 10)' });
-    userPerformance.slice(0, 10).forEach(u => summarySheet.addRow({ m: u.name, v: `${u.onTime}/${u.total} On-Time` }));
-    summarySheet.addRow({});
-    
-    summarySheet.addRow({ m: 'DEPARTMENT WORKLOAD' });
-    deptWorkload.forEach(d => summarySheet.addRow({ m: d.name, v: d.count }));
-
-    // Sheet 2: Detailed Task Log
-    const taskSheet = workbook.addWorksheet('Detailed Task Log');
-    taskSheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Task Name', key: 'name', width: 40 },
-      { header: 'Entity', key: 'entity', width: 20 },
-      { header: 'Department', key: 'dept', width: 20 },
-      { header: 'Owner', key: 'owner', width: 20 },
-      { header: 'Due Date', key: 'due', width: 15 },
-      { header: 'Status', key: 'status', width: 15 },
-      { header: 'Review Status', key: 'review', width: 20 }
-    ];
-    filteredTasks.forEach(t => taskSheet.addRow({
-      id: t.id,
-      name: t.taskName,
-      entity: t.entityName,
-      dept: t.departmentName,
-      owner: t.ownerName,
-      due: t.dueDate ? formatDate(t.dueDate) : 'N/A',
-      status: t.taskStatus,
-      review: t.reviewStatus
-    }));
-
-    // Sheet 3: IDR Pipeline
-    const idrSheet = workbook.addWorksheet('IDR Pipeline');
-    idrSheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Requester', key: 'req', width: 30 },
-      { header: 'Subject', key: 'sub', width: 40 },
-      { header: 'Status', key: 'status', width: 20 },
-      { header: 'Converted Task ID', key: 'tid', width: 20 }
-    ];
-    filteredIDR.forEach(r => idrSheet.addRow({
-      id: r.id,
-      req: r.requestFrom,
-      sub: r.natureOfRequest,
-      status: r.status,
-      tid: r.convertedTaskId || 'Pending'
-    }));
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Task_Analytics_Report_${formatDate(new Date())}.xlsx`);
+    const { filteredTasks, filteredIDR } = taskAnalyticsData;
+    await generateProfessionalExcelReport({
+      tasks: filteredTasks,
+      idrs: filteredIDR,
+      los: los,
+      analytics: taskAnalyticsData,
+      filters: { 
+        entity: anaTaskEntityFilter, 
+        dept: anaTaskDeptFilter, 
+        user: anaTaskUserFilter 
+      },
+      generatedBy: user?.name || user?.email || 'Admin'
+    });
   };
 
   const handleTaskAnaExportPDF = async () => {
-    const { userPerformance, deptWorkload, totalTasks, onTimeTasks, overdueTasks, lateTasks } = taskAnalyticsData;
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(79, 70, 229);
-    doc.text('Task Analytics & Performance', 14, 22);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated on: ${formatDateTime(new Date().toISOString())}`, 14, 30);
-    doc.text(`Filters: Entity: ${anaTaskEntityFilter} | Dept: ${anaTaskDeptFilter} | User: ${anaTaskUserFilter}`, 14, 35);
-
-    // KPI Summary
-    autoTable(doc, {
-      startY: 45,
-      head: [['Key Performance Indicator', 'Value']],
-      body: [
-        ['Total Tasks Analyzed', totalTasks],
-        ['Overall On-Time Rate', totalTasks > 0 ? Math.round((onTimeTasks / totalTasks) * 100) + '%' : '0%'],
-        ['Total Overdue', overdueTasks],
-        ['Total Late Completions', lateTasks]
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [79, 70, 229], fontStyle: 'bold' }
+    const { filteredTasks } = taskAnalyticsData;
+    await generateProfessionalPDFReport({
+      tasks: filteredTasks,
+      analytics: taskAnalyticsData,
+      filters: { 
+        entity: anaTaskEntityFilter, 
+        dept: anaTaskDeptFilter, 
+        user: anaTaskUserFilter 
+      },
+      generatedBy: user?.name || user?.email || 'Admin'
     });
-
-    // User Performance
-    doc.setFontSize(14);
-    doc.setTextColor(0);
-    doc.text('User Performance Analysis', 14, (doc as any).lastAutoTable.finalY + 15);
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 20,
-      head: [['User', 'Total Tasks', 'On-Time', 'Overdue', 'Success %']],
-      body: userPerformance.slice(0, 15).map(u => [u.name, u.total, u.onTime, u.overdue, u.rate + '%']),
-      headStyles: { fillColor: [16, 185, 129] }
-    });
-
-    // Department Workload
-    doc.setFontSize(14);
-    doc.text('Department Workload', 14, (doc as any).lastAutoTable.finalY + 15);
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 20,
-      head: [['Department', 'Active Tasks', 'Completed']],
-      body: deptWorkload.map(d => [d.name, d.count, d.completed]),
-      headStyles: { fillColor: [245, 158, 11] }
-    });
-
-    doc.save(`Task_Analytics_Report_${formatDate(new Date())}.pdf`);
   };
 
 
