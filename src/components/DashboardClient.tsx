@@ -743,8 +743,8 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
 
   const renderResourceCard = (res: any, viewMode: string, themeColors: any, isAdmin: boolean, deleteFn: (id: number) => void) => {
-    const iconSize = viewMode === 'extra-large' ? 32 : viewMode === 'large' ? 24 : 20;
-    const boxSize = viewMode === 'extra-large' ? 64 : viewMode === 'large' ? 56 : 48;
+    const isList = viewMode === 'list' || viewMode === 'details';
+    const isCompact = viewMode === 'tiles' || viewMode === 'list';
     
     const getFileIcon = (res: any, size: number) => {
       if (res.type === 'LINK') return <Link size={size} color="#3b82f6" />;
@@ -768,35 +768,71 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       if (['ppt', 'pptx'].includes(ext)) return "#fffbeb";
       return "#f8fafc";
     };
+
+    const iconSize = isList ? 18 : viewMode === 'extra-large' ? 40 : viewMode === 'large' ? 32 : 24;
+    const boxSize = isList ? 32 : viewMode === 'extra-large' ? 80 : viewMode === 'large' ? 64 : 48;
     
     return (
-      <div key={res.id} style={{ background: "white", border: `1px solid ${themeColors.border}`, borderRadius: "20px", padding: viewMode === 'extra-large' ? "32px" : "24px", display: "flex", flexDirection: "column", gap: "16px", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "#4f46e5"} onMouseOut={e => e.currentTarget.style.borderColor = themeColors.border}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ width: `${boxSize}px`, height: `${boxSize}px`, borderRadius: "12px", background: getIconBg(res), display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {getFileIcon(res, iconSize)}
-          </div>
-          {isAdmin && (
-            <button onClick={(e) => { e.stopPropagation(); deleteFn(res.id); }} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", opacity: 0.6 }}><Trash2 size={16} /></button>
-          )}
-        </div>
-        <div style={{ flex: 1 }}>
-          <h5 style={{ margin: "0 0 8px 0", fontSize: viewMode === 'extra-large' ? "1.125rem" : "1rem", fontWeight: 700, color: themeColors.text, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{res.name}</h5>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            <span style={{ padding: "2px 8px", borderRadius: "6px", background: "#f1f5f9", fontSize: "0.7rem", fontWeight: 700, color: "#475569" }}>{res.category}</span>
-            <span style={{ color: themeColors.textMuted, fontSize: "0.7rem", display: "flex", alignItems: "center", gap: "4px" }}>
-              <Clock size={12} /> {formatDate(res.createdAt)}
-            </span>
-          </div>
-        </div>
-        <button onClick={() => {
+      <div 
+        key={res.id} 
+        style={{ 
+          background: "white", 
+          border: `1px solid ${themeColors.border}`, 
+          borderRadius: isList ? "8px" : "16px", 
+          padding: isList ? "8px 16px" : viewMode === 'extra-large' ? "32px" : "20px", 
+          display: "flex", 
+          flexDirection: isList || viewMode === 'tiles' ? "row" : "column", 
+          alignItems: "center", 
+          gap: "16px", 
+          transition: "all 0.2s",
+          cursor: "pointer",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+        }} 
+        onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.background = "#f8fafc"; }} 
+        onMouseOut={e => { e.currentTarget.style.borderColor = themeColors.border; e.currentTarget.style.background = "white"; }}
+        onClick={() => {
           if (res.type === 'LINK') window.open(res.url, '_blank');
           else {
             const win = window.open();
             if (win) win.document.write(`<iframe src="${res.data}" style="width:100%;height:100%;border:0;top:0;left:0;width:100%;height:100%;" allowfullscreen></iframe>`);
           }
-        }} style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "none", background: "#4f46e5", color: "white", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "12px" }}>
-          <Eye size={18} /> View Resource
-        </button>
+        }}
+      >
+        <div style={{ width: `${boxSize}px`, height: `${boxSize}px`, minWidth: `${boxSize}px`, borderRadius: "10px", background: getIconBg(res), display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {getFileIcon(res, iconSize)}
+        </div>
+        
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h5 style={{ 
+            margin: 0, 
+            fontSize: isList ? "0.875rem" : viewMode === 'extra-large' ? "1.125rem" : "1rem", 
+            fontWeight: 700, 
+            color: themeColors.text, 
+            overflow: "hidden", 
+            textOverflow: "ellipsis", 
+            whiteSpace: "nowrap" 
+          }}>
+            {res.name}
+          </h5>
+          {!isList && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+              <span style={{ fontSize: "0.7rem", color: themeColors.textMuted }}>{res.category}</span>
+              <span style={{ color: themeColors.textMuted, fontSize: "0.7rem", opacity: 0.5 }}>•</span>
+              <span style={{ color: themeColors.textMuted, fontSize: "0.7rem" }}>{formatDate(res.createdAt)}</span>
+            </div>
+          )}
+        </div>
+
+        {isList && (
+           <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "0.75rem", color: themeColors.textMuted }}>
+             <span style={{ whiteSpace: "nowrap" }}>{formatDate(res.createdAt)}</span>
+             <Eye size={16} />
+           </div>
+        )}
+
+        {isAdmin && !isList && (
+           <button onClick={(e) => { e.stopPropagation(); deleteFn(res.id); }} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", opacity: 0.6, alignSelf: "flex-start" }}><Trash2 size={16} /></button>
+        )}
       </div>
     );
   };
@@ -7424,29 +7460,44 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             <>
                               {/* Level 1: Categories */}
                               {!currentLibraryPath && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "20px" }}>
+                                <div style={{ 
+                                  display: libraryViewMode === 'list' || libraryViewMode === 'details' ? "flex" : "grid", 
+                                  flexDirection: "column",
+                                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", 
+                                  gap: libraryViewMode === 'list' || libraryViewMode === 'details' ? "8px" : "20px" 
+                                }}>
                                   {Array.from(new Set(resources.map(r => r.category || "General"))).concat(subfolders.map(sf => sf.category)).filter((v, i, a) => a.indexOf(v) === i).sort().map(cat => {
                                     const resCount = resources.filter(r => (r.category || "General") === cat).length;
                                     const sfCount = subfolders.filter(sf => sf.category === cat).length;
+                                    const isList = libraryViewMode === 'list' || libraryViewMode === 'details';
+                                    
                                     return (
                                       <div 
                                         key={cat}
                                         onClick={() => setCurrentLibraryPath(cat)}
                                         style={{ 
-                                          background: "white", padding: "20px", borderRadius: "16px", border: `1px solid ${t.border}`, 
-                                          cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", 
-                                          gap: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                                          background: "white", 
+                                          padding: isList ? "10px 16px" : "20px", 
+                                          borderRadius: isList ? "8px" : "16px", 
+                                          border: `1px solid ${t.border}`, 
+                                          cursor: "pointer", 
+                                          transition: "all 0.2s", 
+                                          display: "flex", 
+                                          alignItems: "center", 
+                                          gap: "14px", 
+                                          boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
                                         }}
-                                        onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.background = "#f5f3ff"; }}
-                                        onMouseOut={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.background = "white"; }}
+                                        onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.background = "#f5f3ff"; }}
+                                        onMouseOut={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.background = "white"; }}
                                       >
-                                        <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
-                                          <Folder size={24} />
+                                        <div style={{ width: isList ? "32px" : "44px", height: isList ? "32px" : "44px", borderRadius: "8px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
+                                          <Folder size={isList ? 18 : 24} />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                          <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: "0.875rem" }}>{cat}</h4>
-                                          <p style={{ margin: "2px 0 0 0", color: t.textMuted, fontSize: "0.7rem", fontWeight: 600 }}>{resCount + sfCount} items</p>
+                                          <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: isList ? "0.875rem" : "1rem" }}>{cat}</h4>
+                                          {!isList && <p style={{ margin: "2px 0 0 0", color: t.textMuted, fontSize: "0.7rem", fontWeight: 600 }}>{resCount + sfCount} items</p>}
                                         </div>
+                                        {isList && <ChevronRight size={16} color="#94a3b8" />}
                                       </div>
                                     );
                                   })}
@@ -7456,27 +7507,44 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                               {/* Level 2: Subfolders & Root Resources */}
                               {currentLibraryPath && !currentSubfolderId && (
                                 <>
-                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "24px", marginBottom: "32px" }}>
+                                  <div style={{ 
+                                    display: libraryViewMode === 'list' || libraryViewMode === 'details' ? "flex" : "grid", 
+                                    flexDirection: "column",
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", 
+                                    gap: libraryViewMode === 'list' || libraryViewMode === 'details' ? "8px" : "20px",
+                                    marginBottom: "32px"
+                                  }}>
                                     {subfolders.filter(sf => sf.category === currentLibraryPath).sort((a,b) => a.name.localeCompare(b.name)).map(sf => {
                                       const resCount = resources.filter(r => r.subfolderId === sf.id).length;
+                                      const isList = libraryViewMode === 'list' || libraryViewMode === 'details';
+                                      
                                       return (
                                         <div 
                                           key={sf.id}
                                           onClick={() => { setCurrentSubfolderId(sf.id); setCurrentSubfolderPath(sf.name); }}
                                           style={{ 
-                                            background: "white", padding: "20px", borderRadius: "16px", border: `1px solid ${t.border}`, 
-                                            cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "14px", boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
+                                            background: "white", 
+                                            padding: isList ? "10px 16px" : "16px 20px", 
+                                            borderRadius: isList ? "8px" : "16px", 
+                                            border: `1px solid ${t.border}`, 
+                                            cursor: "pointer", 
+                                            transition: "all 0.2s", 
+                                            display: "flex", 
+                                            alignItems: "center", 
+                                            gap: "14px", 
+                                            boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
                                           }}
                                           onMouseOver={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#4f46e5"; }}
                                           onMouseOut={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = t.border; }}
                                         >
-                                          <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
-                                            <Folder size={20} />
+                                          <div style={{ width: isList ? "32px" : "40px", height: isList ? "32px" : "40px", borderRadius: "8px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
+                                            <Folder size={isList ? 16 : 20} />
                                           </div>
-                                          <div>
-                                            <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: "0.875rem" }}>{sf.name}</h4>
-                                            <p style={{ margin: 0, color: t.textMuted, fontSize: "0.7rem", fontWeight: 600 }}>{resCount} Items</p>
+                                          <div style={{ flex: 1 }}>
+                                            <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: isList ? "0.8125rem" : "0.875rem" }}>{sf.name}</h4>
+                                            {!isList && <p style={{ margin: 0, color: t.textMuted, fontSize: "0.7rem", fontWeight: 600 }}>{resCount} items</p>}
                                           </div>
+                                          {isList && <ChevronRight size={14} color="#94a3b8" />}
                                         </div>
                                       );
                                     })}
@@ -7488,7 +7556,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                       <div style={{ width: "4px", height: "16px", background: "#4f46e5", borderRadius: "2px" }} />
                                       Resources in {currentLibraryPath}
                                     </h4>
-                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "24px" }}>
+                                    <div style={{ 
+                                      display: libraryViewMode === 'list' || libraryViewMode === 'details' ? "flex" : "grid", 
+                                      flexDirection: "column",
+                                      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", 
+                                      gap: libraryViewMode === 'list' || libraryViewMode === 'details' ? "8px" : "20px" 
+                                    }}>
                                       {resources.filter(r => (r.category || "General") === currentLibraryPath && !r.subfolderId).map(res => renderResourceCard(res, libraryViewMode, t, isAdmin, handleDeleteResource))}
                                       {resources.filter(r => (r.category || "General") === currentLibraryPath && !r.subfolderId).length === 0 && (
                                         <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px", background: "#f8fafc", borderRadius: "16px", border: `1px dashed ${t.border}` }}>
@@ -7502,7 +7575,12 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                               {/* Level 3: Resources in Subfolder */}
                               {currentSubfolderId && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "24px" }}>
+                                <div style={{ 
+                                  display: libraryViewMode === 'list' || libraryViewMode === 'details' ? "flex" : "grid", 
+                                  flexDirection: "column",
+                                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", 
+                                  gap: libraryViewMode === 'list' || libraryViewMode === 'details' ? "8px" : "20px" 
+                                }}>
                                   {resources.filter(r => r.subfolderId === currentSubfolderId).map(res => renderResourceCard(res, libraryViewMode, t, isAdmin, handleDeleteResource))}
                                   {resources.filter(r => r.subfolderId === currentSubfolderId).length === 0 && (
                                     <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "80px", background: "#f8fafc", borderRadius: "20px", border: `1px dashed ${t.border}` }}>
