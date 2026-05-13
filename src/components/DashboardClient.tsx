@@ -3226,7 +3226,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             setSubfolders(prev => [...prev, newFolder]);
           } else {
             const errorData = await res.json();
-            showNotification(`Failed to create subfolder: ${errorData.message || "Unknown error"}`, "error");
+            showNotification(`Failed to create subfolder: ${errorData.message}${errorData.error ? ` (${errorData.error})` : ""}`, "error");
             setResourcesLoading(false);
             return;
           }
@@ -7250,69 +7250,89 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           />
                         </div>
                         {!isViewer && (
-                          <div style={{ position: "relative", overflow: "hidden", borderRadius: "14px" }}>
-                            <style dangerouslySetInnerHTML={{ __html: `
-                              @keyframes shimmer-btn {
-                                0% { transform: translateX(-100%) skewX(-20deg); }
-                                100% { transform: translateX(250%) skewX(-20deg); }
-                              }
-                              .btn-add-resource:hover .btn-shimmer {
-                                animation: shimmer-btn 1.5s infinite;
-                              }
-                              .btn-add-resource:hover .plus-icon {
-                                transform: rotate(90deg);
-                              }
-                              .btn-add-resource:active {
-                                transform: scale(0.95);
-                              }
-                            `}} />
-                            <button 
-                              onClick={() => {
-                                const cats = settings.masterResourceCategories?.split(',').map(c => c.trim()).filter(Boolean) || [];
-                                if (cats.length > 0) setResourceCategory(cats[0]);
-                                setShowResourceModal(true);
-                              }} 
-                              className="btn-add-resource"
-                              style={{ 
-                                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
-                                color: "white", 
-                                padding: "10px 22px", 
-                                borderRadius: "14px", 
-                                border: "1px solid rgba(255,255,255,0.1)", 
-                                cursor: "pointer", 
-                                fontWeight: 700, 
-                                fontSize: "0.8125rem", 
-                                boxShadow: "0 8px 20px -6px rgba(16, 185, 129, 0.4)", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                gap: "8px",
-                                transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                                position: "relative",
-                                overflow: "hidden"
-                              }}
-                              onMouseOver={e => {
-                                e.currentTarget.style.boxShadow = "0 12px 24px -6px rgba(16, 185, 129, 0.6)";
-                                e.currentTarget.style.transform = "translateY(-2px)";
-                              }}
-                              onMouseOut={e => {
-                                e.currentTarget.style.boxShadow = "0 8px 20px -6px rgba(16, 185, 129, 0.4)";
-                                e.currentTarget.style.transform = "translateY(0)";
-                              }}
-                            >
-                              {/* Shimmer Overlay */}
-                              <div className="btn-shimmer" style={{ 
-                                position: "absolute", 
-                                top: 0, 
-                                left: 0, 
-                                width: "40px", 
-                                height: "100%", 
-                                background: "linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent)", 
-                                pointerEvents: "none" 
-                              }} />
-                              
-                              <Plus className="plus-icon" size={18} style={{ transition: "transform 0.4s ease" }} /> 
-                              <span style={{ position: "relative", zIndex: 1 }}>Add Resource</span>
-                            </button>
+                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                            {isAdmin && (
+                              <button 
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch("/api/users/sync-schema", { method: "POST" });
+                                    if (res.ok) showNotification("Database schema synced successfully!", "success");
+                                    else showNotification("Schema sync failed", "error");
+                                  } catch (err) {
+                                    showNotification("Network error during sync", "error");
+                                  }
+                                }}
+                                style={{ 
+                                  background: "rgba(79, 70, 229, 0.1)", 
+                                  color: "#4f46e5", 
+                                  padding: "10px 18px", 
+                                  borderRadius: "14px", 
+                                  border: "1px solid rgba(79, 70, 229, 0.2)", 
+                                  cursor: "pointer", 
+                                  fontWeight: 700, 
+                                  fontSize: "0.8125rem",
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  gap: "8px"
+                                }}
+                              >
+                                <RefreshCw size={16} /> Sync DB
+                              </button>
+                            )}
+                            <div style={{ position: "relative", overflow: "hidden", borderRadius: "14px" }}>
+                              <style dangerouslySetInnerHTML={{ __html: `
+                                @keyframes shimmer-btn {
+                                  0% { transform: translateX(-100%) skewX(-20deg); }
+                                  100% { transform: translateX(250%) skewX(-20deg); }
+                                }
+                                .btn-add-resource:hover .btn-shimmer {
+                                  animation: shimmer-btn 1.5s infinite;
+                                }
+                                .btn-add-resource:hover .plus-icon {
+                                  transform: rotate(90deg);
+                                }
+                                .btn-add-resource:active {
+                                  transform: scale(0.95);
+                                }
+                              `}} />
+                              <button 
+                                onClick={() => {
+                                  const cats = settings.masterResourceCategories?.split(',').map(c => c.trim()).filter(Boolean) || [];
+                                  if (cats.length > 0) setResourceCategory(cats[0]);
+                                  setShowResourceModal(true);
+                                }} 
+                                className="btn-add-resource"
+                                style={{ 
+                                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
+                                  color: "white", 
+                                  padding: "10px 22px", 
+                                  borderRadius: "14px", 
+                                  border: "1px solid rgba(255,255,255,0.1)", 
+                                  cursor: "pointer", 
+                                  fontWeight: 700, 
+                                  fontSize: "0.8125rem", 
+                                  boxShadow: "0 8px 20px -6px rgba(16, 185, 129, 0.4)", 
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  gap: "8px",
+                                  transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                                  position: "relative",
+                                  overflow: "hidden"
+                                }}
+                              >
+                                <div className="btn-shimmer" style={{ 
+                                  position: "absolute", 
+                                  top: 0, 
+                                  left: 0, 
+                                  width: "40px", 
+                                  height: "100%", 
+                                  background: "linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent)", 
+                                  pointerEvents: "none" 
+                                }} />
+                                <Plus className="plus-icon" size={18} /> 
+                                <span>Add Resource</span>
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -7404,7 +7424,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             <>
                               {/* Level 1: Categories */}
                               {!currentLibraryPath && (
-                                <div style={{ display: libraryViewMode === 'list' ? "block" : "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "24px" }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "20px" }}>
                                   {Array.from(new Set(resources.map(r => r.category || "General"))).concat(subfolders.map(sf => sf.category)).filter((v, i, a) => a.indexOf(v) === i).sort().map(cat => {
                                     const resCount = resources.filter(r => (r.category || "General") === cat).length;
                                     const sfCount = subfolders.filter(sf => sf.category === cat).length;
@@ -7413,19 +7433,19 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                                         key={cat}
                                         onClick={() => setCurrentLibraryPath(cat)}
                                         style={{ 
-                                          background: "white", padding: "24px", borderRadius: "20px", border: `1px solid ${t.border}`, 
-                                          cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", 
-                                          alignItems: "center", gap: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
+                                          background: "white", padding: "20px", borderRadius: "16px", border: `1px solid ${t.border}`, 
+                                          cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", 
+                                          gap: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
                                         }}
-                                        onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                                        onMouseOut={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.transform = "translateY(0)"; }}
+                                        onMouseOver={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.background = "#f5f3ff"; }}
+                                        onMouseOut={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.background = "white"; }}
                                       >
-                                        <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5" }}>
-                                          <Folder size={32} />
+                                        <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
+                                          <Folder size={24} />
                                         </div>
-                                        <div style={{ textAlign: "center" }}>
-                                          <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: "1rem" }}>{cat}</h4>
-                                          <p style={{ margin: "4px 0 0 0", color: t.textMuted, fontSize: "0.75rem", fontWeight: 600 }}>{resCount} Resources | {sfCount} Folders</p>
+                                        <div style={{ flex: 1 }}>
+                                          <h4 style={{ margin: 0, fontWeight: 700, color: t.text, fontSize: "0.875rem" }}>{cat}</h4>
+                                          <p style={{ margin: "2px 0 0 0", color: t.textMuted, fontSize: "0.7rem", fontWeight: 600 }}>{resCount + sfCount} items</p>
                                         </div>
                                       </div>
                                     );
