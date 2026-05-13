@@ -7282,22 +7282,40 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                    <div style={{ background: "#f8fafc", padding: "16px 40px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem" }}>
-                       <button onClick={() => { setCurrentLibraryPath(null); setLibrarySearchQuery(""); }} style={{ color: "#4f46e5", background: "none", border: "none", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
+                       <button onClick={() => { setCurrentLibraryPath(null); setCurrentSubfolderId(null); setCurrentSubfolderPath(null); setLibrarySearchQuery(""); }} style={{ color: "#4f46e5", background: "none", border: "none", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
                          <Home size={16} /> Library
                        </button>
-                       {currentLibraryPath && !librarySearchQuery && (
+                       {currentLibraryPath && (
                          <>
                            <ChevronRight size={14} color="#94a3b8" />
-                           <span style={{ fontWeight: 600, color: t.text }}>{currentLibraryPath}</span>
+                           <button onClick={() => { setCurrentSubfolderId(null); setCurrentSubfolderPath(null); }} style={{ color: currentSubfolderId ? "#4f46e5" : t.text, background: "none", border: "none", fontWeight: 600, cursor: currentSubfolderId ? "pointer" : "default" }}>
+                             {currentLibraryPath}
+                           </button>
+                         </>
+                       )}
+                       {currentSubfolderPath && (
+                         <>
+                           <ChevronRight size={14} color="#94a3b8" />
+                           <span style={{ fontWeight: 600, color: t.text }}>{currentSubfolderPath}</span>
                          </>
                        )}
                        {librarySearchQuery && (
                           <>
                             <ChevronRight size={14} color="#94a3b8" />
-                            <span style={{ fontWeight: 600, color: t.text }}>Search Results: "{librarySearchQuery}"</span>
+                            <span style={{ fontWeight: 600, color: t.text }}>Search: "{librarySearchQuery}"</span>
                           </>
                        )}
                      </div>
+
+                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                       {currentLibraryPath && !currentSubfolderId && !librarySearchQuery && !isViewer && (
+                         <button 
+                           onClick={() => setShowAddSubfolderModal(true)}
+                           style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe", padding: "6px 14px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                         >
+                           <Plus size={14} /> Add Folder
+                         </button>
+                       )}
                      <div style={{ position: "relative" }}>
                         <div style={{ display: "flex", background: "white", padding: "4px", borderRadius: "8px", border: `1px solid ${t.border}`, gap: "4px" }}>
                           <button onClick={() => setLibraryViewMode('tiles')} style={{ padding: "6px", borderRadius: "6px", border: "none", background: libraryViewMode === 'tiles' ? "#f1f5f9" : "transparent", color: libraryViewMode === 'tiles' ? "#4f46e5" : "#64748b", cursor: "pointer" }} title="Tiles View"><LayoutGrid size={18} /></button>
@@ -7324,57 +7342,18 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           </div>
                         )}
                       </div>
-                   </div>
+                    </div>
+                  </div>
 
-                    <div style={{ padding: "40px", flex: 1 }}>
-                      {resourcesLoading ? (
-                        <div style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>
-                          <RefreshCw size={40} className="animate-spin" style={{ margin: "0 auto 16px", opacity: 0.5 }} />
-                          <p>Fetching your library resources...</p>
-                        </div>
-                      ) : (
-                        <>
-                          {/* Breadcrumbs */}
-                          <div style={{ background: "#f8fafc", padding: "12px 0", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${t.border}` }}>
-                             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem" }}>
-                                <button onClick={() => { setCurrentLibraryPath(null); setCurrentSubfolderId(null); setCurrentSubfolderPath(null); setLibrarySearchQuery(""); }} style={{ color: "#4f46e5", background: "none", border: "none", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
-                                  <Home size={16} /> Library
-                                </button>
-                                {currentLibraryPath && (
-                                  <>
-                                    <ChevronRight size={14} color="#94a3b8" />
-                                    <button onClick={() => { setCurrentSubfolderId(null); setCurrentSubfolderPath(null); }} style={{ color: currentSubfolderId ? "#4f46e5" : t.text, background: "none", border: "none", fontWeight: 600, cursor: currentSubfolderId ? "pointer" : "default" }}>
-                                      {currentLibraryPath}
-                                    </button>
-                                  </>
-                                )}
-                                {currentSubfolderPath && (
-                                  <>
-                                    <ChevronRight size={14} color="#94a3b8" />
-                                    <span style={{ fontWeight: 600, color: t.text }}>{currentSubfolderPath}</span>
-                                  </>
-                                )}
-                                {librarySearchQuery && (
-                                   <>
-                                     <ChevronRight size={14} color="#94a3b8" />
-                                     <span style={{ fontWeight: 600, color: t.text }}>Search: "{librarySearchQuery}"</span>
-                                   </>
-                                )}
-                             </div>
-
-                             {currentLibraryPath && !currentSubfolderId && !librarySearchQuery && !isViewer && (
-                               <button 
-                                 onClick={() => {
-                                   setShowAddSubfolderModal(true);
-                                 }}
-                                 style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe", padding: "6px 14px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                               >
-                                 <Plus size={14} /> Add Folder
-                               </button>
-                             )}
-                          </div>
-
-                          {/* Search Results View */}
+                  <div style={{ padding: "40px", flex: 1 }}>
+                    {resourcesLoading ? (
+                      <div style={{ textAlign: "center", padding: "60px", color: t.textMuted }}>
+                        <RefreshCw size={40} className="animate-spin" style={{ margin: "0 auto 16px", opacity: 0.5 }} />
+                        <p>Fetching your library resources...</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Search Results View */}
                           {librarySearchQuery ? (
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "24px" }}>
                                {resources.filter(r => 
