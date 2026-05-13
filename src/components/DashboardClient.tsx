@@ -4030,6 +4030,10 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             style={{ height: "42px", width: "auto", objectFit: "contain", transition: "transform 0.3s ease" }} 
             onMouseOver={e => e.currentTarget.style.transform = "scale(1.05) rotate(-2deg)"}
             onMouseOut={e => e.currentTarget.style.transform = "scale(1) rotate(0)"}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open('https://www.intellicar.in/', '_blank');
+            }}
           />
           <div style={{ height: "28px", width: "1px", background: t.border, opacity: 0.6 }}></div>
           <div style={{ animation: "fade-in 0.5s ease-out" }}>
