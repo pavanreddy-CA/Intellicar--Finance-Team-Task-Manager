@@ -22,7 +22,17 @@ export async function GET(req: NextRequest) {
     const isMasterAdmin = userEmail?.toLowerCase() === "pavanreddy@intellicar.in" || userRole === "ADMIN" || userRole === "ALLOCATOR";
     if (isMasterAdmin) {
       const tasks = await sql`
-        SELECT * FROM "Task"
+        SELECT 
+          id, "taskName", "entityName", "taskType", "departmentName", "requestFrom", 
+          "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus", 
+          "reviewStatus", "completionDate", "reviewCompletionDate", "ownerComments", 
+          "reviewerComments", "createdAt", "updatedAt", "editRequested", "editRequestBy", 
+          "editRequestReason", "deleteRequested", "deleteRequestReason", "linkedRequestId", 
+          "requestStatus", "originalRequestType", "transferStatus", "financeFunction", 
+          "frequency", "editApproved", "deleteRequestedBy", "displayId", "isApproved", 
+          "completedSubmissionAt", "reviewedSubmissionAt", "processedSubmissionAt", 
+          "completedBy", "reviewedBy", "processedBy", "createdByEmail", "captureLO", "source"
+        FROM "Task"
         ORDER BY "createdAt" DESC
       `;
       // Transform for display but preserve raw status for the dropdown
@@ -35,7 +45,17 @@ export async function GET(req: NextRequest) {
 
     // Regular users only see tasks assigned to them or created by them AND approved tasks
     const allTasks = await sql`
-      SELECT * FROM "Task"
+      SELECT 
+        id, "taskName", "entityName", "taskType", "departmentName", "requestFrom", 
+        "ownerName", "reviewerName", "dueDate", "mailLink", "taskStatus", 
+        "reviewStatus", "completionDate", "reviewCompletionDate", "ownerComments", 
+        "reviewerComments", "createdAt", "updatedAt", "editRequested", "editRequestBy", 
+        "editRequestReason", "deleteRequested", "deleteRequestReason", "linkedRequestId", 
+        "requestStatus", "originalRequestType", "transferStatus", "financeFunction", 
+        "frequency", "editApproved", "deleteRequestedBy", "displayId", "isApproved", 
+        "completedSubmissionAt", "reviewedSubmissionAt", "processedSubmissionAt", 
+        "completedBy", "reviewedBy", "processedBy", "createdByEmail", "captureLO", "source"
+      FROM "Task"
       WHERE "isApproved" = TRUE
       ORDER BY "createdAt" DESC
     `;

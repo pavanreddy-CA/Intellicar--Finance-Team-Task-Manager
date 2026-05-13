@@ -1241,18 +1241,24 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       fetchPaymentRequests(true);
     };
 
-    // 1. Auto-refresh every 10 seconds
-    const interval = setInterval(refreshAll, 10000);
+    // 1. Auto-refresh every 40 seconds (increased from 10s and only runs when active)
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshAll();
+      }
+    }, 40000);
 
-    // 2. Refresh on window focus
+    // 2. Refresh on window focus or visibility change
     const handleFocus = () => {
       refreshAll();
     };
 
     window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
     };
   }, []);
 
