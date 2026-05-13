@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo, Fragment } from "react";
 import TaskForm from "@/components/TaskForm";
 import LOForm from "@/components/LOForm";
-import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, UserPlus, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink, Eye, Filter, User, CreditCard, Paperclip, ShieldAlert, Folder, LayoutGrid, List } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Clock, AlertCircle, AlertTriangle, LogOut, Plus, Trash2, Users, UserPlus, Send, Sliders, Mail, Download, FileText, ChevronLeft, ChevronRight, FileSpreadsheet, Lightbulb, Edit2, Quote, UserCheck, BookOpen, Search, ArrowUp, ArrowDown, Home, ChevronDown, Building2, Tag, ShieldCheck, ListFilter, Shield, X, Key, Repeat, Briefcase, RefreshCw, FileCode, Wallet, MessageSquare, Database, Activity, Sun, Moon, Share2, RotateCcw, Zap, Calendar, Rocket, Award, Compass, Trophy, Link, ExternalLink, Eye, Filter, User, CreditCard, Paperclip, ShieldAlert, Folder, LayoutGrid, List, Image as ImageIcon } from "lucide-react";
 import RecurringActivities from "@/components/RecurringActivities";
 import PaymentsCalendar from "@/components/PaymentsCalendar";
 import ExcelJS from "exceljs";
@@ -749,7 +749,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     const getFileIcon = (res: any, size: number) => {
       if (res.type === 'LINK') return <Link size={size} color="#3b82f6" />;
       const ext = res.data?.split('.').pop()?.toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return <Image size={size} color="#10b981" />;
+      if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return <ImageIcon size={size} color="#10b981" />;
       if (['pdf'].includes(ext)) return <FileText size={size} color="#ef4444" />;
       if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileSpreadsheet size={size} color="#059669" />;
       if (['doc', 'docx'].includes(ext)) return <FileText size={size} color="#2563eb" />;
