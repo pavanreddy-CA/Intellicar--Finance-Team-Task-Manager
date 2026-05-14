@@ -46,6 +46,7 @@ export const getEmailFromName = (name: string | null) => {
     "Chandana": "chandanak@intellicar.in",
     "Nikhat": "nikhat@intellicar.in",
     "Venkat": "venkata.g@intellicar.in",
+    "Venkat Gottapu": "venkata.g@intellicar.in",
     "Sidharth Saneja": "saneja@intellicar.in",
     "Saneja": "saneja@intellicar.in"
   };
