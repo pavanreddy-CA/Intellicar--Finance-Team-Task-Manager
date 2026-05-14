@@ -2686,8 +2686,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     return `${day}-${month}-${year}`;
   };
   const taskAnalyticsData = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const todayNum = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    const isDateBeforeToday = (dateStr: string | Date) => {
+      const d = new Date(dateStr);
+      const taskDateNum = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      return taskDateNum < todayNum;
+    };
+
+    const isDateSameOrBefore = (dateStr1: string | Date, dateStr2: string | Date) => {
+      const d1 = new Date(dateStr1);
+      const d2 = new Date(dateStr2);
+      const n1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate()).getTime();
+      const n2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate()).getTime();
+      return n1 <= n2;
+    };
 
     const filteredTasks = tasks.filter(t => {
       const matchesEntity = anaTaskEntityFilter === 'ALL' || t.entityName === anaTaskEntityFilter;
@@ -2707,27 +2721,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     
     const onTimeTasks = filteredTasks.filter(t => {
       if (!isFinished(t) || !t.dueDate || !t.completionDate) return false;
-      const d = new Date(t.dueDate);
-      d.setHours(0, 0, 0, 0);
-      const c = new Date(t.completionDate);
-      c.setHours(0, 0, 0, 0);
-      return c <= d;
+      return isDateSameOrBefore(t.completionDate, t.dueDate);
     }).length;
 
     const overdueTasks = filteredTasks.filter(t => {
       if (isFinished(t) || !t.dueDate) return false;
-      const d = new Date(t.dueDate);
-      d.setHours(0, 0, 0, 0);
-      return d < today;
+      return isDateBeforeToday(t.dueDate);
     }).length;
 
     const lateTasks = filteredTasks.filter(t => {
       if (!isFinished(t) || !t.dueDate || !t.completionDate) return false;
-      const d = new Date(t.dueDate);
-      d.setHours(0, 0, 0, 0);
-      const c = new Date(t.completionDate);
-      c.setHours(0, 0, 0, 0);
-      return c > d;
+      return !isDateSameOrBefore(t.completionDate, t.dueDate);
     }).length;
 
     const totalIDR = filteredIDR.length;
@@ -2741,27 +2745,17 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       
       const uOnTime = uTasks.filter(t => {
         if (!isFinished(t) || !t.dueDate || !t.completionDate) return false;
-        const d = new Date(t.dueDate);
-        d.setHours(0, 0, 0, 0);
-        const c = new Date(t.completionDate);
-        c.setHours(0, 0, 0, 0);
-        return c <= d;
+        return isDateSameOrBefore(t.completionDate, t.dueDate);
       }).length;
 
       const uLate = uTasks.filter(t => {
         if (!isFinished(t) || !t.dueDate || !t.completionDate) return false;
-        const d = new Date(t.dueDate);
-        d.setHours(0, 0, 0, 0);
-        const c = new Date(t.completionDate);
-        c.setHours(0, 0, 0, 0);
-        return c > d;
+        return !isDateSameOrBefore(t.completionDate, t.dueDate);
       }).length;
 
       const uOverdue = uTasks.filter(t => {
         if (isFinished(t) || !t.dueDate) return false;
-        const d = new Date(t.dueDate);
-        d.setHours(0, 0, 0, 0);
-        return d < today;
+        return isDateBeforeToday(t.dueDate);
       }).length;
       
       return {
