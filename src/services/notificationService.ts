@@ -1,6 +1,6 @@
-
 import { sendEmail, getEmailFromName } from '@/lib/email';
 import { getBaseTemplate } from './emailTemplates';
+import { getDb } from '@/lib/db';
 
 // Types for different notification payloads
 export type NotificationType = 
@@ -14,12 +14,32 @@ export type NotificationType =
   | 'LO_ACKNOWLEDGED';
 
 /**
+ * Resolves an email address from a name by checking the database first,
+ * then falling back to the legacy hardcoded map.
+ */
+async function resolveEmail(name: string | null, providedEmail?: string | null): Promise<string | null> {
+  if (providedEmail && providedEmail.includes('@')) return providedEmail;
+  if (!name || name === "Not Applicable" || name === "Choose") return null;
+
+  try {
+    const sql = getDb();
+    const users = await sql`SELECT email FROM "User" WHERE name = ${name} LIMIT 1`;
+    if (users.length > 0) return users[0].email;
+  } catch (error) {
+    console.error(`[NotificationEngine] Database lookup failed for ${name}:`, error);
+  }
+
+  // Fallback to hardcoded map in taskUtils
+  return getEmailFromName(name);
+}
+
+/**
  * The core Notification Service.
  * This is designed to be called asynchronously and silently.
  */
 export async function triggerNotification(type: NotificationType, payload: any) {
   try {
-    const emailData = buildEmailData(type, payload);
+    const emailData = await buildEmailData(type, payload);
     if (!emailData || !emailData.to) return;
 
     const html = getBaseTemplate({
@@ -54,13 +74,13 @@ function formatDate(date: any) {
   return `${day}-${month}-${year}`;
 }
 
-function buildEmailData(type: NotificationType, payload: any) {
+async function buildEmailData(type: NotificationType, payload: any) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://v0-finpulse.vercel.app';
 
   switch (type) {
     case 'TASK_ASSIGNED':
       return {
-        to: payload.ownerMailId || getEmailFromName(payload.ownerName),
+        to: await resolveEmail(payload.ownerName, payload.ownerMailId),
         subject: `New Task Assigned: ${payload.taskName}`,
         title: 'A new task has been assigned to you',
         badgeText: 'New Assignment',
@@ -76,7 +96,7 @@ function buildEmailData(type: NotificationType, payload: any) {
 
     case 'TASK_COMPLETED':
       return {
-        to: payload.reviewerEmail || getEmailFromName(payload.reviewerName),
+        to: await resolveEmail(payload.reviewerName, payload.reviewerEmail),
         subject: `Task Ready for Review: ${payload.taskName}`,
         title: 'A task has been completed and is ready for review',
         badgeText: 'Review Required',
@@ -106,7 +126,7 @@ function buildEmailData(type: NotificationType, payload: any) {
 
     case 'TASK_REJECTED':
       return {
-        to: payload.ownerMailId || getEmailFromName(payload.ownerName),
+        to: await resolveEmail(payload.ownerName, payload.ownerMailId),
         subject: `Task Returned: ${payload.taskName}`,
         title: 'A task has been returned for further action',
         badgeText: 'Action Required',
@@ -121,7 +141,7 @@ function buildEmailData(type: NotificationType, payload: any) {
 
     case 'REQUEST_SUBMITTED':
       return {
-        to: payload.to || "pavanreddy@intellicar.in", // Default to admin if no specific to provided
+        to: payload.to || "pavanreddy@intellicar.in", 
         subject: `New Inter-Dept Request: ${payload.natureOfRequest}`,
         title: 'A new inter-departmental request has been submitted',
         badgeText: 'New Request',
@@ -153,7 +173,7 @@ function buildEmailData(type: NotificationType, payload: any) {
 
     case 'LO_CREATED':
       return {
-        to: getEmailFromName(payload.committedBy),
+        to: await resolveEmail(payload.committedBy),
         subject: `New Learning Opportunity: ${payload.entity}`,
         title: 'A new learning finding has been recorded for you',
         badgeText: 'New Finding',
@@ -169,7 +189,7 @@ function buildEmailData(type: NotificationType, payload: any) {
 
     case 'LO_ACKNOWLEDGED':
       return {
-        to: payload.createdByEmail || getEmailFromName(payload.identifiedBy),
+        to: payload.createdByEmail || await resolveEmail(payload.identifiedBy),
         subject: `Learning Acknowledged: ${payload.entity}`,
         title: 'A learning finding has been acknowledged by the user',
         badgeText: 'Acknowledged',
