@@ -5113,9 +5113,23 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           </button>
                           <button
                             onClick={() => { handleTaskAnaExportPDF(); setShowTaskAnaDownloadDropdown(false); }}
-                            style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}
+                            style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: `1px solid ${t.border}` }}
                           >
                             <FileText size={18} /> Export as PDF
+                          </button>
+                          <button
+                            onClick={() => { 
+                              setAnaShareConfig({
+                                ...anaShareConfig, 
+                                reportType: 'task', 
+                                subject: `Task Analytics Report - ${new Date().toLocaleDateString('en-IN')}`
+                              });
+                              setShowAnaShareModal(true); 
+                              setShowTaskAnaDownloadDropdown(false); 
+                            }}
+                            style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#6366f1", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}
+                          >
+                            <Mail size={18} /> Share via Email
                           </button>
                         </div>
                       )}
@@ -10875,11 +10889,107 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                     <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: t.text }}>Bulk Data Import</h4>
                     <p style={{ color: t.textMuted, marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. All imports follow a strictly defined schema.</p>
 
-                    {/* Recent Import History Section - MOVED TO TOP */}
-                    <div style={{ marginBottom: "40px", padding: "24px", background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderRadius: "20px", border: `1px solid ${t.border}` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
+                      
+                      {/* Task Import Section */}
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#eff6ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <FileSpreadsheet size={24} color="#3b82f6" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Task Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Standard one-time task uploads.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('tasks')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #3b82f6", background: t.card, color: "#3b82f6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#3b82f6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'tasks')} />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Recurring Import Section */}
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#f5f3ff", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Repeat size={24} color="#8b5cf6" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Recurring Task Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Master Recurring Template data.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('recurring')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #8b5cf6", background: t.card, color: "#8b5cf6", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#8b5cf6", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'recurring')} />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* LO Import Section */}
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#fef2f2", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Lightbulb size={24} color="#ef4444" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>LO Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Learning Opportunities tracker.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('lo')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #ef4444", background: t.card, color: "#ef4444", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#ef4444", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'lo')} />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Payments Import Section */}
+                      <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                        <div style={{ background: "#ecfdf5", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Wallet size={24} color="#10b981" />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: "0 0 4px 0", fontSize: "1rem", fontWeight: 700 }}>Payments Bulk Import</h4>
+                          <p style={{ margin: 0, fontSize: "0.8125rem", color: t.textMuted }}>Master Payments Sheet data.</p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
+                          <button 
+                            onClick={() => downloadBulkTemplate('payments')}
+                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #10b981", background: t.card, color: "#10b981", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                          >
+                            <Download size={14} /> Template
+                          </button>
+                          <label style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#10b981", color: "white", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+                            <Plus size={14} /> Upload Excel
+                            <input type="file" accept=".xlsx" hidden onChange={(e) => handleExcelBulkUpload(e, 'payments')} />
+                          </label>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Recent Import History Section - MOVED TO BOTTOM */}
+                    <div style={{ marginTop: "40px", padding: "24px", background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderRadius: "20px", border: `1px solid ${t.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
                         <History size={20} color="#6366f1" />
-                        <h4 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Recent Import History (Last 5)</h4>
+                        <h4 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Recent Import History (Last 10)</h4>
                       </div>
                       
                       {importHistory.length > 0 ? (
@@ -10933,8 +11043,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                       )}
                     </div>
-                    
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
                       
                       {/* Task Import Section */}
                       <div style={{ padding: "24px", border: `1px solid ${t.border}`, borderRadius: "16px", background: t.card, display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
