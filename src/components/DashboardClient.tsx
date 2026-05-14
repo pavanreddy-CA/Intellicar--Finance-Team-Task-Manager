@@ -6675,7 +6675,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </button>
                 </div>
 
-                <div style={{ position: "relative" }}>
+                <div style={{ position: "relative", marginLeft: "auto" }}>
                   <button
                     onClick={() => setShowTaskAnaDownloadDropdown(!showTaskAnaDownloadDropdown)}
                     style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", border: "none", color: "white", cursor: "pointer", padding: "0 18px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", fontWeight: 700, boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
@@ -10891,6 +10891,65 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                     <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: t.text }}>Bulk Data Import</h4>
                     <p style={{ color: t.textMuted, marginBottom: "32px" }}>Download the template, fill it with your data, and upload it back. All imports follow a strictly defined schema.</p>
+
+                    {/* Recent Import History Section - MOVED TO TOP */}
+                    <div style={{ marginBottom: "40px", padding: "24px", background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderRadius: "20px", border: `1px solid ${t.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                        <History size={20} color="#6366f1" />
+                        <h4 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Recent Import History (Last 5)</h4>
+                      </div>
+                      
+                      {importHistory.length > 0 ? (
+                        <div style={{ background: t.card, borderRadius: "16px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+                            <thead>
+                              <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", textAlign: "left" }}>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Date & Time</th>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Type</th>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Status</th>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {importHistory.map((h: any) => (
+                                <tr key={h.id} style={{ borderBottom: `1px solid ${t.border}` }}>
+                                  <td style={{ padding: "14px 20px", color: t.text }}>{new Date(h.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                                  <td style={{ padding: "14px 20px", color: t.text, textTransform: 'capitalize' }}>{h.type}</td>
+                                  <td style={{ padding: "14px 20px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                      <span style={{ color: "#10b981", fontWeight: 700 }}>{h.successCount} Success</span>
+                                      {h.errorCount > 0 && (
+                                        <span style={{ color: "#ef4444", fontWeight: 700 }}>{h.errorCount} Failed</span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: "14px 20px" }}>
+                                    {h.errorCount > 0 ? (
+                                      <button 
+                                        onClick={() => {
+                                          const errors = typeof h.errors === 'string' ? JSON.parse(h.errors) : h.errors;
+                                          downloadErrorReport(errors, h.type);
+                                        }}
+                                        style={{ background: "none", border: "none", color: "#4f46e5", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: 0 }}
+                                      >
+                                        <Download size={14} /> Download Error Report
+                                      </button>
+                                    ) : (
+                                      <span style={{ color: t.textMuted, fontSize: "0.8125rem" }}>No Errors</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div style={{ padding: "40px", textAlign: "center", background: t.card, borderRadius: "16px", border: `1px dashed ${t.border}` }}>
+                          <History size={32} color={t.textMuted} style={{ opacity: 0.3, marginBottom: "12px" }} />
+                          <p style={{ margin: 0, color: t.textMuted, fontSize: "0.9rem" }}>No recent imports found. Start by uploading a file below.</p>
+                        </div>
+                      )}
+                    </div>
                     
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
                       
@@ -10988,58 +11047,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                     </div>
 
-                    {/* Recent Error Reports Section */}
-                    {importHistory.length > 0 && (
-                      <div style={{ marginTop: "40px", borderTop: `1px solid ${t.border}`, paddingTop: "32px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-                          <History size={20} color="#6366f1" />
-                          <h4 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Recent Import History (Last 5)</h4>
-                        </div>
-                        <div style={{ background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderRadius: "20px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
-                            <thead>
-                              <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", textAlign: "left" }}>
-                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Date & Time</th>
-                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Type</th>
-                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Status</th>
-                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {importHistory.map((h: any) => (
-                                <tr key={h.id} style={{ borderBottom: `1px solid ${t.border}` }}>
-                                  <td style={{ padding: "14px 20px", color: t.text }}>{new Date(h.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                                  <td style={{ padding: "14px 20px", color: t.text, textTransform: 'capitalize' }}>{h.type}</td>
-                                  <td style={{ padding: "14px 20px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                      <span style={{ color: "#10b981", fontWeight: 700 }}>{h.successCount} Success</span>
-                                      {h.errorCount > 0 && (
-                                        <span style={{ color: "#ef4444", fontWeight: 700 }}>{h.errorCount} Failed</span>
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td style={{ padding: "14px 20px" }}>
-                                    {h.errorCount > 0 ? (
-                                      <button 
-                                        onClick={() => {
-                                          const errors = typeof h.errors === 'string' ? JSON.parse(h.errors) : h.errors;
-                                          downloadErrorReport(errors, h.type);
-                                        }}
-                                        style={{ background: "none", border: "none", color: "#4f46e5", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: 0 }}
-                                      >
-                                        <Download size={14} /> Download Error Report
-                                      </button>
-                                    ) : (
-                                      <span style={{ color: t.textMuted, fontSize: "0.8125rem" }}>No Errors</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
