@@ -1850,14 +1850,25 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       });
 
       if (res.ok) {
-        showNotification(`${validRows.length} records imported successfully!`);
-        setImportPreview(null);
-        if (type === 'tasks') fetchTasks(true); 
-        else if (type === 'lo') fetchLOs();
-        else if (type === 'employees') fetchUsersList();
-        else fetchTasks(true); 
+        const result = await res.json();
+        if (type === 'tasks' && result.errorCount > 0) {
+          showNotification(`${result.successCount} tasks imported. ${result.errorCount} failed name verification.`, "warning");
+          // Update preview with server-side errors so user can download the report
+          setImportPreview(prev => prev ? {
+            ...prev,
+            errors: [...prev.errors, ...result.errors.map((e: any) => ({ row: e.row, msg: e.error }))]
+          } : null);
+          fetchTasks(true);
+        } else {
+          showNotification(`${type === 'payments' || type === 'employees' ? (result.count || validRows.length) : (result.successCount || validRows.length)} records imported successfully!`);
+          setImportPreview(null);
+          if (type === 'tasks') fetchTasks(true); 
+          else if (type === 'lo') fetchLOs();
+          else if (type === 'employees') fetchUsersList();
+          else fetchTasks(true); 
+        }
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         showNotification(errorData.message || "Import failed. Please check data format.", "error");
       }
     } catch (err) {
