@@ -1745,6 +1745,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           ownerName: values[7],
           reviewerName: values[8],
           dueDate: parseExcelDate(values[9]),
+          originalRowNumber: rowNumber,
         });
       } else if (type === 'lo') {
         checkRequired(1, "Entity");
@@ -1756,6 +1757,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           identifiedBy: values[4],
           committedBy: values[5],
           resolutionProvided: values[6],
+          originalRowNumber: rowNumber,
         });
       } else if (type === 'recurring') {
         checkRequired(1, "Task Pattern");

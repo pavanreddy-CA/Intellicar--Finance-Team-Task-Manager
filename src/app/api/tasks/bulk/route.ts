@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     for (let i = 0; i < data.length; i++) {
       const task = data[i];
-      const rowNum = i + 1;
+      const rowNum = task.originalRowNumber || (i + 1);
 
       try {
         // 2. Validation Logic
