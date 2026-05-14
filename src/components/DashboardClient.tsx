@@ -2880,8 +2880,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       const reviewerEmail = getEmailFromName(t.reviewerName);
       const isOwner = ownerEmail?.toLowerCase() === user?.email?.toLowerCase();
       const isReviewer = (reviewerEmail || "").toLowerCase() === user?.email?.toLowerCase();
-      const isCreator = (t.createdByEmail || "").toLowerCase() === user?.email?.toLowerCase();
-      if (!isOwner && !isReviewer && !isCreator) return false;
+      if (!isOwner && !isReviewer) return false;
     }
 
     // Basic Approval Filter
