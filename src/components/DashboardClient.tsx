@@ -243,6 +243,22 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [anaTaskEntityFilter, setAnaTaskEntityFilter] = useState('ALL');
   const [anaTaskDeptFilter, setAnaTaskDeptFilter] = useState('ALL');
   const [anaTaskUserFilter, setAnaTaskUserFilter] = useState('ALL');
+  
+  // Financial Year Helpers
+  const getFYDates = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); 
+    const startYear = month >= 3 ? year : year - 1;
+    return {
+      start: `${startYear}-04-01`,
+      end: `${startYear + 1}-03-31`
+    };
+  };
+  const [anaStartDate, setAnaStartDate] = useState(getFYDates().start);
+  const [anaEndDate, setAnaEndDate] = useState(getFYDates().end);
+
+  const [importHistory, setImportHistory] = useState<any[]>([]);
   const [showTaskAnaDownloadDropdown, setShowTaskAnaDownloadDropdown] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeMainView, setActiveMainView] = useState<'DASHBOARD' | 'ADMIN_MATRIX'>('DASHBOARD');
@@ -1241,6 +1257,18 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  const fetchImportHistory = async () => {
+    try {
+      const res = await fetch("/api/tasks/bulk");
+      if (res.ok) {
+        const data = await res.json();
+        setImportHistory(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch import history", error);
+    }
+  };
+
   useEffect(() => {
     fetchCurrentUser();
     fetchTasks();
@@ -1250,6 +1278,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     fetchSettings();
     fetchUsersList(); 
     fetchResources();
+    if (isAdmin) fetchImportHistory();
   }, [isAdmin]);
 
   // LIVE SYNC: 10-Second Auto-Refresh & Window Focus Revalidation
@@ -1869,9 +1898,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
           else if (type === 'employees') fetchUsersList();
           else fetchTasks(true); 
         }
+        // Always refresh history if admin
+        if (isAdmin) fetchImportHistory();
       } else {
         const errorData = await res.json().catch(() => ({}));
         showNotification(errorData.message || "Import failed. Please check data format.", "error");
+        if (isAdmin) fetchImportHistory(); // History might still have logged the failure
       }
     } catch (err) {
       showNotification("An error occurred during import.", "error");
@@ -1880,9 +1912,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
-  const downloadErrorReport = async () => {
-    if (!importPreview || importPreview.errors.length === 0) return;
-    const { type, rows, errors } = importPreview;
+  const downloadErrorReport = async (providedErrors?: any[], providedType?: string) => {
+    const previewData = importPreview || { type: '', rows: [], errors: [] };
+    const type = providedType || previewData.type;
+    const errors = providedErrors || previewData.errors;
+    const rows = previewData.rows;
+    
+    if (!errors || errors.length === 0) return;
     
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Errors to Fix');
@@ -1941,18 +1977,30 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     headRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
 
     const errorRowMap = new Map();
+    const rowDataMap = new Map();
     errors.forEach(e => {
-        const existing = errorRowMap.get(e.row) || [];
-        errorRowMap.set(e.row, [...existing, e.msg]);
+        const rowNumber = e.row;
+        const msg = e.msg || e.error || "Unknown Error";
+        const existing = errorRowMap.get(rowNumber) || [];
+        errorRowMap.set(rowNumber, [...existing, msg]);
+        if (e.rowData) rowDataMap.set(rowNumber, e.rowData);
     });
 
-    rows.forEach((row, idx) => {
-        const rowNumber = idx + 2;
-        if (errorRowMap.has(rowNumber)) {
-            const errorMsg = errorRowMap.get(rowNumber).join('; ');
-            worksheet.addRow({ ...row, error: errorMsg });
-        }
-    });
+    if (rows && rows.length > 0) {
+        rows.forEach((row, idx) => {
+            const rowNumber = idx + 2;
+            if (errorRowMap.has(rowNumber)) {
+                const errorMsg = errorRowMap.get(rowNumber).join('; ');
+                worksheet.addRow({ ...row, error: errorMsg });
+            }
+        });
+    } else {
+        // Fallback for historical reports where live 'rows' array is gone
+        errorRowMap.forEach((msgs, rowNum) => {
+            const rowData = rowDataMap.get(rowNum) || {};
+            worksheet.addRow({ ...rowData, error: msgs.join('; ') });
+        });
+    }
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `Fix_Errors_${type}_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -2734,13 +2782,34 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       const matchesEntity = anaTaskEntityFilter === 'ALL' || t.entityName === anaTaskEntityFilter;
       const matchesDept = anaTaskDeptFilter === 'ALL' || t.departmentName === anaTaskDeptFilter;
       const matchesUser = anaTaskUserFilter === 'ALL' || t.ownerName === anaTaskUserFilter || (t.reviewerName || "") === anaTaskUserFilter;
-      return matchesEntity && matchesDept && matchesUser;
+      
+      const tDate = t.dueDate ? new Date(t.dueDate) : new Date(t.createdAt);
+      const start = new Date(anaStartDate);
+      const end = new Date(anaEndDate);
+      // Normalize to midnight for comparison
+      const tn = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime();
+      const sn = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+      const en = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+      
+      const matchesDate = tn >= sn && tn <= en;
+      
+      return matchesEntity && matchesDept && matchesUser && matchesDate;
     });
 
     const filteredIDR = externalRequests.filter(r => {
       const matchesDept = anaTaskDeptFilter === 'ALL' || r.departmentName === anaTaskDeptFilter;
       const matchesUser = anaTaskUserFilter === 'ALL' || r.requesterEmail.toLowerCase().includes(anaTaskUserFilter.toLowerCase());
-      return matchesDept && matchesUser;
+      
+      const rDate = new Date(r.createdAt);
+      const start = new Date(anaStartDate);
+      const end = new Date(anaEndDate);
+      const rn = new Date(rDate.getFullYear(), rDate.getMonth(), rDate.getDate()).getTime();
+      const sn = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+      const en = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+      
+      const matchesDate = rn >= sn && rn <= en;
+
+      return matchesDept && matchesUser && matchesDate;
     });
 
     const totalTasks = filteredTasks.length;
@@ -6566,6 +6635,44 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       {uniqueTaskOwners.map(user => <option key={user} value={user} style={{ background: t.card, color: t.text }}>{user}</option>)}
                     </select>
                   </div>
+
+                  {/* Date Filters */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
+                    <Calendar size={16} color={t.textMuted} />
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginRight: "4px" }}>FROM</span>
+                    <input 
+                      type="date"
+                      value={anaStartDate}
+                      onChange={(e) => setAnaStartDate(e.target.value)}
+                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
+                    <Calendar size={16} color={t.textMuted} />
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginRight: "4px" }}>TO</span>
+                    <input 
+                      type="date"
+                      value={anaEndDate}
+                      onChange={(e) => setAnaEndDate(e.target.value)}
+                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setAnaTaskEntityFilter('ALL');
+                      setAnaTaskDeptFilter('ALL');
+                      setAnaTaskUserFilter('ALL');
+                      const fy = getFYDates();
+                      setAnaStartDate(fy.start);
+                      setAnaEndDate(fy.end);
+                    }}
+                    title="Reset all filters"
+                    style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", border: `1px solid ${t.border}`, color: t.text, cursor: "pointer", padding: "8px 16px", borderRadius: "12px", fontSize: "0.8125rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", transition: "all 0.2s" }}
+                  >
+                    <RotateCcw size={14} /> Reset Filters
+                  </button>
                 </div>
 
                 <div style={{ position: "relative" }}>
@@ -10880,6 +10987,59 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                       </div>
 
                     </div>
+
+                    {/* Recent Error Reports Section */}
+                    {importHistory.length > 0 && (
+                      <div style={{ marginTop: "40px", borderTop: `1px solid ${t.border}`, paddingTop: "32px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                          <History size={20} color="#6366f1" />
+                          <h4 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Recent Import History (Last 5)</h4>
+                        </div>
+                        <div style={{ background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderRadius: "20px", border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+                            <thead>
+                              <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", textAlign: "left" }}>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Date & Time</th>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Type</th>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Status</th>
+                                <th style={{ padding: "14px 20px", fontWeight: 700, color: t.textMuted }}>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {importHistory.map((h: any) => (
+                                <tr key={h.id} style={{ borderBottom: `1px solid ${t.border}` }}>
+                                  <td style={{ padding: "14px 20px", color: t.text }}>{new Date(h.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                                  <td style={{ padding: "14px 20px", color: t.text, textTransform: 'capitalize' }}>{h.type}</td>
+                                  <td style={{ padding: "14px 20px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                      <span style={{ color: "#10b981", fontWeight: 700 }}>{h.successCount} Success</span>
+                                      {h.errorCount > 0 && (
+                                        <span style={{ color: "#ef4444", fontWeight: 700 }}>{h.errorCount} Failed</span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: "14px 20px" }}>
+                                    {h.errorCount > 0 ? (
+                                      <button 
+                                        onClick={() => {
+                                          const errors = typeof h.errors === 'string' ? JSON.parse(h.errors) : h.errors;
+                                          downloadErrorReport(errors, h.type);
+                                        }}
+                                        style={{ background: "none", border: "none", color: "#4f46e5", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: 0 }}
+                                      >
+                                        <Download size={14} /> Download Error Report
+                                      </button>
+                                    ) : (
+                                      <span style={{ color: t.textMuted, fontSize: "0.8125rem" }}>No Errors</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -12136,7 +12296,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               <div>
                 {importPreview.errors.length > 0 && (
                   <button 
-                    onClick={downloadErrorReport}
+                    onClick={() => downloadErrorReport()}
                     style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid #ef4444", background: "white", color: "#ef4444", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem" }}
                   >
                     <Download size={16} /> Download Error Report

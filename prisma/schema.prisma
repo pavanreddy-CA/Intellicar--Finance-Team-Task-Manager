@@ -357,3 +357,14 @@ model playing_with_neon {
   name  String
   value Float? @db.Real
 }
+
+model ImportHistory {
+  id           Int      @id @default(autoincrement())
+  type         String   // 'tasks', 'lo', etc.
+  fileName     String?
+  successCount Int
+  errorCount   Int
+  errors       Json?    // Store the errors array
+  createdAt    DateTime @default(now())
+  createdBy    String?  // Email of uploader
+}

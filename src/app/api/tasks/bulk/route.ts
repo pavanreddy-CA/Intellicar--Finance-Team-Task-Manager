@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const validNames = new Set(validUsers.map(u => u.name.toLowerCase().trim()));
 
     let successCount = 0;
-    const errors: { row: number; taskName: string; error: string }[] = [];
+    const errors: { row: number; taskName: string; error: string; rowData?: any }[] = [];
     
     const now = new Date();
     const monthStr = String(now.getMonth() + 1).padStart(2, '0');
@@ -46,13 +46,13 @@ export async function POST(req: NextRequest) {
 
         // Check Owner
         if (!validNames.has(ownerName.toLowerCase())) {
-          errors.push({ row: rowNum, taskName: task.taskName, error: `Owner "${ownerName}" not found in User Management.` });
+          errors.push({ row: rowNum, taskName: task.taskName, error: `Owner "${ownerName}" not found in User Management.`, rowData: task });
           continue;
         }
 
         // Check Reviewer (if applicable)
         if (reviewerName !== "Not Applicable" && !validNames.has(reviewerName.toLowerCase())) {
-          errors.push({ row: rowNum, taskName: task.taskName, error: `Reviewer "${reviewerName}" not found in User Management.` });
+          errors.push({ row: rowNum, taskName: task.taskName, error: `Reviewer "${reviewerName}" not found in User Management.`, rowData: task });
           continue;
         }
 
@@ -92,8 +92,28 @@ export async function POST(req: NextRequest) {
         successCount++;
       } catch (rowError: any) {
         console.error(`Error processing row ${rowNum}:`, rowError);
-        errors.push({ row: rowNum, taskName: task.taskName, error: rowError.message || "Database error" });
+        errors.push({ row: rowNum, taskName: task.taskName, error: rowError.message || "Database error", rowData: task });
       }
+    }
+
+    // 4. Save to history
+    try {
+      await sql`
+        INSERT INTO "ImportHistory" ("type", "successCount", "errorCount", "errors", "createdBy", "createdAt")
+        VALUES ('tasks', ${successCount}, ${errors.length}, ${JSON.stringify(errors)}, ${userEmail}, NOW())
+      `;
+      // Keep only latest 5
+      await sql`
+        DELETE FROM "ImportHistory"
+        WHERE id NOT IN (
+          SELECT id FROM "ImportHistory"
+          WHERE "type" = 'tasks'
+          ORDER BY "createdAt" DESC
+          LIMIT 5
+        ) AND "type" = 'tasks'
+      `;
+    } catch (hError) {
+      console.error("Failed to save import history:", hError);
     }
 
     return NextResponse.json({ 
@@ -106,5 +126,28 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Bulk task import failed", error);
     return NextResponse.json({ message: "Failed to import tasks", error: error.message }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const sql = getDb();
+    const session = await getServerSession();
+    if (!session || (session.user as any)?.role !== 'ADMIN') {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const history = await sql`
+      SELECT id, "type", "successCount", "errorCount", "createdAt", "createdBy", "errors"
+      FROM "ImportHistory"
+      WHERE "type" = 'tasks'
+      ORDER BY "createdAt" DESC
+      LIMIT 5
+    `;
+
+    return NextResponse.json(history);
+  } catch (error: any) {
+    console.error("Failed to fetch import history", error);
+    return NextResponse.json({ message: "Failed to fetch history" }, { status: 500 });
   }
 }
