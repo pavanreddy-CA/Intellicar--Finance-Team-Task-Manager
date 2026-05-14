@@ -6706,40 +6706,6 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               </div>
             </div>
 
-                  {showTaskAnaDownloadDropdown && (
-                    <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: t.card, border: `1px solid ${t.border}`, borderRadius: "14px", overflow: "hidden", minWidth: "210px", boxShadow: isDarkMode ? "0 16px 40px rgba(0,0,0,0.4)" : "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100 }}>
-                      <button
-                        onClick={() => { handleTaskAnaExportExcel(); setShowTaskAnaDownloadDropdown(false); }}
-                        style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#10b981", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: `1px solid ${t.border}` }}
-                      >
-                        <FileSpreadsheet size={18} /> Export as Excel
-                      </button>
-                      <button
-                        onClick={() => { handleTaskAnaExportPDF(); setShowTaskAnaDownloadDropdown(false); }}
-                        style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: `1px solid ${t.border}` }}
-                      >
-                        <FileText size={18} /> Export as PDF
-                      </button>
-                      <button
-                        onClick={() => { 
-                          setAnaShareConfig({
-                            ...anaShareConfig, 
-                            reportType: 'task', 
-                            subject: `Task Analytics Report - ${formatDate(new Date())}`
-                          });
-                          setShowAnaShareModal(true); 
-                          setShowTaskAnaDownloadDropdown(false); 
-                        }}
-                        style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#6366f1", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}
-                      >
-                        <Mail size={18} /> Share via Email
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
             <div style={{ flex: 1, overflowY: "auto", padding: "32px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
                 {/* Scorecards */}
