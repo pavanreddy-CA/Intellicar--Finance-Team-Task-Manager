@@ -140,14 +140,16 @@ export async function GET() {
     const history = await sql`
       SELECT id, "type", "successCount", "errorCount", "createdAt", "createdBy", "errors"
       FROM "ImportHistory"
-      WHERE "type" = 'tasks'
       ORDER BY "createdAt" DESC
-      LIMIT 5
-    `;
+      LIMIT 10
+    `.catch(e => {
+      console.error("Table might not exist yet:", e);
+      return [];
+    });
 
     return NextResponse.json(history);
   } catch (error: any) {
     console.error("Failed to fetch import history", error);
-    return NextResponse.json({ message: "Failed to fetch history" }, { status: 500 });
+    return NextResponse.json([], { status: 200 }); // Return empty array instead of 500 to keep UI clean
   }
 }

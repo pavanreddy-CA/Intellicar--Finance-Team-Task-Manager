@@ -5094,6 +5094,38 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         <Plus size={18} /> New Task
                       </button>
                     )
+                  ) : (activeView === 'TASKS' && activeSubView === 'ANALYTICS') ? (
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={() => setShowTaskAnaDownloadDropdown(!showTaskAnaDownloadDropdown)}
+                        style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", border: "none", color: "white", cursor: "pointer", padding: "0 18px", height: "44px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", fontWeight: 700, boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
+                      >
+                        <Download size={16} /> Download Analytics <ChevronDown size={14} style={{ transform: showTaskAnaDownloadDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+                      </button>
+
+                      {showTaskAnaDownloadDropdown && (
+                        <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: t.card, border: `1px solid ${t.border}`, borderRadius: "14px", overflow: "hidden", minWidth: "210px", boxShadow: isDarkMode ? "0 16px 40px rgba(0,0,0,0.4)" : "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100 }}>
+                          <button
+                            onClick={() => { handleTaskAnaExportExcel(); setShowTaskAnaDownloadDropdown(false); }}
+                            style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#10b981", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: `1px solid ${t.border}` }}
+                          >
+                            <FileSpreadsheet size={18} /> Export as Excel
+                          </button>
+                          <button
+                            onClick={() => { handleTaskAnaExportPDF(); setShowTaskAnaDownloadDropdown(false); }}
+                            style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left", borderBottom: `1px solid ${t.border}` }}
+                          >
+                            <FileText size={18} /> Export as PDF
+                          </button>
+                          <button
+                            onClick={() => { handleTaskAnaExportImage(); setShowTaskAnaDownloadDropdown(false); }}
+                            style={{ width: "100%", padding: "14px 20px", background: "none", border: "none", color: "#6366f1", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}
+                          >
+                            <ImageIcon size={18} /> Export as Image
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ) : (activeView === 'TASKS' && activeSubView === 'OTHER_DEPT') ? (
                     <Fragment>
                       <div style={{ position: "relative" }}>
@@ -6597,91 +6629,82 @@ const handleResourceUpload = async (e: React.FormEvent) => {
         {activeMainView === 'DASHBOARD' && activeView === 'TASKS' && activeSubView === 'ANALYTICS' && (
           <div style={{ background: t.card, borderRadius: "24px", border: `1px solid ${t.border}`, minHeight: "calc(100vh - 200px)", padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", animation: "fadeIn 0.4s ease-out", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
             {/* Analytics Header / Filters */}
-            <div style={{ background: t.bg, borderBottom: `1px solid ${t.border}`, padding: "16px 24px" }}>
-              <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                    <Building2 size={16} color={t.textMuted} />
-                    <select 
-                      value={anaTaskEntityFilter}
-                      onChange={(e) => setAnaTaskEntityFilter(e.target.value)}
-                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                    >
-                      <option value="ALL" style={{ background: t.card, color: t.text }}>All Entities</option>
-                      {uniqueTaskEntities.map(ent => <option key={ent} value={ent} style={{ background: t.card, color: t.text }}>{ent}</option>)}
-                    </select>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                    <Tag size={16} color={t.textMuted} />
-                    <select 
-                      value={anaTaskDeptFilter}
-                      onChange={(e) => setAnaTaskDeptFilter(e.target.value)}
-                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                    >
-                      <option value="ALL" style={{ background: t.card, color: t.text }}>All Departments</option>
-                      {uniqueTaskDepts.map(dept => <option key={dept} value={dept} style={{ background: t.card, color: t.text }}>{dept}</option>)}
-                    </select>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                    <User size={16} color={t.textMuted} />
-                    <select 
-                      value={anaTaskUserFilter}
-                      onChange={(e) => setAnaTaskUserFilter(e.target.value)}
-                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                    >
-                      <option value="ALL" style={{ background: t.card, color: t.text }}>All Users</option>
-                      {uniqueTaskOwners.map(user => <option key={user} value={user} style={{ background: t.card, color: t.text }}>{user}</option>)}
-                    </select>
-                  </div>
-
-                  {/* Date Filters */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                    <Calendar size={16} color={t.textMuted} />
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginRight: "4px" }}>FROM</span>
-                    <input 
-                      type="date"
-                      value={anaStartDate}
-                      onChange={(e) => setAnaStartDate(e.target.value)}
-                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                    />
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "8px 16px", borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                    <Calendar size={16} color={t.textMuted} />
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", marginRight: "4px" }}>TO</span>
-                    <input 
-                      type="date"
-                      value={anaEndDate}
-                      onChange={(e) => setAnaEndDate(e.target.value)}
-                      style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.875rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                    />
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setAnaTaskEntityFilter('ALL');
-                      setAnaTaskDeptFilter('ALL');
-                      setAnaTaskUserFilter('ALL');
-                      const fy = getFYDates();
-                      setAnaStartDate(fy.start);
-                      setAnaEndDate(fy.end);
-                    }}
-                    title="Reset all filters"
-                    style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", border: `1px solid ${t.border}`, color: t.text, cursor: "pointer", padding: "8px 16px", borderRadius: "12px", fontSize: "0.8125rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", transition: "all 0.2s" }}
+            <div style={{ background: t.bg, borderBottom: `1px solid ${t.border}`, padding: "12px 20px" }}>
+              <div style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", flexWrap: "nowrap", overflowX: "auto" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
+                  <Building2 size={14} color={t.textMuted} />
+                  <select 
+                    value={anaTaskEntityFilter}
+                    onChange={(e) => setAnaTaskEntityFilter(e.target.value)}
+                    style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
                   >
-                    <RotateCcw size={14} /> Reset Filters
-                  </button>
+                    <option value="ALL" style={{ background: t.card, color: t.text }}>All Entities</option>
+                    {uniqueTaskEntities.map(ent => <option key={ent} value={ent} style={{ background: t.card, color: t.text }}>{ent}</option>)}
+                  </select>
                 </div>
 
-                <div style={{ position: "relative", marginLeft: "auto" }}>
-                  <button
-                    onClick={() => setShowTaskAnaDownloadDropdown(!showTaskAnaDownloadDropdown)}
-                    style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", border: "none", color: "white", cursor: "pointer", padding: "0 18px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", fontWeight: 700, boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
+                  <Tag size={14} color={t.textMuted} />
+                  <select 
+                    value={anaTaskDeptFilter}
+                    onChange={(e) => setAnaTaskDeptFilter(e.target.value)}
+                    style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
                   >
-                    <Download size={16} /> Download Analytics <ChevronDown size={14} style={{ transform: showTaskAnaDownloadDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
-                  </button>
+                    <option value="ALL" style={{ background: t.card, color: t.text }}>All Departments</option>
+                    {uniqueTaskDepts.map(dept => <option key={dept} value={dept} style={{ background: t.card, color: t.text }}>{dept}</option>)}
+                  </select>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
+                  <User size={14} color={t.textMuted} />
+                  <select 
+                    value={anaTaskUserFilter}
+                    onChange={(e) => setAnaTaskUserFilter(e.target.value)}
+                    style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                  >
+                    <option value="ALL" style={{ background: t.card, color: t.text }}>All Users</option>
+                    {uniqueTaskOwners.map(user => <option key={user} value={user} style={{ background: t.card, color: t.text }}>{user}</option>)}
+                  </select>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
+                  <Calendar size={14} color={t.textMuted} />
+                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", marginRight: "2px" }}>FROM</span>
+                  <input 
+                    type="date"
+                    value={anaStartDate}
+                    onChange={(e) => setAnaStartDate(e.target.value)}
+                    style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
+                  <Calendar size={14} color={t.textMuted} />
+                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", marginRight: "2px" }}>TO</span>
+                  <input 
+                    type="date"
+                    value={anaEndDate}
+                    onChange={(e) => setAnaEndDate(e.target.value)}
+                    style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    setAnaTaskEntityFilter('ALL');
+                    setAnaTaskDeptFilter('ALL');
+                    setAnaTaskUserFilter('ALL');
+                    const fy = getFYDates();
+                    setAnaStartDate(fy.start);
+                    setAnaEndDate(fy.end);
+                  }}
+                  title="Reset all filters"
+                  style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", border: `1px solid ${t.border}`, color: t.text, cursor: "pointer", padding: "6px 12px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+                >
+                  <RotateCcw size={12} /> RESET
+                </button>
+              </div>
+            </div>
 
                   {showTaskAnaDownloadDropdown && (
                     <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: t.card, border: `1px solid ${t.border}`, borderRadius: "14px", overflow: "hidden", minWidth: "210px", boxShadow: isDarkMode ? "0 16px 40px rgba(0,0,0,0.4)" : "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100 }}>
