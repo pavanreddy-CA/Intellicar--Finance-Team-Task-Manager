@@ -82,8 +82,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const isMasterAdmin = userEmail?.toLowerCase() === "pavanreddy@intellicar.in" || userRole === "ADMIN";
     const isOwner = getEmailFromName(existingTask.ownerName)?.toLowerCase() === userEmail?.toLowerCase();
     const isReviewer = getEmailFromName(existingTask.reviewerName)?.toLowerCase() === userEmail?.toLowerCase();
+    const isCreator = existingTask.createdByEmail?.toLowerCase() === userEmail?.toLowerCase();
 
-    if (!isMasterAdmin && !isOwner && !isReviewer) {
+    if (!isMasterAdmin && !isOwner && !isReviewer && !isCreator) {
       return NextResponse.json({ message: "Forbidden: You don't have permission to edit this task" }, { status: 403 });
     }
 
