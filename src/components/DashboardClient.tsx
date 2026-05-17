@@ -300,7 +300,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     departmentHeadMatrix: '{}',
     masterLOClassifications: 'Process Error,Calculation Error,Communication Gap,Documentation Miss,System Issue,Miscellaneous'
   });
-  const [isAdminViewMode, setIsAdminViewMode] = useState(true);
+  const [isAdminViewMode, setIsAdminViewMode] = useState(isAdmin);
 
   // Reset sub-views and filters when Admin View Mode is toggled
   useEffect(() => {
@@ -4503,7 +4503,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
             </h3>
             <p style={{ margin: "2px 0 0 0", color: t.textMuted, fontSize: "0.75rem", fontWeight: 500, display: "flex", alignItems: "center" }}>
               FinPulse • Welcome back!
-              {isAdminViewMode && (
+              {isAdmin && isAdminViewMode && (
                 <span style={{ 
                   marginLeft: "12px", background: "#f5f3ff", color: "#4f46e5", 
                   padding: "2px 8px", borderRadius: "6px", fontSize: "0.6rem", 
@@ -5022,7 +5022,7 @@ const handleResourceUpload = async (e: React.FormEvent) => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                    {isAdminViewMode && (
+                    {isAdmin && isAdminViewMode && (
                       <>
                         <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#4f46e5", textTransform: "uppercase", letterSpacing: "0.05em" }}>ADMIN</span>
                         <span style={{ color: "#cbd5e1" }}>/</span>
