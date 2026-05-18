@@ -15,6 +15,46 @@ function isOverdue(dueDate: Date | null, referenceDate: Date) {
   return target < ref;
 }
 
+// Stateful helper to check if a recurring notification schedule is due and hasn't been sent yet today
+function isScheduleDue(
+  frequency: string,
+  timesStr: string,
+  lastSentAt: Date | string | null,
+  istDate: Date,
+  dayOfWeek: number,
+  currentDate: number
+): boolean {
+  if (frequency === 'OFF' || !timesStr) return false;
+
+  // Frequency check
+  if (frequency === 'W' && dayOfWeek !== 1) return false; // Weekly on Monday
+  if (frequency === 'M' && currentDate !== 1) return false; // Monthly on 1st of month
+
+  const currentHHmm = `${String(istDate.getUTCHours()).padStart(2, '0')}:${String(istDate.getUTCMinutes()).padStart(2, '0')}`;
+  
+  // Parse and sort scheduled times
+  const times = timesStr.split(',').map(t => t.trim()).sort();
+  const dueTimes = times.filter(t => t <= currentHHmm);
+  
+  if (dueTimes.length === 0) return false; // Not due yet today
+
+  const latestDueTime = dueTimes[dueTimes.length - 1]; // e.g. "18:00"
+
+  // Construct target due timestamp in IST today
+  const [dueHour, dueMin] = latestDueTime.split(':').map(Number);
+  const latestDueTimestamp = new Date(istDate.getTime());
+  latestDueTimestamp.setUTCHours(dueHour, dueMin, 0, 0);
+
+  if (!lastSentAt) return true; // Never sent before, so it's due!
+  
+  // Convert lastSentAt to IST Date to compare
+  const lastSentDate = new Date(lastSentAt);
+  const lastSentIST = new Date(lastSentDate.getTime() + (5.5 * 60 * 60 * 1000));
+
+  return lastSentIST < latestDueTimestamp;
+}
+
+
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -291,50 +331,70 @@ export async function GET(req: NextRequest) {
 
         let shouldRemind = false, shouldReport = false, shouldLOReport = false, shouldPaymentReport = false;
 
-        if (settings.reminderFrequency !== 'OFF') {
-          const rTimes = settings.reminderTimes.split(',').map((t: string) => t.trim());
-          if (rTimes.includes(currentHHmm)) {
-            if (settings.reminderFrequency === 'D') shouldRemind = true;
-            else if (settings.reminderFrequency === 'W' && currentDay === 1) shouldRemind = true;
-            else if (settings.reminderFrequency === 'M' && currentDate === 1) shouldRemind = true;
-          }
-        }
+        shouldRemind = isScheduleDue(
+          settings.reminderFrequency,
+          settings.reminderTimes,
+          settings.lastReminderSentAt,
+          istDate,
+          currentDay,
+          currentDate
+        );
 
-        if (settings.managerReportFrequency !== 'OFF') {
-          const mTimes = settings.managerReportTimes.split(',').map((t: string) => t.trim());
-          if (mTimes.includes(currentHHmm)) {
-            if (settings.managerReportFrequency === 'D') shouldReport = true;
-            else if (settings.managerReportFrequency === 'W' && currentDay === 1) shouldReport = true;
-            else if (settings.managerReportFrequency === 'M' && currentDate === 1) shouldReport = true;
-          }
-        }
+        shouldReport = isScheduleDue(
+          settings.managerReportFrequency,
+          settings.managerReportTimes,
+          settings.lastManagerReportSentAt,
+          istDate,
+          currentDay,
+          currentDate
+        );
 
-        if (settings.loReportFrequency !== 'OFF') {
-          const loTimes = settings.loReportTimes.split(',').map((t: string) => t.trim());
-          if (loTimes.includes(currentHHmm)) {
-            if (settings.loReportFrequency === 'D') shouldLOReport = true;
-            else if (settings.loReportFrequency === 'W' && currentDay === 1) shouldLOReport = true;
-            else if (settings.loReportFrequency === 'M' && currentDate === 1) shouldLOReport = true;
-          }
-        }
+        shouldLOReport = isScheduleDue(
+          settings.loReportFrequency,
+          settings.loReportTimes,
+          settings.lastLoReportSentAt,
+          istDate,
+          currentDay,
+          currentDate
+        );
 
         if (settings.paymentReportFrequency && !settings.paymentReportFrequency.includes('OFF')) {
-          const pTimes = (settings.paymentReportTimes || "10:00").split(',').map((t: string) => t.trim());
+          const pTimes = (settings.paymentReportTimes || "10:00").split(',').map((t: string) => t.trim()).sort();
           const pFreqs = settings.paymentReportFrequency.split(',').map((f: string) => f.trim());
           
-          if (pTimes.includes(currentHHmm)) {
-            if (pFreqs.includes('D')) {
-              shouldPaymentReport = true;
-            } 
-            
-            if (!shouldPaymentReport && pFreqs.includes('W')) {
-              const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
-              const targetDay = dayMap[settings.paymentReportDay || 'Monday'];
-              if (currentDay === targetDay) shouldPaymentReport = true;
-            } 
-            
-            if (!shouldPaymentReport && pFreqs.includes('M')) {
-              if (currentDate === (settings.paymentReportDate || 1)) shouldPaymentReport = true;
+          let frequencyIsActive = false;
+          if (pFreqs.includes('D')) {
+            frequencyIsActive = true;
+          } 
+          if (!frequencyIsActive && pFreqs.includes('W')) {
+            const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+            const targetDay = dayMap[settings.paymentReportDay || 'Monday'];
+            if (currentDay === targetDay) frequencyIsActive = true;
+          } 
+          if (!frequencyIsActive && pFreqs.includes('M')) {
+            if (currentDate === (settings.paymentReportDate || 1)) frequencyIsActive = true;
+          }
+
+          if (frequencyIsActive) {
+            const dueTimes = pTimes.filter((t: string) => t <= currentHHmm);
+            if (dueTimes.length > 0) {
+              const latestDueTime = dueTimes[dueTimes.length - 1];
+              const [dueHour, dueMin] = latestDueTime.split(':').map(Number);
+              const latestDueTimestamp = new Date(istDate.getTime());
+              latestDueTimestamp.setUTCHours(dueHour, dueMin, 0, 0);
+
+              let alreadySent = false;
+              if (settings.lastPaymentReportSentAt) {
+                const lastSentDate = new Date(settings.lastPaymentReportSentAt);
+                const lastSentIST = new Date(lastSentDate.getTime() + (5.5 * 60 * 60 * 1000));
+                if (lastSentIST >= latestDueTimestamp) {
+                  alreadySent = true;
+                }
+              }
+
+              if (!alreadySent) {
+                shouldPaymentReport = true;
+              }
             }
           }
         }
@@ -419,6 +479,8 @@ export async function GET(req: NextRequest) {
         ]
       });
 
+      await sql`UPDATE "SystemSettings" SET "lastLoReportSentAt" = NOW() WHERE id = 'singleton'`;
+
       return NextResponse.json({ message: "LO Report sent successfully." });
     }
 
@@ -467,6 +529,8 @@ export async function GET(req: NextRequest) {
           { filename: `Consolidated_Payments_Report_${formatDate(referenceDate)}.xlsx`, content: consolidatedBuffer, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
         ]
       });
+
+      await sql`UPDATE "SystemSettings" SET "lastPaymentReportSentAt" = NOW() WHERE id = 'singleton'`;
 
       return NextResponse.json({ message: "Payment Report sent successfully." });
     }
