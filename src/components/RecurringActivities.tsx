@@ -411,8 +411,17 @@ export default function RecurringActivities({   settings, usersList = [] , showN
   };
 
   const handleSaveTemplate = async () => {
-    if (!templateForm.taskNamePattern || !templateForm.entityName) {
-      showNotification("Please fill all required fields");
+    if (
+      !templateForm.taskNamePattern || 
+      !templateForm.entityName || 
+      !templateForm.departmentName ||
+      !templateForm.financeFunction ||
+      !templateForm.frequency ||
+      !templateForm.defaultOwner ||
+      !templateForm.defaultReviewer ||
+      !templateForm.startDate
+    ) {
+      showNotification("Please fill all mandatory fields (Task Name, Entity, Department, Function, Frequency, Start Date, Owner, and Reviewer).");
       return;
     }
     setIsSaving(true);
@@ -1968,7 +1977,7 @@ export default function RecurringActivities({   settings, usersList = [] , showN
             <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                 <div style={{ gridColumn: "span 2" }}>
-                  <label style={labelStyle}>Task Name Pattern</label>
+                  <label style={labelStyle}>Task Name</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Ageing report for {{MONTH}} {{YEAR}}" 

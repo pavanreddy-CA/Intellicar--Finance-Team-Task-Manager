@@ -257,6 +257,51 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   };
   const [anaStartDate, setAnaStartDate] = useState(getFYDates().start);
   const [anaEndDate, setAnaEndDate] = useState(getFYDates().end);
+  const [anaDateFilterPreset, setAnaDateFilterPreset] = useState("CURRENT_FY");
+
+  const handleAnaPresetChange = (preset: string) => {
+    setAnaDateFilterPreset(preset);
+    const today = new Date();
+    
+    if (preset === "ALL_TIME") {
+      setAnaStartDate("");
+      setAnaEndDate("");
+      return;
+    }
+
+    if (preset === "CUSTOM") {
+      return; // Leave dates as they are, let user pick
+    }
+
+    let start = new Date(today);
+    let end = new Date(today);
+
+    if (preset === "CURRENT_MONTH") {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else if (preset === "LAST_MONTH") {
+      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      end = new Date(today.getFullYear(), today.getMonth(), 0); 
+    } else if (preset === "LAST_3_MONTHS") {
+      start = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+    } else if (preset === "LAST_6_MONTHS") {
+      start = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate());
+    } else if (preset === "LAST_FY" || preset === "CURRENT_FY") {
+      const fy = getFYDates();
+      setAnaStartDate(fy.start);
+      setAnaEndDate(fy.end);
+      return;
+    }
+
+    const toIsoDate = (d: Date) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    setAnaStartDate(toIsoDate(start));
+    setAnaEndDate(toIsoDate(end));
+  };
 
   const [importHistory, setImportHistory] = useState<any[]>([]);
   const [showTaskAnaDownloadDropdown, setShowTaskAnaDownloadDropdown] = useState(false);
@@ -627,6 +672,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [taskStatusFilter, setTaskStatusFilter] = useState<string[]>([]);
   const [taskReviewerFilter, setTaskReviewerFilter] = useState<string[]>([]);
   const [taskSourceFilter, setTaskSourceFilter] = useState<string[]>([]);
+  const [taskFrequencyFilter, setTaskFrequencyFilter] = useState<string[]>([]);
   const [taskSortConfig, setTaskSortConfig] = useState<{ key: keyof Task; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
 
   const [loSearchQuery, setLoSearchQuery] = useState("");
@@ -2703,6 +2749,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
     if (taskReviewerFilter.length > 0 && !taskReviewerFilter.includes(t.reviewerName || "")) return false;
     if (taskSourceFilter.length > 0 && !taskSourceFilter.includes((t as any).source || 'TDB')) return false;
+    if (taskFrequencyFilter.length > 0 && !taskFrequencyFilter.includes(t.frequency || 'Ad')) return false;
     
     // Task Type Match
     const isActuallyExternal = !!t.linkedRequestId && t.departmentName !== "Finance";
@@ -3033,6 +3080,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
     if (taskReviewerFilter.length > 0 && !taskReviewerFilter.includes(t.reviewerName || "")) dropdownMatch = false;
     if (taskSourceFilter.length > 0 && !taskSourceFilter.includes((t as any).source || 'TDB')) dropdownMatch = false;
+    if (taskFrequencyFilter.length > 0 && !taskFrequencyFilter.includes(t.frequency || 'Ad')) dropdownMatch = false;
     
     // 5. Task Type Filter
     const isActuallyExternal = !!t.linkedRequestId && t.departmentName !== "Finance";
@@ -3072,6 +3120,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const uniqueTaskStatuses = Array.from(new Set(tasks.map(t => t.taskStatus))).sort();
   const uniqueTaskReviewers = Array.from(new Set(tasks.map(t => t.reviewerName).filter((r): r is string => !!r && r !== "Not Applicable"))).sort();
   const uniqueTaskSources = ['TDB', 'IDR', 'RA', 'BULK'];
+  const uniqueTaskFrequencies = Array.from(new Set(tasks.map(t => t.frequency || 'Ad'))).sort();
 
   // Unique values for LO filters and analytics
   const uniqueLOEntities = Array.from(new Set(los.map(l => l.entity))).sort();
@@ -5891,6 +5940,15 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   }}
                 />
 
+                <MultiSelectFilter
+                  options={uniqueTaskFrequencies}
+                  selected={taskFrequencyFilter}
+                  onChange={setTaskFrequencyFilter}
+                  placeholder="All Frequencies"
+                  theme={theme}
+                  t={t}
+                />
+
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "0 8px", borderLeft: `1px solid ${t.border}` }}>
                   <span style={{ fontSize: "0.75rem", fontWeight: 600, color: t.textMuted, textTransform: "uppercase" }}>Rows:</span>
                   <select 
@@ -6680,27 +6738,45 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   </select>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
-                  <Calendar size={14} color={t.textMuted} />
-                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", marginRight: "2px" }}>FROM</span>
-                  <input 
-                    type="date"
-                    value={anaStartDate}
-                    onChange={(e) => setAnaStartDate(e.target.value)}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "4px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
+                  <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: t.textMuted }}>Filter by Date:</span>
+                  <select
+                    value={anaDateFilterPreset}
+                    onChange={(e) => handleAnaPresetChange(e.target.value)}
                     style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                  />
+                  >
+                    <option value="ALL_TIME" style={{ background: t.card, color: t.text }}>All Time</option>
+                    <option value="CURRENT_MONTH" style={{ background: t.card, color: t.text }}>Current Month</option>
+                    <option value="LAST_MONTH" style={{ background: t.card, color: t.text }}>Last Month</option>
+                    <option value="LAST_3_MONTHS" style={{ background: t.card, color: t.text }}>Last 3 Months</option>
+                    <option value="LAST_6_MONTHS" style={{ background: t.card, color: t.text }}>Last 6 Months</option>
+                    <option value="CURRENT_FY" style={{ background: t.card, color: t.text }}>Current Financial Year</option>
+                    <option value="CUSTOM" style={{ background: t.card, color: t.text }}>Custom Range</option>
+                  </select>
+
+                  {anaDateFilterPreset === "CUSTOM" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Calendar size={14} color={t.textMuted} />
+                      <input 
+                        type="date"
+                        value={anaStartDate}
+                        onChange={(e) => setAnaStartDate(e.target.value)}
+                        style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b" }}>TO</span>
+                      <input 
+                        type="date"
+                        value={anaEndDate}
+                        onChange={(e) => setAnaEndDate(e.target.value)}
+                        style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: isDarkMode ? "rgba(255,255,255,0.05)" : "#ffffff", padding: "6px 12px", borderRadius: "10px", border: `1px solid ${t.border}`, flexShrink: 0 }}>
-                  <Calendar size={14} color={t.textMuted} />
-                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", marginRight: "2px" }}>TO</span>
-                  <input 
-                    type="date"
-                    value={anaEndDate}
-                    onChange={(e) => setAnaEndDate(e.target.value)}
-                    style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
-                  />
-                </div>
+                <button onClick={() => { handleAnaPresetChange("CURRENT_FY"); setAnaTaskEntityFilter("ALL"); setAnaTaskDeptFilter("ALL"); setAnaTaskUserFilter("ALL"); }} style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "10px" }} className="hover-card">
+                  <RotateCcw size={14} /> RESET
+                </button>
 
                 <button
                   onClick={() => {
@@ -6776,13 +6852,25 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         <circle cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" strokeWidth="10" 
                                 strokeDasharray={`${(taskAnalyticsData.onTimeTasks / Math.max(taskAnalyticsData.totalTasks, 1)) * 251.2} 251.2`} 
                                 strokeDashoffset="0" strokeLinecap="round" transform="rotate(-90 50 50)"
-                                style={{ transition: "stroke-dasharray 1s ease-out" }} />
+                                style={{ transition: "stroke-dasharray 1s ease-out" }}>
+                          <title>On-Time: {taskAnalyticsData.onTimeTasks}</title>
+                        </circle>
                         {/* Late Circle */}
                         <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f59e0b" strokeWidth="10" 
                                 strokeDasharray={`${(taskAnalyticsData.lateTasks / Math.max(taskAnalyticsData.totalTasks, 1)) * 251.2} 251.2`} 
                                 strokeDashoffset={`-${(taskAnalyticsData.onTimeTasks / Math.max(taskAnalyticsData.totalTasks, 1)) * 251.2}`} 
                                 strokeLinecap="round" transform="rotate(-90 50 50)"
-                                style={{ transition: "stroke-dasharray 1s ease-out" }} />
+                                style={{ transition: "stroke-dasharray 1s ease-out" }}>
+                          <title>Late: {taskAnalyticsData.lateTasks}</title>
+                        </circle>
+                        {/* Overdue Circle */}
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ef4444" strokeWidth="10" 
+                                strokeDasharray={`${(taskAnalyticsData.overdueTasks / Math.max(taskAnalyticsData.totalTasks, 1)) * 251.2} 251.2`} 
+                                strokeDashoffset={`-${((taskAnalyticsData.onTimeTasks + taskAnalyticsData.lateTasks) / Math.max(taskAnalyticsData.totalTasks, 1)) * 251.2}`} 
+                                strokeLinecap="round" transform="rotate(-90 50 50)"
+                                style={{ transition: "stroke-dasharray 1s ease-out" }}>
+                          <title>Overdue: {taskAnalyticsData.overdueTasks}</title>
+                        </circle>
                       </svg>
                       <div style={{ position: "absolute", textAlign: "center" }}>
                         <div style={{ fontSize: "2rem", fontWeight: 800, color: t.text }}>{taskAnalyticsData.totalTasks > 0 ? Math.round(((taskAnalyticsData.onTimeTasks + taskAnalyticsData.lateTasks) / taskAnalyticsData.totalTasks) * 100) : 0}%</div>
