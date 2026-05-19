@@ -87,9 +87,13 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
   };
 
   const handleEntityToggle = (entity: string) => {
-    setSelectedEntities(current => 
-      current.includes(entity) ? current.filter(e => e !== entity) : [...current, entity]
-    );
+    if (isEditing) {
+      setSelectedEntities([entity]);
+    } else {
+      setSelectedEntities(current => 
+        current.includes(entity) ? current.filter(e => e !== entity) : [...current, entity]
+      );
+    }
   };
 
   const handleSelectAll = () => {
@@ -384,8 +388,8 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                     background: !!initialData?.linkedRequestId ? "#f8fafc" : t.bg,
                     borderRadius: "8px",
                     border: `1px solid ${!!initialData?.linkedRequestId ? "#e2e8f0" : t.border}`,
-                    pointerEvents: (isEditing || initialData?.linkedRequestId) ? "none" : "auto",
-                    opacity: (isEditing || initialData?.linkedRequestId) ? 0.9 : 1
+                    pointerEvents: initialData?.linkedRequestId ? "none" : "auto",
+                    opacity: initialData?.linkedRequestId ? 0.9 : 1
                   }}>
                     {allowedEntities
                       .filter(entity => {
@@ -396,11 +400,11 @@ export default function TaskForm({   onClose, onSuccess, settings, usersList = [
                         return true;
                       })
                       .map(entity => (
-                        <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: (isEditing || initialData?.linkedRequestId) ? "not-allowed" : "pointer", padding: "4px", borderRadius: "4px", color: t.text }}>
+                        <label key={entity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8125rem", cursor: initialData?.linkedRequestId ? "not-allowed" : "pointer", padding: "4px", borderRadius: "4px", color: t.text }}>
                           <input 
                             type="checkbox" 
                             checked={selectedEntities.includes(entity)} 
-                            onChange={() => !(isEditing || initialData?.linkedRequestId) && handleEntityToggle(entity)}
+                            onChange={() => !initialData?.linkedRequestId && handleEntityToggle(entity)}
                             style={{ width: "16px", height: "16px", accentColor: t.accent }}
                           />
                           {entity}
