@@ -4,6 +4,8 @@ import { sendEmail, getEmailFromName } from "@/lib/email";
 import { getServerSession } from "@/lib/session";
 import * as ExcelJS from "exceljs";
 
+export const dynamic = 'force-dynamic';
+
 
 // Helper to check if a task is overdue
 function isOverdue(dueDate: Date | null, referenceDate: Date) {
@@ -312,7 +314,8 @@ function generateGridHtml(tasks: any[], title: string, referenceDate: Date) {
 export async function GET(req: NextRequest) {
   const sql = getDb();
   const url = new URL(req.url);
-  let type = url.searchParams.get("type") || "all";
+  const requestedType = url.searchParams.get("type") || "all";
+  let typesToProcess: string[] = [requestedType];
   const clientDateStr = url.searchParams.get("clientDate");
   const referenceDate = clientDateStr ? new Date(clientDateStr) : new Date();
 
@@ -389,11 +392,14 @@ export async function GET(req: NextRequest) {
           return NextResponse.json({ message: `Skipping.` });
         }
 
-        if (shouldPaymentReport) type = "payments";
-        else if (shouldLOReport) type = "lo";
-        else if (shouldRemind && shouldReport) type = "all";
-        else if (shouldRemind) type = "users";
-        else if (shouldReport) type = "manager";
+        typesToProcess = [];
+        if (shouldPaymentReport) typesToProcess.push("payments");
+        if (shouldLOReport) typesToProcess.push("lo");
+        if (shouldRemind && shouldReport) typesToProcess.push("all");
+        else {
+          if (shouldRemind) typesToProcess.push("users");
+          if (shouldReport) typesToProcess.push("manager");
+        }
       }
     } catch (e) {
       console.error("Settings check failed", e);
@@ -402,7 +408,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const sql = getDb();
-    if (type === "lo") {
+    if (typesToProcess.includes("lo")) {
       const allLOs = await sql`SELECT * FROM "LearningOpportunity" ORDER BY "createdAt" DESC`;
       const stats = getLOStats(allLOs);
       const managerEmail = settings?.loReportEmail || "pavanreddy@intellicar.in";
@@ -466,11 +472,9 @@ export async function GET(req: NextRequest) {
       });
 
       await sql`UPDATE "SystemSettings" SET "lastLoReportSentAt" = NOW() WHERE id = 'singleton'`;
-
-      return NextResponse.json({ message: "LO Report sent successfully." });
     }
 
-    if (type === "payments") {
+    if (typesToProcess.includes("payments")) {
       const allOccurrences = await sql`
         SELECT o.*, t."entityName", t."vendorName", t."paymentDescription", t."paymentType", t."departmentName", t."financeFunction", t.frequency
         FROM "PaymentOccurrence" o
@@ -517,15 +521,13 @@ export async function GET(req: NextRequest) {
       });
 
       await sql`UPDATE "SystemSettings" SET "lastPaymentReportSentAt" = NOW() WHERE id = 'singleton'`;
-
-      return NextResponse.json({ message: "Payment Report sent successfully." });
     }
 
     const allTasks = await sql`SELECT * FROM "Task" ORDER BY "createdAt" DESC`;
     const pendingOwnerTasks = allTasks.filter(t => t.taskStatus !== "Completed");
     const pendingReviewTasks = allTasks.filter(t => t.reviewStatus === "Pending" || t.reviewStatus === "Task Pending From Owner");
 
-    if (type === "all" || type === "users") {
+    if (typesToProcess.includes("all") || typesToProcess.includes("users")) {
       const owners = Array.from(new Set(pendingOwnerTasks.map(t => t.ownerName)));
       for (const owner of owners) {
         const ownerEmail = getEmailFromName(owner as string);
@@ -559,7 +561,7 @@ export async function GET(req: NextRequest) {
       await sql`UPDATE "SystemSettings" SET "lastReminderSentAt" = NOW() WHERE id = 'singleton'`;
     }
 
-    if (type === "all" || type === "manager") {
+    if (typesToProcess.includes("all") || typesToProcess.includes("manager")) {
       const managerEmail = settings?.managerEmail || "pavanreddy@intellicar.in";
       const startOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
       const mtdTasks = allTasks.filter(t => new Date(t.createdAt) >= startOfMonth);
