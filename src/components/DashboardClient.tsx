@@ -278,6 +278,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
 
     if (preset === "CURRENT_MONTH") {
       start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     } else if (preset === "LAST_MONTH") {
       start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       end = new Date(today.getFullYear(), today.getMonth(), 0); 
@@ -2825,20 +2826,36 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       return n1 <= n2;
     };
 
+    const getLocalDateString = (dateInput: string | Date | null | undefined): string => {
+      if (!dateInput) return "";
+      
+      // If it is a string and matches YYYY-MM-DD, return it directly to avoid timezone shift
+      if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+        return dateInput;
+      }
+      
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return "";
+      
+      // Get local date parts
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
     const filteredTasks = tasks.filter(t => {
       const matchesEntity = anaTaskEntityFilter === 'ALL' || t.entityName === anaTaskEntityFilter;
       const matchesDept = anaTaskDeptFilter === 'ALL' || t.departmentName === anaTaskDeptFilter;
       const matchesUser = anaTaskUserFilter === 'ALL' || t.ownerName === anaTaskUserFilter || (t.reviewerName || "") === anaTaskUserFilter;
       
-      const tDate = t.dueDate ? new Date(t.dueDate) : new Date(t.createdAt);
-      const start = new Date(anaStartDate);
-      const end = new Date(anaEndDate);
-      // Normalize to midnight for comparison
-      const tn = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate()).getTime();
-      const sn = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-      const en = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+      const tDateStr = getLocalDateString(t.dueDate || t.createdAt);
+      const startStr = getLocalDateString(anaStartDate);
+      const endStr = getLocalDateString(anaEndDate);
       
-      const matchesDate = tn >= sn && tn <= en;
+      let matchesDate = true;
+      if (startStr && tDateStr < startStr) matchesDate = false;
+      if (endStr && tDateStr > endStr) matchesDate = false;
       
       return matchesEntity && matchesDept && matchesUser && matchesDate;
     });
@@ -2847,14 +2864,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       const matchesDept = anaTaskDeptFilter === 'ALL' || r.departmentName === anaTaskDeptFilter;
       const matchesUser = anaTaskUserFilter === 'ALL' || r.requesterEmail.toLowerCase().includes(anaTaskUserFilter.toLowerCase());
       
-      const rDate = new Date(r.createdAt);
-      const start = new Date(anaStartDate);
-      const end = new Date(anaEndDate);
-      const rn = new Date(rDate.getFullYear(), rDate.getMonth(), rDate.getDate()).getTime();
-      const sn = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-      const en = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+      const rDateStr = getLocalDateString(r.createdAt);
+      const startStr = getLocalDateString(anaStartDate);
+      const endStr = getLocalDateString(anaEndDate);
       
-      const matchesDate = rn >= sn && rn <= en;
+      let matchesDate = true;
+      if (startStr && rDateStr < startStr) matchesDate = false;
+      if (endStr && rDateStr > endStr) matchesDate = false;
 
       return matchesDept && matchesUser && matchesDate;
     });
