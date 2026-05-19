@@ -2989,7 +2989,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       filteredTasks,
       filteredIDR
     };
-  }, [tasks, externalRequests, anaTaskEntityFilter, anaTaskDeptFilter, anaTaskUserFilter]);
+  }, [tasks, externalRequests, anaTaskEntityFilter, anaTaskDeptFilter, anaTaskUserFilter, anaStartDate, anaEndDate]);
 
   // Format date and time as DD-MMM-YYYY HH:mm
   const formatDateTime = (dateStr: string) => {
