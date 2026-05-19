@@ -15,39 +15,49 @@ function isOverdue(dueDate: Date | null, referenceDate: Date) {
   return target < ref;
 }
 
-// Stateful helper to check if a recurring notification schedule is due and hasn't been sent yet today
 function isScheduleDue(
   frequency: string,
   timesStr: string,
   lastSentAt: Date | string | null,
   istDate: Date,
   dayOfWeek: number,
-  currentDate: number
+  currentDate: number,
+  targetDayName?: string | null,
+  targetDate?: number | null
 ): boolean {
-  if (frequency === 'OFF' || !timesStr) return false;
-
-  // Frequency check
-  if (frequency === 'W' && dayOfWeek !== 1) return false; // Weekly on Monday
-  if (frequency === 'M' && currentDate !== 1) return false; // Monthly on 1st of month
+  if (!frequency || frequency.includes('OFF') || !timesStr) return false;
 
   const currentHHmm = `${String(istDate.getUTCHours()).padStart(2, '0')}:${String(istDate.getUTCMinutes()).padStart(2, '0')}`;
   
-  // Parse and sort scheduled times
+  const freqs = frequency.split(',').map(f => f.trim().toUpperCase());
+  let frequencyIsActive = false;
+  
+  if (freqs.includes('D') || freqs.includes('DAILY')) {
+    frequencyIsActive = true;
+  }
+  if (!frequencyIsActive && (freqs.includes('W') || freqs.includes('WEEKLY'))) {
+    const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+    const targetDay = dayMap[targetDayName || 'Monday'];
+    if (dayOfWeek === targetDay) frequencyIsActive = true;
+  }
+  if (!frequencyIsActive && (freqs.includes('M') || freqs.includes('MONTHLY'))) {
+    if (currentDate === (targetDate || 1)) frequencyIsActive = true;
+  }
+
+  if (!frequencyIsActive) return false;
+  
   const times = timesStr.split(',').map(t => t.trim()).sort();
   const dueTimes = times.filter(t => t <= currentHHmm);
   
-  if (dueTimes.length === 0) return false; // Not due yet today
+  if (dueTimes.length === 0) return false;
 
-  const latestDueTime = dueTimes[dueTimes.length - 1]; // e.g. "18:00"
-
-  // Construct target due timestamp in IST today
+  const latestDueTime = dueTimes[dueTimes.length - 1];
   const [dueHour, dueMin] = latestDueTime.split(':').map(Number);
   const latestDueTimestamp = new Date(istDate.getTime());
   latestDueTimestamp.setUTCHours(dueHour, dueMin, 0, 0);
 
-  if (!lastSentAt) return true; // Never sent before, so it's due!
+  if (!lastSentAt) return true;
   
-  // Convert lastSentAt to IST Date to compare
   const lastSentDate = new Date(lastSentAt);
   const lastSentIST = new Date(lastSentDate.getTime() + (5.5 * 60 * 60 * 1000));
 
@@ -337,7 +347,9 @@ export async function GET(req: NextRequest) {
           settings.lastReminderSentAt,
           istDate,
           currentDay,
-          currentDate
+          currentDate,
+          settings.reminderDay,
+          settings.reminderDate
         );
 
         shouldReport = isScheduleDue(
@@ -346,7 +358,9 @@ export async function GET(req: NextRequest) {
           settings.lastManagerReportSentAt,
           istDate,
           currentDay,
-          currentDate
+          currentDate,
+          settings.managerReportDay,
+          settings.managerReportDate
         );
 
         shouldLOReport = isScheduleDue(
@@ -355,49 +369,21 @@ export async function GET(req: NextRequest) {
           settings.lastLoReportSentAt,
           istDate,
           currentDay,
-          currentDate
+          currentDate,
+          settings.loReportDay,
+          settings.loReportDate
         );
 
-        if (settings.paymentReportFrequency && !settings.paymentReportFrequency.includes('OFF')) {
-          const pTimes = (settings.paymentReportTimes || "10:00").split(',').map((t: string) => t.trim()).sort();
-          const pFreqs = settings.paymentReportFrequency.split(',').map((f: string) => f.trim());
-          
-          let frequencyIsActive = false;
-          if (pFreqs.includes('D')) {
-            frequencyIsActive = true;
-          } 
-          if (!frequencyIsActive && pFreqs.includes('W')) {
-            const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
-            const targetDay = dayMap[settings.paymentReportDay || 'Monday'];
-            if (currentDay === targetDay) frequencyIsActive = true;
-          } 
-          if (!frequencyIsActive && pFreqs.includes('M')) {
-            if (currentDate === (settings.paymentReportDate || 1)) frequencyIsActive = true;
-          }
-
-          if (frequencyIsActive) {
-            const dueTimes = pTimes.filter((t: string) => t <= currentHHmm);
-            if (dueTimes.length > 0) {
-              const latestDueTime = dueTimes[dueTimes.length - 1];
-              const [dueHour, dueMin] = latestDueTime.split(':').map(Number);
-              const latestDueTimestamp = new Date(istDate.getTime());
-              latestDueTimestamp.setUTCHours(dueHour, dueMin, 0, 0);
-
-              let alreadySent = false;
-              if (settings.lastPaymentReportSentAt) {
-                const lastSentDate = new Date(settings.lastPaymentReportSentAt);
-                const lastSentIST = new Date(lastSentDate.getTime() + (5.5 * 60 * 60 * 1000));
-                if (lastSentIST >= latestDueTimestamp) {
-                  alreadySent = true;
-                }
-              }
-
-              if (!alreadySent) {
-                shouldPaymentReport = true;
-              }
-            }
-          }
-        }
+        shouldPaymentReport = isScheduleDue(
+          settings.paymentReportFrequency || 'OFF',
+          settings.paymentReportTimes || '10:00',
+          settings.lastPaymentReportSentAt,
+          istDate,
+          currentDay,
+          currentDate,
+          settings.paymentReportDay,
+          settings.paymentReportDate
+        );
 
         if (!shouldRemind && !shouldReport && !shouldLOReport && !shouldPaymentReport) {
           return NextResponse.json({ message: `Skipping.` });

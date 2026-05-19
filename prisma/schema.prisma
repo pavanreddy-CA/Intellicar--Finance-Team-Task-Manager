@@ -238,6 +238,12 @@ model SystemSettings {
   paymentReportDate        Int?      @default(1)
   departmentHeadMatrix     String?   @default("{}")
   masterLOClassifications  String?   @default("Process Error,Calculation Error,Communication Gap,Documentation Miss,System Issue,Miscellaneous")
+  reminderDay              String?   @default("Monday")
+  reminderDate             Int?      @default(1)
+  managerReportDay         String?   @default("Monday")
+  managerReportDate        Int?      @default(1)
+  loReportDay              String?   @default("Monday")
+  loReportDate             Int?      @default(1)
 }
 
 model PaymentTemplate {

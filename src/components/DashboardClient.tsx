@@ -9051,349 +9051,131 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                         </div>
                       </div>
                     </div>
-                    {/* Reminders Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                        <h4 style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 600 }}>Pending Reminders (Owners)</h4>
-                        <select 
-                          value={settings.reminderFrequency}
-                          onChange={(e) => setSettings({...settings, reminderFrequency: e.target.value})}
-                          style={{ padding: "6px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem" }}
-                        >
-                          <option value="D">Daily</option>
-                          <option value="W">Weekly</option>
-                          <option value="M">Monthly</option>
-                          <option value="CUSTOM">Custom</option>
-                          <option value="OFF">Turn Off</option>
-                        </select>
-                      </div>
+                    {/* Advanced Schedule Helper */}
+                    {(()=>{
+                      const renderAdvancedScheduleBlock = (title: string, freqKey: string, timesKey: string, dayKey: string, dateKey: string, bgColor: string = t.bg, borderColor: string = t.border, titleColor: string = t.text) => {
+                        return (
+                          <div style={{ marginBottom: "32px", padding: "20px", background: bgColor, borderRadius: "12px", border: `1px solid ${borderColor}` }}>
+                            <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: titleColor, fontWeight: 700 }}>{title}</h4>
+                            <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
+                              {(['OFF', 'D', 'W', 'M'] as const).map((freq) => {
+                                const currentVal = (settings as any)[freqKey] || 'OFF';
+                                // handle legacy "DAILY" etc
+                                const normalizedVal = currentVal === 'DAILY' ? 'D' : currentVal === 'WEEKLY' ? 'W' : currentVal === 'MONTHLY' ? 'M' : currentVal;
+                                const currentFreqs = normalizedVal.split(',').filter((f: string) => f.trim());
+                                const isSelected = currentFreqs.includes(freq);
+                                
+                                return (
+                                  <label key={freq} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", borderRadius: "10px", border: "1px solid", borderColor: isSelected ? titleColor : t.border, background: isSelected ? (bgColor === t.bg ? t.card : bgColor) : t.card, cursor: "pointer", transition: "all 0.2s" }}>
+                                    <input 
+                                      type="checkbox" 
+                                      checked={isSelected} 
+                                      onChange={() => {
+                                        let newFreqs: string[];
+                                        if (freq === 'OFF') {
+                                          newFreqs = ['OFF'];
+                                        } else {
+                                          if (isSelected) {
+                                            newFreqs = currentFreqs.filter((f: string) => f !== freq);
+                                            if (newFreqs.length === 0) newFreqs = ['OFF'];
+                                          } else {
+                                            newFreqs = [...currentFreqs.filter((f: string) => f !== 'OFF'), freq];
+                                          }
+                                        }
+                                        setSettings({...settings, [freqKey]: newFreqs.join(',')});
+                                      }}
+                                      style={{ accentColor: titleColor }}
+                                    />
+                                    <span style={{ fontSize: "0.875rem", fontWeight: 600, color: isSelected ? titleColor : t.textMuted }}>
+                                      {freq === 'OFF' ? 'Off' : freq === 'D' ? 'Daily' : freq === 'W' ? 'Weekly' : 'Monthly'}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
 
-                      {settings.reminderFrequency !== 'OFF' && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
-                          {settings.reminderTimes.split(',').map((timeStr, idx) => {
-                            const timeObj = convertTo12h(timeStr.trim());
-                            return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: t.card, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
+                            {((settings as any)[freqKey] || '').includes('W') && (
+                              <div style={{ marginBottom: "16px" }}>
+                                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 700, color: titleColor }}>SELECT DAY (WEEKLY)</label>
                                 <select 
-                                  value={timeObj.h}
-                                  onChange={(e) => {
-                                    const times = settings.reminderTimes.split(',');
-                                    times[idx] = convertTo24h(e.target.value, timeObj.m, timeObj.s);
-                                    setSettings({...settings, reminderTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
+                                  value={(settings as any)[dayKey] || 'Monday'}
+                                  onChange={(e) => setSettings({...settings, [dayKey]: e.target.value})}
+                                  style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${borderColor}`, width: "100%", background: t.card, fontSize: "0.875rem", fontWeight: 600, color: titleColor }}
                                 >
-                                  {hours12.map(h => <option key={h} value={h}>{h}</option>)}
+                                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                                    <option key={day} value={day}>{day}</option>
+                                  ))}
                                 </select>
-                                <span>:</span>
+                              </div>
+                            )}
+
+                            {((settings as any)[freqKey] || '').includes('M') && (
+                              <div style={{ marginBottom: "16px" }}>
+                                <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 700, color: titleColor }}>SELECT DATE (MONTHLY)</label>
                                 <select 
-                                  value={timeObj.m}
-                                  onChange={(e) => {
-                                    const times = settings.reminderTimes.split(',');
-                                    times[idx] = convertTo24h(timeObj.h, e.target.value, timeObj.s);
-                                    setSettings({...settings, reminderTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
+                                  value={(settings as any)[dateKey] || 1}
+                                  onChange={(e) => setSettings({...settings, [dateKey]: parseInt(e.target.value)})}
+                                  style={{ padding: "10px", borderRadius: "10px", border: `1px solid ${borderColor}`, width: "100%", background: t.card, fontSize: "0.875rem", fontWeight: 600, color: titleColor }}
                                 >
-                                  {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                                  {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
+                                    <option key={date} value={date}>{date}</option>
+                                  ))}
                                 </select>
-                                <select 
-                                  value={timeObj.s}
-                                  onChange={(e) => {
-                                    const times = settings.reminderTimes.split(',');
-                                    times[idx] = convertTo24h(timeObj.h, timeObj.m, e.target.value);
-                                    setSettings({...settings, reminderTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", color: "#2563eb", fontWeight: 700 }}
-                                >
-                                  {ampm.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
+                              </div>
+                            )}
+
+                            {!(settings as any)[freqKey]?.includes('OFF') && (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                {((settings as any)[timesKey] || "").split(',').filter((t: string) => t.trim()).map((time: string, idx: number) => {
+                                  const [h, m] = time.split(':');
+                                  const h12 = parseInt(h) % 12 || 12;
+                                  const suffix = parseInt(h) >= 12 ? 'PM' : 'AM';
+                                  return (
+                                    <div key={idx} style={{ background: t.card, padding: "6px 10px", borderRadius: "8px", border: `1px solid ${borderColor}`, display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                                      <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: titleColor }}>{h12}:{m} {suffix}</span>
+                                      <input 
+                                        type="time" 
+                                        value={time}
+                                        onChange={(e) => {
+                                          const times = ((settings as any)[timesKey] || "").split(',').filter((t: string) => t.trim());
+                                          times[idx] = e.target.value;
+                                          setSettings({...settings, [timesKey]: times.join(',')});
+                                        }}
+                                        style={{ border: "none", width: "20px", padding: 0, background: "transparent", cursor: "pointer", color: "transparent" }}
+                                      />
+                                      <button 
+                                        onClick={() => {
+                                          const times = ((settings as any)[timesKey] || "").split(',').filter((_: any, i: number) => i !== idx);
+                                          setSettings({...settings, [timesKey]: times.join(',')});
+                                        }}
+                                        style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  );
+                                })}
                                 <button 
-                                  onClick={() => {
-                                    const times = settings.reminderTimes.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, reminderTimes: times.join(',') || "09:00"});
-                                  }}
-                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
+                                  onClick={() => setSettings({...settings, [timesKey]: ((settings as any)[timesKey] || "") + (((settings as any)[timesKey]?.trim() ? "," : "") + "10:00")})}
+                                  style={{ padding: "8px 16px", borderRadius: "8px", border: `1px dashed ${borderColor}`, background: "transparent", color: titleColor, cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}
                                 >
-                                  ×
+                                  + Add Time
                                 </button>
                               </div>
-                            );
-                          })}
-                          <button 
-                            onClick={() => setSettings({...settings, reminderTimes: settings.reminderTimes + ",09:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: t.textMuted, cursor: "pointer", fontSize: "0.875rem" }}
-                          >
-                            + Add Time
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                            )}
+                          </div>
+                        );
+                      };
 
-                    {/* Manager Report Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                        <h4 style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 600 }}>Manager Report Summary</h4>
-                        <select 
-                          value={settings.managerReportFrequency}
-                          onChange={(e) => setSettings({...settings, managerReportFrequency: e.target.value})}
-                          style={{ padding: "6px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem" }}
-                        >
-                          <option value="D">Daily</option>
-                          <option value="W">Weekly</option>
-                          <option value="M">Monthly</option>
-                          <option value="OFF">Turn Off</option>
-                        </select>
-                      </div>
-
-                      {settings.managerReportFrequency !== 'OFF' && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
-                          {settings.managerReportTimes.split(',').map((timeStr, idx) => {
-                            const timeObj = convertTo12h(timeStr.trim());
-                            return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: t.card, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
-                                <select 
-                                  value={timeObj.h}
-                                  onChange={(e) => {
-                                    const times = settings.managerReportTimes.split(',');
-                                    times[idx] = convertTo24h(e.target.value, timeObj.m, timeObj.s);
-                                    setSettings({...settings, managerReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
-                                >
-                                  {hours12.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
-                                <span>:</span>
-                                <select 
-                                  value={timeObj.m}
-                                  onChange={(e) => {
-                                    const times = settings.managerReportTimes.split(',');
-                                    times[idx] = convertTo24h(timeObj.h, e.target.value, timeObj.s);
-                                    setSettings({...settings, managerReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
-                                >
-                                  {minutes.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                                <select 
-                                  value={timeObj.s}
-                                  onChange={(e) => {
-                                    const times = settings.managerReportTimes.split(',');
-                                    times[idx] = convertTo24h(timeObj.h, timeObj.m, e.target.value);
-                                    setSettings({...settings, managerReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", color: "#2563eb", fontWeight: 700 }}
-                                >
-                                  {ampm.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                                <button 
-                                  onClick={() => {
-                                    const times = settings.managerReportTimes.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, managerReportTimes: times.join(',') || "10:00"});
-                                  }}
-                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          })}
-                          <button 
-                            onClick={() => setSettings({...settings, managerReportTimes: settings.managerReportTimes + ",10:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: t.textMuted, cursor: "pointer", fontSize: "0.875rem" }}
-                          >
-                            + Add Time
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* LO Report Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: t.bg, borderRadius: "12px", border: `1px solid ${t.border}` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                        <h4 style={{ margin: 0, fontSize: "1rem", color: t.text, fontWeight: 600 }}>LO Report (Learning Opportunities)</h4>
-                        <select 
-                          value={settings.loReportFrequency}
-                          onChange={(e) => setSettings({...settings, loReportFrequency: e.target.value})}
-                          style={{ padding: "6px 12px", borderRadius: "8px", border: `1px solid ${t.border}`, fontSize: "0.875rem" }}
-                        >
-                          <option value="D">Daily</option>
-                          <option value="W">Weekly</option>
-                          <option value="M">Monthly</option>
-                          <option value="OFF">Turn Off</option>
-                        </select>
-                      </div>
-
-                      {settings.loReportFrequency !== 'OFF' && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
-                          {settings.loReportTimes.split(',').map((timeStr, idx) => {
-                            const timeObj = convertTo12h(timeStr.trim());
-                            return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: t.card, padding: "8px 12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
-                                <select 
-                                  value={timeObj.h}
-                                  onChange={(e) => {
-                                    const times = settings.loReportTimes.split(',');
-                                    times[idx] = convertTo24h(e.target.value, timeObj.m, timeObj.s);
-                                    setSettings({...settings, loReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
-                                >
-                                  {hours12.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
-                                <span>:</span>
-                                <select 
-                                  value={timeObj.m}
-                                  onChange={(e) => {
-                                    const times = settings.loReportTimes.split(',');
-                                    times[idx] = convertTo24h(timeObj.h, e.target.value, timeObj.s);
-                                    setSettings({...settings, loReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600 }}
-                                >
-                                  {minutes.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                                <select 
-                                  value={timeObj.s}
-                                  onChange={(e) => {
-                                    const times = settings.loReportTimes.split(',');
-                                    times[idx] = convertTo24h(timeObj.h, timeObj.m, e.target.value);
-                                    setSettings({...settings, loReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", outline: "none", fontWeight: 600, color: "#2563eb" }}
-                                >
-                                  {ampm.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                                <button 
-                                  onClick={() => {
-                                    const times = settings.loReportTimes.split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, loReportTimes: times.join(',') || "10:00"});
-                                  }}
-                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          })}
-                          <button 
-                            onClick={() => setSettings({...settings, loReportTimes: settings.loReportTimes + ",10:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #cbd5e1", background: "transparent", color: t.textMuted, cursor: "pointer", fontSize: "0.875rem" }}
-                          >
-                            + Add Time
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Payment Report Schedule */}
-                    <div style={{ marginBottom: "32px", padding: "20px", background: "#fdf4ff", borderRadius: "12px", border: "1px solid #f5d0fe" }}>
-                      <h4 style={{ margin: "0 0 16px 0", fontSize: "1rem", color: "#a21caf", fontWeight: 700 }}>Payment Report Schedule</h4>
-                      <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
-                        {(['OFF', 'D', 'W', 'M'] as const).map((freq) => {
-                          const currentFreqs = (settings.paymentReportFrequency || 'OFF').split(',').filter(f => f.trim());
-                          const isSelected = currentFreqs.includes(freq);
-                          
-                          return (
-                            <label key={freq} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", borderRadius: "10px", border: "1px solid", borderColor: isSelected ? "#d946ef" : "#e2e8f0", background: isSelected ? "#fdf4ff" : "white", cursor: "pointer", transition: "all 0.2s" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={isSelected} 
-                                onChange={() => {
-                                  let newFreqs: string[];
-                                  if (freq === 'OFF') {
-                                    newFreqs = ['OFF'];
-                                  } else {
-                                    if (isSelected) {
-                                      newFreqs = currentFreqs.filter(f => f !== freq);
-                                      if (newFreqs.length === 0) newFreqs = ['OFF'];
-                                    } else {
-                                      newFreqs = [...currentFreqs.filter(f => f !== 'OFF'), freq];
-                                    }
-                                  }
-                                  setSettings({...settings, paymentReportFrequency: newFreqs.join(',')});
-                                }}
-                                style={{ accentColor: "#d946ef" }}
-                              />
-                              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: isSelected ? "#a21caf" : "#64748b" }}>
-                                {freq === 'OFF' ? 'Off' : freq === 'D' ? 'Daily' : freq === 'W' ? 'Weekly' : 'Monthly'}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      {(settings.paymentReportFrequency || '').split(',').includes('W') && (
-                        <div style={{ marginBottom: "16px" }}>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 700, color: "#a21caf" }}>SELECT DAY (WEEKLY)</label>
-                          <select 
-                            value={settings.paymentReportDay}
-                            onChange={(e) => setSettings({...settings, paymentReportDay: e.target.value})}
-                            style={{ padding: "10px", borderRadius: "10px", border: "1px solid #f5d0fe", width: "100%", background: "white", fontSize: "0.875rem", fontWeight: 600, color: "#a21caf" }}
-                          >
-                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                              <option key={day} value={day}>{day}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      {(settings.paymentReportFrequency || '').split(',').includes('M') && (
-                        <div style={{ marginBottom: "16px" }}>
-                          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.75rem", fontWeight: 700, color: "#a21caf" }}>SELECT DATE (MONTHLY)</label>
-                          <select 
-                            value={settings.paymentReportDate}
-                            onChange={(e) => setSettings({...settings, paymentReportDate: parseInt(e.target.value)})}
-                            style={{ padding: "10px", borderRadius: "10px", border: "1px solid #f5d0fe", width: "100%", background: "white", fontSize: "0.875rem", fontWeight: 600, color: "#a21caf" }}
-                          >
-                            {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
-                              <option key={date} value={date}>{date}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-
-                      {settings.paymentReportFrequency !== 'OFF' && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                          {(settings.paymentReportTimes || "").split(',').filter(t => t.trim()).map((time, idx) => {
-                            const [h, m] = time.split(':');
-                            const h12 = parseInt(h) % 12 || 12;
-                            const suffix = parseInt(h) >= 12 ? 'PM' : 'AM';
-                            return (
-                              <div key={idx} style={{ background: t.card, padding: "6px 10px", borderRadius: "8px", border: "1px solid #f5d0fe", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-                                <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#a21caf" }}>{h12}:{m} {suffix}</span>
-                                <input 
-                                  type="time" 
-                                  value={time}
-                                  onChange={(e) => {
-                                    const times = (settings.paymentReportTimes || "").split(',').filter(t => t.trim());
-                                    times[idx] = e.target.value;
-                                    setSettings({...settings, paymentReportTimes: times.join(',')});
-                                  }}
-                                  style={{ border: "none", width: "20px", padding: 0, background: "transparent", cursor: "pointer" }}
-                                />
-                                <button 
-                                  onClick={() => {
-                                    const times = (settings.paymentReportTimes || "").split(',').filter((_, i) => i !== idx);
-                                    setSettings({...settings, paymentReportTimes: times.join(',')});
-                                  }}
-                                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", marginLeft: "4px", fontSize: "1.25rem", padding: "0 4px" }}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          })}
-                          <button 
-                            onClick={() => setSettings({...settings, paymentReportTimes: (settings.paymentReportTimes || "") + (settings.paymentReportTimes?.trim() ? "," : "") + "10:00"})}
-                            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px dashed #f5d0fe", background: "transparent", color: "#a21caf", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}
-                          >
-                            + Add Time
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      return (
+                        <>
+                          {renderAdvancedScheduleBlock("Pending Reminders (Owners)", "reminderFrequency", "reminderTimes", "reminderDay", "reminderDate")}
+                          {renderAdvancedScheduleBlock("Manager Report Summary", "managerReportFrequency", "managerReportTimes", "managerReportDay", "managerReportDate")}
+                          {renderAdvancedScheduleBlock("LO Report (Learning Opportunities)", "loReportFrequency", "loReportTimes", "loReportDay", "loReportDate")}
+                          {renderAdvancedScheduleBlock("Payment Report Schedule", "paymentReportFrequency", "paymentReportTimes", "paymentReportDay", "paymentReportDate", "#fdf4ff", "#f5d0fe", "#a21caf")}
+                        </>
+                      );
+                    })()}
 
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
                       <button 
