@@ -337,7 +337,8 @@ export async function GET(req: NextRequest) {
     try {
       if (settings) {
         const now = new Date();
-        const istDate = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+        // Add 1-minute jitter buffer so if Vercel fires at 02:29:58, it is treated as 02:30
+        const istDate = new Date(now.getTime() + (5.5 * 60 * 60 * 1000) + (1 * 60 * 1000));
         const currentHHmm = `${String(istDate.getUTCHours()).padStart(2, '0')}:${String(istDate.getUTCMinutes()).padStart(2, '0')}`;
         const currentDay = istDate.getUTCDay();
         const currentDate = istDate.getUTCDate();
