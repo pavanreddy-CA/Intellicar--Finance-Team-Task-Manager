@@ -4,13 +4,26 @@ import { resolveTaskName, getPeriodKey } from "@/lib/recurringUtils";
 import { getEmailFromName, sendEmail } from "@/lib/email";
 import { triggerNotification } from "@/services/notificationService";
 
-export async function POST(req: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+async function handleDailyTasks(req: NextRequest) {
   try {
     const sql = getDb();
-    const isManual = req.headers.get("x-manual-trigger") === "true";
+    
+    // Auth Check matching daily-summary
+    const authHeader = req.headers.get("authorization");
+    const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+    const isManualToken = authHeader === "Bearer intellicar-cron-123";
+    const isManualTrigger = req.headers.get("x-manual-trigger") === "true";
+    
+    if (process.env.NODE_ENV === "production" && !isVercelCron && !isManualToken && !isManualTrigger) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const isManual = isManualTrigger || isManualToken;
     
     // 1. Fetch System Settings for Holidays and Time
-     const settingsResult = await sql`SELECT * FROM "SystemSettings" LIMIT 1`;
+    const settingsResult = await sql`SELECT * FROM "SystemSettings" LIMIT 1`;
     const settings = settingsResult[0] || {};
     const holidayList = JSON.parse(settings.holidayList || "[]");
     const generationTime = settings.dailyTaskGenerationTime || "06:00";
@@ -148,4 +161,12 @@ export async function POST(req: NextRequest) {
     console.error("Cron daily tasks error:", error);
     return NextResponse.json({ success: false, message: error.message || "Internal server error" }, { status: 500 });
   }
+}
+
+export async function GET(req: NextRequest) {
+  return handleDailyTasks(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handleDailyTasks(req);
 }
