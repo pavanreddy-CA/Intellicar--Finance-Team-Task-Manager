@@ -6774,21 +6774,16 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                   )}
                 </div>
 
-                <button onClick={() => { handleAnaPresetChange("CURRENT_FY"); setAnaTaskEntityFilter("ALL"); setAnaTaskDeptFilter("ALL"); setAnaTaskUserFilter("ALL"); }} style={{ background: "transparent", border: "none", color: t.text, fontSize: "0.8125rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "10px" }} className="hover-card">
-                  <RotateCcw size={14} /> RESET
-                </button>
-
                 <button
                   onClick={() => {
                     setAnaTaskEntityFilter('ALL');
                     setAnaTaskDeptFilter('ALL');
                     setAnaTaskUserFilter('ALL');
-                    const fy = getFYDates();
-                    setAnaStartDate(fy.start);
-                    setAnaEndDate(fy.end);
+                    handleAnaPresetChange('CURRENT_FY');
                   }}
                   title="Reset all filters"
                   style={{ background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9", border: `1px solid ${t.border}`, color: t.text, cursor: "pointer", padding: "6px 12px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+                  className="hover-card"
                 >
                   <RotateCcw size={12} /> RESET
                 </button>
