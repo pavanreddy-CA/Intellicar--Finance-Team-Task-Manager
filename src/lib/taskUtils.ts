@@ -1,29 +1,30 @@
 export function getTrackingStatus(task: { taskStatus: string; dueDate: string | Date | null; completionDate: string | Date | null }) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const getISTDateString = (date: Date | string | null): string | null => {
+    if (!date) return null;
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return null;
+    const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+    const yyyy = istDate.getUTCFullYear();
+    const mm = String(istDate.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(istDate.getUTCDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
-  const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-  if (dueDate) dueDate.setHours(0, 0, 0, 0);
+  const todayStr = getISTDateString(new Date())!;
+  const dueDateStr = getISTDateString(task.dueDate);
+  const completionDateStr = getISTDateString(task.completionDate);
 
-  const completionDate = task.completionDate ? new Date(task.completionDate) : null;
-  if (completionDate) completionDate.setHours(0, 0, 0, 0);
-
-  const isCompleted = task.taskStatus === 'Completed' || !!completionDate;
-
-  const isSameDay = (d1: Date, d2: Date) => 
-    d1.getDate() === d2.getDate() && 
-    d1.getMonth() === d2.getMonth() && 
-    d1.getFullYear() === d2.getFullYear();
+  const isCompleted = task.taskStatus === 'Completed' || !!completionDateStr;
 
   if (!isCompleted) {
-    if (!dueDate) return "Not Yet Due";
-    if (isSameDay(dueDate, today)) return "Due on Today";
-    if (dueDate < today) return "Over Due";
+    if (!dueDateStr) return "Not Yet Due";
+    if (dueDateStr === todayStr) return "Due on Today";
+    if (dueDateStr < todayStr) return "Over Due";
     return "Not Yet Due";
   } else {
-    if (!completionDate || !dueDate) return "On-Time";
-    if (isSameDay(completionDate, dueDate)) return "On-Time";
-    if (completionDate < dueDate) return "Early Closure";
+    if (!completionDateStr || !dueDateStr) return "On-Time";
+    if (completionDateStr === dueDateStr) return "On-Time";
+    if (completionDateStr < dueDateStr) return "Early Closure";
     return "Delay in Closure";
   }
 }
