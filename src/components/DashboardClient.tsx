@@ -243,6 +243,10 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [anaTaskEntityFilter, setAnaTaskEntityFilter] = useState('ALL');
   const [anaTaskDeptFilter, setAnaTaskDeptFilter] = useState('ALL');
   const [anaTaskUserFilter, setAnaTaskUserFilter] = useState('ALL');
+  const [workloadSearchQuery, setWorkloadSearchQuery] = useState('');
+  const [workloadSortField, setWorkloadSortField] = useState<string>('name');
+  const [workloadSortDirection, setWorkloadSortDirection] = useState<'asc' | 'desc'>('asc');
+
   
   // Financial Year Helpers
   const getFYDates = () => {
@@ -3099,6 +3103,48 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       filteredIDR
     };
   }, [tasks, externalRequests, anaTaskEntityFilter, anaTaskDeptFilter, anaTaskUserFilter, anaStartDate, anaEndDate]);
+
+  // Clickable header sorting logic for workload table
+  const handleWorkloadSort = (field: string) => {
+    if (workloadSortField === field) {
+      setWorkloadSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setWorkloadSortField(field);
+      setWorkloadSortDirection(field === 'name' ? 'asc' : 'desc');
+    }
+  };
+
+  const processedWorkload = useMemo(() => {
+    if (!taskAnalyticsData.userWorkload) return [];
+    
+    // 1. Filter by Name (search query)
+    let list = taskAnalyticsData.userWorkload;
+    if (workloadSearchQuery.trim()) {
+      const q = workloadSearchQuery.toLowerCase().trim();
+      list = list.filter(u => u.name && u.name.toLowerCase().includes(q));
+    }
+    
+    // 2. Sort by field
+    list = [...list].sort((a, b) => {
+      const aVal = a[workloadSortField as keyof typeof a];
+      const bVal = b[workloadSortField as keyof typeof b];
+      
+      if (workloadSortField === 'name') {
+        const aStr = String(aVal || '').toLowerCase();
+        const bStr = String(bVal || '').toLowerCase();
+        return workloadSortDirection === 'asc'
+          ? aStr.localeCompare(bStr)
+          : bStr.localeCompare(aStr);
+      } else {
+        const aNum = Number(aVal) || 0;
+        const bNum = Number(bVal) || 0;
+        return workloadSortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+      }
+    });
+    
+    return list;
+  }, [taskAnalyticsData.userWorkload, workloadSearchQuery, workloadSortField, workloadSortDirection]);
+
 
   // Format date and time as DD-MMM-YYYY HH:mm
   const formatDateTime = (dateStr: string) => {
@@ -7060,76 +7106,125 @@ const handleResourceUpload = async (e: React.FormEvent) => {
 
                 {/* User Workload & Outstanding Queues Grid */}
                 <div style={{ padding: "32px", borderRadius: "32px", background: t.card, border: `1px solid ${t.border}`, boxShadow: isDarkMode ? "none" : "0 10px 30px -10px rgba(0,0,0,0.08)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                    <h3 style={{ margin: 0, color: t.text, fontSize: "1.25rem", fontWeight: 800 }}>User Workload & Outstanding Queues</h3>
-                    <div style={{ fontSize: "0.8125rem", color: "#8b5cf6", background: "rgba(139, 92, 246, 0.1)", padding: "4px 12px", borderRadius: "20px", fontWeight: 700 }}>Outstanding Metrics</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: t.text, fontSize: "1.25rem", fontWeight: 800 }}>User Workload & Outstanding Queues</h3>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: t.textMuted }}>Double-layered workload analytics. Click column headers to sort by metrics.</p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      {/* Search box */}
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          placeholder="Search name..."
+                          value={workloadSearchQuery}
+                          onChange={e => setWorkloadSearchQuery(e.target.value)}
+                          style={{
+                            padding: "8px 12px 8px 32px",
+                            borderRadius: "12px",
+                            border: `1px solid ${t.border}`,
+                            background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f8fafc",
+                            color: t.text,
+                            fontSize: "0.8125rem",
+                            outline: "none",
+                            width: "180px",
+                            transition: "all 0.2s"
+                          }}
+                          onFocus={e => e.target.style.borderColor = "#8b5cf6"}
+                          onBlur={e => e.target.style.borderColor = t.border}
+                        />
+                        <svg
+                          style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", width: "14px", height: "14px", color: t.textMuted }}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <div style={{ fontSize: "0.8125rem", color: "#8b5cf6", background: "rgba(139, 92, 246, 0.1)", padding: "4px 12px", borderRadius: "20px", fontWeight: 700 }}>
+                        {processedWorkload.length} Users
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem", textAlign: "left" }}>
-                      <thead>
-                        <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderBottom: `2px solid ${t.border}` }}>
-                          <th rowSpan={2} style={{ padding: "16px", fontWeight: 800, color: t.text }}>Name</th>
-                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderLeft: `1px solid ${t.border}`, borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#10b981" }}>Completed</th>
-                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#ef4444" }}>Pending at Owner</th>
-                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#f59e0b" }}>Pending at Reviewer</th>
-                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", fontWeight: 800, color: "#8b5cf6" }}>Pending : Mark as Processed</th>
-                        </tr>
-                        <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.01)" : "#fcfdfe", borderBottom: `1px solid ${t.border}`, fontSize: "0.75rem" }}>
-                          {/* Completed Sub-headers */}
-                          <th style={{ padding: "8px", textAlign: "center", borderLeft: `1px solid ${t.border}`, color: t.textMuted }}>On or Before Due Date</th>
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Delay in Closure</th>
-                          <th style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>Total</th>
-                          {/* Pending Owner Sub-headers */}
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Overdue Tasks</th>
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Due on Today</th>
-                          <th style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>Total</th>
-                          {/* Pending Reviewer Sub-headers */}
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending for a day</th>
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending &gt; 1 day</th>
-                          <th style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>Total</th>
-                          {/* Mark as Processed Sub-headers */}
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending for a day</th>
-                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending &gt; 1 day</th>
-                          <th style={{ padding: "8px", textAlign: "center", fontWeight: 700, color: t.text }}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {taskAnalyticsData.userWorkload && taskAnalyticsData.userWorkload.length > 0 ? (
-                          taskAnalyticsData.userWorkload.map((w, idx) => (
-                            <tr key={idx} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.02)" : "rgba(15, 23, 42, 0.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                              {/* User Name with avatar */}
-                              <td style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
-                                <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 800 }}>
-                                  {w.name ? w.name[0].toUpperCase() : "?"}
-                                </div>
-                                <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: t.text }}>{w.name}</span>
-                              </td>
-                              {/* Completed Cells */}
-                              <td style={{ padding: "12px", textAlign: "center", borderLeft: `1px solid ${t.border}`, color: w.completedOnTime > 0 ? "#10b981" : t.textMuted, fontWeight: w.completedOnTime > 0 ? 600 : 400 }}>{w.completedOnTime}</td>
-                              <td style={{ padding: "12px", textAlign: "center", color: w.completedDelayed > 0 ? "#f59e0b" : t.textMuted, fontWeight: w.completedDelayed > 0 ? 600 : 400 }}>{w.completedDelayed}</td>
-                              <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.completedTotal}</td>
-                              {/* Pending Owner Cells */}
-                              <td style={{ padding: "12px", textAlign: "center", color: w.pendingOverdue > 0 ? "#ef4444" : t.textMuted, fontWeight: w.pendingOverdue > 0 ? 700 : 400 }}>{w.pendingOverdue}</td>
-                              <td style={{ padding: "12px", textAlign: "center", color: w.pendingDueToday > 0 ? "#3b82f6" : t.textMuted, fontWeight: w.pendingDueToday > 0 ? 700 : 400 }}>{w.pendingDueToday}</td>
-                              <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.pendingTotal}</td>
-                              {/* Pending Reviewer Cells */}
-                              <td style={{ padding: "12px", textAlign: "center", color: w.reviewerPendingUnder1Day > 0 ? t.text : t.textMuted, fontWeight: w.reviewerPendingUnder1Day > 0 ? 600 : 400 }}>{w.reviewerPendingUnder1Day}</td>
-                              <td style={{ padding: "12px", textAlign: "center", color: w.reviewerPendingOver1Day > 0 ? "#ef4444" : t.textMuted, fontWeight: w.reviewerPendingOver1Day > 0 ? 700 : 400 }}>{w.reviewerPendingOver1Day}</td>
-                              <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.reviewerPendingTotal}</td>
-                              {/* Processed Cells */}
-                              <td style={{ padding: "12px", textAlign: "center", color: w.processedPendingUnder1Day > 0 ? t.text : t.textMuted, fontWeight: w.processedPendingUnder1Day > 0 ? 600 : 400 }}>{w.processedPendingUnder1Day}</td>
-                              <td style={{ padding: "12px", textAlign: "center", color: w.processedPendingOver1Day > 0 ? "#ef4444" : t.textMuted, fontWeight: w.processedPendingOver1Day > 0 ? 700 : 400 }}>{w.processedPendingOver1Day}</td>
-                              <td style={{ padding: "12px", textAlign: "center", fontWeight: 700, color: t.text }}>{w.processedPendingTotal}</td>
+
+                  {(() => {
+                    const renderSortIcon = (field: string) => {
+                      if (workloadSortField !== field) {
+                        return <span style={{ marginLeft: "4px", color: t.textMuted, opacity: 0.3, fontSize: "0.7rem" }}>⇅</span>;
+                      }
+                      return <span style={{ marginLeft: "4px", color: "#8b5cf6", fontWeight: "bold", fontSize: "0.75rem" }}>{workloadSortDirection === 'asc' ? ' ▲' : ' ▼'}</span>;
+                    };
+                    return (
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem", textAlign: "left" }}>
+                          <thead>
+                            <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderBottom: `2px solid ${t.border}` }}>
+                              <th rowSpan={2} onClick={() => handleWorkloadSort('name')} style={{ padding: "16px", fontWeight: 800, color: t.text, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Name {renderSortIcon('name')}</th>
+                              <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderLeft: `1px solid ${t.border}`, borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#10b981" }}>Completed</th>
+                              <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#ef4444" }}>Pending at Owner</th>
+                              <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#f59e0b" }}>Pending at Reviewer</th>
+                              <th colSpan={3} style={{ padding: "12px", textAlign: "center", fontWeight: 800, color: "#8b5cf6" }}>Pending : Mark as Processed</th>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={13} style={{ padding: "24px", textAlign: "center", color: t.textMuted }}>No active user workloads for the current selection.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                            <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.01)" : "#fcfdfe", borderBottom: `1px solid ${t.border}`, fontSize: "0.75rem" }}>
+                              {/* Completed Sub-headers */}
+                              <th onClick={() => handleWorkloadSort('completedOnTime')} style={{ padding: "8px", textAlign: "center", borderLeft: `1px solid ${t.border}`, color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>On or Before Due Date {renderSortIcon('completedOnTime')}</th>
+                              <th onClick={() => handleWorkloadSort('completedDelayed')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Delay in Closure {renderSortIcon('completedDelayed')}</th>
+                              <th onClick={() => handleWorkloadSort('completedTotal')} style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Total {renderSortIcon('completedTotal')}</th>
+                              {/* Pending Owner Sub-headers */}
+                              <th onClick={() => handleWorkloadSort('pendingOverdue')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Overdue Tasks {renderSortIcon('pendingOverdue')}</th>
+                              <th onClick={() => handleWorkloadSort('pendingDueToday')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Due on Today {renderSortIcon('pendingDueToday')}</th>
+                              <th onClick={() => handleWorkloadSort('pendingTotal')} style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Total {renderSortIcon('pendingTotal')}</th>
+                              {/* Pending Reviewer Sub-headers */}
+                              <th onClick={() => handleWorkloadSort('reviewerPendingUnder1Day')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Pending for a day {renderSortIcon('reviewerPendingUnder1Day')}</th>
+                              <th onClick={() => handleWorkloadSort('reviewerPendingOver1Day')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Pending &gt; 1 day {renderSortIcon('reviewerPendingOver1Day')}</th>
+                              <th onClick={() => handleWorkloadSort('reviewerPendingTotal')} style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Total {renderSortIcon('reviewerPendingTotal')}</th>
+                              {/* Mark as Processed Sub-headers */}
+                              <th onClick={() => handleWorkloadSort('processedPendingUnder1Day')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Pending for a day {renderSortIcon('processedPendingUnder1Day')}</th>
+                              <th onClick={() => handleWorkloadSort('processedPendingOver1Day')} style={{ padding: "8px", textAlign: "center", color: t.textMuted, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Pending &gt; 1 day {renderSortIcon('processedPendingOver1Day')}</th>
+                              <th onClick={() => handleWorkloadSort('processedPendingTotal')} style={{ padding: "8px", textAlign: "center", fontWeight: 700, color: t.text, cursor: "pointer", userSelect: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Total {renderSortIcon('processedPendingTotal')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {processedWorkload && processedWorkload.length > 0 ? (
+                              processedWorkload.map((w, idx) => (
+                                <tr key={idx} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.02)" : "rgba(15, 23, 42, 0.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                  {/* User Name with avatar */}
+                                  <td style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 800 }}>
+                                      {w.name ? w.name[0].toUpperCase() : "?"}
+                                    </div>
+                                    <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: t.text }}>{w.name}</span>
+                                  </td>
+                                  {/* Completed Cells */}
+                                  <td style={{ padding: "12px", textAlign: "center", borderLeft: `1px solid ${t.border}`, color: w.completedOnTime > 0 ? "#10b981" : t.textMuted, fontWeight: w.completedOnTime > 0 ? 600 : 400 }}>{w.completedOnTime}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.completedDelayed > 0 ? "#f59e0b" : t.textMuted, fontWeight: w.completedDelayed > 0 ? 600 : 400 }}>{w.completedDelayed}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.completedTotal}</td>
+                                  {/* Pending Owner Cells */}
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.pendingOverdue > 0 ? "#ef4444" : t.textMuted, fontWeight: w.pendingOverdue > 0 ? 700 : 400 }}>{w.pendingOverdue}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.pendingDueToday > 0 ? "#3b82f6" : t.textMuted, fontWeight: w.pendingDueToday > 0 ? 700 : 400 }}>{w.pendingDueToday}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.pendingTotal}</td>
+                                  {/* Pending Reviewer Cells */}
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.reviewerPendingUnder1Day > 0 ? t.text : t.textMuted, fontWeight: w.reviewerPendingUnder1Day > 0 ? 600 : 400 }}>{w.reviewerPendingUnder1Day}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.reviewerPendingOver1Day > 0 ? "#ef4444" : t.textMuted, fontWeight: w.reviewerPendingOver1Day > 0 ? 700 : 400 }}>{w.reviewerPendingOver1Day}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.reviewerPendingTotal}</td>
+                                  {/* Processed Cells */}
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.processedPendingUnder1Day > 0 ? t.text : t.textMuted, fontWeight: w.processedPendingUnder1Day > 0 ? 600 : 400 }}>{w.processedPendingUnder1Day}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", color: w.processedPendingOver1Day > 0 ? "#ef4444" : t.textMuted, fontWeight: w.processedPendingOver1Day > 0 ? 700 : 400 }}>{w.processedPendingOver1Day}</td>
+                                  <td style={{ padding: "12px", textAlign: "center", fontWeight: 700, color: t.text }}>{w.processedPendingTotal}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={13} style={{ padding: "24px", textAlign: "center", color: t.textMuted }}>No active user workloads matching your query.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Fourth Row: Departmental Workload */}
