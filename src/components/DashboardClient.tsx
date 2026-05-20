@@ -246,6 +246,9 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
   const [workloadSearchQuery, setWorkloadSearchQuery] = useState('');
   const [workloadSortField, setWorkloadSortField] = useState<string>('name');
   const [workloadSortDirection, setWorkloadSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [workloadSelectedUsers, setWorkloadSelectedUsers] = useState<string[]>([]);
+  const [showWorkloadUserDropdown, setShowWorkloadUserDropdown] = useState(false);
+  const [workloadDropdownSearch, setWorkloadDropdownSearch] = useState('');
 
   
   // Financial Year Helpers
@@ -3114,6 +3117,11 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     }
   };
 
+  const allWorkloadNames = useMemo(() => {
+    if (!taskAnalyticsData.userWorkload) return [];
+    return taskAnalyticsData.userWorkload.map(u => u.name).filter(Boolean) as string[];
+  }, [taskAnalyticsData.userWorkload]);
+
   const processedWorkload = useMemo(() => {
     if (!taskAnalyticsData.userWorkload) return [];
     
@@ -3124,7 +3132,12 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       list = list.filter(u => u.name && u.name.toLowerCase().includes(q));
     }
     
-    // 2. Sort by field
+    // 2. Filter by Checked Selected Users
+    if (workloadSelectedUsers.length > 0) {
+      list = list.filter(u => u.name && workloadSelectedUsers.includes(u.name));
+    }
+    
+    // 3. Sort by field
     list = [...list].sort((a, b) => {
       const aVal = a[workloadSortField as keyof typeof a];
       const bVal = b[workloadSortField as keyof typeof b];
@@ -3143,7 +3156,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
     });
     
     return list;
-  }, [taskAnalyticsData.userWorkload, workloadSearchQuery, workloadSortField, workloadSortDirection]);
+  }, [taskAnalyticsData.userWorkload, workloadSearchQuery, workloadSelectedUsers, workloadSortField, workloadSortDirection]);
 
 
   // Format date and time as DD-MMM-YYYY HH:mm
@@ -7143,6 +7156,180 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                       </div>
+
+                      {/* Name Dropdown Filter */}
+                      <div style={{ position: "relative" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowWorkloadUserDropdown(!showWorkloadUserDropdown)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px 16px",
+                            borderRadius: "12px",
+                            border: `1px solid ${t.border}`,
+                            background: isDarkMode ? "rgba(255,255,255,0.05)" : "#f8fafc",
+                            color: t.text,
+                            fontSize: "0.8125rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            outline: "none",
+                            transition: "all 0.2s",
+                            minWidth: "160px",
+                            justifyContent: "space-between"
+                          }}
+                        >
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "120px" }}>
+                            {workloadSelectedUsers.length === 0 
+                              ? "All Users" 
+                              : `${workloadSelectedUsers.length} Selected`}
+                          </span>
+                          <span style={{ fontSize: "0.6rem", color: t.textMuted }}>
+                            {showWorkloadUserDropdown ? "▲" : "▼"}
+                          </span>
+                        </button>
+
+                        {showWorkloadUserDropdown && (
+                          <>
+                            {/* Overlay to close the dropdown */}
+                            <div 
+                              onClick={() => setShowWorkloadUserDropdown(false)}
+                              style={{
+                                position: "fixed",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 998
+                              }}
+                            />
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: "calc(100% + 8px)",
+                                right: 0,
+                                width: "240px",
+                                background: t.card,
+                                border: `1px solid ${t.border}`,
+                                borderRadius: "16px",
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                                padding: "12px",
+                                zIndex: 999,
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px"
+                              }}
+                            >
+                              {/* Search user names within the dropdown */}
+                              <div>
+                                <input
+                                  type="text"
+                                  placeholder="Filter user list..."
+                                  value={workloadDropdownSearch}
+                                  onChange={e => setWorkloadDropdownSearch(e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "6px 8px",
+                                    borderRadius: "8px",
+                                    border: `1px solid ${t.border}`,
+                                    background: isDarkMode ? "rgba(255,255,255,0.03)" : "#f1f5f9",
+                                    color: t.text,
+                                    fontSize: "0.75rem",
+                                    outline: "none"
+                                  }}
+                                />
+                              </div>
+
+                              {/* Action links */}
+                              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${t.border}`, paddingBottom: "6px" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setWorkloadSelectedUsers(allWorkloadNames);
+                                  }}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#8b5cf6",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                    padding: 0
+                                  }}
+                                >
+                                  Select All
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setWorkloadSelectedUsers([]);
+                                  }}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: t.textMuted,
+                                    fontSize: "0.7rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                    padding: 0
+                                  }}
+                                >
+                                  Clear All
+                                </button>
+                              </div>
+
+                              {/* Scrollable checklist */}
+                              <div style={{ maxHeight: "180px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                {allWorkloadNames
+                                  .filter(name => name.toLowerCase().includes(workloadDropdownSearch.toLowerCase()))
+                                  .map(name => {
+                                    const isChecked = workloadSelectedUsers.includes(name);
+                                    return (
+                                      <label
+                                        key={name}
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                          fontSize: "0.75rem",
+                                          color: t.text,
+                                          cursor: "pointer",
+                                          padding: "4px 6px",
+                                          borderRadius: "6px",
+                                          background: isChecked 
+                                            ? (isDarkMode ? "rgba(139, 92, 246, 0.15)" : "rgba(139, 92, 246, 0.08)") 
+                                            : "transparent",
+                                          transition: "background 0.2s"
+                                        }}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={() => {
+                                            if (isChecked) {
+                                              setWorkloadSelectedUsers(prev => prev.filter(n => n !== name));
+                                            } else {
+                                              setWorkloadSelectedUsers(prev => [...prev, name]);
+                                            }
+                                          }}
+                                          style={{
+                                            accentColor: "#8b5cf6",
+                                            cursor: "pointer"
+                                          }}
+                                        />
+                                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                          {name}
+                                        </span>
+                                      </label>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
                       <div style={{ fontSize: "0.8125rem", color: "#8b5cf6", background: "rgba(139, 92, 246, 0.1)", padding: "4px 12px", borderRadius: "20px", fontWeight: 700 }}>
                         {processedWorkload.length} Users
                       </div>
