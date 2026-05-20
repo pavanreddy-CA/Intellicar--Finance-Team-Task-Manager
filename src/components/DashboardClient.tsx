@@ -2826,6 +2826,13 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       return n1 <= n2;
     };
 
+    const isDueToday = (dateStr: string | Date) => {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      return d.getFullYear() === currentYear && d.getMonth() === currentMonth && d.getDate() === currentDate;
+    };
+
+
     const getLocalDateString = (dateInput: string | Date | null | undefined): string => {
       if (!dateInput) return "";
       
@@ -2928,6 +2935,107 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       };
     }).sort((a, b) => b.total - a.total);
 
+    // Aggregating all unique active task users for workload breakdown
+    const activeUsersList = Array.from(
+      new Set([
+        ...filteredTasks.map(t => t.ownerName),
+        ...filteredTasks.map(t => t.reviewerName).filter(Boolean)
+      ])
+    ).filter(name => name && name !== "Not Applicable" && name !== "N/A" && name !== "System");
+
+    const userWorkload = activeUsersList.map(user => {
+      const uOwnedTasks = filteredTasks.filter(t => t.ownerName === user);
+      
+      // Completed metrics
+      const completedOnTime = uOwnedTasks.filter(t => {
+        if (!isFinished(t)) return false;
+        if (!t.dueDate || !t.completionDate) return true;
+        return isDateSameOrBefore(t.completionDate, t.dueDate);
+      }).length;
+
+      const completedDelayed = uOwnedTasks.filter(t => {
+        if (!isFinished(t)) return false;
+        if (!t.dueDate || !t.completionDate) return false;
+        return !isDateSameOrBefore(t.completionDate, t.dueDate);
+      }).length;
+
+      const completedTotal = completedOnTime + completedDelayed;
+
+      // Pending at Owner metrics
+      const pendingOverdue = uOwnedTasks.filter(t => {
+        if (isFinished(t) || !t.dueDate) return false;
+        return isDateBeforeToday(t.dueDate);
+      }).length;
+
+      const pendingDueToday = uOwnedTasks.filter(t => {
+        if (isFinished(t) || !t.dueDate) return false;
+        return isDueToday(t.dueDate);
+      }).length;
+
+      const pendingTotal = uOwnedTasks.filter(t => !isFinished(t)).length;
+
+      // Pending at Reviewer metrics
+      const uReviewedTasks = filteredTasks.filter(t => 
+        t.reviewerName === user && 
+        isFinished(t) && 
+        (t.reviewStatus === "Pending" || !t.reviewCompletionDate)
+      );
+
+      let reviewerPendingUnder1Day = 0;
+      let reviewerPendingOver1Day = 0;
+
+      uReviewedTasks.forEach(t => {
+        const subTime = t.completedSubmissionAt ? new Date(t.completedSubmissionAt) : (t.completionDate ? new Date(t.completionDate) : null);
+        if (subTime) {
+          const hours = (now.getTime() - subTime.getTime()) / (1000 * 60 * 60);
+          if (hours <= 24) reviewerPendingUnder1Day++;
+          else reviewerPendingOver1Day++;
+        } else {
+          reviewerPendingUnder1Day++;
+        }
+      });
+
+      const reviewerPendingTotal = uReviewedTasks.length;
+
+      // Pending Mark as Processed
+      const uProcessedTasks = uOwnedTasks.filter(t => 
+        isFinished(t) && 
+        (t.reviewStatus === "Completed" || t.reviewerName === "Not Applicable" || t.reviewStatus === "Review Not Required") && 
+        t.requestStatus !== "Processed"
+      );
+
+      let processedPendingUnder1Day = 0;
+      let processedPendingOver1Day = 0;
+
+      uProcessedTasks.forEach(t => {
+        const appTime = t.reviewedSubmissionAt ? new Date(t.reviewedSubmissionAt) : (t.reviewCompletionDate ? new Date(t.reviewCompletionDate) : (t.completedSubmissionAt ? new Date(t.completedSubmissionAt) : (t.completionDate ? new Date(t.completionDate) : null)));
+        if (appTime) {
+          const hours = (now.getTime() - appTime.getTime()) / (1000 * 60 * 60);
+          if (hours <= 24) processedPendingUnder1Day++;
+          else processedPendingOver1Day++;
+        } else {
+          processedPendingUnder1Day++;
+        }
+      });
+
+      const processedPendingTotal = uProcessedTasks.length;
+
+      return {
+        name: user,
+        completedOnTime,
+        completedDelayed,
+        completedTotal,
+        pendingOverdue,
+        pendingDueToday,
+        pendingTotal,
+        reviewerPendingUnder1Day,
+        reviewerPendingOver1Day,
+        reviewerPendingTotal,
+        processedPendingUnder1Day,
+        processedPendingOver1Day,
+        processedPendingTotal
+      };
+    }).sort((a, b) => (b.completedTotal + b.pendingTotal) - (a.completedTotal + a.pendingTotal));
 
     const depts = Array.from(new Set(filteredTasks.map(t => t.departmentName)));
     const deptWorkload = depts.map(dept => {
@@ -2983,6 +3091,7 @@ export default function DashboardClient({ user: initialUser }: { user: any }) {
       convertedIDR,
       completedIDR,
       userPerformance,
+      userWorkload,
       deptWorkload,
       trends: last6Months,
       sources,
@@ -6944,6 +7053,80 @@ const handleResourceUpload = async (e: React.FormEvent) => {
                             </td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* User Workload & Outstanding Queues Grid */}
+                <div style={{ padding: "32px", borderRadius: "32px", background: t.card, border: `1px solid ${t.border}`, boxShadow: isDarkMode ? "none" : "0 10px 30px -10px rgba(0,0,0,0.08)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                    <h3 style={{ margin: 0, color: t.text, fontSize: "1.25rem", fontWeight: 800 }}>User Workload & Outstanding Queues</h3>
+                    <div style={{ fontSize: "0.8125rem", color: "#8b5cf6", background: "rgba(139, 92, 246, 0.1)", padding: "4px 12px", borderRadius: "20px", fontWeight: 700 }}>Outstanding Metrics</div>
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.02)" : "#f8fafc", borderBottom: `2px solid ${t.border}` }}>
+                          <th rowSpan={2} style={{ padding: "16px", fontWeight: 800, color: t.text }}>Name</th>
+                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderLeft: `1px solid ${t.border}`, borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#10b981" }}>Completed</th>
+                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#ef4444" }}>Pending at Owner</th>
+                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 800, color: "#f59e0b" }}>Pending at Reviewer</th>
+                          <th colSpan={3} style={{ padding: "12px", textAlign: "center", fontWeight: 800, color: "#8b5cf6" }}>Pending : Mark as Processed</th>
+                        </tr>
+                        <tr style={{ background: isDarkMode ? "rgba(255,255,255,0.01)" : "#fcfdfe", borderBottom: `1px solid ${t.border}`, fontSize: "0.75rem" }}>
+                          {/* Completed Sub-headers */}
+                          <th style={{ padding: "8px", textAlign: "center", borderLeft: `1px solid ${t.border}`, color: t.textMuted }}>On or Before Due Date</th>
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Delay in Closure</th>
+                          <th style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>Total</th>
+                          {/* Pending Owner Sub-headers */}
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Overdue Tasks</th>
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Due on Today</th>
+                          <th style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>Total</th>
+                          {/* Pending Reviewer Sub-headers */}
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending for a day</th>
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending &gt; 1 day</th>
+                          <th style={{ padding: "8px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>Total</th>
+                          {/* Mark as Processed Sub-headers */}
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending for a day</th>
+                          <th style={{ padding: "8px", textAlign: "center", color: t.textMuted }}>Pending &gt; 1 day</th>
+                          <th style={{ padding: "8px", textAlign: "center", fontWeight: 700, color: t.text }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {taskAnalyticsData.userWorkload && taskAnalyticsData.userWorkload.length > 0 ? (
+                          taskAnalyticsData.userWorkload.map((w, idx) => (
+                            <tr key={idx} style={{ borderBottom: `1px solid ${t.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.02)" : "rgba(15, 23, 42, 0.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              {/* User Name with avatar */}
+                              <td style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 800 }}>
+                                  {w.name ? w.name[0].toUpperCase() : "?"}
+                                </div>
+                                <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: t.text }}>{w.name}</span>
+                              </td>
+                              {/* Completed Cells */}
+                              <td style={{ padding: "12px", textAlign: "center", borderLeft: `1px solid ${t.border}`, color: w.completedOnTime > 0 ? "#10b981" : t.textMuted, fontWeight: w.completedOnTime > 0 ? 600 : 400 }}>{w.completedOnTime}</td>
+                              <td style={{ padding: "12px", textAlign: "center", color: w.completedDelayed > 0 ? "#f59e0b" : t.textMuted, fontWeight: w.completedDelayed > 0 ? 600 : 400 }}>{w.completedDelayed}</td>
+                              <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.completedTotal}</td>
+                              {/* Pending Owner Cells */}
+                              <td style={{ padding: "12px", textAlign: "center", color: w.pendingOverdue > 0 ? "#ef4444" : t.textMuted, fontWeight: w.pendingOverdue > 0 ? 700 : 400 }}>{w.pendingOverdue}</td>
+                              <td style={{ padding: "12px", textAlign: "center", color: w.pendingDueToday > 0 ? "#3b82f6" : t.textMuted, fontWeight: w.pendingDueToday > 0 ? 700 : 400 }}>{w.pendingDueToday}</td>
+                              <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.pendingTotal}</td>
+                              {/* Pending Reviewer Cells */}
+                              <td style={{ padding: "12px", textAlign: "center", color: w.reviewerPendingUnder1Day > 0 ? t.text : t.textMuted, fontWeight: w.reviewerPendingUnder1Day > 0 ? 600 : 400 }}>{w.reviewerPendingUnder1Day}</td>
+                              <td style={{ padding: "12px", textAlign: "center", color: w.reviewerPendingOver1Day > 0 ? "#ef4444" : t.textMuted, fontWeight: w.reviewerPendingOver1Day > 0 ? 700 : 400 }}>{w.reviewerPendingOver1Day}</td>
+                              <td style={{ padding: "12px", textAlign: "center", borderRight: `1px solid ${t.border}`, fontWeight: 700, color: t.text }}>{w.reviewerPendingTotal}</td>
+                              {/* Processed Cells */}
+                              <td style={{ padding: "12px", textAlign: "center", color: w.processedPendingUnder1Day > 0 ? t.text : t.textMuted, fontWeight: w.processedPendingUnder1Day > 0 ? 600 : 400 }}>{w.processedPendingUnder1Day}</td>
+                              <td style={{ padding: "12px", textAlign: "center", color: w.processedPendingOver1Day > 0 ? "#ef4444" : t.textMuted, fontWeight: w.processedPendingOver1Day > 0 ? 700 : 400 }}>{w.processedPendingOver1Day}</td>
+                              <td style={{ padding: "12px", textAlign: "center", fontWeight: 700, color: t.text }}>{w.processedPendingTotal}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={13} style={{ padding: "24px", textAlign: "center", color: t.textMuted }}>No active user workloads for the current selection.</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
